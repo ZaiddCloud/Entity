@@ -70,7 +70,7 @@
                 
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up animation-delay-300">
                     @auth
-                        <a href="{{ url('/books') }}" class="w-full sm:w-auto px-8 py-4 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-xl font-bold text-lg shadow-lg shadow-purple-900/40 transition-all hover:scale-105">
+                        <a href="{{ route('dashboard') }}" class="w-full sm:w-auto px-8 py-4 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-xl font-bold text-lg shadow-lg shadow-purple-900/40 transition-all hover:scale-105">
                             Go to Dashboard
                         </a>
                     @else

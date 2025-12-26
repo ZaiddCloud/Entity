@@ -31,6 +31,8 @@ Route::post('logout', [App\Http\Controllers\Auth\LoginController::class, 'destro
     ->name('logout');
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+
     // Web Resource Routes
     Route::resource('books', BookController::class);
     Route::resource('audios', AudioController::class);
