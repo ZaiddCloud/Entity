@@ -18,5 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Illuminate\Http\Exceptions\PostTooLargeException $e, \Illuminate\Http\Request $request) {
+            return back()->withErrors(['file' => 'The uploaded file is too large for the server configuration (Max: 2MB). Please contact the administrator to increase the PHP limits.'])->withInput();
+        });
     })->create();

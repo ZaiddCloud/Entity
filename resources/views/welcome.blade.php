@@ -17,8 +17,8 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-20">
                     <!-- Logo -->
-                    <div class="flex-shrink-0 flex items-center space-x-3">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
+                    <div class="shrink-0 flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-linear-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
                             <span class="text-white font-bold text-xl">E</span>
                         </div>
                         <span class="font-bold text-2xl tracking-tight">Entity</span>
@@ -60,7 +60,7 @@
                 
                 <h1 class="text-5xl md:text-7xl font-bold tracking-tight mb-8 animate-fade-in-up animation-delay-100">
                     <span class="block mb-2">Manage your Digital</span>
-                    <span class="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Creative Assets</span>
+                    <span class="bg-linear-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Creative Assets</span>
                 </h1>
                 
                 <p class="mt-6 max-w-2xl mx-auto text-xl text-gray-400 mb-12 animate-fade-in-up animation-delay-200 leading-relaxed">
@@ -70,11 +70,11 @@
                 
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up animation-delay-300">
                     @auth
-                        <a href="{{ url('/books') }}" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-xl font-bold text-lg shadow-lg shadow-purple-900/40 transition-all hover:scale-105">
+                        <a href="{{ url('/books') }}" class="w-full sm:w-auto px-8 py-4 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-xl font-bold text-lg shadow-lg shadow-purple-900/40 transition-all hover:scale-105">
                             Go to Dashboard
                         </a>
                     @else
-                        <a href="{{ route('login') }}" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-xl font-bold text-lg shadow-lg shadow-purple-900/40 transition-all hover:scale-105">
+                        <a href="{{ route('login') }}" class="w-full sm:w-auto px-8 py-4 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-xl font-bold text-lg shadow-lg shadow-purple-900/40 transition-all hover:scale-105">
                             Get Started
                         </a>
                         <a href="#features" class="w-full sm:w-auto px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-semibold text-lg backdrop-blur-sm transition-all text-white">
@@ -85,7 +85,7 @@
 
                 <!-- Floating UI Mockup/Graphic -->
                 <div class="mt-20 relative animate-fade-in-up animation-delay-500">
-                    <div class="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl blur opacity-20"></div>
+                    <div class="absolute -inset-1 bg-linear-to-r from-blue-500 to-purple-600 rounded-2xl blur opacity-20"></div>
                     <div class="relative bg-[#0F0F11] border border-white/10 rounded-2xl shadow-2xl overflow-hidden aspect-video mx-auto max-w-5xl group">
                          <!-- Simplified Dashboard UI Mockup using CSS -->
                         <div class="absolute top-0 left-0 w-64 h-full border-r border-white/5 bg-[#0a0a0a] hidden md:block p-6 space-y-4">
@@ -103,9 +103,9 @@
                                 </div>
                             </div>
                             <div class="grid grid-cols-3 gap-6">
-                                <div class="aspect-[3/4] bg-white/5 rounded-xl border border-white/5 hover:border-purple-500/50 transition-colors"></div>
-                                <div class="aspect-[3/4] bg-white/5 rounded-xl border border-white/5 hover:border-purple-500/50 transition-colors"></div>
-                                <div class="aspect-[3/4] bg-white/5 rounded-xl border border-white/5 hover:border-purple-500/50 transition-colors"></div>
+                                <div class="aspect-3/4 bg-white/5 rounded-xl border border-white/5 hover:border-purple-500/50 transition-colors"></div>
+                                <div class="aspect-3/4 bg-white/5 rounded-xl border border-white/5 hover:border-purple-500/50 transition-colors"></div>
+                                <div class="aspect-3/4 bg-white/5 rounded-xl border border-white/5 hover:border-purple-500/50 transition-colors"></div>
                             </div>
                         </div>
                     </div>

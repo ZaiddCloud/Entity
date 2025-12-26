@@ -14,7 +14,7 @@
                 
                 <!-- Header -->
                 <div class="text-center mb-8">
-                    <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
+                    <h1 class="text-3xl font-bold bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
                         Create Account
                     </h1>
                     <p class="text-gray-400 text-sm">
@@ -104,7 +104,7 @@
                     <button 
                         type="submit" 
                         :disabled="form.processing"
-                        class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-medium py-3 rounded-xl shadow-lg hover:shadow-purple-500/25 transform transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+                        class="w-full bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-medium py-3 rounded-xl shadow-lg hover:shadow-purple-500/25 transform transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                         <span v-if="!form.processing">Get Started</span>
                         <span v-else class="flex items-center justify-center">
