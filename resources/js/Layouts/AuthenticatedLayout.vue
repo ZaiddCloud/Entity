@@ -48,7 +48,7 @@ const showingNavigationDropdown = ref(false);
 
                     <!-- User Actions -->
                     <div class="flex items-center space-x-4 space-x-reverse">
-                        <div class="text-sm text-gray-400 ml-4 hidden md:block">
+                        <div v-if="$page.props.auth.user" class="text-sm text-gray-400 ml-4 hidden md:block">
                             {{ $page.props.auth.user.name }}
                         </div>
                         <Link :href="route('logout')" method="post" as="button" class="text-sm text-gray-500 hover:text-red-400 transition-colors">
