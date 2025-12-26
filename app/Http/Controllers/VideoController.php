@@ -11,6 +11,10 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
 
+use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\StoreEntityRequest;
+use App\Http\Requests\UpdateEntityRequest;
+
 class VideoController extends Controller
 {
     protected $manager;
@@ -27,6 +31,7 @@ class VideoController extends Controller
      */
     public function index(Request $request): Response
     {
+        Gate::authorize('viewAny', Video::class);
         $filters = $request->only(['search', 'category', 'tag']);
         
         $videos = Video::with(['tags', 'categories'])
@@ -60,16 +65,21 @@ class VideoController extends Controller
      */
     public function create(): Response
     {
+        Gate::authorize('create', Video::class);
         return Inertia::render('Videos/Create');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StoreEntityRequest $request): RedirectResponse
     {
-        $data = $request->all();
-        $data['type'] = 'video';
+        Gate::authorize('create', Video::class);
+        $data = $request->validated();
+        
+        if (!isset($data['type'])) {
+             $data['type'] = 'video';
+        }
 
         $video = $this->manager->create($data);
 
@@ -82,6 +92,7 @@ class VideoController extends Controller
      */
     public function show(Video $video): Response
     {
+        Gate::authorize('view', $video);
         return Inertia::render('Videos/Show', [
             'video' => $video->load(['tags', 'categories', 'comments.user']),
         ]);
@@ -92,6 +103,7 @@ class VideoController extends Controller
      */
     public function edit(Video $video): Response
     {
+        Gate::authorize('update', $video);
         return Inertia::render('Videos/Edit', [
             'video' => $video->load(['tags', 'categories']),
         ]);
@@ -100,9 +112,10 @@ class VideoController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Video $video): RedirectResponse
+    public function update(UpdateEntityRequest $request, Video $video): RedirectResponse
     {
-        $this->manager->update($video, $request->all());
+        Gate::authorize('update', $video);
+        $this->manager->update($video, $request->validated());
 
         return redirect()->route('videos.show', $video->id)
             ->with('message', 'تم تحديث الفيديو بنجاح');
@@ -113,6 +126,7 @@ class VideoController extends Controller
      */
     public function destroy(Video $video): RedirectResponse
     {
+        Gate::authorize('delete', $video);
         $this->manager->delete($video);
 
         return redirect()->route('videos.index')

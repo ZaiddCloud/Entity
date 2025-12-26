@@ -11,6 +11,10 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
 
+use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\StoreEntityRequest;
+use App\Http\Requests\UpdateEntityRequest;
+
 class AudioController extends Controller
 {
     protected $manager;
@@ -27,6 +31,7 @@ class AudioController extends Controller
      */
     public function index(Request $request): Response
     {
+        Gate::authorize('viewAny', Audio::class);
         $filters = $request->only(['search', 'category', 'tag']);
         
         $audios = Audio::with(['tags', 'categories'])
@@ -60,16 +65,21 @@ class AudioController extends Controller
      */
     public function create(): Response
     {
+        Gate::authorize('create', Audio::class);
         return Inertia::render('Audio/Create');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StoreEntityRequest $request): RedirectResponse
     {
-        $data = $request->all();
-        $data['type'] = 'audio';
+        Gate::authorize('create', Audio::class);
+        $data = $request->validated();
+        
+        if (!isset($data['type'])) {
+             $data['type'] = 'audio';
+        }
 
         $audio = $this->manager->create($data);
 
@@ -82,6 +92,7 @@ class AudioController extends Controller
      */
     public function show(Audio $audio): Response
     {
+        Gate::authorize('view', $audio);
         return Inertia::render('Audio/Show', [
             'audio' => $audio->load(['tags', 'categories', 'comments.user']),
         ]);
@@ -92,6 +103,7 @@ class AudioController extends Controller
      */
     public function edit(Audio $audio): Response
     {
+        Gate::authorize('update', $audio);
         return Inertia::render('Audio/Edit', [
             'audio' => $audio->load(['tags', 'categories']),
         ]);
@@ -100,9 +112,10 @@ class AudioController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Audio $audio): RedirectResponse
+    public function update(UpdateEntityRequest $request, Audio $audio): RedirectResponse
     {
-        $this->manager->update($audio, $request->all());
+        Gate::authorize('update', $audio);
+        $this->manager->update($audio, $request->validated());
 
         return redirect()->route('audios.show', $audio->id)
             ->with('message', 'تم تحديث الملف الصوتي بنجاح');
@@ -113,6 +126,7 @@ class AudioController extends Controller
      */
     public function destroy(Audio $audio): RedirectResponse
     {
+        Gate::authorize('delete', $audio);
         $this->manager->delete($audio);
 
         return redirect()->route('audios.index')

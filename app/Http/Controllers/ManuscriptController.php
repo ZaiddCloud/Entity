@@ -11,6 +11,10 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
 
+use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\StoreEntityRequest;
+use App\Http\Requests\UpdateEntityRequest;
+
 class ManuscriptController extends Controller
 {
     protected $manager;
@@ -27,6 +31,7 @@ class ManuscriptController extends Controller
      */
     public function index(Request $request): Response
     {
+        Gate::authorize('viewAny', Manuscript::class);
         $filters = $request->only(['search', 'category', 'tag']);
         
         $manuscripts = Manuscript::with(['tags', 'categories'])
@@ -60,16 +65,21 @@ class ManuscriptController extends Controller
      */
     public function create(): Response
     {
+        Gate::authorize('create', Manuscript::class);
         return Inertia::render('Manuscripts/Create');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StoreEntityRequest $request): RedirectResponse
     {
-        $data = $request->all();
-        $data['type'] = 'manuscript';
+        Gate::authorize('create', Manuscript::class);
+        $data = $request->validated();
+        
+        if (!isset($data['type'])) {
+             $data['type'] = 'manuscript';
+        }
 
         $manuscript = $this->manager->create($data);
 
@@ -82,6 +92,7 @@ class ManuscriptController extends Controller
      */
     public function show(Manuscript $manuscript): Response
     {
+        Gate::authorize('view', $manuscript);
         return Inertia::render('Manuscripts/Show', [
             'manuscript' => $manuscript->load(['tags', 'categories', 'comments.user']),
         ]);
@@ -92,6 +103,7 @@ class ManuscriptController extends Controller
      */
     public function edit(Manuscript $manuscript): Response
     {
+        Gate::authorize('update', $manuscript);
         return Inertia::render('Manuscripts/Edit', [
             'manuscript' => $manuscript->load(['tags', 'categories']),
         ]);
@@ -100,9 +112,10 @@ class ManuscriptController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Manuscript $manuscript): RedirectResponse
+    public function update(UpdateEntityRequest $request, Manuscript $manuscript): RedirectResponse
     {
-        $this->manager->update($manuscript, $request->all());
+        Gate::authorize('update', $manuscript);
+        $this->manager->update($manuscript, $request->validated());
 
         return redirect()->route('manuscripts.show', $manuscript->id)
             ->with('message', 'تم تحديث المخطوطة بنجاح');
@@ -113,6 +126,7 @@ class ManuscriptController extends Controller
      */
     public function destroy(Manuscript $manuscript): RedirectResponse
     {
+        Gate::authorize('delete', $manuscript);
         $this->manager->delete($manuscript);
 
         return redirect()->route('manuscripts.index')

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\User;
+use PHPUnit\Framework\Attributes\Test;
 
 class ControllerAccessTest extends TestCase
 {
@@ -15,7 +16,8 @@ class ControllerAccessTest extends TestCase
     parent::setUp();
     
     // إنشاء مستخدم وتسجيل دخوله إذا كان هناك Middleware يحمي الروابط
-    $user = User::factory()->create();
+    /** @var User $user */
+    $user = User::factory()->createOne();
     $this->actingAs($user);
 
     // تعطيل التحقق من نسخة ملفات JavaScript لتجنب خطأ 409
@@ -36,13 +38,13 @@ private function assertIndexAccess($prefix)
     }
 }
 
-    /** @test */
+    #[Test]
     public function it_can_access_web_index_routes()
     {
         $this->assertIndexAccess(null);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_access_api_index_routes()
     {
         $this->assertIndexAccess('api');
