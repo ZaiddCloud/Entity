@@ -19,20 +19,22 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-// Entity Resource Routes
-Route::apiResource('books', BookController::class);
-Route::apiResource('audios', AudioController::class);
-Route::apiResource('videos', VideoController::class);
-Route::apiResource('manuscripts', ManuscriptController::class);
+Route::middleware(['auth:sanctum'])->prefix('api')->name('api.')->group(function () {
+    // Entity Resource Routes
+    Route::apiResource('books', BookController::class);
+    Route::apiResource('audios', AudioController::class);
+    Route::apiResource('videos', VideoController::class);
+    Route::apiResource('manuscripts', ManuscriptController::class);
 
-// Taxonomy and Organization
-Route::apiResource('categories', CategoryController::class);
-Route::apiResource('tags', TagController::class);
-Route::apiResource('collections', CollectionController::class);
-Route::apiResource('series', SeriesController::class);
+    // Taxonomy and Organization
+    Route::apiResource('categories', CategoryController::class);
+    Route::apiResource('tags', TagController::class);
+    Route::apiResource('collections', CollectionController::class);
+    Route::apiResource('series', SeriesController::class);
 
-// Metadata and Logs
-Route::apiResource('activities', ActivityController::class)->only(['index', 'show']);
-Route::apiResource('comments', CommentController::class);
-Route::apiResource('notes', NoteController::class);
-Route::apiResource('deletions', DeletionController::class)->only(['index', 'show']);
+    // Metadata and Logs
+    Route::apiResource('activities', ActivityController::class)->only(['index', 'show']);
+    Route::apiResource('comments', CommentController::class);
+    Route::apiResource('notes', NoteController::class);
+    Route::apiResource('deletions', DeletionController::class)->only(['index', 'show']);
+});

@@ -11,6 +11,10 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
 
+use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\StoreEntityRequest;
+use App\Http\Requests\UpdateEntityRequest;
+
 class BookController extends Controller
 {
     protected $manager;
@@ -27,6 +31,8 @@ class BookController extends Controller
      */
     public function index(Request $request): Response
     {
+        Gate::authorize('viewAny', Book::class);
+
         $filters = $request->only(['search', 'category', 'tag']);
         
         $books = Book::with(['tags', 'categories'])
@@ -61,16 +67,23 @@ class BookController extends Controller
      */
     public function create(): Response
     {
+        Gate::authorize('create', Book::class);
         return Inertia::render('Books/Create');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StoreEntityRequest $request): RedirectResponse
     {
-        $data = $request->all();
-        $data['type'] = 'book';
+        Gate::authorize('create', Book::class);
+        $data = $request->validated();
+        
+        // Add type if not present (though FormRequest prepareForValidation should have added it, validated() returns what was validated + merged)
+        // Actually validated() only returns keys in rules(). 'type' is in rules() and merged in prepareForValidation.
+        if (!isset($data['type'])) {
+             $data['type'] = 'book';
+        }
 
         $book = $this->manager->create($data);
 
@@ -83,6 +96,7 @@ class BookController extends Controller
      */
     public function show(Book $book): Response
     {
+        Gate::authorize('view', $book);
         return Inertia::render('Books/Show', [
             'book' => $book->load(['tags', 'categories', 'comments.user']),
         ]);
@@ -93,6 +107,7 @@ class BookController extends Controller
      */
     public function edit(Book $book): Response
     {
+        Gate::authorize('update', $book);
         return Inertia::render('Books/Edit', [
             'book' => $book->load(['tags', 'categories']),
         ]);
@@ -101,9 +116,10 @@ class BookController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Book $book): RedirectResponse
+    public function update(UpdateEntityRequest $request, Book $book): RedirectResponse
     {
-        $this->manager->update($book, $request->all());
+        Gate::authorize('update', $book);
+        $this->manager->update($book, $request->validated());
 
         return redirect()->route('books.show', $book->id)
             ->with('message', 'تم تحديث الكتاب بنجاح');
@@ -114,6 +130,7 @@ class BookController extends Controller
      */
     public function destroy(Book $book): RedirectResponse
     {
+        Gate::authorize('delete', $book);
         $this->manager->delete($book);
 
         return redirect()->route('books.index')

@@ -18,24 +18,30 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Web Resource Routes
-Route::resource('books', BookController::class);
-Route::resource('audios', AudioController::class);
-Route::resource('videos', VideoController::class);
-Route::resource('manuscripts', ManuscriptController::class);
+Route::get('login', function () {
+    return Inertia\Inertia::render('Auth/Login');
+})->name('login');
 
-// Taxonomy and Organization
-Route::post('categories/bulk-destroy', [CategoryController::class, 'bulkDestroy'])->name('categories.bulk-destroy');
-Route::resource('categories', CategoryController::class);
+Route::middleware(['auth'])->group(function () {
+    // Web Resource Routes
+    Route::resource('books', BookController::class);
+    Route::resource('audios', AudioController::class);
+    Route::resource('videos', VideoController::class);
+    Route::resource('manuscripts', ManuscriptController::class);
 
-Route::post('tags/bulk-destroy', [TagController::class, 'bulkDestroy'])->name('tags.bulk-destroy');
-Route::resource('tags', TagController::class);
+    // Taxonomy and Organization
+    Route::post('categories/bulk-destroy', [CategoryController::class, 'bulkDestroy'])->name('categories.bulk-destroy');
+    Route::resource('categories', CategoryController::class);
 
-Route::resource('collections', CollectionController::class);
-Route::resource('series', SeriesController::class);
+    Route::post('tags/bulk-destroy', [TagController::class, 'bulkDestroy'])->name('tags.bulk-destroy');
+    Route::resource('tags', TagController::class);
 
-// Metadata and Logs
-Route::resource('activities', ActivityController::class)->only(['index', 'show']);
-Route::resource('comments', CommentController::class);
-Route::resource('notes', NoteController::class);
-Route::resource('deletions', DeletionController::class)->only(['index', 'show']);
+    Route::resource('collections', CollectionController::class);
+    Route::resource('series', SeriesController::class);
+
+    // Metadata and Logs
+    Route::resource('activities', ActivityController::class)->only(['index', 'show']);
+    Route::resource('comments', CommentController::class);
+    Route::resource('notes', NoteController::class);
+    Route::resource('deletions', DeletionController::class)->only(['index', 'show']);
+});

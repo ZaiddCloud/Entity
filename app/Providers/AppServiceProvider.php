@@ -20,6 +20,9 @@ use App\Observers\EntityLifecycleObserver;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Gate;
+use App\Models\Entity;
+use App\Policies\EntityPolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -40,6 +43,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::policy(Entity::class, EntityPolicy::class);
+        Gate::policy(Book::class, EntityPolicy::class);
+        Gate::policy(Video::class, EntityPolicy::class);
+        Gate::policy(Audio::class, EntityPolicy::class);
+        Gate::policy(Manuscript::class, EntityPolicy::class);
+
         Book::flushEventListeners();
         Video::flushEventListeners();
         Audio::flushEventListeners();
@@ -117,29 +126,29 @@ class AppServiceProvider extends ServiceProvider
                 $ids = $data[2] ?? [];
 
                 $observer = new EntityCacheObserver();
-                $observer->invalidateRelationCaches($model, $relation, ['attached' => $ids]);
+                $observer->invalidateRelationCaches($model);
             }
         });
 
         Event::listen('eloquent.detached: *', function ($event, $data) {
             if (count($data) >= 3) {
                 $model = $data[0];
-                $relation = $data[1];
-                $ids = $data[2] ?? [];
+                // $relation = $data[1];
+                // $ids = $data[2] ?? [];
 
                 $observer = new EntityCacheObserver();
-                $observer->invalidateRelationCaches($model, $relation, ['detached' => $ids]);
+                $observer->invalidateRelationCaches($model);
             }
         });
 
         Event::listen('eloquent.synced: *', function ($event, $data) {
             if (count($data) >= 3) {
                 $model = $data[0];
-                $relation = $data[1];
-                $changes = $data[2] ?? [];
+                // $relation = $data[1];
+                // $changes = $data[2] ?? [];
 
                 $observer = new EntityCacheObserver();
-                $observer->invalidateRelationCaches($model, $relation, $changes);
+                $observer->invalidateRelationCaches($model);
             }
         });
     }
