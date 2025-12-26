@@ -18,9 +18,17 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('login', function () {
-    return Inertia\Inertia::render('Auth/Login');
-})->name('login');
+Route::middleware('guest')->group(function () {
+    Route::get('login', [App\Http\Controllers\Auth\LoginController::class, 'create'])->name('login');
+    Route::post('login', [App\Http\Controllers\Auth\LoginController::class, 'store']);
+
+    Route::get('register', [App\Http\Controllers\Auth\RegisterController::class, 'create'])->name('register');
+    Route::post('register', [App\Http\Controllers\Auth\RegisterController::class, 'store']);
+});
+
+Route::post('logout', [App\Http\Controllers\Auth\LoginController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('logout');
 
 Route::middleware(['auth'])->group(function () {
     // Web Resource Routes
