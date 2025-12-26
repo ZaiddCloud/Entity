@@ -81,6 +81,14 @@ class ManuscriptController extends Controller
              $data['type'] = 'manuscript';
         }
 
+        if ($request->hasFile('cover')) {
+            $data['cover_path'] = $request->file('cover')->store('covers', 'public');
+        }
+
+        if ($request->hasFile('file')) {
+            $data['file_path'] = $request->file('file')->store('manuscripts', 'public');
+        }
+
         $manuscript = $this->manager->create($data);
 
         return redirect()->route('manuscripts.index')
@@ -115,7 +123,17 @@ class ManuscriptController extends Controller
     public function update(UpdateEntityRequest $request, Manuscript $manuscript): RedirectResponse
     {
         Gate::authorize('update', $manuscript);
-        $this->manager->update($manuscript, $request->validated());
+        $data = $request->validated();
+
+        if ($request->hasFile('cover')) {
+            $data['cover_path'] = $request->file('cover')->store('covers', 'public');
+        }
+
+        if ($request->hasFile('file')) {
+            $data['file_path'] = $request->file('file')->store('manuscripts', 'public');
+        }
+
+        $this->manager->update($manuscript, $data);
 
         return redirect()->route('manuscripts.show', $manuscript->id)
             ->with('message', 'تم تحديث المخطوطة بنجاح');

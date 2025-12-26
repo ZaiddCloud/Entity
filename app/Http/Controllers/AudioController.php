@@ -81,6 +81,14 @@ class AudioController extends Controller
              $data['type'] = 'audio';
         }
 
+        if ($request->hasFile('cover')) {
+            $data['cover_path'] = $request->file('cover')->store('covers', 'public');
+        }
+
+        if ($request->hasFile('file')) {
+            $data['file_path'] = $request->file('file')->store('audios', 'public');
+        }
+
         $audio = $this->manager->create($data);
 
         return redirect()->route('audios.index')
@@ -115,7 +123,17 @@ class AudioController extends Controller
     public function update(UpdateEntityRequest $request, Audio $audio): RedirectResponse
     {
         Gate::authorize('update', $audio);
-        $this->manager->update($audio, $request->validated());
+        $data = $request->validated();
+
+        if ($request->hasFile('cover')) {
+            $data['cover_path'] = $request->file('cover')->store('covers', 'public');
+        }
+
+        if ($request->hasFile('file')) {
+            $data['file_path'] = $request->file('file')->store('audios', 'public');
+        }
+
+        $this->manager->update($audio, $data);
 
         return redirect()->route('audios.show', $audio->id)
             ->with('message', 'تم تحديث الملف الصوتي بنجاح');

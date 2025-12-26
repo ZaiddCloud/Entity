@@ -51,6 +51,23 @@ defineProps({
                             </div>
                             
                             <div>
+                                <div v-if="manuscript.cover_path" class="mb-6">
+                                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">الغلاف</h3>
+                                    <img :src="'/storage/' + manuscript.cover_path" alt="Cover" class="w-full max-w-md h-auto rounded-lg shadow-md object-cover">
+                                </div>
+
+                                <div v-if="manuscript.file_path" class="mb-6">
+                                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">الملف</h3>
+                                    <a :href="'/storage/' + manuscript.file_path" target="_blank" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring ring-indigo-300 disabled:opacity-25 transition ease-in-out duration-150">
+                                        تحميل / قراءة PDF
+                                    </a>
+                                </div>
+                                
+                                <div v-if="manuscript.description" class="mb-6">
+                                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">الوصف</h3>
+                                    <p class="text-gray-700 dark:text-gray-300 whitespace-pre-line">{{ manuscript.description }}</p>
+                                </div>
+
                                 <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">التصنيفات والوسوم</h3>
                                 <div>
                                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">الوسوم</dt>

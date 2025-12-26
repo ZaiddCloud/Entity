@@ -11,10 +11,13 @@ const form = useForm({
     author: props.book.author,
     isbn: props.book.isbn || '',
     description: props.book.description || '',
+    cover: null,
+    file: null,
+    _method: 'PUT',
 });
 
 const submit = () => {
-    form.put(route('books.update', props.book.id));
+    form.post(route('books.update', props.book.id));
 };
 </script>
 
@@ -76,6 +79,30 @@ const submit = () => {
                                     v-model="form.description"
                                 ></textarea>
                                 <div v-if="form.errors.description" class="mt-2 text-sm text-red-600">{{ form.errors.description }}</div>
+                            </div>
+
+                            <div>
+                                <label for="cover" class="block text-sm font-medium text-gray-700 dark:text-gray-300">تحديث صورة الغلاف (اختياري)</label>
+                                <input
+                                    id="cover"
+                                    type="file"
+                                    class="mt-1 block w-full text-sm text-gray-500 hover:file:bg-indigo-100 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 transition"
+                                    @input="form.cover = $event.target.files[0]"
+                                    accept="image/*"
+                                />
+                                <div v-if="form.errors.cover" class="mt-2 text-sm text-red-600">{{ form.errors.cover }}</div>
+                            </div>
+
+                            <div>
+                                <label for="file" class="block text-sm font-medium text-gray-700 dark:text-gray-300">تحديث ملف الكتاب (PDF - اختياري)</label>
+                                <input
+                                    id="file"
+                                    type="file"
+                                    class="mt-1 block w-full text-sm text-gray-500 hover:file:bg-indigo-100 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 transition"
+                                    @input="form.file = $event.target.files[0]"
+                                    accept="application/pdf"
+                                />
+                                <div v-if="form.errors.file" class="mt-2 text-sm text-red-600">{{ form.errors.file }}</div>
                             </div>
 
                             <div class="flex items-center justify-end">

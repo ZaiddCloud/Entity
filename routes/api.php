@@ -19,7 +19,7 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::middleware(['auth:sanctum'])->prefix('api')->name('api.')->group(function () {
+Route::middleware(['auth:sanctum'])->name('api.')->group(function () {
     // Entity Resource Routes
     Route::apiResource('books', BookController::class);
     Route::apiResource('audios', AudioController::class);

@@ -81,6 +81,14 @@ class VideoController extends Controller
              $data['type'] = 'video';
         }
 
+        if ($request->hasFile('cover')) {
+            $data['cover_path'] = $request->file('cover')->store('covers', 'public');
+        }
+
+        if ($request->hasFile('file')) {
+            $data['file_path'] = $request->file('file')->store('videos', 'public');
+        }
+
         $video = $this->manager->create($data);
 
         return redirect()->route('videos.index')
@@ -115,7 +123,17 @@ class VideoController extends Controller
     public function update(UpdateEntityRequest $request, Video $video): RedirectResponse
     {
         Gate::authorize('update', $video);
-        $this->manager->update($video, $request->validated());
+        $data = $request->validated();
+
+        if ($request->hasFile('cover')) {
+            $data['cover_path'] = $request->file('cover')->store('covers', 'public');
+        }
+
+        if ($request->hasFile('file')) {
+            $data['file_path'] = $request->file('file')->store('videos', 'public');
+        }
+
+        $this->manager->update($video, $data);
 
         return redirect()->route('videos.show', $video->id)
             ->with('message', 'تم تحديث الفيديو بنجاح');

@@ -51,6 +51,24 @@ defineProps({
                             </div>
                             
                             <div>
+                                <div v-if="audio.cover_path" class="mb-6">
+                                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">الغلاف</h3>
+                                    <img :src="'/storage/' + audio.cover_path" alt="Cover" class="w-full max-w-md h-auto rounded-lg shadow-md object-cover">
+                                </div>
+
+                                <div v-if="audio.file_path" class="mb-6">
+                                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">الاستماع</h3>
+                                    <audio controls class="w-full rounded-lg shadow-md bg-gray-100 dark:bg-gray-700">
+                                        <source :src="'/storage/' + audio.file_path" type="audio/mpeg">
+                                        متصفحك لا يدعم تشغيل الصوت.
+                                    </audio>
+                                </div>
+                                
+                                <div v-if="audio.description" class="mb-6">
+                                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">الوصف</h3>
+                                    <p class="text-gray-700 dark:text-gray-300 whitespace-pre-line">{{ audio.description }}</p>
+                                </div>
+
                                 <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">التصنيفات والوسوم</h3>
                                 <div>
                                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">الوسوم</dt>

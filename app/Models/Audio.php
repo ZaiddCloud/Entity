@@ -9,6 +9,7 @@ class Audio extends Entity
     protected $fillable = [
         'title', 'slug', 'duration', 'format',
         'bitrate', 'sample_rate', 'file_size',
+        'description', 'cover_path', 'file_path',
         'created_at', 'updated_at'
     ];
 

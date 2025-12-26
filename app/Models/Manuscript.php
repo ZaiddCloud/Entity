@@ -9,6 +9,7 @@ class Manuscript extends Entity
     protected $fillable = [
         'title', 'slug', 'author', 'century',
         'language', 'pages', 'publisher', 'location',
+        'description', 'cover_path', 'file_path',
         'created_at', 'updated_at'
     ];
 

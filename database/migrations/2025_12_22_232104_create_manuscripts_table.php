@@ -21,6 +21,9 @@ return new class extends Migration
             $table->integer('pages')->default(0);
             $table->string('publisher')->nullable();
             $table->string('location')->nullable(); // مكان الحفظ
+            $table->longText('description')->nullable();
+            $table->string('cover_path')->nullable();
+            $table->string('file_path')->nullable();
             $table->timestamps();
             $table->softDeletes();
 

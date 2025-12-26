@@ -21,15 +21,30 @@ class UpdateEntityRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'title' => 'sometimes|string|max:255',
-            'author' => 'nullable|string|max:255',
-            'century' => 'nullable|integer',
-            'description' => 'nullable|string',
+            'author' => 'sometimes|string|max:255',
+            'description' => 'sometimes|nullable|string',
+            'cover' => 'sometimes|nullable|image|max:2048',
             'categories' => 'array',
             'categories.*' => 'exists:categories,id',
             'tags' => 'array',
             'tags.*' => 'exists:tags,id',
         ];
+
+        // Determine type from route binding
+        $fileRules = 'sometimes|nullable|file|max:102400';
+        
+        if ($this->route('book') || $this->route('manuscript')) {
+            $fileRules = 'sometimes|nullable|mimes:pdf|max:51200';
+        } elseif ($this->route('audio')) {
+             $fileRules = 'sometimes|nullable|mimes:mp3,wav|max:51200';
+        } elseif ($this->route('video')) {
+             $fileRules = 'sometimes|nullable|mimes:mp4,mov,avi|max:102400';
+        }
+
+        $rules['file'] = $fileRules;
+
+        return $rules;
     }
 }

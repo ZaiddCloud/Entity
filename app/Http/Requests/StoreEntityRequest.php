@@ -47,18 +47,29 @@ class StoreEntityRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'title' => 'required|string|max:255',
             'type' => 'required|in:book,video,audio,manuscript',
-            // Specific fields
-            'author' => 'nullable|string|max:255', // Book
-            'century' => 'nullable|integer', // Manuscript
+            'author' => 'nullable|string|max:255',
+            'century' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            // Relations
+            'cover' => 'nullable|image|max:2048', // 2MB Max
             'categories' => 'array',
             'categories.*' => 'exists:categories,id',
             'tags' => 'array',
             'tags.*' => 'exists:tags,id',
         ];
+
+        $type = $this->input('type');
+
+        if ($type === 'book' || $type === 'manuscript') {
+             $rules['file'] = 'nullable|mimes:pdf|max:51200'; // 50MB
+        } elseif ($type === 'audio') {
+             $rules['file'] = 'nullable|mimes:mp3,wav|max:51200';
+        } elseif ($type === 'video') {
+             $rules['file'] = 'nullable|mimes:mp4,mov,avi|max:102400'; // 100MB
+        }
+
+        return $rules;
     }
 }

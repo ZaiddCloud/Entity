@@ -17,6 +17,9 @@ return new class extends Migration
             $table->string('slug')->unique();
             $table->integer('duration')->default(0); // بالثانية
             $table->string('format')->default('mp4');
+            $table->longText('description')->nullable();
+            $table->string('cover_path')->nullable();
+            $table->string('file_path')->nullable();
             $table->timestamps();
             $table->softDeletes();
 

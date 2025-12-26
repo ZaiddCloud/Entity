@@ -79,10 +79,16 @@ class BookController extends Controller
         Gate::authorize('create', Book::class);
         $data = $request->validated();
         
-        // Add type if not present (though FormRequest prepareForValidation should have added it, validated() returns what was validated + merged)
-        // Actually validated() only returns keys in rules(). 'type' is in rules() and merged in prepareForValidation.
         if (!isset($data['type'])) {
              $data['type'] = 'book';
+        }
+
+        if ($request->hasFile('cover')) {
+            $data['cover_path'] = $request->file('cover')->store('covers', 'public');
+        }
+
+        if ($request->hasFile('file')) {
+            $data['file_path'] = $request->file('file')->store('books', 'public');
         }
 
         $book = $this->manager->create($data);
@@ -119,7 +125,17 @@ class BookController extends Controller
     public function update(UpdateEntityRequest $request, Book $book): RedirectResponse
     {
         Gate::authorize('update', $book);
-        $this->manager->update($book, $request->validated());
+        $data = $request->validated();
+
+        if ($request->hasFile('cover')) {
+            $data['cover_path'] = $request->file('cover')->store('covers', 'public');
+        }
+
+        if ($request->hasFile('file')) {
+            $data['file_path'] = $request->file('file')->store('books', 'public');
+        }
+
+        $this->manager->update($book, $data);
 
         return redirect()->route('books.show', $book->id)
             ->with('message', 'تم تحديث الكتاب بنجاح');

@@ -20,6 +20,9 @@ return new class extends Migration
             $table->integer('bitrate')->nullable(); // kbps
             $table->integer('sample_rate')->nullable(); // Hz
             $table->integer('file_size')->nullable(); // بالكيلوبايت
+            $table->longText('description')->nullable();
+            $table->string('cover_path')->nullable();
+            $table->string('file_path')->nullable();
             $table->timestamps();
             $table->softDeletes();
 

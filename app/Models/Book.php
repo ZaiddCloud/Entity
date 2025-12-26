@@ -11,6 +11,7 @@ class Book extends Entity
 
     protected $fillable = [
         'title', 'slug', 'author', 'isbn',
+        'description', 'cover_path', 'file_path',
         'created_at', 'updated_at'
     ];
 
