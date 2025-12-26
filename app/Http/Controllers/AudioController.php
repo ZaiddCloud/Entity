@@ -1,0 +1,121 @@
+<?php
+
+namespace App\Http\Controllers;
+
+
+use App\Models\Audio;
+use App\Services\EntityManagerService;
+use App\Services\EntityQueryService;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+use Illuminate\Http\RedirectResponse;
+
+class AudioController extends Controller
+{
+    protected $manager;
+    protected $query;
+
+    public function __construct(EntityManagerService $manager, EntityQueryService $query)
+    {
+        $this->manager = $manager;
+        $this->query = $query;
+    }
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request): Response
+    {
+        $filters = $request->only(['search', 'category', 'tag']);
+        
+        $audios = Audio::with(['tags', 'categories'])
+            ->when($request->search, function ($query, $search) {
+                $query->where('title', 'like', "%{$search}%");
+            })
+            ->when($request->category, function ($query, $category) {
+                $query->whereHas('categories', function ($q) use ($category) {
+                    $q->where('categories.id', $category);
+                });
+            })
+            ->when($request->tag, function ($query, $tag) {
+                $query->whereHas('tags', function ($q) use ($tag) {
+                    $q->where('tags.id', $tag);
+                });
+            })
+            ->latest()
+            ->paginate($request->get('per_page', 10))
+            ->withQueryString();
+
+        return Inertia::render('Audio/Index', [
+            'audios' => $audios,
+            'filters' => $filters,
+            'categories' => \App\Models\Category::all(['id', 'name']),
+            'tags' => \App\Models\Tag::all(['id', 'name']),
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create(): Response
+    {
+        return Inertia::render('Audio/Create');
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->all();
+        $data['type'] = 'audio';
+
+        $audio = $this->manager->create($data);
+
+        return redirect()->route('audios.index')
+            ->with('message', 'تم إنشاء الملف الصوتي بنجاح');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Audio $audio): Response
+    {
+        return Inertia::render('Audio/Show', [
+            'audio' => $audio->load(['tags', 'categories', 'comments.user']),
+        ]);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Audio $audio): Response
+    {
+        return Inertia::render('Audio/Edit', [
+            'audio' => $audio->load(['tags', 'categories']),
+        ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Audio $audio): RedirectResponse
+    {
+        $this->manager->update($audio, $request->all());
+
+        return redirect()->route('audios.show', $audio->id)
+            ->with('message', 'تم تحديث الملف الصوتي بنجاح');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Audio $audio): RedirectResponse
+    {
+        $this->manager->delete($audio);
+
+        return redirect()->route('audios.index')
+            ->with('message', 'تم حذف الملف الصوتي بنجاح');
+    }
+}

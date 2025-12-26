@@ -1,0 +1,146 @@
+<?php
+
+namespace App\Providers;
+
+use App\Models\Activity;
+use App\Models\Audio;
+use App\Models\Book;
+use App\Models\Category;
+use App\Models\Comment;
+use App\Models\Manuscript;
+use App\Models\Tag;
+use App\Models\Video;
+use App\Models\Note;
+use App\Models\Deletion;
+use App\Models\Collection;
+use App\Models\Series;
+use App\Observers\EntityAuditObserver;
+use App\Observers\EntityCacheObserver;
+use App\Observers\EntityLifecycleObserver;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\ServiceProvider;
+
+class AppServiceProvider extends ServiceProvider
+{
+    /**
+     * Register any application services.
+     */
+    public function register(): void
+    {
+        //
+    }
+
+    /**
+     * Bootstrap any application services.
+     */
+    // app/Providers/AppServiceProvider.php
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
+    {
+        Book::flushEventListeners();
+        Video::flushEventListeners();
+        Audio::flushEventListeners();
+        Manuscript::flushEventListeners();
+
+
+        $this->registerMorphMap();
+        $this->registerObservers();
+        $this->registerEventListeners();
+    }
+
+    /**
+     * تسجيل morphMap للعلاقات البوليمورفية
+     * هذا يحل مشكلة العلاقات مع Entity abstract class
+     */
+    protected function registerMorphMap(): void
+    {
+        Relation::morphMap([
+            'book' => Book::class,
+            'video' => Video::class,
+            'audio' => Audio::class,
+            'manuscript' => Manuscript::class,
+            'tag' => Tag::class,
+            'category' => Category::class,
+            // إضافة النماذج الجديدة
+            'activity' => Activity::class,
+            'comment' => Comment::class,
+            'note' => Note::class,
+            'deletion' => Deletion::class,
+            'collection' => Collection::class,
+            'series' => Series::class,
+        ]);
+    }
+
+    /**
+     * تسجيل الـ Observers
+     */
+    protected function registerObservers(): void
+    {
+        // إنشاء instances من الـ observers
+        $lifecycleObserver = app(EntityLifecycleObserver::class);
+        $auditObserver = app(EntityAuditObserver::class);
+        $cacheObserver = app(EntityCacheObserver::class);
+
+        // قائمة الموديلات التي تحتاج observers
+        $entityModels = [
+            Book::class,
+            Video::class,
+            Audio::class,
+            Manuscript::class,
+        ];
+
+        // تسجيل observers لكل موديل
+        foreach ($entityModels as $modelClass) {
+            $modelClass::observe($lifecycleObserver);
+            $modelClass::observe($auditObserver);
+            $modelClass::observe($cacheObserver);
+        }
+
+        // تسجيل cache observer فقط لـ Tag و Category
+        Tag::observe($cacheObserver);
+        Category::observe($cacheObserver);
+    }
+
+    /**
+     * تسجيل Event Listeners لعمليات Sync
+     */
+    protected function registerEventListeners(): void
+    {
+        // مراقبة عمليات sync للعلاقات
+        Event::listen('eloquent.attached: *', function ($event, $data) {
+            if (count($data) >= 3) {
+                $model = $data[0];
+                $relation = $data[1];
+                $ids = $data[2] ?? [];
+
+                $observer = new EntityCacheObserver();
+                $observer->invalidateRelationCaches($model, $relation, ['attached' => $ids]);
+            }
+        });
+
+        Event::listen('eloquent.detached: *', function ($event, $data) {
+            if (count($data) >= 3) {
+                $model = $data[0];
+                $relation = $data[1];
+                $ids = $data[2] ?? [];
+
+                $observer = new EntityCacheObserver();
+                $observer->invalidateRelationCaches($model, $relation, ['detached' => $ids]);
+            }
+        });
+
+        Event::listen('eloquent.synced: *', function ($event, $data) {
+            if (count($data) >= 3) {
+                $model = $data[0];
+                $relation = $data[1];
+                $changes = $data[2] ?? [];
+
+                $observer = new EntityCacheObserver();
+                $observer->invalidateRelationCaches($model, $relation, $changes);
+            }
+        });
+    }
+}
