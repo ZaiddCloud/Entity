@@ -238,6 +238,7 @@ package "مكونات النظام" <<(M,TRAIT_COLOR)>> {
     }
   }
 
+  package "Commands" as COMMANDS <<COMMAND_COLOR>> {
     class "StorageSync" as CMD_SYNC <<(C,COMMAND_COLOR)>> {
       + signature : "storage:sync"
       + handle() : void
