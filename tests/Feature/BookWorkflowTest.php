@@ -52,7 +52,7 @@ class BookWorkflowTest extends TestCase
     {
         Storage::fake('public');
         $user = User::factory()->create();
-        $book = Book::create(['title' => 'Old Title', 'author' => 'Old Author', 'type' => 'book', 'slug' => 'old-title']);
+        $book = Book::factory()->create(['title' => 'Old Title', 'author' => 'Old Author']);
 
         $newCover = UploadedFile::fake()->image('new_cover.jpg');
 
@@ -60,7 +60,7 @@ class BookWorkflowTest extends TestCase
             'title' => 'Updated Title',
             'cover' => $newCover,
         ]);
-
+        $book->refresh();
         $response->assertRedirect(route('books.show', $book));
         
         $book->refresh();

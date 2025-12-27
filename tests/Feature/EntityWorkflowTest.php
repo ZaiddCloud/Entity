@@ -53,17 +53,17 @@ class EntityWorkflowTest extends TestCase
         Storage::fake('public');
         /** @var \App\Models\User $user */
         $user = User::factory()->create();
-        $video = Video::create(['title' => 'Old Video', 'slug' => 'old-video', 'type' => 'video']);
+        $video = Video::factory()->create(['title' => 'Old Video']);
 
         $newCover = UploadedFile::fake()->image('new_cover.jpg');
         
-        $response = $this->actingAs($user)->post(route('videos.update', $video->id), [
+        $response = $this->actingAs($user)->post(route('videos.update', $video), [
             '_method' => 'PUT',
             'title' => 'Updated Video',
             'cover' => $newCover,
         ]);
-
-        $response->assertRedirect(route('videos.show', $video->id));
+        $video->refresh();
+        $response->assertRedirect(route('videos.show', $video));
 
         $video->refresh();
         $this->assertEquals('Updated Video', $video->title);
