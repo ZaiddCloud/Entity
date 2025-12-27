@@ -137,7 +137,7 @@ class BookController extends Controller
 
         $this->manager->update($book, $data);
 
-        return redirect()->route('books.show', $book->id)
+        return redirect()->route('books.show', $book)
             ->with('message', 'تم تحديث الكتاب بنجاح');
     }
 

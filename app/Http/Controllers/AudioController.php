@@ -135,7 +135,7 @@ class AudioController extends Controller
 
         $this->manager->update($audio, $data);
 
-        return redirect()->route('audios.show', $audio->id)
+        return redirect()->route('audios.show', $audio)
             ->with('message', 'تم تحديث الملف الصوتي بنجاح');
     }
 

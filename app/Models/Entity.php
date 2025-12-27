@@ -27,17 +27,19 @@ abstract class Entity extends Model
     {
         parent::boot();
 
-        /*static::creating(function ($entity) {
-            if (empty($entity->slug)) {
+        static::saving(function ($entity) {
+            if (empty($entity->slug) || $entity->isDirty('title')) {
                 $entity->slug = Str::slug($entity->title);
             }
         });
+    }
 
-        static::updating(function ($entity) {
-            if ($entity->isDirty('title')) {
-                $entity->slug = \Illuminate\Support\Str::slug($entity->title);
-            }
-        });*/
+    /**
+     * Use slug instead of UUID for routing.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
     }
 
     /**

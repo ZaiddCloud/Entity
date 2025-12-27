@@ -19,7 +19,6 @@ class ManuscriptFactory extends Factory
         $title = $this->faker->unique()->realText(20);
         return [
             'title' => $title,
-            'slug' => \Illuminate\Support\Str::slug($title, '-', null),
             'author' => $this->faker->name(),
             'century' => $this->faker->numberBetween(10, 19),
             'language' => $this->faker->languageCode(),

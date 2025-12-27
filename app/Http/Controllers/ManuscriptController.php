@@ -135,7 +135,7 @@ class ManuscriptController extends Controller
 
         $this->manager->update($manuscript, $data);
 
-        return redirect()->route('manuscripts.show', $manuscript->id)
+        return redirect()->route('manuscripts.show', $manuscript)
             ->with('message', 'تم تحديث المخطوطة بنجاح');
     }
 

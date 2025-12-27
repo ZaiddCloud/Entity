@@ -19,7 +19,6 @@ class VideoFactory extends Factory
         $title = $this->faker->unique()->realText(20);
         return [
             'title' => $title,
-            'slug' => \Illuminate\Support\Str::slug($title, '-', null),
             'duration' => $this->faker->numberBetween(60, 7200), // seconds
             'format' => $this->faker->randomElement(['mp4', 'mkv', 'avi']),
             'created_at' => now(),

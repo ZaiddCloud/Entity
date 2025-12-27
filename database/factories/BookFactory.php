@@ -15,7 +15,6 @@ class BookFactory extends Factory
         $title = $this->faker->unique()->realText(20);
         return [
             'title' => $title,
-            'slug' => Str::slug($title, '-', null),
             'author' => $this->faker->name(),
             'isbn' => $this->faker->isbn13(),
             'created_at' => now(),

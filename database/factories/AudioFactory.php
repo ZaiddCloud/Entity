@@ -20,7 +20,6 @@ class AudioFactory extends Factory
         $title = $this->faker->unique()->company();
         return [
             'title' => $title,
-            'slug' => Str::slug($title, '-', null),
             'duration' => $this->faker->numberBetween(180, 3600),
             'format' => $this->faker->randomElement(['mp3', 'wav', 'aac']),
             'bitrate' => $this->faker->randomElement([128, 192, 320]),

@@ -135,7 +135,7 @@ class VideoController extends Controller
 
         $this->manager->update($video, $data);
 
-        return redirect()->route('videos.show', $video->id)
+        return redirect()->route('videos.show', $video)
             ->with('message', 'تم تحديث الفيديو بنجاح');
     }
 
