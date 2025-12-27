@@ -3,16 +3,17 @@
 namespace Tests\Unit\Traits;
 
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class HasCommonScopesTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function trait_exists()
     {
         $this->assertTrue(trait_exists(\App\Traits\HasCommonScopes::class));
     }
 
-    /** @test */
+    #[Test]
     public function trait_adds_scopes_methods()
     {
         // تحقق من وجود methods

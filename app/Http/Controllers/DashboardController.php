@@ -6,8 +6,13 @@ use App\Models\Audio;
 use App\Models\Book;
 use App\Models\Manuscript;
 use App\Models\Video;
+use App\Models\Series;
+use App\Models\Collection;
+use App\Models\Category;
+use App\Models\Tag;
+use App\Models\Comment;
+use App\Models\Activity;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -18,24 +23,31 @@ class DashboardController extends Controller
             'videos' => Video::count(),
             'audios' => Audio::count(),
             'manuscripts' => Manuscript::count(),
+            'collections' => Collection::count(),
+            'series' => Series::count(),
+            'categories' => Category::count(),
+            'tags' => Tag::count(),
+            'comments' => Comment::count(),
+            'activities' => Activity::count(),
         ];
 
-        // Fetch 5 most recent across all types
-        // Note: Using union for a simple "Global Recent Activity"
-        $recent = DB::table('books')
-            ->select('id', 'title', 'created_at', DB::raw("'book' as type"))
-            ->union(
-                DB::table('videos')->select('id', 'title', 'created_at', DB::raw("'video' as type"))
-            )
-            ->union(
-                DB::table('audios')->select('id', 'title', 'created_at', DB::raw("'audio' as type"))
-            )
-            ->union(
-                DB::table('manuscripts')->select('id', 'title', 'created_at', DB::raw("'manuscript' as type"))
-            )
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get();
+        // Fetch 5 most recent activities with their related entity and user
+        $recent = Activity::with(['user', 'entity'])
+            ->latest()
+            ->limit(8)
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'id' => $activity->id,
+                    'type' => strtolower(class_basename($activity->entity_type)),
+                    'activity_type' => $activity->activity_type,
+                    'description' => $activity->description,
+                    'entity_title' => $activity->entity?->title ?? 'عنصر محذوف',
+                    'user_name' => $activity->user?->name ?? 'النظام',
+                    'created_at' => $activity->created_at,
+                    'entity_id' => $activity->entity_id,
+                ];
+            });
 
         return Inertia::render('Dashboard', [
             'stats' => $stats,

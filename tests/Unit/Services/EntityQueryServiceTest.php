@@ -8,6 +8,7 @@ use App\Models\Book;
 use App\Models\Video;
 use App\Models\Tag;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 
 class EntityQueryServiceTest extends TestCase
 {
@@ -34,13 +35,13 @@ class EntityQueryServiceTest extends TestCase
         Video::first()->tags()->attach($laravelTag);
     }
 
-    /** @test */
+    #[Test]
     public function service_can_be_instantiated()
     {
         $this->assertInstanceOf(EntityQueryService::class, $this->service);
     }
 
-    /** @test */
+    #[Test]
     public function it_searches_across_all_entities()
     {
         $results = $this->service->search('Laravel');
@@ -50,7 +51,7 @@ class EntityQueryServiceTest extends TestCase
         $this->assertTrue($results->contains('title', 'Laravel Tutorial'));
     }
 
-    /** @test */
+    #[Test]
     public function it_filters_by_entity_type()
     {
         $books = $this->service->filter(['type' => 'book']);
@@ -59,7 +60,7 @@ class EntityQueryServiceTest extends TestCase
         $this->assertContainsOnlyInstancesOf(Book::class, $books);
     }
 
-    /** @test */
+    #[Test]
     public function it_filters_by_multiple_criteria()
     {
         $results = $this->service->filter([
@@ -71,7 +72,7 @@ class EntityQueryServiceTest extends TestCase
         $this->assertEquals('PHP Advanced', $results->first()->title);
     }
 
-    /** @test */
+    #[Test]
     public function it_paginates_results()
     {
         $paginator = $this->service->paginate(1);
@@ -81,7 +82,7 @@ class EntityQueryServiceTest extends TestCase
         $this->assertEquals(4, $paginator->total()); // جميع الـ entities
     }
 
-    /** @test */
+    #[Test]
     public function it_searches_by_tag()
     {
         $results = $this->service->searchByTag('PHP');
@@ -90,7 +91,7 @@ class EntityQueryServiceTest extends TestCase
         $this->assertEquals('Laravel Book', $results->first()->title);
     }
 
-    /** @test */
+    #[Test]
     public function it_gets_recent_entities()
     {
         $recent = $this->service->recent(7); // آخر 7 أيام
@@ -98,7 +99,7 @@ class EntityQueryServiceTest extends TestCase
         $this->assertCount(4, $recent); // جميعها حديثة
     }
 
-    /** @test */
+    #[Test]
     public function it_gets_popular_entities()
     {
         $popularBook = Book::first();

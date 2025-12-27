@@ -8,6 +8,7 @@ use App\Models\Book;
 use App\Models\Video;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 
 class EntityManagerServiceTest extends TestCase
 {
@@ -21,13 +22,13 @@ class EntityManagerServiceTest extends TestCase
         $this->service = new EntityManagerService();
     }
 
-    /** @test */
+    #[Test]
     public function service_can_be_instantiated()
     {
         $this->assertInstanceOf(EntityManagerService::class, $this->service);
     }
 
-    /** @test */
+    #[Test]
     public function it_creates_book_entity_with_valid_data()
     {
         // RED: Service غير موجود أو ليس لديه create method
@@ -46,7 +47,7 @@ class EntityManagerServiceTest extends TestCase
         $this->assertEquals('Book Author', $entity->author);
     }
 
-    /** @test */
+    #[Test]
     public function it_creates_video_entity()
     {
         $data = [
@@ -63,7 +64,7 @@ class EntityManagerServiceTest extends TestCase
         $this->assertEquals(3600, $entity->duration);
     }
 
-    /** @test */
+    #[Test]
     public function it_throws_invalid_argument_for_unhandled_type()
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -78,7 +79,7 @@ class EntityManagerServiceTest extends TestCase
     }
 
     // في tests/Unit/Services/EntityManagerServiceTest.php
-    /** @test */
+    #[Test]
     public function it_throws_validation_exception_for_invalid_entity_type()
     {
         $this->expectException(ValidationException::class);
@@ -91,7 +92,7 @@ class EntityManagerServiceTest extends TestCase
         $this->service->create($data);
     }
 
-    /** @test */
+    #[Test]
     public function it_updates_existing_entity()
     {
         $book = Book::create([
@@ -108,7 +109,7 @@ class EntityManagerServiceTest extends TestCase
         $this->assertEquals('updated-title', $book->fresh()->slug);
     }
 
-    /** @test */
+    #[Test]
     public function it_deletes_entity_softly()
     {
         $book = Book::create([
@@ -122,7 +123,7 @@ class EntityManagerServiceTest extends TestCase
         $this->assertSoftDeleted($book);
     }
 
-    /** @test */
+    #[Test]
     public function it_restores_soft_deleted_entity()
     {
         $book = Book::create([
@@ -138,7 +139,7 @@ class EntityManagerServiceTest extends TestCase
         $this->assertFalse($book->fresh()->trashed());
     }
 
-    /** @test */
+    #[Test]
     public function it_updates_slug_when_title_changes()
     {
         $book = Book::create([
@@ -156,7 +157,7 @@ class EntityManagerServiceTest extends TestCase
     }
 
     // tests/Unit/Services/EntityManagerServiceTest.php - عدّل آخر test
-    /** @test */
+    #[Test]
     public function it_provides_validation_messages()
     {
         try {

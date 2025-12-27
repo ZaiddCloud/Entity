@@ -10,6 +10,7 @@ use App\Models\Video;
 use App\Models\Tag;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\Test;
 
 class EntityRelationServiceTest extends TestCase
 {
@@ -27,7 +28,7 @@ class EntityRelationServiceTest extends TestCase
         $this->actingAs($user);
     }
 
-    /** @test */
+    #[Test]
     public function it_attaches_tags_to_entity()
     {
         $book = Book::create(['title' => 'Test Book', 'author' => 'Author']);
@@ -44,7 +45,7 @@ class EntityRelationServiceTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function it_detaches_tags_from_entity()
     {
         $book = Book::create(['title' => 'Test Book', 'author' => 'Author']);
@@ -60,7 +61,7 @@ class EntityRelationServiceTest extends TestCase
         $this->assertEquals('Laravel', $book->tags->first()->name);
     }
 
-    /** @test */
+    #[Test]
     public function it_syncs_tags_for_entity()
     {
         $book = Book::create(['title' => 'Test Book', 'author' => 'Author']);
@@ -80,15 +81,7 @@ class EntityRelationServiceTest extends TestCase
         );
     }
 
-    /** @test */
-    // tests/Unit/Services/EntityRelationServiceTest.php
-
-    /** @test */
-// tests/Unit/Services/EntityRelationServiceTest.php
-    /** @test */
-    // tests/Unit/Services/EntityRelationServiceTest.php
-
-    /** @test */
+    #[Test]
     public function it_attaches_categories_to_entity()
     {
         // 1. Arrange
@@ -104,7 +97,7 @@ class EntityRelationServiceTest extends TestCase
         // 3. Assert
         $this->assertCount(3, $book->fresh()->categories);
     }
-    /** @test */
+    #[Test]
     public function it_validates_tag_ids_before_attaching()
     {
         $book = Book::create(['title' => 'Test Book', 'author' => 'Author']);
@@ -115,7 +108,7 @@ class EntityRelationServiceTest extends TestCase
         $this->service->attachTags($book, [999999]);
     }
 
-    /** @test */
+    #[Test]
     public function it_attaches_tags_by_name_and_creates_missing_ones()
     {
         $book = Book::create(['title' => 'Test Book', 'author' => 'Author']);
@@ -130,7 +123,7 @@ class EntityRelationServiceTest extends TestCase
         $this->assertDatabaseHas('tags', ['name' => 'New Tag 2']);
     }
 
-    /** @test */
+    #[Test]
     public function it_finds_common_tags_between_entities()
     {
         $book1 = Book::create(['title' => 'Book 1', 'author' => 'Author']);
@@ -153,7 +146,7 @@ class EntityRelationServiceTest extends TestCase
         $this->assertContains('PHP', $tagNames);
     }
 
-    /** @test */
+    #[Test]
     public function it_copies_tags_from_one_entity_to_another()
     {
         $sourceBook = Book::create(['title' => 'Source Book', 'author' => 'Author']);

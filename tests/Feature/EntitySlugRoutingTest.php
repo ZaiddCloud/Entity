@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Video;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class EntitySlugRoutingTest extends TestCase
 {
@@ -22,7 +23,7 @@ class EntitySlugRoutingTest extends TestCase
         $this->user = User::factory()->create();
     }
 
-    /** @test */
+    #[Test]
     public function book_url_contains_slug_instead_of_uuid()
     {
         $book = Book::factory()->create(['title' => 'My Test Book']);
@@ -37,7 +38,7 @@ class EntitySlugRoutingTest extends TestCase
             ->assertSee('My Test Book');
     }
 
-    /** @test */
+    #[Test]
     public function audio_url_contains_slug_instead_of_uuid()
     {
         $audio = Audio::factory()->create(['title' => 'My Test Audio']);
@@ -52,7 +53,7 @@ class EntitySlugRoutingTest extends TestCase
             ->assertSee('My Test Audio');
     }
 
-    /** @test */
+    #[Test]
     public function video_url_contains_slug_instead_of_uuid()
     {
         $video = Video::factory()->create(['title' => 'My Test Video']);
@@ -67,7 +68,7 @@ class EntitySlugRoutingTest extends TestCase
             ->assertSee('My Test Video');
     }
 
-    /** @test */
+    #[Test]
     public function manuscript_url_contains_slug_instead_of_uuid()
     {
         $manuscript = Manuscript::factory()->create(['title' => 'My Test Manuscript']);
@@ -82,7 +83,7 @@ class EntitySlugRoutingTest extends TestCase
             ->assertSee('My Test Manuscript');
     }
 
-    /** @test */
+    #[Test]
     public function slug_is_automatically_generated_on_creation()
     {
         $book = Book::create([
@@ -94,7 +95,7 @@ class EntitySlugRoutingTest extends TestCase
         $this->assertEquals('automatic-slug-test', $book->slug);
     }
 
-    /** @test */
+    #[Test]
     public function slug_is_automatically_updated_when_title_changes()
     {
         $book = Book::factory()->create(['title' => 'Old Title']);

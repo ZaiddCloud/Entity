@@ -10,6 +10,7 @@ use App\Models\Tag;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Support\Facades\Schema;
+use PHPUnit\Framework\Attributes\Test;
 
 // نموذج تجريبي يستخدم جداول منفصلة
 class TestEntity extends Model
@@ -74,7 +75,7 @@ class HasPolymorphicRelationsTest extends TestCase
         parent::tearDown();
     }*/
 
-    /** @test */
+    #[Test]
     public function trait_adds_polymorphic_methods()
     {
         $model = new TestEntity();
@@ -84,7 +85,7 @@ class HasPolymorphicRelationsTest extends TestCase
         $this->assertTrue(method_exists($model, 'tags'));
     }
 
-    /** @test */
+    #[Test]
     public function tags_relationship_works()
     {
         // إنشاء tag أولاً
@@ -105,7 +106,7 @@ class HasPolymorphicRelationsTest extends TestCase
         $this->assertEquals('php-testing', $entity->tags->first()->slug);
     }
 
-    /** @test */
+    #[Test]
     public function morph_map_works_for_tags()
     {
         // Arrange

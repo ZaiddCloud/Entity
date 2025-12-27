@@ -14,6 +14,7 @@ use App\Models\Series;
 use App\Models\Tag;
 use App\Models\User;
 use App\Models\Video;
+use PHPUnit\Framework\Attributes\Test;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -22,7 +23,7 @@ class ConsoleCommandsTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function seed_realistic_data_command_populates_all_relationships_exhaustively()
     {
         // 1. Run the command
@@ -91,7 +92,7 @@ class ConsoleCommandsTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function storage_sync_command_scans_and_updates_database_records()
     {
         Storage::fake('public');

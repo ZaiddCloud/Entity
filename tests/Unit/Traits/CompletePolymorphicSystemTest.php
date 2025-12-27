@@ -17,6 +17,7 @@ use App\Models\Series;
 use App\Models\Tag;
 use App\Models\Category;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 
 class CompletePolymorphicSystemTest extends TestCase
 {
@@ -30,7 +31,7 @@ class CompletePolymorphicSystemTest extends TestCase
         $this->user = \App\Models\User::factory()->create();
     }
 
-    /** @test */
+    #[Test]
     public function entity_has_all_polymorphic_relationships()
     {
         $book = Book::create(['title' => 'Test Book', 'author' => 'Author']);
@@ -45,7 +46,7 @@ class CompletePolymorphicSystemTest extends TestCase
         $this->assertTrue(method_exists($book, 'series'));
     }
 
-    /** @test */
+    #[Test]
     public function one_to_many_polymorphic_relationships_work()
     {
         $video = Video::create(['title' => 'Test Video', 'duration' => 120]);
@@ -88,7 +89,7 @@ class CompletePolymorphicSystemTest extends TestCase
         $this->assertCount(1, $video->notes);
     }
 
-    /** @test */
+    #[Test]
     public function many_to_many_polymorphic_relationships_work()
     {
         $audio = Audio::create(['title' => 'Test Audio', 'duration' => 180]);
@@ -108,7 +109,7 @@ class CompletePolymorphicSystemTest extends TestCase
         $this->assertEquals('Entertainment', $audio->categories->first()->name);
     }
 
-    /** @test */
+    #[Test]
     public function collection_and_series_relationships_work()
     {
         $book = Book::create(['title' => 'Book 1', 'author' => 'Author 1']);
@@ -148,7 +149,7 @@ class CompletePolymorphicSystemTest extends TestCase
         $this->assertEquals('Video 1', $series->entities[1]->title);
     }
 
-    /** @test */
+    #[Test]
     public function deletion_records_work_with_soft_deletes()
     {
         $manuscript = Manuscript::create([
@@ -173,7 +174,7 @@ class CompletePolymorphicSystemTest extends TestCase
         $this->assertSoftDeleted($manuscript);
     }
 
-    /** @test */
+    #[Test]
     public function all_entity_types_support_same_relationships()
     {
         $entities = [
@@ -208,7 +209,7 @@ class CompletePolymorphicSystemTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function morph_map_works_correctly_for_all_types()
     {
         // التحقق من أن morphMap يعمل
@@ -226,7 +227,7 @@ class CompletePolymorphicSystemTest extends TestCase
         $this->assertEquals($book->id, $activity->entity->id);
     }
 
-    /** @test */
+    #[Test]
     public function complex_scenarios_work()
     {
         // سيناريو معقد: كتاب مع tags، activities، وفي collection

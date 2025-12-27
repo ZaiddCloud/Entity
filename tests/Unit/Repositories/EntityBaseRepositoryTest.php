@@ -11,6 +11,7 @@ use App\Models\Manuscript;
 use App\Models\Tag;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
+use PHPUnit\Framework\Attributes\Test;
 
 class EntityBaseRepositoryTest extends TestCase
 {
@@ -24,13 +25,13 @@ class EntityBaseRepositoryTest extends TestCase
         $this->repository = new EntityBaseRepository();
     }
 
-    /** @test */
+    #[Test]
     public function repository_can_be_instantiated()
     {
         $this->assertInstanceOf(EntityBaseRepository::class, $this->repository);
     }
 
-    /** @test */
+    #[Test]
     public function it_finds_entity_by_id()
     {
         $book = Book::create(['title' => 'Test Book', 'author' => 'Author']);
@@ -43,7 +44,7 @@ class EntityBaseRepositoryTest extends TestCase
         $this->assertEquals('Test Book', $found->title);
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_null_when_entity_not_found_by_id()
     {
         $found = $this->repository->find(999999);
@@ -51,7 +52,7 @@ class EntityBaseRepositoryTest extends TestCase
         $this->assertNull($found);
     }
 
-    /** @test */
+    #[Test]
     public function it_finds_entity_by_slug()
     {
         $book = Book::create([
@@ -67,7 +68,7 @@ class EntityBaseRepositoryTest extends TestCase
         $this->assertEquals('Laravel Book', $found->title);
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_null_when_entity_not_found_by_slug()
     {
         $found = $this->repository->findBySlug('non-existent-slug');
@@ -75,7 +76,7 @@ class EntityBaseRepositoryTest extends TestCase
         $this->assertNull($found);
     }
 
-    /** @test */
+    #[Test]
     public function it_finds_entity_by_type_and_id()
     {
         $book = Book::create(['title' => 'Book 1', 'author' => 'Author']);
@@ -90,7 +91,7 @@ class EntityBaseRepositoryTest extends TestCase
         $this->assertEquals($video->id, $foundVideo->id);
     }
 
-    /** @test */
+    #[Test]
     public function it_finds_entity_with_relations()
     {
         $book = Book::create(['title' => 'Book with Tags', 'author' => 'Author']);
@@ -104,7 +105,7 @@ class EntityBaseRepositoryTest extends TestCase
         $this->assertEquals('PHP', $found->tags->first()->name);
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_all_entities()
     {
         Book::create(['title' => 'Book 1', 'author' => 'Author 1']);
@@ -122,7 +123,7 @@ class EntityBaseRepositoryTest extends TestCase
         $this->assertEquals(1, $videoCount);
     }
 
-    /** @test */
+    #[Test]
     public function it_filters_entities_by_type()
     {
         Book::create(['title' => 'Book 1', 'author' => 'Author']);
@@ -140,7 +141,7 @@ class EntityBaseRepositoryTest extends TestCase
         $this->assertContainsOnlyInstancesOf(Video::class, $videos);
     }
 
-    /** @test */
+    #[Test]
     public function it_paginates_entities()
     {
         // إنشاء 15 entity
@@ -157,7 +158,7 @@ class EntityBaseRepositoryTest extends TestCase
         $this->assertCount(10, $paginator->items());
     }
 
-    /** @test */
+    #[Test]
     public function it_creates_entity()
     {
         $data = [
@@ -178,7 +179,7 @@ class EntityBaseRepositoryTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function it_updates_entity()
     {
         $book = Book::create(['title' => 'Old Title', 'author' => 'Old Author']);
@@ -196,7 +197,7 @@ class EntityBaseRepositoryTest extends TestCase
         $this->assertEquals('updated-title', $book->slug);
     }
 
-    /** @test */
+    #[Test]
     public function it_deletes_entity()
     {
         $book = Book::create(['title' => 'To Delete', 'author' => 'Author']);
@@ -207,7 +208,7 @@ class EntityBaseRepositoryTest extends TestCase
         $this->assertSoftDeleted($book);
     }
 
-    /** @test */
+    #[Test]
     public function it_restores_deleted_entity()
     {
         $book = Book::create(['title' => 'To Restore', 'author' => 'Author']);

@@ -13,6 +13,7 @@ use App\Models\Category;
 use App\Models\Tag;
 use App\Models\Collection;
 use Inertia\Testing\AssertableInertia as Assert;
+use PHPUnit\Framework\Attributes\Test;
 
 class InertiaResponseTest extends TestCase
 {
@@ -25,49 +26,49 @@ class InertiaResponseTest extends TestCase
         $this->actingAs($user);
     }
 
-    /** @test */
+    #[Test]
     public function it_renders_books_index_page()
     {
         Book::factory()->count(3)->create();
         $this->get('/books')->assertInertia(fn (Assert $page) => $page->component('Books/Index'));
     }
 
-    /** @test */
+    #[Test]
     public function it_renders_audio_index_page()
     {
         Audio::factory()->count(3)->create();
         $this->get('/audios')->assertInertia(fn (Assert $page) => $page->component('Audio/Index'));
     }
 
-    /** @test */
+    #[Test]
     public function it_renders_videos_index_page()
     {
         Video::factory()->count(3)->create();
         $this->get('/videos')->assertInertia(fn (Assert $page) => $page->component('Videos/Index'));
     }
 
-    /** @test */
+    #[Test]
     public function it_renders_manuscripts_index_page()
     {
         Manuscript::factory()->count(3)->create();
         $this->get('/manuscripts')->assertInertia(fn (Assert $page) => $page->component('Manuscripts/Index'));
     }
 
-    /** @test */
+    #[Test]
     public function it_renders_categories_index_page()
     {
         Category::factory()->count(3)->create();
         $this->get('/categories')->assertInertia(fn (Assert $page) => $page->component('Categories/Index'));
     }
 
-    /** @test */
+    #[Test]
     public function it_renders_tags_index_page()
     {
         Tag::factory()->count(3)->create();
         $this->get('/tags')->assertInertia(fn (Assert $page) => $page->component('Tags/Index'));
     }
 
-    /** @test */
+    #[Test]
     public function it_renders_collections_index_page()
     {
         Collection::factory()->count(3)->create();
@@ -78,7 +79,7 @@ class InertiaResponseTest extends TestCase
         $response->assertInertia(fn (Assert $page) => $page->component('Collections/Index'));
     }
 
-    /** @test */
+    #[Test]
     public function it_renders_series_index_page()
     {
         \App\Models\Series::factory()->count(3)->create();
