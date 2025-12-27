@@ -84,7 +84,7 @@ const submit = () => {
                             </div>
 
                             <div class="flex items-center justify-end">
-                                <Link :href="route('manuscripts.show', manuscript.id)" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 underline decoration-none mr-4">
+                                <Link :href="route('manuscripts.show', manuscript.slug)" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 underline decoration-none mr-4">
                                     إلغاء
                                 </Link>
                                 <button

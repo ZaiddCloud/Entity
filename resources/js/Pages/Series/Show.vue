@@ -60,7 +60,7 @@ defineProps({
                                     <h4 class="font-semibold mb-4 border-b pb-2">الكتب</h4>
                                     <ul class="space-y-2">
                                         <li v-for="book in series.books" :key="book.id">
-                                            <Link :href="route('books.show', book.id)" class="text-sm text-indigo-600 hover:text-indigo-900 dark:text-indigo-400">{{ book.title }}</Link>
+                                            <Link :href="route('books.show', book.slug)" class="text-sm text-indigo-600 hover:text-indigo-900 dark:text-indigo-400">{{ book.title }}</Link>
                                         </li>
                                         <li v-if="!series.books.length" class="text-xs text-gray-400 italic">لا يوجد</li>
                                     </ul>
@@ -69,7 +69,7 @@ defineProps({
                                     <h4 class="font-semibold mb-4 border-b pb-2">الصوتيات</h4>
                                     <ul class="space-y-2">
                                         <li v-for="audio in series.audio" :key="audio.id">
-                                            <Link :href="route('audio.show', audio.id)" class="text-sm text-indigo-600 hover:text-indigo-900 dark:text-indigo-400">{{ audio.title }}</Link>
+                                            <Link :href="route('audios.show', audio.slug)" class="text-sm text-indigo-600 hover:text-indigo-900 dark:text-indigo-400">{{ audio.title }}</Link>
                                         </li>
                                         <li v-if="!series.audio.length" class="text-xs text-gray-400 italic">لا يوجد</li>
                                     </ul>
@@ -78,7 +78,7 @@ defineProps({
                                     <h4 class="font-semibold mb-4 border-b pb-2">المرئيات</h4>
                                     <ul class="space-y-2">
                                         <li v-for="video in series.videos" :key="video.id">
-                                            <Link :href="route('videos.show', video.id)" class="text-sm text-indigo-600 hover:text-indigo-900 dark:text-indigo-400">{{ video.title }}</Link>
+                                            <Link :href="route('videos.show', video.slug)" class="text-sm text-indigo-600 hover:text-indigo-900 dark:text-indigo-400">{{ video.title }}</Link>
                                         </li>
                                         <li v-if="!series.videos.length" class="text-xs text-gray-400 italic">لا يوجد</li>
                                     </ul>
@@ -87,7 +87,7 @@ defineProps({
                                     <h4 class="font-semibold mb-4 border-b pb-2">المخطوطات</h4>
                                     <ul class="space-y-2">
                                         <li v-for="manuscript in series.manuscripts" :key="manuscript.id">
-                                            <Link :href="route('manuscripts.show', manuscript.id)" class="text-sm text-indigo-600 hover:text-indigo-900 dark:text-indigo-400">{{ manuscript.title }}</Link>
+                                            <Link :href="route('manuscripts.show', manuscript.slug)" class="text-sm text-indigo-600 hover:text-indigo-900 dark:text-indigo-400">{{ manuscript.title }}</Link>
                                         </li>
                                         <li v-if="!series.manuscripts.length" class="text-xs text-gray-400 italic">لا يوجد</li>
                                     </ul>

@@ -62,7 +62,7 @@ defineProps({
                                     <h4 class="font-semibold mb-2">الكتب</h4>
                                     <ul class="list-disc list-inside">
                                         <li v-for="book in tag.books" :key="book.id">
-                                            <Link :href="route('books.show', book.id)" class="text-indigo-600 hover:text-indigo-900">{{ book.title }}</Link>
+                                            <Link :href="route('books.show', book.slug)" class="text-indigo-600 hover:text-indigo-900">{{ book.title }}</Link>
                                         </li>
                                     </ul>
                                 </div>
@@ -70,7 +70,7 @@ defineProps({
                                     <h4 class="font-semibold mb-2">الصوتيات</h4>
                                     <ul class="list-disc list-inside">
                                         <li v-for="audio in tag.audio" :key="audio.id">
-                                            <Link :href="route('audio.show', audio.id)" class="text-indigo-600 hover:text-indigo-900">{{ audio.title }}</Link>
+                                            <Link :href="route('audios.show', audio.slug)" class="text-indigo-600 hover:text-indigo-900">{{ audio.title }}</Link>
                                         </li>
                                     </ul>
                                 </div>
@@ -78,7 +78,7 @@ defineProps({
                                     <h4 class="font-semibold mb-2">المرئيات</h4>
                                     <ul class="list-disc list-inside">
                                         <li v-for="video in tag.videos" :key="video.id">
-                                            <Link :href="route('videos.show', video.id)" class="text-indigo-600 hover:text-indigo-900">{{ video.title }}</Link>
+                                            <Link :href="route('videos.show', video.slug)" class="text-indigo-600 hover:text-indigo-900">{{ video.title }}</Link>
                                         </li>
                                     </ul>
                                 </div>
