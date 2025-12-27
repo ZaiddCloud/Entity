@@ -1,0 +1,214 @@
+@startuml
+
+' ========== إعدادات أساسية ==========
+skinparam defaultFontName "Arial"
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam backgroundColor #F9F9F9
+skinparam arrowColor #333333
+skinparam arrowFontSize 13
+
+title "نظام الاختبارات المتكامل - TDD Approach (نسخة محدثة)"
+
+' ========== Unit Tests ==========
+package "Unit Tests" {
+  package "Entity Tests" {
+    class "EntityTest" {
+      + test_entity_creation_with_uuid()
+      + test_required_properties()
+      + test_slug_generation()
+      + test_soft_delete()
+      + test_timestamps()
+      + test_polymorphic_type()
+    }
+    
+    class "ConcreteModelsTest" {
+      + test_book_inherits_entity()
+      + test_book_specific_properties()
+      + test_manuscript_validation()
+      + test_audio_duration_format()
+      + test_video_metadata()
+    }
+  }
+  
+  package "System Commands Tests" {
+    class "StorageSyncCommandTest" {
+      + test_command_scans_directories()
+      + test_command_creates_missing_directories()
+      + test_command_syncs_new_files_to_db()
+      + test_command_avoids_duplicate_sync()
+      + test_command_force_flag_updates_records()
+    }
+  }
+
+  package "Traits Tests" {
+    class "HasPolymorphicRelationsTest" {
+      + test_morph_one_relation()
+      + test_morph_many_relation()
+      + test_morph_to_many_relation()
+      + test_relation_loading()
+      + test_eager_loading()
+    }
+    
+    class "HasCommonScopesTest" {
+      + test_active_scope()
+      + test_recent_scope()
+      + test_popular_scope()
+    }
+    
+    class "HasEntityEventsTest" {
+      + test_creating_event()
+      + test_created_event()
+      + test_updating_event()
+      + test_updated_event()
+    }
+  }
+  
+  package "Services Unit Tests" {
+    class "EntityManagerServiceTest" {
+      + test_create_entity()
+      + test_update_entity()
+      + test_delete_entity()
+      + test_restore_entity()
+    }
+    
+    class "EntityQueryServiceTest" {
+      + test_search_functionality()
+      + test_filter_by_type()
+      + test_pagination()
+    }
+  }
+  
+  package "Repositories Unit Tests" {
+    class "EntityBaseRepositoryTest" {
+      + test_find_by_type()
+      + test_find_by_slug()
+      + test_find_by_uuid()
+      + test_find_with_relations()
+    }
+    
+    class "EntityStatisticsRepositoryTest" {
+      + test_get_view_statistics()
+      + test_get_engagement_stats()
+    }
+  }
+}
+
+' ========== Feature Tests ==========
+package "Feature Tests" {
+  package "Auth & Security Tests" {
+    class "LoginFlowTest" {
+      + test_login_page_renders_in_arabic()
+      + test_successful_login_redirects_to_dashboard()
+      + test_unauthenticated_user_cannot_access_dashboard()
+      + test_inertia_shares_authenticated_user_data()
+    }
+    
+    class "SecurityValidationTest" {
+      + test_guests_cannot_access_protected_routes()
+      + test_csrf_protection_is_active()
+    }
+  }
+
+  package "Polymorphic Relations Tests" {
+    class "ActivityPolymorphicTest" {
+      + test_activity_logging_for_all_entities()
+      + test_activity_user_association()
+      + test_activity_timeline()
+    }
+    
+    class "CommentPolymorphicTest" {
+      + test_comment_creation()
+      + test_comment_threading()
+    }
+    
+    class "ReviewPolymorphicTest" {
+      + test_review_creation()
+      + test_review_average_calculation()
+    }
+    
+    class "TaggingSystemTest" {
+      + test_tag_creation_and_assignment()
+      + test_polymorphic_tag_attachments()
+    }
+    
+    class "CategorizationTest" {
+      + test_category_hierarchy()
+      + test_polymorphic_categorization()
+    }
+    
+    class "CollectionTest" {
+      + test_collection_creation()
+      + test_add_to_collection()
+    }
+    
+    class "DeletionTest" {
+      + test_soft_deletion()
+      + test_restoration()
+    }
+    
+    class "ViewTest" {
+      + test_view_tracking()
+      + test_unique_views()
+    }
+  }
+  
+  package "Acceptance & Integration" {
+    class "InertiaResponseTest" {
+      + test_dashboard_renders_with_correct_props()
+      + test_resource_pages_render_correctly()
+    }
+  }
+}
+
+' ========== Test Support Infrastructure ==========
+package "Test Support" {
+  package "Factories" {
+    class "EntityFactory" {
+      + definition() : array (UUID based)
+      + book() : Book
+      + video() : Video
+      + audio() : Audio
+      + manuscript() : Manuscript
+    }
+    
+    class "UserFactory" {
+      + definition() : array (UUID based)
+      + admin() : User
+    }
+  }
+  
+  package "Helpers" {
+    class "EntityAssertions" {
+      + assertEntityHasRequiredProperties($entity)
+      + assertPolymorphicRelationshipWorks()
+      + assertUuidIsCorrect($id)
+    }
+    
+    class "APITestHelpers" {
+      + actingAsUser($user)
+      + assertInertiaPropertyExists($response, $prop)
+    }
+  }
+}
+
+' ========== الملاحظات التوضيحية ==========
+note top of "Unit Tests"
+<b>تحديثات الاختبارات الأخيرة:</b>
+- التأكد من أن جميع المعرفات هي <b>UUID</b>.
+- إضافة اختبارات شاملة لأمر <b>storage:sync</b>.
+- اختبار تعريب واجهة الدخول وتوجيهها للداشبورد.
+end note
+
+note right of "Feature Tests"
+<b>تكامل النظام:</b>
+نختبر هنا كيفية تفاعل ميزة المزامنة
+مع قاعدة البيانات وكيفية مشاركة
+بيانات المستخدم عبر Inertia.
+end note
+
+' ========== العلاقات بين المستويات ==========
+"Unit Tests" --> "Feature Tests"
+"Feature Tests" --> "Acceptance Tests"
+
+@enduml

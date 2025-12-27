@@ -1,0 +1,376 @@
+@startuml
+' ============================================
+' نظام Entity المتكامل - نسخة شاملة محدثة
+' ============================================
+
+' ========== إعدادات أساسية ==========
+skinparam defaultFontName "Arial"
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam backgroundColor #F9F9F9
+skinparam arrowColor #333333
+skinparam arrowFontSize 13
+skinparam linetype ortho
+
+title "نظام Entity المتكامل - الهندسة المعمارية الكاملة"
+
+' ========== ألوان ==========
+!define ENTITY_COLOR    #FFFFFF
+!define TRAIT_COLOR     #E3F2FD
+!define SERVICE_COLOR   #FFEBEE
+!define OBSERVER_COLOR  #F3E5F5
+!define REPO_COLOR      #E8F5E8
+!define DB_ENTITY_COLOR #ADD8E6
+!define DB_RELATION_COLOR #90EE90
+!define PROVIDER_COLOR  #FFF3E0
+!define COMMAND_COLOR   #E1BEE7
+
+' ========== Entity المركزية ==========
+class "Entity <<abstract>>" as ENTITY <<(E,ENTITY_COLOR)>> {
+  --
+  <b>الخصائص المشتركة لكل Entity:</b>
+  
+  <color:green>← الإجبارية (UUID) →</color>
+  + id : uuid <<PK>>
+  + title : string
+  + slug : string
+  + created_at : timestamp
+  + updated_at : timestamp
+
+  <color:orange>← الاختيارية →</color>
+  + deleted_at : timestamp? <<soft delete>>
+  
+  --
+  <b><color:#1976D2>العمليات والخصائص المشتركة:</color></b>
+  + getTypeAttribute() : string
+  + getCached(id) : static
+  + getCachedWithRelations() : static
+  + getCachedStats() : array
+  --
+  <b><color:#1976D2>العلاقات البوليمورفية المشتركة:</color></b>
+  --
+  + activities() : MorphMany
+  + comments() : MorphMany
+  + reviews() : MorphMany
+  + favourites() : MorphMany
+  + notes() : MorphMany
+  + deletions() : MorphMany
+  + searchTerms() : MorphMany
+  + views() : MorphMany
+  
+  + tags() : MorphToMany
+  + categories() : MorphToMany
+  + collections() : MorphToMany
+  + series() : MorphToMany
+}
+
+' ========== باكيج 1: العلاقات البوليمورفية (كاملة) ==========
+package "العلاقات البوليمورفية" <<(R,DB_RELATION_COLOR)>> {
+  
+  entity "Activity" as ACTIVITY <<table>> {
+    *id : uuid <<PK>>
+    --
+    *entity_id : uuid <<FK>>
+    *entity_type : string
+    *activity_type : string
+    *user_id : uuid <<FK, nullable>>
+    description : text
+    created_at : timestamp
+  }
+  
+  entity "Comment" as COMMENT <<table>> {
+    *id : uuid <<PK>>
+    --
+    *entity_id : uuid <<FK>>
+    *entity_type : string
+    *content : text
+    *user_id : uuid <<FK>>
+    parent_id : uuid <<self-ref>>
+    created_at : timestamp
+  }
+  
+  entity "Review" as REVIEW <<table>> {
+    *id : uuid <<PK>>
+    --
+    *entity_id : uuid <<FK>>
+    *entity_type : string
+    *rating : integer
+    *title : string
+    *user_id : uuid <<FK>>
+    content : text
+    created_at : timestamp
+  }
+  
+  entity "Favourite" as FAVOURITE <<table>> {
+    *id : uuid <<PK>>
+    --
+    *entity_id : uuid <<FK>>
+    *entity_type : string
+    *user_id : uuid <<FK>>
+    created_at : timestamp
+  }
+  
+  entity "Note" as NOTE <<table>> {
+    *id : uuid <<PK>>
+    --
+    *entity_id : uuid
+    *entity_type : string
+    *content : text
+    *user_id : uuid <<FK>>
+    created_at : timestamp
+    updated_at : timestamp
+  }
+  
+  entity "Deletion" as DELETION <<table>> {
+    *id : uuid <<PK>>
+    --
+    *entity_id : uuid
+    *entity_type : string
+    *user_id : uuid <<FK, nullable>>
+    reason : text
+    deleted_at : timestamp
+  }
+  
+  entity "SearchTerm" as SEARCH_TERM <<table>> {
+    *id : uuid <<PK>>
+    --
+    *entity_id : uuid
+    *entity_type : string
+    *term : string
+    count : integer
+    last_searched : timestamp
+  }
+  
+  entity "View" as VIEW <<table>> {
+    *id : uuid <<PK>>
+    --
+    *entity_id : uuid
+    *entity_type : string
+    *user_id : uuid <<FK>>
+    ip_address : string
+    viewed_at : timestamp
+  }
+  
+  entity "Tag" as TAG <<table>> {
+    *id : uuid <<PK>>
+    --
+    *name : string
+    slug : string <<unique>>
+    type : string
+  }
+  
+  entity "Category" as CATEGORY <<table>> {
+    *id : uuid <<PK>>
+    --
+    *name : string
+    slug : string <<unique>>
+    description : text
+    parent_id : uuid <<self-ref>>
+  }
+  
+  entity "Collection" as COLLECTION {
+    *id : uuid <<PK>>
+    --
+    *name : string
+    *user_id : uuid <<FK>>
+    description : text
+    is_public : boolean
+  }
+  
+  entity "Series" as SERIES {
+    *id : uuid <<PK>>
+    --
+    *title : string
+    description : text
+    order_column : integer
+  }
+  
+  entity "seriables" as Seriable {
+    *entity_id : uuid
+    *entity_type : string
+    *series_id : uuid <<FK>>
+    position : integer
+  }
+  
+  entity "collectables" as Collectable {
+    *entity_id : uuid
+    *entity_type : string
+    *collection_id : uuid <<FK>>
+    order_column : integer
+    added_at : timestamp
+  }
+  
+  entity "categorizables" as Categorizable {
+    *entity_id : uuid
+    *entity_type : string
+    *category_id : uuid <<FK>>
+    created_at : timestamp
+  }
+  
+  entity "taggables" as Taggable {
+    *entity_id : uuid
+    *entity_type : string
+    *tag_id : uuid <<FK>>
+    created_at : timestamp
+  }
+}
+
+' ========== باكيج 2: مكونات النظام ==========
+package "مكونات النظام" <<(M,TRAIT_COLOR)>> {
+  
+  package "Traits" as TRAITS <<TRAIT_COLOR>> {
+    class "HasPolymorphicRelations" as TRAIT_POLY <<(T,TRAIT_COLOR)>> {
+      + morphOne(Model, name)
+      + morphMany(Model, name)
+      + morphToMany(Model, name)
+    }
+    
+    class "HasCommonScopes" as TRAIT_SCOPES <<(T,TRAIT_COLOR)>> {
+      + scopeActive(Builder)
+      + scopeRecent(Builder, days)
+      + scopePopular(Builder)
+    }
+    
+    class "HasEntityEvents" as TRAIT_EVENTS <<(T,TRAIT_COLOR)>> {
+      + onCreated(callable)
+      + onUpdated(callable)
+      + onDeleted(callable)
+    }
+  }
+
+  package "أوامر النظام (Commands)" <<(C,COMMAND_COLOR)>> {
+    class "StorageSync" as CMD_SYNC <<(C,COMMAND_COLOR)>> {
+      + signature : "storage:sync"
+      + handle() : void
+      <i>// Scans directories and populates database</i>
+    }
+  }
+  
+  package "Services" as SERVICES <<SERVICE_COLOR>> {
+    class "EntityManagerService" as SERVICE_MANAGER <<(S,SERVICE_COLOR)>> {
+      + create(array data) : Entity
+      + update(Entity, array) : bool
+      + delete(Entity) : bool
+    }
+    
+    class "EntityQueryService" as SERVICE_QUERY <<(S,SERVICE_COLOR)>> {
+      + search(string, array) : Collection
+    }
+    
+    class "EntityRelationService" as SERVICE_RELATIONS <<(S,SERVICE_COLOR)>> {
+      + attachTags(Entity, array) : void
+      + attachCategories(Entity, array) : void
+    }
+  }
+  
+  package "Observers" as OBSERVERS <<OBSERVER_COLOR>> {
+    class "EntityLifecycleObserver" as OBSERVER_LIFECYCLE <<(O,OBSERVER_COLOR)>> {
+      + creating(Entity) : void
+      + created(Entity) : void
+    }
+    
+    class "EntityAuditObserver" as OBSERVER_AUDIT <<(O,OBSERVER_COLOR)>> {
+      + logChange(Entity, string) : void
+    }
+    
+    class "EntityCacheObserver" as OBSERVER_CACHE <<(O,OBSERVER_COLOR)>> {
+      + invalidateCache(Entity) : void
+    }
+  }
+  
+  package "Repositories" as REPOSITORIES <<REPO_COLOR>> {
+    class "EntityBaseRepository" as REPO_BASE <<(R,REPO_COLOR)>> {
+      + findByType(string, int) : Entity
+      + findBySlug(string) : Entity
+    }
+    
+    class "EntityStatisticsRepository" as REPO_STATS <<(R,REPO_COLOR)>> {
+      + getViewStatistics(Entity) : array
+    }
+  }
+}
+
+' ========== باكيج 3: النماذج الملموسة ==========
+package "النماذج الملموسة" <<(S,DB_ENTITY_COLOR)>> {
+  
+  class "Book" as BOOK {
+    + author : string
+    + isbn : string
+    + description : text
+    + cover_path : string
+    + file_path : string
+  }
+  
+  class "Manuscript" as MANUSCRIPT {
+    + author : string
+    + century : integer
+    + language : string
+    + pages : integer
+    + publisher : string
+    + location : string
+    + cover_path : string
+    + file_path : string
+  }
+  
+  class "Video" as VIDEO {
+    + duration : integer
+    + format : string
+    + cover_path : string
+    + file_path : string
+  }
+  
+  class "Audio" as AUDIO {
+    + duration : integer
+    + format : string
+    + bitrate : integer
+    + sample_rate : integer
+    + file_size : integer
+    + cover_path : string
+    + file_path : string
+  }
+}
+
+' ========== العلاقات ==========
+
+' 1. النماذج ترث من Entity
+ENTITY <|-- BOOK : يرث
+ENTITY <|-- MANUSCRIPT : يرث
+ENTITY <|-- VIDEO : يرث
+ENTITY <|-- AUDIO : يرث
+
+' 2. العلاقات البوليمورفية
+ACTIVITY }o--|| ENTITY : "entity"
+COMMENT }o--|| ENTITY : "entity"
+REVIEW }o--|| ENTITY : "entity"
+FAVOURITE }o--|| ENTITY : "entity"
+NOTE }o--|| ENTITY : "entity"
+DELETION }o--|| ENTITY : "entity"
+SEARCH_TERM }o--|| ENTITY : "entity"
+VIEW }o--|| ENTITY : "entity"
+TAG }o--|| ENTITY : "entity"
+CATEGORY }o--|| ENTITY : "entity"
+COLLECTION }o--|| ENTITY : "entity"
+SERIES }o--|| ENTITY : "entity"
+
+' 3. الأوامر البرمجية
+CMD_SYNC ..> BOOK : "Populates"
+CMD_SYNC ..> AUDIO : "Populates"
+CMD_SYNC ..> VIDEO : "Populates"
+CMD_SYNC ..> MANUSCRIPT : "Populates"
+
+' 4. Entity تستخدم مكونات النظام
+ENTITY --> TRAITS : uses
+ENTITY ..> SERVICES : "تستخدم خدمات"
+ENTITY ..> OBSERVERS : "تراقبها"
+ENTITY ..> REPOSITORIES : "تستعلم عبر"
+
+' ========== ملاحظة توضيحية ==========
+note right of ENTITY
+<b>العلاقات والتحديثات الجديدة:</b>
+- جميع الـ IDs تحولت إلى UUID.
+- إضافة حزمة Commands مع StorageSync.
+- تحديث حقول النماذج الملموسة (Paths, Meta).
+- استمرار دعم جميع العلاقات البوليمورفية.
+end note
+
+@enduml
