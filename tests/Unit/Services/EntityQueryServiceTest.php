@@ -101,9 +101,18 @@ class EntityQueryServiceTest extends TestCase
     /** @test */
     public function it_gets_popular_entities()
     {
-        // سيحتاج views relationship لاحقاً
-        $popular = $this->service->popular(10);
+        $popularBook = Book::first();
+        // إنشاء أنشطة لمحاكاة الشعبية
+        for ($i = 0; $i < 5; $i++) {
+            $popularBook->activities()->create([
+                'activity_type' => 'view',
+                'description' => 'Viewed'
+            ]);
+        }
 
-        $this->assertInstanceOf(\Illuminate\Support\Collection::class, $popular);
+        $popular = $this->service->popular(1);
+
+        $this->assertCount(1, $popular);
+        $this->assertEquals($popularBook->title, $popular->first()->title);
     }
 }

@@ -23,13 +23,11 @@ abstract class Entity extends Model
 
     protected $dates = ['deleted_at'];
 
-    protected static function boot()
+    protected static function booted()
     {
-        parent::boot();
-
         static::saving(function ($entity) {
-            if (empty($entity->slug) || $entity->isDirty('title')) {
-                $entity->slug = Str::slug($entity->title);
+            if (empty($entity->slug)) {
+                $entity->slug = Str::slug($entity->title) ?: Str::uuid()->toString();
             }
         });
     }

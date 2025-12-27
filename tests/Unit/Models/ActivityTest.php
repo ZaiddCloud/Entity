@@ -19,6 +19,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 class ActivityTest extends TestCase
 {
     use RefreshDatabase;
+ 
+    protected User $user;
 
     protected function setUp(): void
     {
@@ -83,7 +85,7 @@ class ActivityTest extends TestCase
             'entity_id' => $book->id,
             'entity_type' => 'book',
             'content' => 'This is a test comment on a book',
-            'user_id' => 1,
+            'user_id' => $this->user->id,
         ]);
 
         $this->assertEquals('This is a test comment on a book', $comment->content);
@@ -100,7 +102,7 @@ class ActivityTest extends TestCase
             'entity_id' => $video->id,
             'entity_type' => 'video',
             'content' => 'Private note about this video',
-            'user_id' => 1,
+            'user_id' => $this->user->id,
         ]);
 
         $this->assertEquals('Private note about this video', $note->content);
@@ -115,7 +117,7 @@ class ActivityTest extends TestCase
         $deletion = Deletion::create([
             'entity_id' => $audio->id,
             'entity_type' => 'audio',
-            'user_id' => 1,
+            'user_id' => $this->user->id,
             'reason' => 'Test deletion recording',
         ]);
 
@@ -132,7 +134,7 @@ class ActivityTest extends TestCase
     {
         $collection = Collection::create([
             'name' => 'My Test Collection',
-            'user_id' => 1,
+            'user_id' => $this->user->id,
             'description' => 'Collection for testing',
             'is_public' => true,
         ]);

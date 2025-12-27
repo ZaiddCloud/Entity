@@ -15,7 +15,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('title');
             $table->string('slug')->unique();
-            $table->string('author');
+            $table->string('author')->nullable();
             $table->string('isbn')->unique()->nullable();
             $table->longText('description')->nullable();
             $table->string('cover_path')->nullable();

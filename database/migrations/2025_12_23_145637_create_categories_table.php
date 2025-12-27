@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('slug')->unique();
             $table->text('description')->nullable();
             $table->foreignUuid('parent_id')->nullable();
+            $table->softDeletes();
             $table->timestamps();
 
             // فهرس للعلاقة الذاتية

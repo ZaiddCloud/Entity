@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('deletions', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuidMorphs('entity');
-            $table->foreignUuid('user_id');
+            $table->foreignUuid('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->text('reason')->nullable();
+            $table->json('data')->nullable();
             $table->timestamp('deleted_at')->useCurrent();
 
             $table->index(['entity_id', 'entity_type']);

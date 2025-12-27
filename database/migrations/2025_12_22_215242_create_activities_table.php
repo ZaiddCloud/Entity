@@ -13,10 +13,11 @@ return new class extends Migration
     {
         Schema::create('activities', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignUuid('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->uuidMorphs('entity'); // App\Models\Book, etc.
             $table->string('activity_type'); // created, updated, deleted, etc.
             $table->text('description')->nullable();
+            $table->json('changes')->nullable();
             $table->timestamps();
 
             $table->index(['entity_id', 'entity_type']);

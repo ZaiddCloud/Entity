@@ -50,19 +50,21 @@ class CompletePolymorphicSystemTest extends TestCase
     {
         $video = Video::create(['title' => 'Test Video', 'duration' => 120]);
 
-        // إنشاء Activity
-        $activity = Activity::create([
+        // إنشاء Activity إضافي يدوياً
+        $manualActivity = Activity::create([
             'entity_id' => $video->id,
             'entity_type' => 'video',
-            'activity_type' => 'created',
+            'activity_type' => 'viewed',
             'user_id' => $this->user->id,
-            'description' => 'Video was created',
+            'description' => 'Video was viewed',
         ]);
 
         $video->refresh();
 
-        $this->assertCount(1, $video->activities);
-        $this->assertEquals('created', $video->activities->first()->activity_type);
+        // سجلين: 1 من الـ Observer (created) و 1 يدوياً (viewed)
+        $this->assertCount(2, $video->activities);
+        $this->assertTrue($video->activities->contains('activity_type', 'created'));
+        $this->assertTrue($video->activities->contains('activity_type', 'viewed'));
 
         // إنشاء Comment
         $comment = Comment::create([
@@ -190,6 +192,7 @@ class CompletePolymorphicSystemTest extends TestCase
             $this->assertCount(1, $entity->tags);
 
             // Activities تعمل مع جميع الأنواع
+            // الـ Observer قد أنشأ فعلاً سجل 'created'
             Activity::create([
                 'entity_id' => $entity->id,
                 'entity_type' => $this->getMorphType($entity),
@@ -200,7 +203,8 @@ class CompletePolymorphicSystemTest extends TestCase
 
             $entity->refresh();
 
-            $this->assertCount(1, $entity->activities);
+            // سجلين: created (observer) + viewed (manual)
+            $this->assertCount(2, $entity->activities);
         }
     }
 
@@ -268,7 +272,8 @@ class CompletePolymorphicSystemTest extends TestCase
         $collection->refresh();
 
         $this->assertCount(2, $book->tags);
-        $this->assertCount(2, $book->activities);
+        // 3 سجلات: created (observer) + created (manual) + updated (manual)
+        $this->assertCount(3, $book->activities);
         $this->assertCount(1, $book->collections);
         $this->assertCount(1, $collection->entities);
     }

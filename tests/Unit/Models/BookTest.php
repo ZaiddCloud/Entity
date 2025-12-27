@@ -75,28 +75,23 @@ class BookTest extends TestCase
     public function book_can_have_activities()
     {
         $user = User::factory()->create();
+        $this->actingAs($user);
+
+        // ينبغي أن ينشئ الـ Observer سجل activity تلقائياً عند الإنشاء
         $book = Book::create(['title' => 'Test Book', 'author' => 'Author']);
 
         // التحقق من وجود طريقة activities
         $this->assertTrue(method_exists($book, 'activities'));
 
-        // إنشاء activity
-        Activity::create([
-            'entity_id' => $book->id,
-            'entity_type' => 'book',
-            'activity_type' => 'created',
-            'description' => 'Book created',
-            'user_id' => $user->id,
-        ]);
-
         // تحميل العلاقة
         $book->load('activities');
 
-        // التحقق
-        $this->assertCount(1, $book->activities, 'Book should have 1 activity');
+        // التحقق (يوجد سجل واحد من الـ Observer)
+        $this->assertCount(1, $book->activities, 'Book should have 1 activity from observer');
 
         if ($book->activities->isNotEmpty()) {
             $this->assertEquals('created', $book->activities->first()->activity_type);
+            $this->assertEquals($user->id, $book->activities->first()->user_id);
         }
 
         // تحقق من قاعدة البيانات
@@ -104,6 +99,7 @@ class BookTest extends TestCase
             'entity_id' => $book->id,
             'entity_type' => 'book',
             'activity_type' => 'created',
+            'user_id' => $user->id,
         ]);
     }
 

@@ -31,7 +31,15 @@ class EntityAuditObserverTest extends TestCase
      */
     public function it_logs_when_book_is_created()
     {
-        $this->markTestSkipped('مهمة مكررة مع EntityLifecycleObserver - سيتم التعامل معها لاحقاً');
+        // Act
+        $book = Book::factory()->create(['title' => 'Test Book']);
+
+        // Assert
+        $this->assertDatabaseHas('activities', [
+            'entity_type' => 'book',
+            'entity_id' => $book->id,
+            'activity_type' => 'created'
+        ]);
     }
 
     /**
@@ -42,7 +50,15 @@ class EntityAuditObserverTest extends TestCase
      */
     public function it_logs_when_video_is_created()
     {
-        $this->markTestSkipped('مهمة مكررة مع EntityLifecycleObserver - سيتم التعامل معها لاحقاً');
+        // Act
+        $video = Video::factory()->create(['title' => 'Test Video']);
+
+        // Assert
+        $this->assertDatabaseHas('activities', [
+            'entity_type' => 'video',
+            'entity_id' => $video->id,
+            'activity_type' => 'created'
+        ]);
     }
 
     /**
@@ -52,7 +68,15 @@ class EntityAuditObserverTest extends TestCase
      */
     public function it_logs_when_audio_is_created()
     {
-        $this->markTestSkipped('مهمة مكررة مع EntityLifecycleObserver - سيتم التعامل معها لاحقاً');
+        // Act
+        $audio = Audio::factory()->create(['title' => 'Test Audio']);
+
+        // Assert
+        $this->assertDatabaseHas('activities', [
+            'entity_type' => 'audio',
+            'entity_id' => $audio->id,
+            'activity_type' => 'created'
+        ]);
     }
 
     /**
@@ -62,7 +86,15 @@ class EntityAuditObserverTest extends TestCase
      */
     public function it_logs_when_manuscript_is_created()
     {
-        $this->markTestSkipped('مهمة مكررة مع EntityLifecycleObserver - سيتم التعامل معها لاحقاً');
+        // Act
+        $manuscript = Manuscript::factory()->create(['title' => 'Test Manuscript']);
+
+        // Assert
+        $this->assertDatabaseHas('activities', [
+            'entity_type' => 'manuscript',
+            'entity_id' => $manuscript->id,
+            'activity_type' => 'created'
+        ]);
     }
 
     /**
@@ -72,7 +104,25 @@ class EntityAuditObserverTest extends TestCase
      */
     public function it_logs_updates_with_changes()
     {
-        $this->markTestSkipped('مهمة مكررة مع EntityLifecycleObserver - سيتم التعامل معها لاحقاً');
+        // Arrange
+        $book = Book::factory()->create(['title' => 'Original']);
+
+        // Act
+        $book->update(['title' => 'Updated']);
+
+        // Assert
+        $this->assertDatabaseHas('activities', [
+            'entity_type' => 'book',
+            'entity_id' => $book->id,
+            'activity_type' => 'updated'
+        ]);
+
+        $activity = \App\Models\Activity::where('entity_id', $book->id)
+            ->where('activity_type', 'updated')
+            ->first();
+        
+        $this->assertNotNull($activity->changes);
+        $this->assertEquals('Updated', $activity->changes['title']);
     }
 
     /**
@@ -83,7 +133,18 @@ class EntityAuditObserverTest extends TestCase
      */
     public function it_logs_deletions()
     {
-        $this->markTestSkipped('مهمة مكررة مع EntityLifecycleObserver - سيتم التعامل معها لاحقاً');
+        // Arrange
+        $video = Video::factory()->create();
+
+        // Act
+        $video->delete();
+
+        // Assert
+        $this->assertDatabaseHas('activities', [
+            'entity_type' => 'video',
+            'entity_id' => $video->id,
+            'activity_type' => 'deleted'
+        ]);
     }
 
     /**
@@ -96,7 +157,22 @@ class EntityAuditObserverTest extends TestCase
      */
     public function it_creates_complete_audit_trail()
     {
-        $this->markTestIncomplete('سيتم تنفيذ اختبار audit trail كامل لاحقاً');
+        // Arrange
+        $user = \App\Models\User::factory()->create();
+        $this->actingAs($user);
+
+        // Act
+        $book = Book::factory()->create();
+        $book->update(['title' => 'New Title']);
+        $book->delete();
+
+        // Assert
+        $this->assertCount(3, \App\Models\Activity::where('entity_id', $book->id)->get());
+        $this->assertDatabaseHas('activities', [
+            'entity_id' => $book->id,
+            'user_id' => $user->id,
+            'activity_type' => 'created'
+        ]);
     }
 
     /**
@@ -106,118 +182,10 @@ class EntityAuditObserverTest extends TestCase
      */
     public function it_saves_audit_logs_to_database()
     {
-        $this->markTestIncomplete('سيتم تنفيذ اختبار حفظ audit logs في قاعدة البيانات لاحقاً');
+        // This is covered by other tests but specifically checking the record count
+        $count = \App\Models\Activity::count();
+        Book::factory()->create();
+        $this->assertEquals($count + 1, \App\Models\Activity::count());
     }
 
-
-/*class EntityAuditObserverTest extends TestCase
-{
-    use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-
-        // Mock Log facade لجميع الاختبارات
-        Log::spy();
-    }
-
-    /** @test */
-    /*public function it_logs_when_book_is_created()
-    {
-        // Act
-        Book::create(['title' => 'Test Book', 'author' => 'Author']);
-
-        // Assert
-        Log::shouldHaveReceived('info')
-            ->once()
-            ->with('Entity created', \Mockery::on(function ($data) {
-                return $data['entity_type'] === 'book' &&
-                    $data['title'] === 'Test Book';
-            }));
-    }*/
-
-    /** @test */
-    /*public function it_logs_when_video_is_created()
-    {
-        // Act
-        Video::create(['title' => 'Test Video', 'duration' => 120]);
-
-        // Assert
-        Log::shouldHaveReceived('info')
-            ->once()
-            ->with('Entity created', \Mockery::on(function ($data) {
-                return $data['entity_type'] === 'video' &&
-                    $data['title'] === 'Test Video';
-            }));
-    }*/
-
-    /** @test */
-    /*public function it_logs_when_audio_is_created()
-    {
-        // Act
-        Audio::create(['title' => 'Test Audio', 'duration' => 180]);
-
-        // Assert
-        Log::shouldHaveReceived('info')
-            ->once()
-            ->with('Entity created', \Mockery::on(function ($data) {
-                return $data['entity_type'] === 'audio' &&
-                    $data['title'] === 'Test Audio';
-            }));
-    }*/
-
-    /** @test */
-    /*public function it_logs_when_manuscript_is_created()
-    {
-        // Act
-        Manuscript::create([
-            'title' => 'Test Manuscript',
-            'author' => 'Old Author',
-            'century' => 14,
-        ]);
-
-        // Assert
-        Log::shouldHaveReceived('info')
-            ->once()
-            ->with('Entity created', \Mockery::on(function ($data) {
-                return $data['entity_type'] === 'manuscript' &&
-                    $data['title'] === 'Test Manuscript';
-            }));
-    }*/
-
-    /** @test */
-    /*public function it_logs_updates_with_changes()
-    {
-        // Arrange
-        $book = Book::create(['title' => 'Original', 'author' => 'Author']);
-
-        // Act
-        $book->update(['title' => 'Updated']);
-
-        // Assert
-        Log::shouldHaveReceived('info')
-            ->with('Entity updated', \Mockery::on(function ($data) {
-                return $data['entity_type'] === 'book' &&
-                    isset($data['data']['changes']['title']) &&
-                    $data['data']['changes']['title'] === 'Updated';
-            }));
-    }*/
-
-    /** @test */
-    /*public function it_logs_deletions()
-    {
-        // Arrange
-        $video = Video::create(['title' => 'To Delete', 'duration' => 120]);
-
-        // Act
-        $video->delete();
-
-        // Assert
-        Log::shouldHaveReceived('info')
-            ->with('Entity deleted', \Mockery::on(function ($data) {
-                return $data['entity_type'] === 'video';
-            }));
-    }*/
 }

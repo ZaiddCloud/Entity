@@ -54,19 +54,27 @@ class EntityAuditObserver
     }
 
     /**
-     * تسجيل النشاط
+     * تسجيل النشاط في قاعدة البيانات
      */
     private function logActivity($entity, string $action, array $data = []): void
     {
         $entityType = $this->getEntityType($entity);
 
+        // تسجيل في ملفات الـ Log كاحتياط
         Log::info("Entity {$action}", [
             'entity_type' => $entityType,
             'entity_id' => $entity->id ?? 'N/A',
-            'title' => $entity->title ?? 'N/A',
             'action' => $action,
-            'data' => $data,
-            'timestamp' => now()->toISOString(),
+        ]);
+
+        // حفظ في قاعدة البيانات
+        \App\Models\Activity::create([
+            'activity_type' => $action,
+            'entity_id' => $entity->getKey(),
+            'entity_type' => $entityType, // يستعمل الـ morph map alias
+            'user_id' => auth()->id(),
+            'description' => "Entity of type {$entityType} was {$action}",
+            'changes' => $data['changes'] ?? null,
         ]);
     }
 

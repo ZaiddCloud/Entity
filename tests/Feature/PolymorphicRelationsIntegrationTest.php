@@ -44,15 +44,20 @@ class PolymorphicRelationsIntegrationTest extends TestCase
         $this->assertCount(1, $audio->tags);
         $this->assertCount(1, $manuscript->tags);
 
+        $user = \App\Models\User::factory()->create();
+        $this->actingAs($user);
+
         $bookActivity = Activity::factory()->create([
             'entity_id' => $book->id,
             'entity_type' => 'book',
-            'activity_type' => 'created'
+            'activity_type' => 'manual_log'
         ]);
 
         $book->refresh();
-        $this->assertCount(1, $book->activities);
-        $this->assertEquals('created', $book->activities->first()->activity_type);
+        // 2 activities: 'created' (from observer) + 'manual_log' (manual)
+        $this->assertCount(2, $book->activities);
+        $this->assertTrue($book->activities->contains('activity_type', 'created'));
+        $this->assertTrue($book->activities->contains('activity_type', 'manual_log'));
 
         // 6. اختبار Services
         $entityService = new EntityManagerService();

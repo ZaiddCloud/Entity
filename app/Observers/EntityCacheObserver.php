@@ -9,50 +9,95 @@ use Illuminate\Database\Eloquent\Model;
 
 class EntityCacheObserver
 {
+    protected static array $processing = [];
+
+    protected function isProcessing(Model $model, string $task): bool
+    {
+        $key = get_class($model) . ':' . ($model->id ?? 'new') . ':' . $task;
+        return isset(static::$processing[$key]);
+    }
+
+    protected function startProcessing(Model $model, string $task): void
+    {
+        $key = get_class($model) . ':' . ($model->id ?? 'new') . ':' . $task;
+        static::$processing[$key] = true;
+    }
+
+    protected function stopProcessing(Model $model, string $task): void
+    {
+        $key = get_class($model) . ':' . ($model->id ?? 'new') . ':' . $task;
+        unset(static::$processing[$key]);
+    }
+
     /**
      * Handle the Model "created" event.
      */
+    protected static int $counter = 0;
+
     public function created($model): void
     {
-        $this->invalidateGeneralCaches($model);
-        $this->warmEntityCache($model);
+        if ($this->isProcessing($model, 'all')) return;
+        $this->startProcessing($model, 'all');
+
+        try {
+            $this->invalidateGeneralCaches($model);
+            $this->warmEntityCache($model);
+        } finally {
+            $this->stopProcessing($model, 'all');
+        }
     }
 
-    /**
-     * Handle the Model "updated" event.
-     */
     public function updated($model): void
     {
-        $this->invalidateGeneralCaches($model);
-        $this->invalidateSpecificCaches($model);
-        $this->warmEntityCache($model);
+        if ($this->isProcessing($model, 'all')) return;
+        $this->startProcessing($model, 'all');
+
+        try {
+            $this->invalidateGeneralCaches($model);
+            $this->invalidateSpecificCaches($model);
+            $this->warmEntityCache($model);
+        } finally {
+            $this->stopProcessing($model, 'all');
+        }
     }
 
-    /**
-     * Handle the Model "deleted" event.
-     */
     public function deleted($model): void
     {
-        $this->invalidateGeneralCaches($model);
-        $this->invalidateSpecificCaches($model);
+        if ($this->isProcessing($model, 'all')) return;
+        $this->startProcessing($model, 'all');
+
+        try {
+            $this->invalidateGeneralCaches($model);
+            $this->invalidateSpecificCaches($model);
+        } finally {
+            $this->stopProcessing($model, 'all');
+        }
     }
 
-    /**
-     * Handle the Model "restored" event.
-     */
     public function restored($model): void
     {
-        $this->invalidateGeneralCaches($model);
-        $this->warmEntityCache($model);
+        if ($this->isProcessing($model, 'all')) return;
+        $this->startProcessing($model, 'all');
+
+        try {
+            $this->invalidateGeneralCaches($model);
+            $this->warmEntityCache($model);
+        } finally {
+            $this->stopProcessing($model, 'all');
+        }
     }
 
-    /**
-     * Handle the Model "force deleted" event.
-     */
     public function forceDeleted($model): void
     {
-        $this->invalidateGeneralCaches($model);
-        $this->invalidateSpecificCaches($model);
+        if ($this->isProcessing($model, 'all')) return;
+        $this->startProcessing($model, 'all');
+
+        try {
+            $this->invalidateGeneralCaches($model);
+            $this->invalidateSpecificCaches($model);
+        } finally {
+            $this->stopProcessing($model, 'all');
+        }
     }
 
     /**

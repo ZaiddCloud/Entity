@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('title');
             $table->string('slug')->unique();
             $table->string('author')->nullable();
-            $table->integer('century'); // القرن
+            $table->integer('century')->nullable(); // القرن
             $table->string('language')->default('عربية');
             $table->integer('pages')->default(0);
             $table->string('publisher')->nullable();

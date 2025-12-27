@@ -133,18 +133,18 @@ class EntityQueryService
      */
     public function popular(int $limit = 10): Collection
     {
-        // TODO: Implement based on views or other metrics
         $results = new Collection();
 
         foreach ($this->getEntityClasses() as $entityClass) {
-            $entities = $entityClass::orderBy('created_at', 'desc')
+            $entities = $entityClass::withCount('activities')
+                ->orderBy('activities_count', 'desc')
                 ->limit($limit)
                 ->get();
 
             $results = $results->merge($entities);
         }
 
-        return $results->take($limit);
+        return $results->sortByDesc('activities_count')->take($limit);
     }
 
     /**

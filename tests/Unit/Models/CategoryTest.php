@@ -5,6 +5,8 @@ namespace Tests\Unit\Models;
 
 use Tests\TestCase;
 use App\Models\Category;
+use App\Models\Book;
+use App\Models\Video;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class CategoryTest extends TestCase
@@ -152,10 +154,18 @@ class CategoryTest extends TestCase
     /** @test */
     public function category_can_have_polymorphic_relationship_with_entities()
     {
-        // TODO: هذا الاختبار يحتاج إلى نموذج Entity
-        // سنتخطاه الآن ونعود له بعد اكتمال العلاقة
+        // 1. Arrange
+        $category = Category::create(['name' => 'Tech', 'slug' => 'tech']);
+        $book = Book::factory()->create(['title' => 'Tech Book']);
+        $video = Video::factory()->create(['title' => 'Tech Video']);
 
-        $this->markTestIncomplete('سيتم تنفيذ العلاقة متعددة الأشكال بعد اكتمال Categorizable');
+        // 2. Act
+        $book->categories()->attach($category);
+        $video->categories()->attach($category);
+
+        // 3. Assert
+        $this->assertCount(1, $category->fresh()->books);
+        $this->assertCount(1, $category->fresh()->videos);
     }
     // tests/Unit/Models/CategoryTest.php
 
@@ -193,8 +203,16 @@ class CategoryTest extends TestCase
     /** @test */
     public function category_can_be_soft_deleted_if_configured()
     {
-        // TODO: إذا كنا نريد soft delete للكاتيجوري
-        $this->markTestIncomplete('اعتماداً على إذا كنا نريد soft delete أم لا');
+        // 1. Arrange
+        $category = Category::create(['name' => 'Deletable', 'slug' => 'deletable']);
+
+        // 2. Act
+        $category->delete();
+
+        // 3. Assert
+        $this->assertSoftDeleted('categories', ['id' => $category->id]);
+        $this->assertNotNull(Category::withTrashed()->find($category->id)->deleted_at);
+        $this->assertNull(Category::find($category->id));
     }
 
     /** @test */

@@ -8,11 +8,12 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Str;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Category extends Model
 {
     /** @use HasFactory<\Database\Factories\CategoryFactory> */
-    use HasFactory, HasUuids, \App\Traits\TaxonomyRelationships;
+    use HasFactory, HasUuids, SoftDeletes, \App\Traits\TaxonomyRelationships;
 
     protected function getTaxonomyPivotTable(): string
     {
@@ -38,11 +39,6 @@ class Category extends Model
         });
     }
 
-    // app/Models/Category.php
-    public function entities(): MorphToMany
-    {
-        return $this->morphedByMany(Entity::class, 'entity', 'categorizables');
-    }
 
     /**
      * Generate a unique slug for the category.
@@ -65,7 +61,7 @@ class Category extends Model
     /**
      * علاقة مع الكاتيجوري الأب.
      */
-    public function parent()
+    public function parent(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Category::class, 'parent_id');
     }
@@ -73,7 +69,7 @@ class Category extends Model
     /**
      * علاقة مع الكاتيجوريات الفرعية.
      */
-    public function children()
+    public function children(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Category::class, 'parent_id');
     }
