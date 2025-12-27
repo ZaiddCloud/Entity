@@ -238,11 +238,16 @@ package "مكونات النظام" <<(M,TRAIT_COLOR)>> {
     }
   }
 
-  package "أوامر النظام (Commands)" <<(C,COMMAND_COLOR)>> {
     class "StorageSync" as CMD_SYNC <<(C,COMMAND_COLOR)>> {
       + signature : "storage:sync"
       + handle() : void
       <i>// Scans directories and populates database</i>
+    }
+
+    class "SeedRealisticData" as CMD_SEED <<(C,COMMAND_COLOR)>> {
+      + signature : "project:seed-realistic"
+      + handle() : void
+      <i>// Seeds database with exhaustive Arabic data</i>
     }
   }
   
@@ -368,7 +373,8 @@ ENTITY ..> REPOSITORIES : "تستعلم عبر"
 note right of ENTITY
 <b>العلاقات والتحديثات الجديدة:</b>
 - جميع الـ IDs تحولت إلى UUID.
-- إضافة حزمة Commands مع StorageSync.
+- إضافة حزمة Commands مع StorageSync و SeedRealisticData.
+- دعم توليد البيانات الواقعية بجميع علاقاتها (Collections, Series).
 - تحديث حقول النماذج الملموسة (Paths, Meta).
 - استمرار دعم جميع العلاقات البوليمورفية.
 end note

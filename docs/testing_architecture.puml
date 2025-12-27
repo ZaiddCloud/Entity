@@ -32,12 +32,11 @@ package "Unit Tests" {
   }
   
   package "System Commands Tests" {
-    class "StorageSyncCommandTest" {
-      + test_command_scans_directories()
-      + test_command_creates_missing_directories()
-      + test_command_syncs_new_files_to_db()
-      + test_command_avoids_duplicate_sync()
-      + test_command_force_flag_updates_records()
+    class "ConsoleCommandsTest" {
+      + test_seed_realistic_data_populates_all_relationships()
+      + test_seed_realistic_data_persists_arabic_correctly()
+      + test_storage_sync_scans_and_updates_records()
+      + test_storage_sync_handles_extensions_and_force_flag()
     }
   }
 
@@ -196,7 +195,8 @@ package "Test Support" {
 note top of "Unit Tests"
 <b>تحديثات الاختبارات الأخيرة:</b>
 - التأكد من أن جميع المعرفات هي <b>UUID</b>.
-- إضافة اختبارات شاملة لأمر <b>storage:sync</b>.
+- إضافة اختبارات شاملة للأوامر (SeedRealistic, StorageSync).
+- التحقق من شمولية جميع العلاقات (All Relationships Covered).
 - اختبار تعريب واجهة الدخول وتوجيهها للداشبورد.
 end note
 
