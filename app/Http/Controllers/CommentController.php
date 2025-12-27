@@ -5,56 +5,85 @@ namespace App\Http\Controllers;
 
 use App\Models\Comment;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
+use Inertia\Inertia;
+use Inertia\Response;
+use Illuminate\Http\RedirectResponse;
 
 class CommentController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): Response
     {
-        $comments = Comment::with(['user', 'commentable'])->latest()->get();
+        $comments = Comment::with(['user', 'entity'])
+            ->when($request->search, function ($query, $search) {
+                $query->where('content', 'like', "%{$search}%");
+            })
+            ->latest()
+            ->paginate($request->get('per_page', 10))
+            ->withQueryString();
 
-        return response()->json($comments);
+        return Inertia::render('Comments/Index', [
+            'comments' => $comments,
+            'filters' => $request->only(['search']),
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create(): Response
+    {
+        return Inertia::render('Comments/Create');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): JsonResponse
+    public function store(Request $request): RedirectResponse
     {
         $request->validate([
             'content' => 'required|string',
-            'commentable_id' => 'required|uuid',
-            'commentable_type' => 'required|string', // e.g., 'book', 'video'
+            'entity_id' => 'required|uuid',
+            'entity_type' => 'required|string',
         ]);
 
-        $comment = Comment::create([
+        Comment::create([
             'content' => $request->content,
-            'user_id' => auth()->id() ?? \App\Models\User::first()->id,
-            'commentable_id' => $request->commentable_id,
-            'commentable_type' => $request->commentable_type,
+            'user_id' => auth()->id(),
+            'entity_id' => $request->entity_id,
+            'entity_type' => $request->entity_type,
         ]);
 
-        return response()->json([
-            'message' => 'تم إضافة التعليق بنجاح',
-            'data' => $comment
-        ], 210);
+        return redirect()->route('comments.index')
+            ->with('message', 'تم إضافة التعليق بنجاح');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Comment $comment): JsonResponse
+    public function show(Comment $comment): Response
     {
-        return response()->json($comment->load(['user', 'commentable']));
+        return Inertia::render('Comments/Show', [
+            'comment' => $comment->load(['user', 'entity']),
+        ]);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Comment $comment): Response
+    {
+        return Inertia::render('Comments/Edit', [
+            'comment' => $comment,
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Comment $comment): JsonResponse
+    public function update(Request $request, Comment $comment): RedirectResponse
     {
         $request->validate([
             'content' => 'required|string'
@@ -62,21 +91,18 @@ class CommentController extends Controller
 
         $comment->update($request->only('content'));
 
-        return response()->json([
-            'message' => 'تم تحديث التعليق بنجاح',
-            'data' => $comment
-        ]);
+        return redirect()->route('comments.show', $comment)
+            ->with('message', 'تم تحديث التعليق بنجاح');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Comment $comment): JsonResponse
+    public function destroy(Comment $comment): RedirectResponse
     {
         $comment->delete();
 
-        return response()->json([
-            'message' => 'تم حذف التعليق بنجاح'
-        ]);
+        return redirect()->route('comments.index')
+            ->with('message', 'تم حذف التعليق بنجاح');
     }
 }
