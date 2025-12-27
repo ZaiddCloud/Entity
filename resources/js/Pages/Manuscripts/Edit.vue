@@ -15,7 +15,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('manuscripts.update', props.manuscript.id));
+    form.post(route('manuscripts.update', props.manuscript.slug));
 };
 </script>
 

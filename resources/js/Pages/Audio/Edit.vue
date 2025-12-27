@@ -15,7 +15,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('audios.update', props.audio.id));
+    form.post(route('audios.update', props.audio.slug));
 };
 </script>
 

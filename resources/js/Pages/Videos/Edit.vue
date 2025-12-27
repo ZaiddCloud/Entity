@@ -15,7 +15,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('videos.update', props.video.id));
+    form.post(route('videos.update', props.video.slug));
 };
 </script>
 
