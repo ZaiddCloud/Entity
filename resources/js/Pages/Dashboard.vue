@@ -127,8 +127,8 @@
                                                 {{ translateActivity(item.activity_type) }}
                                             </span>
                                             <Link 
-                                                v-if="item.entity_id"
-                                                :href="item.type === 'book' || item.type === 'video' || item.type === 'audio' || item.type === 'manuscript' ? route(item.type + 's.show', item.entity_id) : '#'" 
+                                                v-if="item.entity_slug"
+                                                :href="item.type === 'book' || item.type === 'video' || item.type === 'audio' || item.type === 'manuscript' ? route(item.type + 's.show', item.entity_slug) : '#'" 
                                                 class="text-gray-900 dark:text-white font-bold hover:text-purple-500 transition-colors"
                                             >
                                                 {{ item.entity_title }}

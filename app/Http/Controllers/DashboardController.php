@@ -45,7 +45,7 @@ class DashboardController extends Controller
                     'entity_title' => $activity->entity?->title ?? 'عنصر محذوف',
                     'user_name' => $activity->user?->name ?? 'النظام',
                     'created_at' => $activity->created_at,
-                    'entity_id' => $activity->entity_id,
+                    'entity_slug' => $activity->entity?->slug,
                 ];
             });
 
