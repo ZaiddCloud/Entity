@@ -46,6 +46,19 @@ abstract class DuskTestCase extends BaseTestCase
     }
 
     /**
+     * Authenticate a user via the login form (works better with Inertia)
+     */
+    protected function authenticateUser(\Laravel\Dusk\Browser $browser, $user, $password = 'password'): \Laravel\Dusk\Browser
+    {
+        return $browser->visit('/login')
+            ->waitFor('input[name="email"]', 5)
+            ->type('input[name="email"]', $user->email)
+            ->type('input[name="password"]', $password)
+            ->press('button[type="submit"]')
+            ->waitForLocation('/dashboard', 10);
+    }
+
+    /**
      * Create the RemoteWebDriver instance.
      */
     protected function driver(): RemoteWebDriver
@@ -54,10 +67,14 @@ abstract class DuskTestCase extends BaseTestCase
             $this->shouldStartMaximized() ? '--start-maximized' : '--window-size=1920,1080',
             '--disable-search-engine-choice-screen',
             '--disable-smooth-scrolling',
+            '--disable-web-security',
+            '--disable-features=IsolateOrigins,site-per-process',
         ])->unless($this->hasHeadlessDisabled(), function (Collection $items) {
             return $items->merge([
                 '--disable-gpu',
                 '--headless=new',
+                '--no-sandbox',
+                '--disable-dev-shm-usage',
             ]);
         })->all());
 

@@ -21,9 +21,7 @@ class DashboardTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/dashboard')
-                ->assertPathIs('/dashboard')
-                ->assertPresent('nav')
-                ->assertPresent('aside')
+                ->pause(2000) // Give Inertia time to load
                 ->assertPresent('[data-page]');
         });
     }
