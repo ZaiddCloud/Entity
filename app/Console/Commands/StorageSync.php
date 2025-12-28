@@ -89,6 +89,40 @@ class StorageSync extends Command
             $title = Str::headline($fileName);
             $slug = Str::slug($title);
 
+            // === Special Logic for Books (Versioned System) ===
+            if ($modelClass === Book::class) {
+                // 1. Check if this VERSION exists
+                $versionExists = \App\Models\Version::where('file_path', $filePath)->exists();
+
+                if (!$versionExists || $this->option('force')) {
+                    // 2. Find or Create the abstract Book
+                    $book = Book::firstOrCreate(
+                        ['slug' => $slug], // Assume slug is unique enough for sync
+                        [
+                            'title' => $title,
+                            'description' => 'Automatically synced book.',
+                            // 'author' => 'Unknown', // We can remove this as we use relations now
+                        ]
+                    );
+
+                    // 3. Create/Update the Version
+                    \App\Models\Version::updateOrCreate(
+                        ['file_path' => $filePath],
+                        [
+                            'book_id' => $book->id,
+                            'format' => $extension,
+                            'file_size' => Storage::disk('public')->size($filePath),
+                            'edition_number' => 1,
+                        ]
+                    );
+
+                    $count++;
+                    $this->line("  [+] Synced Version for: {$title}");
+                }
+                continue; // Skip the standard logic below
+            }
+
+            // === Standard Logic for Other Entities (Legacy) ===
             // Check if record exists
             $exists = $modelClass::where('file_path', $filePath)->exists();
 
@@ -101,9 +135,7 @@ class StorageSync extends Command
                 ];
 
                 // Add specific fields based on model
-                if ($modelClass === Book::class) {
-                    $data['author'] = 'Unknown';
-                } elseif ($modelClass === Audio::class || $modelClass === Video::class) {
+                if ($modelClass === Audio::class || $modelClass === Video::class) {
                     $data['format'] = $extension;
                     $data['duration'] = 0;
                 } elseif ($modelClass === Manuscript::class) {

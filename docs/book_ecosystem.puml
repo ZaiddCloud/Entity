@@ -1,0 +1,170 @@
+@startuml
+
+' ========== إعدادات أساسية ==========
+skinparam defaultFontName "Arial"
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam backgroundColor #F9F9F9
+skinparam arrowColor #333333
+skinparam arrowFontSize 13
+skinparam linetype ortho
+
+title "نظام الكتاب المفصل - مع البيانات الدقيقة (Detailed Book Ecosystem)"
+
+' ========== الألوان والملاحظات ==========
+!define EXISTING_COLOR  #E0E0E0
+!define NEW_COLOR       #E3F2FD
+!define TRAIT_COLOR     #E8F5E9
+
+legend right
+  | Color | Type |
+  | <EXISTING_COLOR> | Existing Model (موجود) |
+  | <NEW_COLOR> | New Model (جديد) |
+  | <TRAIT_COLOR> | Trait (سمة) |
+endlegend
+
+' ======================================================================================
+' 1. Data Models (البيانات)
+' ======================================================================================
+package "Models Ecosystem" {
+    
+    ' --- Existing Models ---
+    class "Category (التصنيف)" as CATEGORY <<EXISTING_COLOR>> {
+        *id : uuid
+        *name : string
+        *slug : string
+        *parent_id : uuid
+        --
+        +parent() : BelongsTo
+        +children() : HasMany
+        +getHierarchyPath()
+    }
+
+    class "Series (السلسلة)" as SERIES <<EXISTING_COLOR>> {
+        *id : uuid
+        *title : string
+        *order_column : integer
+        --
+        +addEntity(entity, pos)
+    }
+
+    ' --- New Models ---
+    class "Book (الكتاب)" as BOOK <<NEW_COLOR>> {
+        *id : uuid
+        *title : string
+        *slug : string
+        *description : text
+        *original_language : string
+        --
+        +versions() : HasMany
+        +authors() : BelongsToMany
+        +bookers() : MorphToMany
+        +topics() : BelongsToMany
+    }
+
+    class "Version (النسخة)" as VERSION <<NEW_COLOR>> {
+        *id : uuid
+        *book_id : uuid
+        *publisher_id : uuid
+        *language_id : uuid
+        *file_path : string
+        *cover_path : string
+        *pages : integer
+        *published_year : integer
+        *edition_number : integer
+        *isbn : string
+        *format : string (pdf/epub)
+        *file_size : integer
+        --
+        +book() : BelongsTo
+        +publisher() : BelongsTo
+        +shelf() : BelongsTo
+    }
+    
+    class "Author (المؤلف)" as AUTHOR <<NEW_COLOR>> {
+        *id : uuid
+        *name : string
+        *slug : string
+        *bio : text
+        *birth_year : integer
+        *death_year : integer
+        --
+        +books() : BelongsToMany
+    }
+
+    class "Booker (المساهم)" as BOOKER <<NEW_COLOR>> {
+        *id : uuid
+        *name : string
+        *slug : string
+        --
+        +bookables() : MorphToMany
+        Note: Role is in pivot
+    }
+    
+    class "Publisher (الناشر)" as PUBLISHER <<NEW_COLOR>> {
+        *id : uuid
+        *name : string
+        *slug : string
+        *country_code : string
+        *logo_path : string
+        --
+        +versions() : HasMany
+    }
+
+    class "Topic (الموضوع)" as TOPIC <<NEW_COLOR>> {
+        *id : uuid
+        *name : string
+        *slug : string
+        *parent_id : uuid
+        --
+        +books() : BelongsToMany
+    }
+    
+    class "Shelf (الرف)" as SHELF <<NEW_COLOR>> {
+        *id : uuid
+        *location_code : string
+        *capacity : integer
+        --
+        +versions() : HasMany
+    }
+}
+
+' ======================================================================================
+' 2. Logic & Services (المنطق)
+' ======================================================================================
+package "Logic Layer (Services)" {
+    class "BookManagerService" as SERVICE <<NEW_COLOR>> {
+        + createBook(data: array) : Book
+        + addVersion(book: Book, data: array) : Version
+        + attachAuthor(book: Book, author: Author) : void
+        + attachBooker(book: Book, booker: Booker, role: string) : void
+    }
+    
+    class "HasBookRelations" as TRAIT <<TRAIT_COLOR>> {
+        + authors() : BelongsToMany
+        + bookers() : MorphToMany
+        + versions() : HasMany
+    }
+}
+
+' ======================================================================================
+' 3. Relationships (العلاقات)
+' ======================================================================================
+
+' Book Relations
+BOOK *-- "1..*" VERSION : Has (composition)
+BOOK o-- "1..*" AUTHOR : Written By (Direct)
+BOOK o-- "0..*" BOOKER : Contributed By (Polymorphic)
+BOOK -- "0..*" TOPIC : Categorized In (Subject)
+BOOK -- "0..*" CATEGORY : Categorized In (General)
+BOOK -- "0..*" SERIES : Part of
+
+' Version Relations
+VERSION -- "1" PUBLISHER : Published By
+VERSION -- "0..1" SHELF : Located At
+
+' Inheritance/Usage
+BOOK -up-|> TRAIT : Uses
+VERSION -up-|> TRAIT : Uses
+
+@enduml

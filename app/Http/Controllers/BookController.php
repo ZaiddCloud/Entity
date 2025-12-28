@@ -19,11 +19,13 @@ class BookController extends Controller
 {
     protected $manager;
     protected $query;
+    protected $bookManager;
 
-    public function __construct(EntityManagerService $manager, EntityQueryService $query)
+    public function __construct(EntityManagerService $manager, EntityQueryService $query, \App\Services\BookManagerService $bookManager)
     {
         $this->manager = $manager;
         $this->query = $query;
+        $this->bookManager = $bookManager;
     }
 
     /**
@@ -34,11 +36,13 @@ class BookController extends Controller
         Gate::authorize('viewAny', Book::class);
 
         $filters = $request->only(['search', 'category', 'tag']);
-        
-        $books = Book::with(['tags', 'categories'])
+
+        $books = Book::with(['tags', 'categories', 'authors', 'versions.publisher']) // Eager load new relations
             ->when($request->search, function ($query, $search) {
                 $query->where('title', 'like', "%{$search}%")
-                      ->orWhere('author', 'like', "%{$search}%");
+                    ->orWhereHas('authors', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
             })
             ->when($request->category, function ($query, $category) {
                 $query->whereHas('categories', function ($q) use ($category) {
@@ -68,7 +72,11 @@ class BookController extends Controller
     public function create(): Response
     {
         Gate::authorize('create', Book::class);
-        return Inertia::render('Books/Create');
+        return Inertia::render('Books/Create', [
+            'authors' => \App\Models\Author::orderBy('name')->get(['id', 'name']),
+            'publishers' => \App\Models\Publisher::orderBy('name')->get(['id', 'name']),
+            'categories' => \App\Models\Category::orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
     /**
@@ -77,21 +85,22 @@ class BookController extends Controller
     public function store(StoreEntityRequest $request): RedirectResponse
     {
         Gate::authorize('create', Book::class);
-        $data = $request->validated();
-        
-        if (!isset($data['type'])) {
-             $data['type'] = 'book';
-        }
 
-        if ($request->hasFile('cover')) {
-            $data['cover_path'] = $request->file('cover')->store('covers', 'public');
-        }
+        // We need to merge file paths manually since the service expects them in the data array
+        // but StoreEntityRequest handles validation. We rely on the request being valid here.
+        $data = $request->validated();
 
         if ($request->hasFile('file')) {
             $data['file_path'] = $request->file('file')->store('books', 'public');
         }
 
-        $book = $this->manager->create($data);
+        // Handle cover if present (optional for book, might belong to version or book)
+        // For now, let's keep it simple and maybe attach to version logic later or book
+        if ($request->hasFile('cover')) {
+            $data['cover_path'] = $request->file('cover')->store('covers', 'public');
+        }
+
+        $this->bookManager->createBook($data);
 
         return redirect()->route('books.index')
             ->with('message', 'تم إنشاء الكتاب بنجاح');
@@ -111,11 +120,21 @@ class BookController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
+    /**
+     * Show the form for editing the specified resource.
+     */
     public function edit(Book $book): Response
     {
         Gate::authorize('update', $book);
+
+        // Load relationships to populate the form
+        $book->load(['authors', 'versions']);
+
         return Inertia::render('Books/Edit', [
-            'book' => $book->load(['tags', 'categories']),
+            'book' => $book,
+            'authors' => \App\Models\Author::orderBy('name')->get(['id', 'name']),
+            'publishers' => \App\Models\Publisher::orderBy('name')->get(['id', 'name']),
+            'categories' => \App\Models\Category::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -135,7 +154,9 @@ class BookController extends Controller
             $data['file_path'] = $request->file('file')->store('books', 'public');
         }
 
-        $this->manager->update($book, $data);
+        $this->bookManager->updateBook($book, $data);
+
+        $book->refresh(); // Refresh to get updated slug if changed
 
         return redirect()->route('books.show', $book)
             ->with('message', 'تم تحديث الكتاب بنجاح');

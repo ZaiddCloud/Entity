@@ -1,0 +1,105 @@
+@startuml
+
+' ========== إعدادات أساسية ==========
+skinparam defaultFontName "Arial"
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam backgroundColor #F9F9F9
+skinparam arrowColor #333333
+skinparam arrowFontSize 13
+skinparam linetype ortho
+
+title "نظام الوسائط والمخطوطات (Media & Manuscript Ecosystem)"
+
+' ========== الألوان ==========
+!define MEDIA_COLOR     #E1F5FE
+!define MANUSCRIPT_COLOR #FFF3E0
+!define SHARED_COLOR    #F3E5F5
+!define TRAIT_COLOR     #E8F5E9
+
+' ======================================================================================
+' 1. Shared Models (نماذج مشتركة)
+' ======================================================================================
+package "Shared Entities (مشترك)" <<SHARED_COLOR>> {
+    class "Author (المؤلف/المحاضر)" as AUTHOR {
+        *id : uuid
+        *name : string
+    }
+    
+    class "Booker (المساهم)" as BOOKER {
+        *id : uuid
+        *name : string
+    }
+
+    class "Topic (الموضوع)" as TOPIC
+    class "Series (السلسلة)" as SERIES
+}
+
+' ======================================================================================
+' 2. Manuscript Ecosystem (نظام المخطوطات)
+' ======================================================================================
+package "Manuscript Ecosystem" <<MANUSCRIPT_COLOR>> {
+    class "Manuscript (المخطوط)" as MANUSCRIPT {
+        *id : uuid
+        *title : string
+        *slug : string
+        *century : integer (القرن)
+        *pages : integer
+        *location : string (مكان الحفظ)
+        *file_path : string
+        --
+        +authors() : BelongsToMany
+        +bookers() : MorphToMany (ناسخ، مالك...)
+        +topics() : BelongsToMany
+    }
+}
+
+' ======================================================================================
+' 3. Audio/Video Ecosystem (نظام الصوتيات والمرئيات)
+' ======================================================================================
+package "Media Ecosystem" <<MEDIA_COLOR>> {
+    class "Video (فيديو)" as VIDEO {
+        *id : uuid
+        *title : string
+        *duration : integer (seconds)
+        *format : string (mp4)
+        *file_path : string
+        --
+        +authors() : BelongsToMany (المحاضر/الضيف)
+        +bookers() : MorphToMany (مونتاج، إخراج...)
+        +series() : MorphToMany
+    }
+
+    class "Audio (صوتي)" as AUDIO {
+        *id : uuid
+        *title : string
+        *duration : integer
+        *bitrate : integer
+        *file_path : string
+        --
+        +authors() : BelongsToMany (المحاضر)
+        +bookers() : MorphToMany (هندسة صوتية...)
+        +series() : MorphToMany
+    }
+}
+
+' ======================================================================================
+' 4. Relationships (العلاقات)
+' ======================================================================================
+
+' Manuscript
+MANUSCRIPT o-- "1..*" AUTHOR : Written By
+MANUSCRIPT o-- "0..*" BOOKER : Copied/Owned By
+MANUSCRIPT -- "0..*" TOPIC : Classified As
+
+' Video
+VIDEO o-- "1..*" AUTHOR : Speaker/Host
+VIDEO o-- "0..*" BOOKER : Production Team
+VIDEO -- "0..1" SERIES : Part of Series
+
+' Audio
+AUDIO o-- "1..*" AUTHOR : Speaker
+AUDIO o-- "0..*" BOOKER : Engineering
+AUDIO -- "0..1" SERIES : Part of Series
+
+@enduml

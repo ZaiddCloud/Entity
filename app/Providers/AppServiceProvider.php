@@ -80,6 +80,13 @@ class AppServiceProvider extends ServiceProvider
             'deletion' => Deletion::class,
             'collection' => Collection::class,
             'series' => Series::class,
+            // New Models
+            'author' => \App\Models\Author::class,
+            'booker' => \App\Models\Booker::class,
+            'publisher' => \App\Models\Publisher::class,
+            'topic' => \App\Models\Topic::class,
+            'shelf' => \App\Models\Shelf::class,
+            'version' => \App\Models\Version::class,
         ]);
     }
 

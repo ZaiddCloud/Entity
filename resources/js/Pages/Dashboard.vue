@@ -24,6 +24,32 @@
                         </div>
                     </div>
 
+                    <!-- Authors -->
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-2xl p-5 border-b-4 border-cyan-500 transform hover:scale-105 transition-transform">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-xl bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400 ml-4">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">المؤلفون</p>
+                                <p class="text-2xl font-black dark:text-white">{{ stats.authors }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Publishers -->
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-2xl p-5 border-b-4 border-teal-500 transform hover:scale-105 transition-transform">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-xl bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400 ml-4">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">الناشرون</p>
+                                <p class="text-2xl font-black dark:text-white">{{ stats.publishers }}</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Manuscripts -->
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-2xl p-5 border-b-4 border-amber-500 transform hover:scale-105 transition-transform">
                         <div class="flex items-center">

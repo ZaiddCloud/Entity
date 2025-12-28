@@ -83,12 +83,6 @@ class EntityAuditObserver
      */
     private function getEntityType($entity): string
     {
-        return match(true) {
-            $entity instanceof Book => 'book',
-            $entity instanceof Video => 'video',
-            $entity instanceof Audio => 'audio',
-            $entity instanceof Manuscript => 'manuscript',
-            default => class_basename($entity),
-        };
+        return $entity->getMorphClass();
     }
 }

@@ -44,30 +44,51 @@ defineProps({
                                         <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ book.title }}</dd>
                                     </div>
                                     <div class="sm:col-span-1">
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">المؤلف</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ book.author }}</dd>
+                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">المؤلفون</dt>
+                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                                            <span v-if="book.authors && book.authors.length">
+                                                {{ book.authors.map(a => a.name).join('، ') }}
+                                            </span>
+                                            <span v-else class="italic text-gray-400">غير محدد</span>
+                                        </dd>
                                     </div>
-                                    <div class="sm:col-span-1">
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">ISBN</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ book.isbn || 'غير متوفر' }}</dd>
-                                    </div>
-                                    <div class="sm:col-span-1">
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Slug</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ book.slug }}</dd>
-                                    </div>
+                                    
+                                    <!-- Version Details (Assuming first version for now) -->
+                                    <template v-if="book.versions && book.versions.length">
+                                        <div class="sm:col-span-1">
+                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">الناشر</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                                                {{ book.versions[0].publisher?.name || 'غير معروف' }}
+                                            </dd>
+                                        </div>
+                                        <div class="sm:col-span-1">
+                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">ISBN</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ book.versions[0].isbn || 'غير متوفر' }}</dd>
+                                        </div>
+                                        <div class="sm:col-span-1">
+                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">سنة النشر</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ book.versions[0].published_year || '-' }}</dd>
+                                        </div>
+                                        <div class="sm:col-span-1">
+                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">عدد الصفحات</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ book.versions[0].pages || '-' }}</dd>
+                                        </div>
+                                    </template>
                                 </dl>
                             </div>
                             
                             <div>
-                                <div v-if="book.cover_path" class="mb-6">
+                                <!-- Cover logic: either on version or book (legacy fallback) -->
+                                <div v-if="book.versions?.[0]?.cover_path || book.cover_path" class="mb-6">
                                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">غلاف الكتاب</h3>
-                                    <img :src="'/storage/' + book.cover_path" alt="Cover" class="w-48 h-auto rounded-lg shadow-md object-cover">
+                                    <img :src="'/storage/' + (book.versions?.[0]?.cover_path || book.cover_path)" alt="Cover" class="w-48 h-auto rounded-lg shadow-md object-cover">
                                 </div>
                                 
-                                <div v-if="book.file_path" class="mb-6">
+                                <!-- File Download Logic -->
+                                <div v-if="book.versions?.[0]?.file_path || book.file_path" class="mb-6">
                                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">ملف الكتاب</h3>
                                     <a 
-                                        :href="'/storage/' + book.file_path" 
+                                        :href="'/storage/' + (book.versions?.[0]?.file_path || book.file_path)" 
                                         target="_blank"
                                         class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                     >
@@ -75,6 +96,7 @@ defineProps({
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                         </svg>
                                         تحميل / قراءة الكتاب
+                                        <span v-if="book.versions?.[0]" class="text-xs mr-2 opacity-75">({{ book.versions[0].format }})</span>
                                     </a>
                                 </div>
 

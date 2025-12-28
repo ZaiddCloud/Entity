@@ -24,6 +24,13 @@ class UpdateEntityRequest extends FormRequest
         $rules = [
             'title' => 'sometimes|string|max:255',
             'author' => 'sometimes|string|max:255',
+            'author_ids' => 'nullable|array',
+            'author_ids.*' => 'exists:authors,id',
+            'publisher_id' => 'nullable|exists:publishers,id',
+            'isbn' => 'nullable|string|max:20',
+            'pages' => 'nullable|integer|min:1',
+            'published_year' => 'nullable|integer|min:1000|max:' . (date('Y') + 1),
+            'edition_number' => 'nullable|integer|min:1',
             'description' => 'sometimes|nullable|string',
             'cover' => 'sometimes|nullable|image|max:2048',
             'categories' => 'array',
@@ -34,13 +41,13 @@ class UpdateEntityRequest extends FormRequest
 
         // Determine type from route binding
         $fileRules = 'sometimes|nullable|file|max:102400';
-        
+
         if ($this->route('book') || $this->route('manuscript')) {
             $fileRules = 'sometimes|nullable|mimes:pdf|max:51200';
         } elseif ($this->route('audio')) {
-             $fileRules = 'sometimes|nullable|mimes:mp3,wav|max:51200';
+            $fileRules = 'sometimes|nullable|mimes:mp3,wav|max:51200';
         } elseif ($this->route('video')) {
-             $fileRules = 'sometimes|nullable|mimes:mp4,mov,avi|max:102400';
+            $fileRules = 'sometimes|nullable|mimes:mp4,mov,avi|max:102400';
         }
 
         $rules['file'] = $fileRules;

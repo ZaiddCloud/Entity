@@ -20,6 +20,8 @@ class DashboardController extends Controller
     {
         $stats = [
             'books' => Book::count(),
+            'authors' => \App\Models\Author::count(),
+            'publishers' => \App\Models\Publisher::count(),
             'videos' => Video::count(),
             'audios' => Audio::count(),
             'manuscripts' => Manuscript::count(),

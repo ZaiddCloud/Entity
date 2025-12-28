@@ -49,7 +49,7 @@ class ConsoleCommandsTest extends TestCase
         foreach ($allEntities as $entity) {
             $this->assertGreaterThanOrEqual(1, $entity->categories()->count(), "Entity {$entity->title} missing category");
             $this->assertGreaterThanOrEqual(1, $entity->tags()->count(), "Entity {$entity->title} missing tags");
-            
+
             // Verify and check activity log
             $this->assertDatabaseHas('activities', [
                 'entity_id' => $entity->id,
@@ -111,18 +111,26 @@ class ConsoleCommandsTest extends TestCase
             ->assertExitCode(0);
 
         // 3. Verify Database Records
-        $this->assertDatabaseHas('books', ['file_path' => 'books/test-book.pdf', 'title' => 'Test Book']);
+        // A. Books should have a related Version
+        $this->assertDatabaseHas('books', ['title' => 'Test Book']);
+        $book = Book::where('title', 'Test Book')->first();
+        $this->assertDatabaseHas('versions', [
+            'book_id' => $book->id,
+            'file_path' => 'books/test-book.pdf'
+        ]);
+
+        // B. Other types behave as before (Legacy)
         $this->assertDatabaseHas('audios', ['format' => 'mp3']);
         $this->assertDatabaseHas('manuscripts', ['century' => 0]);
         $this->assertDatabaseCount('books', 1); // invalid.txt ignored
 
-        // 4. Test --force flag
-        $book = Book::first();
-        $book->update(['description' => 'Modified']);
-        
+        // 4. Test --force flag (using Audio as it uses the standard updateOrCreate logic)
+        $audio = Audio::first();
+        $audio->update(['description' => 'Modified']);
+
         $this->artisan('storage:sync --force')
             ->assertExitCode(0);
-            
-        $this->assertEquals('Automatically synced from storage.', Book::first()->description);
+
+        $this->assertEquals('Automatically synced from storage.', Audio::first()->description);
     }
 }

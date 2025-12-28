@@ -50,7 +50,14 @@ class StoreEntityRequest extends FormRequest
         $rules = [
             'title' => 'required|string|max:255',
             'type' => 'required|in:book,video,audio,manuscript',
-            'author' => 'nullable|string|max:255',
+            'author' => 'nullable|string|max:255', // Legacy support
+            'author_ids' => 'nullable|array',
+            'author_ids.*' => 'exists:authors,id',
+            'publisher_id' => 'nullable|exists:publishers,id',
+            'isbn' => 'nullable|string|max:20',
+            'pages' => 'nullable|integer|min:1',
+            'published_year' => 'nullable|integer|min:1000|max:' . (date('Y') + 1),
+            'edition_number' => 'nullable|integer|min:1',
             'century' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'cover' => 'nullable|image|max:2048', // 2MB Max
@@ -63,11 +70,11 @@ class StoreEntityRequest extends FormRequest
         $type = $this->input('type');
 
         if ($type === 'book' || $type === 'manuscript') {
-             $rules['file'] = 'nullable|mimes:pdf|max:51200'; // 50MB
+            $rules['file'] = 'nullable|mimes:pdf|max:51200'; // 50MB
         } elseif ($type === 'audio') {
-             $rules['file'] = 'nullable|mimes:mp3,wav|max:51200';
+            $rules['file'] = 'nullable|mimes:mp3,wav|max:51200';
         } elseif ($type === 'video') {
-             $rules['file'] = 'nullable|mimes:mp4,mov,avi|max:102400'; // 100MB
+            $rules['file'] = 'nullable|mimes:mp4,mov,avi|max:102400'; // 100MB
         }
 
         return $rules;
