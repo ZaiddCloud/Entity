@@ -21,21 +21,7 @@ class Audio extends Entity
         'updated_at'
     ];
 
-    /**
-     * العلاقة مع النسخ (Versions - Polymorphic)
-     */
-    public function versions()
-    {
-        return $this->morphMany(Version::class, 'versionable');
-    }
 
-    /**
-     * العلاقة مع المؤلفين (Authors - Polymorphic)
-     */
-    public function authors()
-    {
-        return $this->morphToMany(Author::class, 'authorable');
-    }
 
     /**
      * خصائص إضافية للصوت

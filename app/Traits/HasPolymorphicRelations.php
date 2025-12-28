@@ -14,11 +14,38 @@ use App\Models\Note;
 use App\Models\Deletion;
 use App\Models\Collection;
 use App\Models\Series;
+use App\Models\Author;
+use App\Models\Booker;
+use App\Models\Version;
 use App\Models\Video;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 trait HasPolymorphicRelations
 {
+    /**
+     * العلاقة مع النسخ (Versions - Polymorphic)
+     */
+    public function versions()
+    {
+        return $this->morphMany(Version::class, 'versionable');
+    }
+
+    /**
+     * العلاقة مع المؤلفين (Authors - Polymorphic)
+     */
+    public function authors()
+    {
+        return $this->morphToMany(Author::class, 'authorable');
+    }
+
+    /**
+     * العلاقة مع المساهمين (Bookers - Polymorphic)
+     */
+    public function bookers()
+    {
+        return $this->morphToMany(Booker::class, 'bookable');
+    }
+
     /**
      * علاقة One-to-Many بوليمورفية
      */

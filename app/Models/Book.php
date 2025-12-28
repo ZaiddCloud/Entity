@@ -29,29 +29,7 @@ class Book extends Entity
         return "{$this->title} - {$this->author}";
     }
 
-    /**
-     * العلاقة مع النسخ (Versions - Polymorphic)
-     */
-    public function versions()
-    {
-        return $this->morphMany(Version::class, 'versionable');
-    }
 
-    /**
-     * العلاقة مع المؤلفين (Authors - Polymorphic)
-     */
-    public function authors()
-    {
-        return $this->morphToMany(Author::class, 'authorable');
-    }
-
-    /**
-     * العلاقة مع المساهمين (Bookers - Polymorphic)
-     */
-    public function bookers()
-    {
-        return $this->morphToMany(Booker::class, 'bookable');
-    }
 
     /**
      * العلاقة مع المواضيع (Topics)
