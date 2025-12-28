@@ -48,24 +48,51 @@ class SeedRealisticData extends Command
             ['email' => 'admin@admin.com'],
             ['name' => 'Admin User', 'password' => Hash::make('admin')]
         );
-        if (User::count() < 5) User::factory(5)->create();
+        if (User::count() < 5)
+            User::factory(5)->create();
         $users = User::all();
 
         // 2. Core Taxonomies
         $categories = collect([
-            'التاريخ العربي', 'علوم القرآن', 'الفقه وأصوله', 'الأدب والشعر',
-            'الفلسفة والمنطق', 'المخطوطات القديمة', 'السيرة النبوية', 'الطب القديم'
+            'التاريخ العربي',
+            'علوم القرآن',
+            'الفقه وأصوله',
+            'الأدب والشعر',
+            'الفلسفة والمنطق',
+            'المخطوطات القديمة',
+            'السيرة النبوية',
+            'الطب القديم'
         ])->map(fn($name) => Category::firstOrCreate(['name' => $name]));
 
         $tags = collect([
-            'نادر', 'محقق', 'نسخة أصلية', 'العصر العباسي', 'الأندلس', 'ملون', 'مترجم'
+            'نادر',
+            'محقق',
+            'نسخة أصلية',
+            'العصر العباسي',
+            'الأندلس',
+            'ملون',
+            'مترجم'
         ])->map(fn($name) => Tag::firstOrCreate(['name' => $name]));
 
-        // 3. Realistic Datasets
+        // 3. New Ecosystem Data (Authors & Publishers)
+        $this->info("Seeding Authors and Publishers...");
+        $authors = collect(['ابن خلدون', 'البخاري', 'الجاحظ', 'المتنبي', 'ابن رشد', 'نجيب محفوظ', 'طه حسين'])
+            ->map(fn($name) => \App\Models\Author::firstOrCreate(
+                ['name' => $name],
+                ['slug' => Str::slug($name, '-', null)]
+            ));
+
+        $publishers = collect(['دار المعرفة', 'دار الشروق', 'مكتبة العبيكان', 'عالم المعرفة', 'مركز دراسات الوحدة العربية'])
+            ->map(fn($name) => \App\Models\Publisher::firstOrCreate(
+                ['name' => $name],
+                ['slug' => Str::slug($name, '-', null)]
+            ));
+
+        // 4. Realistic Datasets
         $dataSets = [
             'book' => [
                 'titles' => ['مقدمة ابن خلدون', 'صحيح البخاري', 'كتاب الحيوان للجاحظ', 'ديوان المتنبي', 'تهافت التهافت'],
-                'authors' => ['ابن خلدون', 'البخاري', 'الجاحظ', 'المتنبي', 'ابن رشد']
+                // Authors are now handled via relationships
             ],
             'manuscript' => [
                 'titles' => ['مخطوط كليلة ودمنة (القرن الرابع)', 'رسالة الشافعي الأصلية', 'مصحف مذهب نادرا'],
@@ -83,40 +110,59 @@ class SeedRealisticData extends Command
 
         $allEntities = collect();
 
-        // 4. Seeding Entities (Main Loop)
+        // 5. Seeding Entities (Main Loop)
         foreach ($dataSets as $type => $set) {
             $this->info("Seeding {$type}s...");
             $bar = $this->output->createProgressBar($count);
             $bar->start();
 
             for ($i = 0; $i < $count; $i++) {
-                $modelClass = match($type) {
+                $modelClass = match ($type) {
                     'book' => Book::class,
                     'manuscript' => Manuscript::class,
                     'audio' => Audio::class,
                     'video' => Video::class,
                 };
 
-                $title = $set['titles'][$i % count($set['titles'])] . " - نسخة " . (string)($i + 1);
-                $author = $set['authors'][$i % count($set['authors'])] ?? 'كاتب مجهول';
+                $title = $set['titles'][$i % count($set['titles'])] . " - نسخة " . (string) ($i + 1);
 
                 $attributes = [
                     'title' => $title,
                     'description' => "وصف تجريبي لـ {$title}. هذا العمل يعتبر ركيزة أساسية في مكتبتنا الرقمية.",
                 ];
 
-                if ($type === 'book') {
-                    $attributes['author'] = $author;
-                    $attributes['isbn'] = Str::random(13);
-                } elseif ($type === 'manuscript') {
-                    $attributes['author'] = $author;
+                // Legacy handling for non-refactored types
+                if ($type !== 'book') {
+                    $legacyAuthor = $set['authors'][$i % count($set['authors'])] ?? 'كاتب مجهول';
+                    $attributes['author'] = $legacyAuthor;
+                }
+
+                if ($type === 'manuscript') {
                     $attributes['century'] = rand(1, 14);
-                } else {
+                } elseif ($type === 'audio' || $type === 'video') {
                     $attributes['duration'] = rand(300, 3600);
                 }
 
                 $entity = $modelClass::create($attributes);
                 $allEntities->push($entity);
+
+                // Book Specific Logic (New Ecosystem)
+                if ($type === 'book') {
+                    // Attach Random Authors
+                    $entity->authors()->attach($authors->random(rand(1, 2))->pluck('id'));
+
+                    // Create Version
+                    \App\Models\Version::create([
+                        'book_id' => $entity->id,
+                        'publisher_id' => $publishers->random()->id,
+                        'isbn' => Str::random(13),
+                        'pages' => rand(100, 1000),
+                        'published_year' => rand(1900, 2024),
+                        'edition_number' => rand(1, 5),
+                        'format' => 'pdf',
+                        'file_path' => null, // Optional now
+                    ]);
+                }
 
                 // Relationships (Every entity MUST have these)
                 $entity->categories()->attach($categories->random(1)->pluck('id'));
@@ -155,9 +201,9 @@ class SeedRealisticData extends Command
             $this->newLine();
         }
 
-        // 5. Seeding Collections & Series (Overall grouping)
+        // 6. Seeding Collections & Series (Overall grouping)
         $this->info("Creating Collections and Series...");
-        
+
         $collectionTitles = ['مجموعتي المفضلة', 'مراجعات أدبية', 'كنوز تراثية'];
         foreach ($collectionTitles as $name) {
             $col = Collection::create([
@@ -166,7 +212,7 @@ class SeedRealisticData extends Command
                 'description' => "مجموعة تضم مختارات من $name",
                 'is_public' => true
             ]);
-            
+
             // Add 3-5 random entities to each collection
             $allEntities->random(rand(3, 5))->each(fn($e) => $col->addEntity($e));
         }
@@ -178,7 +224,7 @@ class SeedRealisticData extends Command
                 'description' => "سلسلة مرتبة لـ $title",
                 'order_column' => $i + 1
             ]);
-            
+
             // Add 3 random entities to each series
             $allEntities->random(3)->each(fn($e, $idx) => $series->addEntity($e, $idx + 1));
         }
