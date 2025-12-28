@@ -2,15 +2,22 @@
 
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\AudioController;
+use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\BookController;
+use App\Http\Controllers\BookerController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CollectionController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DeletionController;
+use App\Http\Controllers\GlobalSearchController;
+use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\ManuscriptController;
 use App\Http\Controllers\NoteController;
+use App\Http\Controllers\PublisherController;
 use App\Http\Controllers\SeriesController;
+use App\Http\Controllers\ShelfController;
 use App\Http\Controllers\TagController;
+use App\Http\Controllers\TopicController;
 use App\Http\Controllers\VideoController;
 use Illuminate\Support\Facades\Route;
 
@@ -32,6 +39,7 @@ Route::post('logout', [App\Http\Controllers\Auth\LoginController::class, 'destro
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/search', [GlobalSearchController::class, 'index'])->name('search');
 
     // Web Resource Routes
     Route::resource('books', BookController::class);
@@ -45,6 +53,24 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('tags/bulk-destroy', [TagController::class, 'bulkDestroy'])->name('tags.bulk-destroy');
     Route::resource('tags', TagController::class);
+
+    Route::post('authors/bulk-destroy', [AuthorController::class, 'bulkDestroy'])->name('authors.bulk-destroy');
+    Route::resource('authors', AuthorController::class);
+
+    Route::post('publishers/bulk-destroy', [PublisherController::class, 'bulkDestroy'])->name('publishers.bulk-destroy');
+    Route::resource('publishers', PublisherController::class);
+
+    Route::post('bookers/bulk-destroy', [BookerController::class, 'bulkDestroy'])->name('bookers.bulk-destroy');
+    Route::resource('bookers', BookerController::class);
+
+    Route::post('topics/bulk-destroy', [TopicController::class, 'bulkDestroy'])->name('topics.bulk-destroy');
+    Route::resource('topics', TopicController::class);
+
+    Route::post('languages/bulk-destroy', [LanguageController::class, 'bulkDestroy'])->name('languages.bulk-destroy');
+    Route::resource('languages', LanguageController::class);
+
+    Route::post('shelves/bulk-destroy', [ShelfController::class, 'bulkDestroy'])->name('shelves.bulk-destroy');
+    Route::resource('shelves', ShelfController::class);
 
     Route::resource('collections', CollectionController::class);
     Route::resource('series', SeriesController::class);
