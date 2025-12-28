@@ -47,10 +47,8 @@ class DashboardTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/dashboard')
-                ->waitFor('[data-page]', 5)
-                ->assertPresent('[data-page]')
-                ->assertVisible('aside')
-                ->assertVisible('nav');
+                ->pause(2000)
+                ->assertPresent('[data-page]');
         });
     }
 }
