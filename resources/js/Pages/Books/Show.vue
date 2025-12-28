@@ -12,6 +12,7 @@ defineProps({
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+                    <span class="text-gray-400 dark:text-gray-500 ml-2 italic">{{ book.formatted_serial_number }}</span>
                     تفاصيل الكتاب: {{ book.title }}
                 </h2>
                 <div class="flex space-x-2 space-x-reverse">

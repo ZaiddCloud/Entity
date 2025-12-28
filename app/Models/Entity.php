@@ -43,9 +43,16 @@ abstract class Entity extends Model
     /**
      * الخصائص المشتركة
      */
+    protected $appends = ['type', 'formatted_serial_number'];
+
     public function getTypeAttribute(): string
     {
         return class_basename($this);
+    }
+
+    public function getFormattedSerialNumberAttribute(): string
+    {
+        return '#' . str_pad($this->serial_number, 5, '0', STR_PAD_LEFT);
     }
 
     public static function getCached($id)
