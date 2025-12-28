@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
@@ -14,6 +15,9 @@ return new class extends Migration {
             $table->timestamps();
             $table->softDeletes();
         });
+
+        // إضافة الرقم التسلسلي باستخدام SQL مباشر لضمان التوافق مع MariaDB عند وجود UUID كـ Primary Key
+        DB::statement('ALTER TABLE bookers ADD serial_number BIGINT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE AFTER id');
 
         Schema::create('bookables', function (Blueprint $table) {
             $table->foreignUuid('booker_id')->references('id')->on('bookers')->onDelete('cascade');
