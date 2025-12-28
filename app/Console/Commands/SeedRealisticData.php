@@ -9,6 +9,10 @@ use App\Models\Book;
 use App\Models\Audio;
 use App\Models\Video;
 use App\Models\Manuscript;
+use App\Models\Author;
+use App\Models\Publisher;
+use App\Models\Booker;
+use App\Models\Version;
 use App\Models\Category;
 use App\Models\Tag;
 use App\Models\Activity;
@@ -74,37 +78,57 @@ class SeedRealisticData extends Command
             'مترجم'
         ])->map(fn($name) => Tag::firstOrCreate(['name' => $name]));
 
-        // 3. New Ecosystem Data (Authors & Publishers)
-        $this->info("Seeding Authors and Publishers...");
-        $authors = collect(['ابن خلدون', 'البخاري', 'الجاحظ', 'المتنبي', 'ابن رشد', 'نجيب محفوظ', 'طه حسين'])
-            ->map(fn($name) => \App\Models\Author::firstOrCreate(
-                ['name' => $name],
-                ['slug' => Str::slug($name, '-', null)]
-            ));
+        // 3. New Ecosystem Data (Authors, Publishers, Bookers)
+        $this->info("Seeding Authors, Publishers and Contributors...");
 
-        $publishers = collect(['دار المعرفة', 'دار الشروق', 'مكتبة العبيكان', 'عالم المعرفة', 'مركز دراسات الوحدة العربية'])
-            ->map(fn($name) => \App\Models\Publisher::firstOrCreate(
-                ['name' => $name],
-                ['slug' => Str::slug($name, '-', null)]
-            ));
+        $authorsList = ['ابن خلدون', 'البخاري', 'الجاحظ', 'المتنبي', 'ابن رشد', 'نجيب محفوظ', 'طه حسين', 'ابن المقفع', 'الشافعي', 'المنشاوي', 'د. السويدان'];
+        $authors = collect($authorsList)->map(fn($name) => Author::firstOrCreate(
+            ['name' => $name],
+            ['slug' => Str::slug($name, '-', null)]
+        ));
+
+        $publishersList = ['دار المعرفة', 'دار الشروق', 'مكتبة العبيكان', 'عالم المعرفة', 'مركز دراسات الوحدة العربية', 'مؤسسة التراث', 'إذاعة القرآن الكريم'];
+        $publishers = collect($publishersList)->map(fn($name) => Publisher::firstOrCreate(
+            ['name' => $name],
+            ['slug' => Str::slug($name, '-', null)]
+        ));
+
+        $bookersList = ['أحمد شاكر', 'محمد فؤاد عبد الباقي', 'ناصر الدين الألباني', 'بشار عواد معروف'];
+        $bookers = collect($bookersList)->map(fn($name) => Booker::firstOrCreate(
+            ['name' => $name],
+            ['slug' => Str::slug($name, '-', null)]
+        ));
 
         // 4. Realistic Datasets
         $dataSets = [
             'book' => [
-                'titles' => ['مقدمة ابن خلدون', 'صحيح البخاري', 'كتاب الحيوان للجاحظ', 'ديوان المتنبي', 'تهافت التهافت'],
-                // Authors are now handled via relationships
+                'items' => [
+                    ['title' => 'مقدمة ابن خلدون', 'author' => 'ابن خلدون'],
+                    ['title' => 'صحيح البخاري', 'author' => 'البخاري'],
+                    ['title' => 'كتاب الحيوان', 'author' => 'الجاحظ'],
+                    ['title' => 'ديوان المتنبي', 'author' => 'المتنبي'],
+                    ['title' => 'تهافت التهافت', 'author' => 'ابن رشد'],
+                ]
             ],
             'manuscript' => [
-                'titles' => ['مخطوط كليلة ودمنة (القرن الرابع)', 'رسالة الشافعي الأصلية', 'مصحف مذهب نادرا'],
-                'authors' => ['ابن المقفع', 'الشافعي', 'مجهول']
+                'items' => [
+                    ['title' => 'مخطوط كليلة ودمنة', 'author' => 'ابن المقفع'],
+                    ['title' => 'رسالة الشافعي الأصلية', 'author' => 'الشافعي'],
+                    ['title' => 'مصحف مذهب نادر', 'author' => 'مجهول'],
+                ]
             ],
             'audio' => [
-                'titles' => ['شرح ألفية ابن مالك', 'تلاوات المنشاوي', 'محاضرة في التاريخ'],
-                'authors' => ['ابن مالك', 'المنشاوي', 'د. السويدان']
+                'items' => [
+                    ['title' => 'شرح ألفية ابن مالك', 'author' => 'ابن مالك'],
+                    ['title' => 'تلاوات المنشاوي', 'author' => 'المنشاوي'],
+                    ['title' => 'محاضرة في التاريخ', 'author' => 'د. السويدان'],
+                ]
             ],
             'video' => [
-                'titles' => ['وثائقي العمارة الإسلامية', 'ندوة المخطوطات'],
-                'authors' => ['الوثائقية', 'مركز التراث']
+                'items' => [
+                    ['title' => 'وثائقي العمارة الإسلامية', 'author' => 'مركز التراث'],
+                    ['title' => 'ندوة المخطوطات الدولية', 'author' => 'مؤسسة التراث'],
+                ]
             ]
         ];
 
@@ -124,11 +148,17 @@ class SeedRealisticData extends Command
                     'video' => Video::class,
                 };
 
-                $title = $set['titles'][$i % count($set['titles'])] . " - نسخة " . (string) ($i + 1);
+                $itemData = $set['items'][$i % count($set['items'])];
+                $title = $itemData['title'];
+
+                // If we are creating more than the unique titles, add a suffix to avoid duplicate slugs
+                if ($i >= count($set['items'])) {
+                    $title .= " (" . (string) ($i + 1) . ")";
+                }
 
                 $attributes = [
                     'title' => $title,
-                    'description' => "وصف تجريبي لـ {$title}. هذا العمل يعتبر ركيزة أساسية في مكتبتنا الرقمية.",
+                    'description' => "وصف تجريبي لـ {$title}. هذا العمل يعتبر ركيزة أساسية في مكتبتنا الرقمية ويوفر مادة علمية غنية للباحثين والقراء المهتمين بالتراث العربي والإسلامي.",
                 ];
 
                 if ($type === 'manuscript') {
@@ -142,14 +172,26 @@ class SeedRealisticData extends Command
 
                 // 6. Ecosystem Logic (Polymorphic Authors & Versions)
 
-                // Attach Random Authors
-                $entity->authors()->attach($authors->random(rand(1, 2))->pluck('id'));
+                // Attach Specific or Random Authors
+                $authorName = $itemData['author'];
+                $assignedAuthor = Author::where('name', $authorName)->first();
+                if ($assignedAuthor) {
+                    $entity->authors()->attach($assignedAuthor->id);
+                } else {
+                    $entity->authors()->attach($authors->random(rand(1, 2))->pluck('id'));
+                }
+
+                // Attach Contributors (Bookers) for Books and Manuscripts
+                if (($type === 'book' || $type === 'manuscript') && rand(1, 10) > 4) {
+                    $role = ($type === 'book') ? 'editor' : 'illustrator';
+                    $entity->bookers()->attach($bookers->random()->id, ['role' => $role]);
+                }
 
                 // Create Version
-                \App\Models\Version::create([
+                Version::create([
                     'versionable_id' => $entity->id,
                     'versionable_type' => $type, // Matches morphMap
-                    'publisher_id' => ($type === 'book' || $type === 'manuscript') ? $publishers->random()->id : null,
+                    'publisher_id' => $publishers->random()->id,
                     'isbn' => ($type === 'book') ? Str::random(13) : null,
                     'pages' => ($type === 'book' || $type === 'manuscript') ? rand(100, 1000) : null,
                     'published_year' => rand(1900, 2024),
@@ -172,7 +214,7 @@ class SeedRealisticData extends Command
                         'user_id' => $users->random()->id,
                         'entity_id' => $entity->id,
                         'entity_type' => $type,
-                        'content' => "تعليق على {$title}."
+                        'content' => "تعليق ثري على {$title}، أنصح الجميع بالاطلاع عليه."
                     ]);
                 }
 
@@ -181,7 +223,7 @@ class SeedRealisticData extends Command
                         'user_id' => $users->random()->id,
                         'entity_id' => $entity->id,
                         'entity_type' => $type,
-                        'content' => "ملاحظة علمية خاصة بـ {$title}."
+                        'content' => "ملاحظة علمية هامة تتعلق بالمحتوى الموجود في {$title}."
                     ]);
                 }
 
@@ -212,7 +254,7 @@ class SeedRealisticData extends Command
             ]);
 
             // Add 3-5 random entities to each collection
-            $allEntities->random(rand(3, 5))->each(fn($e) => $col->addEntity($e));
+            $allEntities->random(min(rand(3, 5), $allEntities->count()))->each(fn($e) => $col->addEntity($e));
         }
 
         $seriesTitles = ['سلسلة تاريخ الأندلس', 'روائع الأدب العربي'];
@@ -224,7 +266,7 @@ class SeedRealisticData extends Command
             ]);
 
             // Add 3 random entities to each series
-            $allEntities->random(3)->each(fn($e, $idx) => $series->addEntity($e, $idx + 1));
+            $allEntities->random(min(3, $allEntities->count()))->each(fn($e, $idx) => $series->addEntity($e, $idx + 1));
         }
 
         $this->info("Seeding completed successfully with all relationships!");

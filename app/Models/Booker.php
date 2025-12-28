@@ -17,15 +17,34 @@ class Booker extends Model
     ];
 
     /**
-     * الإعمال التي ساهم فيها هذا الشخص (كتب، فيديوهات، الخ)
+     * الكتب التي ساهم فيها هذا الشخص
      */
-    public function bookables()
+    public function books()
     {
         return $this->morphedByMany(Book::class, 'bookable');
     }
 
     /**
-     * يمكننا إضافة علاقات أخرى هنا مثل videos(), manuscripts() لاحقاً
-     * أو استخدام دالة عامة
+     * المخطوطات التي ساهم فيها هذا الشخص
      */
+    public function manuscripts()
+    {
+        return $this->morphedByMany(Manuscript::class, 'bookable');
+    }
+
+    /**
+     * الصوتيات التي ساهم فيها هذا الشخص
+     */
+    public function audios()
+    {
+        return $this->morphedByMany(Audio::class, 'bookable');
+    }
+
+    /**
+     * الفيديوهات التي ساهم فيها هذا الشخص
+     */
+    public function videos()
+    {
+        return $this->morphedByMany(Video::class, 'bookable');
+    }
 }
