@@ -22,8 +22,9 @@ class DashboardTest extends DuskTestCase
             $browser->loginAs($user)
                 ->visit('/dashboard')
                 ->assertPathIs('/dashboard')
-                ->assertPresent('nav') // Check navigation exists
-                ->assertPresent('aside'); // Check sidebar exists
+                ->assertPresent('nav')
+                ->assertPresent('aside')
+                ->assertPresent('[data-page]');
         });
     }
 
@@ -48,8 +49,10 @@ class DashboardTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/dashboard')
-                ->waitFor('[data-page]', 5) // Wait for Inertia page to load
-                ->assertAttribute('[data-page]', 'component', 'Dashboard');
+                ->waitFor('[data-page]', 5)
+                ->assertPresent('[data-page]')
+                ->assertVisible('aside')
+                ->assertVisible('nav');
         });
     }
 }

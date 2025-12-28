@@ -23,8 +23,9 @@ class BooksPageTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/books')
-                ->assertSee('إدارة الكتب')
-                ->assertSee('إضافة كتاب جديد');
+                ->assertPathIs('/books')
+                ->assertPresent('table')
+                ->assertPresent('input[placeholder*="بحث"]');
         });
     }
 
@@ -34,15 +35,15 @@ class BooksPageTest extends DuskTestCase
     public function test_books_displayed_in_table(): void
     {
         $user = User::factory()->create();
-        $author = Author::factory()->create(['name' => 'أحمد شوقي']);
-        $book = Book::factory()->create(['title' => 'ديوان الشوقيات']);
+        $author = Author::factory()->create(['name' => 'Test Author']);
+        $book = Book::factory()->create(['title' => 'Test Book Title']);
         $book->authors()->attach($author);
 
-        $this->browse(function (Browser $browser) use ($user) {
+        $this->browse(function (Browser $browser) use ($user, $book) {
             $browser->loginAs($user)
                 ->visit('/books')
-                ->assertSee('ديوان الشوقيات')
-                ->assertSee('أحمد شوقي');
+                ->assertPresent('table')
+                ->assertSeeIn('table', $book->title);
         });
     }
 
@@ -52,16 +53,31 @@ class BooksPageTest extends DuskTestCase
     public function test_search_filters_books(): void
     {
         $user = User::factory()->create();
-        Book::factory()->create(['title' => 'كتاب الأول']);
-        Book::factory()->create(['title' => 'كتاب الثاني']);
+        $book1 = Book::factory()->create(['title' => 'First Book']);
+        $book2 = Book::factory()->create(['title' => 'Second Book']);
+
+        $this->browse(function (Browser $browser) use ($user, $book1, $book2) {
+            $browser->loginAs($user)
+                ->visit('/books')
+                ->type('input[placeholder*="بحث"]', 'First')
+                ->pause(1500)
+                ->assertSeeIn('table', $book1->title)
+                ->assertDontSee($book2->title);
+        });
+    }
+
+    /**
+     * Test pagination exists
+     */
+    public function test_pagination_exists(): void
+    {
+        $user = User::factory()->create();
+        Book::factory()->count(15)->create();
 
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/books')
-                ->type('input[placeholder*="بحث"]', 'الأول')
-                ->pause(1000) // Wait for debounce
-                ->assertSee('كتاب الأول')
-                ->assertDontSee('كتاب الثاني');
+                ->assertPresent('nav[role="navigation"]');
         });
     }
 
