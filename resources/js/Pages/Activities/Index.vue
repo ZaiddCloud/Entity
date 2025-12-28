@@ -33,7 +33,6 @@
                         <select
                             v-model="type"
                             class="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-black focus:ring-4 focus:ring-indigo-500/10 rounded-2xl text-sm font-black appearance-none"
-                            style="background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\"); background-position: left 1rem center; background-repeat: no-repeat; background-size: 1.5em;"
                         >
                             <option :value="undefined">جميع أنواع العمليات</option>
                             <option value="created">إنشاء عنصر جديد</option>
