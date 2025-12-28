@@ -31,12 +31,24 @@ class DashboardController extends Controller
             'tags' => Tag::count(),
             'comments' => Comment::count(),
             'activities' => Activity::count(),
+            'versions' => \App\Models\Version::count(),
         ];
 
-        // Fetch 5 most recent activities with their related entity and user
-        $recent = Activity::with(['user', 'entity'])
+        // 1. Recent Books with Authors & Versions
+        $recentBooks = Book::with([
+            'authors',
+            'versions' => function ($q) {
+                $q->latest()->limit(1);
+            }
+        ])
             ->latest()
-            ->limit(8)
+            ->limit(5)
+            ->get();
+
+        // 2. Fetch recent activities
+        $recentActivities = Activity::with(['user', 'entity'])
+            ->latest()
+            ->limit(10)
             ->get()
             ->map(function ($activity) {
                 return [
@@ -53,7 +65,8 @@ class DashboardController extends Controller
 
         return Inertia::render('Dashboard', [
             'stats' => $stats,
-            'recent' => $recent,
+            'recent' => $recentActivities,
+            'recentBooks' => $recentBooks,
         ]);
     }
 }
