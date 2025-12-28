@@ -12,7 +12,8 @@ class Version extends Model
     use HasFactory, HasUuids, SoftDeletes;
 
     protected $fillable = [
-        'book_id',
+        'versionable_id',
+        'versionable_type',
         'publisher_id',
         'language_id',
         'shelf_id',
@@ -26,9 +27,12 @@ class Version extends Model
         'edition_number',
     ];
 
-    public function book()
+    /**
+     * العنصر المرتبط بهذه النسخة (كتاب، فيديو، إلخ)
+     */
+    public function versionable()
     {
-        return $this->belongsTo(Book::class);
+        return $this->morphTo();
     }
 
     public function publisher()

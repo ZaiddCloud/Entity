@@ -5,9 +5,9 @@ namespace Tests\Unit\Models;
 use Tests\TestCase;
 use App\Models\Book;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class BookRelationsTest extends TestCase
 {
@@ -19,7 +19,7 @@ class BookRelationsTest extends TestCase
         $book = Book::factory()->create();
 
         $this->assertTrue(method_exists($book, 'versions'), 'Book model is missing versions() relationship');
-        $this->assertInstanceOf(HasMany::class, $book->versions());
+        $this->assertInstanceOf(MorphMany::class, $book->versions());
     }
 
     /** @test */
@@ -28,7 +28,7 @@ class BookRelationsTest extends TestCase
         $book = Book::factory()->create();
 
         $this->assertTrue(method_exists($book, 'authors'), 'Book model is missing authors() relationship');
-        $this->assertInstanceOf(BelongsToMany::class, $book->authors());
+        $this->assertInstanceOf(MorphToMany::class, $book->authors());
     }
 
     /** @test */

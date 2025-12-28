@@ -30,19 +30,19 @@ class Book extends Entity
     }
 
     /**
-     * العلاقة مع النسخ (Versions)
+     * العلاقة مع النسخ (Versions - Polymorphic)
      */
     public function versions()
     {
-        return $this->hasMany(Version::class);
+        return $this->morphMany(Version::class, 'versionable');
     }
 
     /**
-     * العلاقة مع المؤلفين (Authors)
+     * العلاقة مع المؤلفين (Authors - Polymorphic)
      */
     public function authors()
     {
-        return $this->belongsToMany(Author::class, 'author_book');
+        return $this->morphToMany(Author::class, 'authorable');
     }
 
     /**

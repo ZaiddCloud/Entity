@@ -20,10 +20,34 @@ class Author extends Model
     ];
 
     /**
-     * الكتب التي ألفها هذا المؤلف
+     * الكتب المرتبطة بهذا المؤلف
      */
     public function books()
     {
-        return $this->belongsToMany(Book::class, 'author_book');
+        return $this->morphedByMany(Book::class, 'authorable');
+    }
+
+    /**
+     * المرئيات المرتبطة بهذا المؤلف
+     */
+    public function videos()
+    {
+        return $this->morphedByMany(Video::class, 'authorable');
+    }
+
+    /**
+     * الصوتيات المرتبطة بهذا المؤلف
+     */
+    public function audios()
+    {
+        return $this->morphedByMany(Audio::class, 'authorable');
+    }
+
+    /**
+     * المخطوطات المرتبطة بهذا المؤلف
+     */
+    public function manuscripts()
+    {
+        return $this->morphedByMany(Manuscript::class, 'authorable');
     }
 }

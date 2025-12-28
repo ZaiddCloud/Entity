@@ -19,11 +19,13 @@ class AudioController extends Controller
 {
     protected $manager;
     protected $query;
+    protected $mediaManager;
 
-    public function __construct(EntityManagerService $manager, EntityQueryService $query)
+    public function __construct(EntityManagerService $manager, EntityQueryService $query, \App\Services\MediaManagerService $mediaManager)
     {
         $this->manager = $manager;
         $this->query = $query;
+        $this->mediaManager = $mediaManager;
     }
 
     /**
@@ -33,10 +35,13 @@ class AudioController extends Controller
     {
         Gate::authorize('viewAny', Audio::class);
         $filters = $request->only(['search', 'category', 'tag']);
-        
-        $audios = Audio::with(['tags', 'categories'])
+
+        $audios = Audio::with(['tags', 'categories', 'authors', 'versions.publisher'])
             ->when($request->search, function ($query, $search) {
-                $query->where('title', 'like', "%{$search}%");
+                $query->where('title', 'like', "%{$search}%")
+                    ->orWhereHas('authors', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
             })
             ->when($request->category, function ($query, $category) {
                 $query->whereHas('categories', function ($q) use ($category) {
@@ -60,13 +65,14 @@ class AudioController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(): Response
     {
         Gate::authorize('create', Audio::class);
-        return Inertia::render('Audio/Create');
+        return Inertia::render('Audio/Create', [
+            'authors' => \App\Models\Author::orderBy('name')->get(['id', 'name']),
+            'publishers' => \App\Models\Publisher::orderBy('name')->get(['id', 'name']),
+            'categories' => \App\Models\Category::orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
     /**
@@ -76,9 +82,9 @@ class AudioController extends Controller
     {
         Gate::authorize('create', Audio::class);
         $data = $request->validated();
-        
+
         if (!isset($data['type'])) {
-             $data['type'] = 'audio';
+            $data['type'] = 'audio';
         }
 
         if ($request->hasFile('cover')) {
@@ -89,7 +95,8 @@ class AudioController extends Controller
             $data['file_path'] = $request->file('file')->store('audios', 'public');
         }
 
-        $audio = $this->manager->create($data);
+        $data['type'] = 'audio';
+        $this->mediaManager->createMedia($data);
 
         return redirect()->route('audios.index')
             ->with('message', 'تم إنشاء الملف الصوتي بنجاح');
@@ -102,7 +109,7 @@ class AudioController extends Controller
     {
         Gate::authorize('view', $audio);
         return Inertia::render('Audio/Show', [
-            'audio' => $audio->load(['tags', 'categories', 'comments.user']),
+            'audio' => $audio->load(['tags', 'categories', 'authors', 'versions.publisher', 'comments.user']),
         ]);
     }
 
@@ -113,7 +120,10 @@ class AudioController extends Controller
     {
         Gate::authorize('update', $audio);
         return Inertia::render('Audio/Edit', [
-            'audio' => $audio->load(['tags', 'categories']),
+            'audio' => $audio->load(['tags', 'categories', 'authors', 'versions']),
+            'authors' => \App\Models\Author::orderBy('name')->get(['id', 'name']),
+            'publishers' => \App\Models\Publisher::orderBy('name')->get(['id', 'name']),
+            'categories' => \App\Models\Category::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -133,7 +143,7 @@ class AudioController extends Controller
             $data['file_path'] = $request->file('file')->store('audios', 'public');
         }
 
-        $this->manager->update($audio, $data);
+        $this->mediaManager->updateMedia($audio, $data);
 
         return redirect()->route('audios.show', $audio)
             ->with('message', 'تم تحديث الملف الصوتي بنجاح');

@@ -18,10 +18,10 @@ return new class extends Migration {
             $table->softDeletes();
         });
 
-        Schema::create('author_book', function (Blueprint $table) {
-            $table->foreignUuid('book_id')->references('id')->on('books')->onDelete('cascade');
+        Schema::create('authorables', function (Blueprint $table) {
+            $table->uuidMorphs('authorable');
             $table->foreignUuid('author_id')->references('id')->on('authors')->onDelete('cascade');
-            $table->primary(['book_id', 'author_id']);
+            $table->primary(['authorable_id', 'authorable_type', 'author_id']);
         });
     }
 

@@ -115,13 +115,21 @@ class ConsoleCommandsTest extends TestCase
         $this->assertDatabaseHas('books', ['title' => 'Test Book']);
         $book = Book::where('title', 'Test Book')->first();
         $this->assertDatabaseHas('versions', [
-            'book_id' => $book->id,
+            'versionable_id' => $book->id,
+            'versionable_type' => 'book',
             'file_path' => 'books/test-book.pdf'
         ]);
 
-        // B. Other types behave as before (Legacy)
-        $this->assertDatabaseHas('audios', ['format' => 'mp3']);
-        $this->assertDatabaseHas('manuscripts', ['century' => 0]);
+        // B. Other types also have versions now
+        $this->assertDatabaseHas('audios', ['title' => 'Test Audio']);
+        $audio = Audio::where('title', 'Test Audio')->first();
+        $this->assertDatabaseHas('versions', [
+            'versionable_id' => $audio->id,
+            'versionable_type' => 'audio',
+            'file_path' => 'audios/test-audio.mp3'
+        ]);
+
+        $this->assertDatabaseHas('manuscripts', ['title' => 'Test Ms']);
         $this->assertDatabaseCount('books', 1); // invalid.txt ignored
 
         // 4. Test --force flag (using Audio as it uses the standard updateOrCreate logic)

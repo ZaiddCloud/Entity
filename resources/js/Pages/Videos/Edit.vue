@@ -4,10 +4,17 @@ import { Head, useForm, Link } from '@inertiajs/vue3';
 
 const props = defineProps({
     video: Object,
+    authors: Array,
+    publishers: Array,
+    categories: Array,
 });
 
 const form = useForm({
     title: props.video.title,
+    duration: props.video.duration || '',
+    author_ids: props.video.authors?.map(a => a.id) || [],
+    publisher_id: props.video.versions?.[0]?.publisher_id || '',
+    published_year: props.video.versions?.[0]?.published_year || '',
     description: props.video.description || '',
     cover: null,
     file: null,
@@ -43,6 +50,58 @@ const submit = () => {
                                     autofocus
                                 />
                                 <div v-if="form.errors.title" class="mt-2 text-sm text-red-600">{{ form.errors.title }}</div>
+                            </div>
+
+                            <!-- Authors (Multi-Select) -->
+                            <div>
+                                <label for="authors" class="block text-sm font-medium text-gray-700 dark:text-gray-300">المؤلفون / المقدمون</label>
+                                <select
+                                    id="authors"
+                                    multiple
+                                    class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm h-32"
+                                    v-model="form.author_ids"
+                                >
+                                    <option v-for="author in authors" :key="author.id" :value="author.id">
+                                        {{ author.name }}
+                                    </option>
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">اضغط Ctrl لتحديد أكثر من مؤلف</p>
+                            </div>
+
+                            <!-- Publisher -->
+                            <div>
+                                <label for="publisher" class="block text-sm font-medium text-gray-700 dark:text-gray-300">مركز الإنتاج</label>
+                                <select
+                                    id="publisher"
+                                    class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                                    v-model="form.publisher_id"
+                                >
+                                    <option value="">اختر مركز إنتاج...</option>
+                                    <option v-for="publisher in publishers" :key="publisher.id" :value="publisher.id">
+                                        {{ publisher.name }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="duration" class="block text-sm font-medium text-gray-700 dark:text-gray-300">المدة (بالثواني)</label>
+                                    <input
+                                        id="duration"
+                                        type="number"
+                                        class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                                        v-model="form.duration"
+                                    />
+                                </div>
+                                <div>
+                                    <label for="published_year" class="block text-sm font-medium text-gray-700 dark:text-gray-300">سنة الإنتاج</label>
+                                    <input
+                                        id="published_year"
+                                        type="number"
+                                        class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                                        v-model="form.published_year"
+                                    />
+                                </div>
                             </div>
 
                             <div>

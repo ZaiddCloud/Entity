@@ -19,13 +19,13 @@ class BookController extends Controller
 {
     protected $manager;
     protected $query;
-    protected $bookManager;
+    protected $mediaManager;
 
-    public function __construct(EntityManagerService $manager, EntityQueryService $query, \App\Services\BookManagerService $bookManager)
+    public function __construct(EntityManagerService $manager, EntityQueryService $query, \App\Services\MediaManagerService $mediaManager)
     {
         $this->manager = $manager;
         $this->query = $query;
-        $this->bookManager = $bookManager;
+        $this->mediaManager = $mediaManager;
     }
 
     /**
@@ -100,7 +100,8 @@ class BookController extends Controller
             $data['cover_path'] = $request->file('cover')->store('covers', 'public');
         }
 
-        $this->bookManager->createBook($data);
+        $data['type'] = 'book';
+        $this->mediaManager->createMedia($data);
 
         return redirect()->route('books.index')
             ->with('message', 'تم إنشاء الكتاب بنجاح');
@@ -154,7 +155,7 @@ class BookController extends Controller
             $data['file_path'] = $request->file('file')->store('books', 'public');
         }
 
-        $this->bookManager->updateBook($book, $data);
+        $this->mediaManager->updateMedia($book, $data);
 
         $book->refresh(); // Refresh to get updated slug if changed
 

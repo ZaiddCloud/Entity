@@ -89,61 +89,44 @@ class StorageSync extends Command
             $title = Str::headline($fileName);
             $slug = Str::slug($title);
 
-            // === Special Logic for Books (Versioned System) ===
-            if ($modelClass === Book::class) {
-                // 1. Check if this VERSION exists
-                $versionExists = \App\Models\Version::where('file_path', $filePath)->exists();
+            $fileName = pathinfo($filePath, PATHINFO_FILENAME);
+            $title = Str::headline($fileName);
+            $slug = Str::slug($title);
 
-                if (!$versionExists || $this->option('force')) {
-                    // 2. Find or Create the abstract Book
-                    $book = Book::firstOrCreate(
-                        ['slug' => $slug], // Assume slug is unique enough for sync
-                        [
-                            'title' => $title,
-                            'description' => 'Automatically synced book.',
-                            // 'author' => 'Unknown', // We can remove this as we use relations now
-                        ]
-                    );
+            // 1. Check if this VERSION already exists for this file
+            $versionExists = \App\Models\Version::where('file_path', $filePath)->exists();
 
-                    // 3. Create/Update the Version
-                    \App\Models\Version::updateOrCreate(
-                        ['file_path' => $filePath],
-                        [
-                            'book_id' => $book->id,
-                            'format' => $extension,
-                            'file_size' => Storage::disk('public')->size($filePath),
-                            'edition_number' => 1,
-                        ]
-                    );
+            if (!$versionExists || $this->option('force')) {
+                // 2. Find or Create the abstract Entity (Book, Audio, Video, Manuscript)
+                $entity = $modelClass::where('slug', $slug)->first();
 
-                    $count++;
-                    $this->line("  [+] Synced Version for: {$title}");
-                }
-                continue; // Skip the standard logic below
-            }
-
-            // === Standard Logic for Other Entities (Legacy) ===
-            // Check if record exists
-            $exists = $modelClass::where('file_path', $filePath)->exists();
-
-            if (!$exists || $this->option('force')) {
-                $data = [
-                    'title' => $title,
-                    'slug' => $slug,
-                    'file_path' => $filePath,
-                    'description' => 'Automatically synced from storage.',
-                ];
-
-                // Add specific fields based on model
-                if ($modelClass === Audio::class || $modelClass === Video::class) {
-                    $data['format'] = $extension;
-                    $data['duration'] = 0;
-                } elseif ($modelClass === Manuscript::class) {
-                    $data['author'] = 'Unknown';
-                    $data['century'] = 0;
+                if (!$entity) {
+                    $entity = $modelClass::create([
+                        'slug' => $slug,
+                        'title' => $title,
+                        'description' => 'Automatically synced from storage.',
+                        'file_path' => $filePath,
+                    ]);
+                } elseif ($this->option('force')) {
+                    $entity->update([
+                        'title' => $title,
+                        'description' => 'Automatically synced from storage.',
+                        'file_path' => $filePath,
+                    ]);
                 }
 
-                $modelClass::updateOrCreate(['file_path' => $filePath], $data);
+                // 3. Create/Update the Version (Polymorphic)
+                \App\Models\Version::updateOrCreate(
+                    ['file_path' => $filePath],
+                    [
+                        'versionable_id' => $entity->id,
+                        'versionable_type' => $entity->type, // This uses the model's type attribute (audios, videos, etc.)
+                        'format' => $extension,
+                        'file_size' => Storage::disk('public')->size($filePath),
+                        'edition_number' => 1,
+                    ]
+                );
+
                 $count++;
                 $this->line("  [+] Synced: {$title}");
             }

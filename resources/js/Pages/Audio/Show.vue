@@ -44,9 +44,28 @@ defineProps({
                                         <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ audio.title }}</dd>
                                     </div>
                                     <div class="sm:col-span-1">
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Slug</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ audio.slug }}</dd>
+                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">المؤلفون / القراء</dt>
+                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                                            <span v-if="audio.authors && audio.authors.length">
+                                                {{ audio.authors.map(a => a.name).join('، ') }}
+                                            </span>
+                                            <span v-else class="italic text-gray-400">غير محدد</span>
+                                        </dd>
                                     </div>
+
+                                    <!-- Version Details -->
+                                    <template v-if="audio.versions && audio.versions.length">
+                                        <div class="sm:col-span-1">
+                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">الناشر / المنتج</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                                                {{ audio.versions[0].publisher?.name || 'غير معروف' }}
+                                            </dd>
+                                        </div>
+                                        <div class="sm:col-span-1">
+                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">سنة الإصدار</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ audio.versions[0].published_year || '-' }}</dd>
+                                        </div>
+                                    </template>
                                 </dl>
                             </div>
                             
@@ -56,10 +75,10 @@ defineProps({
                                     <img :src="'/storage/' + audio.cover_path" alt="Cover" class="w-full max-w-md h-auto rounded-lg shadow-md object-cover">
                                 </div>
 
-                                <div v-if="audio.file_path" class="mb-6">
+                                <div v-if="audio.versions?.[0]?.file_path || audio.file_path" class="mb-6">
                                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">الاستماع</h3>
                                     <audio controls class="w-full rounded-lg shadow-md bg-gray-100 dark:bg-gray-700">
-                                        <source :src="'/storage/' + audio.file_path" type="audio/mpeg">
+                                        <source :src="'/storage/' + (audio.versions?.[0]?.file_path || audio.file_path)" type="audio/mpeg">
                                         متصفحك لا يدعم تشغيل الصوت.
                                     </audio>
                                 </div>

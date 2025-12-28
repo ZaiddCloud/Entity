@@ -6,22 +6,22 @@ use Tests\TestCase;
 use App\Models\Book;
 use App\Models\Author;
 use App\Models\Publisher;
-use App\Services\BookManagerService; // This service needs to be updated/refactored
+use App\Services\MediaManagerService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-class BookManagerServiceTest extends TestCase
+class MediaManagerServiceTest extends TestCase
 {
     use RefreshDatabase;
 
     /** @test */
-    public function it_creates_book_with_initial_version_and_authors()
+    public function it_creates_media_with_initial_version_and_authors()
     {
         // 1. Arrange: Use Factories
         $author = Author::factory()->create();
         $publisher = Publisher::factory()->create();
 
         $data = [
-            'title' => 'The Factory Book',
+            'title' => 'The Factory Media',
             'type' => 'book',
             'author_ids' => [$author->id],
             'publisher_id' => $publisher->id,
@@ -31,34 +31,35 @@ class BookManagerServiceTest extends TestCase
         ];
 
         // 2. Act
-        $service = app(BookManagerService::class);
-        $book = $service->createBook($data);
+        $service = app(MediaManagerService::class);
+        $book = $service->createMedia($data);
 
         // 3. Assert
         $this->assertInstanceOf(Book::class, $book);
-        $this->assertEquals('The Factory Book', $book->title);
+        $this->assertEquals('The Factory Media', $book->title);
 
         // Assert Author attached
         $this->assertTrue($book->authors->contains($author));
 
         // Assert Version created
-        $this->assertCount(1, $book->versions);
+        $this->assertEquals(1, $book->versions()->count());
         $version = $book->versions->first();
         $this->assertEquals('books/factory_book.pdf', $version->file_path);
-        // $this->assertEquals('978-1234567890', $version->isbn); // Optional strict check
         $this->assertEquals($publisher->id, $version->publisher_id);
     }
 
     /** @test */
-    public function it_updates_book_and_relations()
+    public function it_updates_media_and_relations()
     {
         // 1. Arrange: Create initial book with author
         $author = Author::factory()->create();
         $book = Book::factory()->create(['title' => 'Old Title']);
         $book->authors()->attach($author);
+
         // Create initial version
-        \App\Models\Version::factory()->create([
-            'book_id' => $book->id,
+        \App\Models\Version::create([
+            'versionable_id' => $book->id,
+            'versionable_type' => 'book',
             'pages' => 100
         ]);
 
@@ -67,6 +68,7 @@ class BookManagerServiceTest extends TestCase
 
         $updateData = [
             'title' => 'Updated Title',
+            'type' => 'book',
             'description' => 'New Description',
             'author_ids' => [$newAuthor->id], // Switch author
             'publisher_id' => $newPublisher->id,
@@ -74,20 +76,18 @@ class BookManagerServiceTest extends TestCase
         ];
 
         // 2. Act
-        $service = app(BookManagerService::class);
-        $updatedBook = $service->updateBook($book, $updateData);
+        $service = app(MediaManagerService::class);
+        $updatedBook = $service->updateMedia($book, $updateData);
 
         // 3. Assert
         $this->assertEquals('Updated Title', $updatedBook->fresh()->title);
         $this->assertEquals('New Description', $updatedBook->fresh()->description);
 
         // Assert Author Synced
-        $this->assertCount(1, $updatedBook->authors);
+        $this->assertEquals(1, $updatedBook->authors()->count());
         $this->assertEquals($newAuthor->id, $updatedBook->authors->first()->id);
 
-        // Assert Version Updated (Assuming created lazily or updated)
-        // Since factory creates book without version usually, updateBook logic creates/updates it.
-        // Let's ensure version exists
+        // Assert Version Updated
         $version = $updatedBook->versions->first();
         $this->assertNotNull($version);
         $this->assertEquals($newPublisher->id, $version->publisher_id);

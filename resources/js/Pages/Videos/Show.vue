@@ -44,9 +44,32 @@ defineProps({
                                         <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ video.title }}</dd>
                                     </div>
                                     <div class="sm:col-span-1">
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Slug</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ video.slug }}</dd>
+                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">المؤلفون / المقدمون</dt>
+                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                                            <span v-if="video.authors && video.authors.length">
+                                                {{ video.authors.map(a => a.name).join('، ') }}
+                                            </span>
+                                            <span v-else class="italic text-gray-400">غير محدد</span>
+                                        </dd>
                                     </div>
+                                    <div class="sm:col-span-1">
+                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">المدة</dt>
+                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ video.duration }} ثانية</dd>
+                                    </div>
+
+                                    <!-- Version Details -->
+                                    <template v-if="video.versions && video.versions.length">
+                                        <div class="sm:col-span-1">
+                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">مركز الإنتاج</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                                                {{ video.versions[0].publisher?.name || 'غير معروف' }}
+                                            </dd>
+                                        </div>
+                                        <div class="sm:col-span-1">
+                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">سنة الإنتاج</dt>
+                                            <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ video.versions[0].published_year || '-' }}</dd>
+                                        </div>
+                                    </template>
                                 </dl>
                             </div>
                             
@@ -56,10 +79,10 @@ defineProps({
                                     <img :src="'/storage/' + video.cover_path" alt="Cover" class="w-full max-w-md h-auto rounded-lg shadow-md object-cover">
                                 </div>
 
-                                <div v-if="video.file_path" class="mb-6">
+                                <div v-if="video.versions?.[0]?.file_path || video.file_path" class="mb-6">
                                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">المشاهدة</h3>
                                     <video controls class="w-full rounded-lg shadow-lg">
-                                        <source :src="'/storage/' + video.file_path" type="video/mp4">
+                                        <source :src="'/storage/' + (video.versions?.[0]?.file_path || video.file_path)" type="video/mp4">
                                         متصفحك لا يدعم تشغيل الفيديو.
                                     </video>
                                 </div>

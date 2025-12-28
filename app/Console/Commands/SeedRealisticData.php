@@ -131,12 +131,6 @@ class SeedRealisticData extends Command
                     'description' => "وصف تجريبي لـ {$title}. هذا العمل يعتبر ركيزة أساسية في مكتبتنا الرقمية.",
                 ];
 
-                // Legacy handling for non-refactored types
-                if ($type !== 'book') {
-                    $legacyAuthor = $set['authors'][$i % count($set['authors'])] ?? 'كاتب مجهول';
-                    $attributes['author'] = $legacyAuthor;
-                }
-
                 if ($type === 'manuscript') {
                     $attributes['century'] = rand(1, 14);
                 } elseif ($type === 'audio' || $type === 'video') {
@@ -146,23 +140,27 @@ class SeedRealisticData extends Command
                 $entity = $modelClass::create($attributes);
                 $allEntities->push($entity);
 
-                // Book Specific Logic (New Ecosystem)
-                if ($type === 'book') {
-                    // Attach Random Authors
-                    $entity->authors()->attach($authors->random(rand(1, 2))->pluck('id'));
+                // 6. Ecosystem Logic (Polymorphic Authors & Versions)
 
-                    // Create Version
-                    \App\Models\Version::create([
-                        'book_id' => $entity->id,
-                        'publisher_id' => $publishers->random()->id,
-                        'isbn' => Str::random(13),
-                        'pages' => rand(100, 1000),
-                        'published_year' => rand(1900, 2024),
-                        'edition_number' => rand(1, 5),
-                        'format' => 'pdf',
-                        'file_path' => null, // Optional now
-                    ]);
-                }
+                // Attach Random Authors
+                $entity->authors()->attach($authors->random(rand(1, 2))->pluck('id'));
+
+                // Create Version
+                \App\Models\Version::create([
+                    'versionable_id' => $entity->id,
+                    'versionable_type' => $type, // Matches morphMap
+                    'publisher_id' => ($type === 'book' || $type === 'manuscript') ? $publishers->random()->id : null,
+                    'isbn' => ($type === 'book') ? Str::random(13) : null,
+                    'pages' => ($type === 'book' || $type === 'manuscript') ? rand(100, 1000) : null,
+                    'published_year' => rand(1900, 2024),
+                    'edition_number' => rand(1, 5),
+                    'format' => match ($type) {
+                        'book', 'manuscript' => 'pdf',
+                        'audio' => 'mp3',
+                        'video' => 'mp4',
+                    },
+                    'file_path' => null, // Placeholder
+                ]);
 
                 // Relationships (Every entity MUST have these)
                 $entity->categories()->attach($categories->random(1)->pluck('id'));

@@ -10,8 +10,8 @@ return new class extends Migration {
         Schema::create('versions', function (Blueprint $table) {
             $table->uuid('id')->primary();
 
-            // Core Relations
-            $table->foreignUuid('book_id')->references('id')->on('books')->onDelete('cascade');
+            // Core Relations (Polymorphic)
+            $table->uuidMorphs('versionable');
             $table->foreignUuid('publisher_id')->nullable()->references('id')->on('publishers')->onDelete('set null');
             $table->foreignUuid('language_id')->nullable()->references('id')->on('languages')->onDelete('set null');
             $table->foreignUuid('shelf_id')->nullable()->references('id')->on('shelves')->onDelete('set null');
@@ -19,7 +19,7 @@ return new class extends Migration {
             // File & Meta
             $table->string('file_path')->nullable(); // The core asset
             $table->string('cover_path')->nullable();
-            $table->string('format')->default('pdf'); // pdf, epub
+            $table->string('format')->default('pdf'); // pdf, epub, mp3, mp4
             $table->bigInteger('file_size')->default(0); // bytes
 
             // Publication Info
@@ -32,7 +32,6 @@ return new class extends Migration {
             $table->softDeletes();
 
             // Indexes
-            $table->index('book_id');
             $table->index('isbn');
         });
     }

@@ -7,11 +7,36 @@ class Manuscript extends Entity
     protected $table = 'manuscripts';
 
     protected $fillable = [
-        'title', 'slug', 'author', 'century',
-        'language', 'pages', 'publisher', 'location',
-        'description', 'cover_path', 'file_path',
-        'created_at', 'updated_at'
+        'title',
+        'slug',
+        'author',
+        'century',
+        'language',
+        'pages',
+        'publisher',
+        'location',
+        'description',
+        'cover_path',
+        'file_path',
+        'created_at',
+        'updated_at'
     ];
+
+    /**
+     * العلاقة مع النسخ (Versions - Polymorphic)
+     */
+    public function versions()
+    {
+        return $this->morphMany(Version::class, 'versionable');
+    }
+
+    /**
+     * العلاقة مع المؤلفين (Authors - Polymorphic)
+     */
+    public function authors()
+    {
+        return $this->morphToMany(Author::class, 'authorable');
+    }
 
     /**
      * خصائص إضافية للمخطوطة

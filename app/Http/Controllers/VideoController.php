@@ -19,11 +19,13 @@ class VideoController extends Controller
 {
     protected $manager;
     protected $query;
+    protected $mediaManager;
 
-    public function __construct(EntityManagerService $manager, EntityQueryService $query)
+    public function __construct(EntityManagerService $manager, EntityQueryService $query, \App\Services\MediaManagerService $mediaManager)
     {
         $this->manager = $manager;
         $this->query = $query;
+        $this->mediaManager = $mediaManager;
     }
 
     /**
@@ -33,10 +35,13 @@ class VideoController extends Controller
     {
         Gate::authorize('viewAny', Video::class);
         $filters = $request->only(['search', 'category', 'tag']);
-        
-        $videos = Video::with(['tags', 'categories'])
+
+        $videos = Video::with(['tags', 'categories', 'authors', 'versions.publisher'])
             ->when($request->search, function ($query, $search) {
-                $query->where('title', 'like', "%{$search}%");
+                $query->where('title', 'like', "%{$search}%")
+                    ->orWhereHas('authors', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
             })
             ->when($request->category, function ($query, $category) {
                 $query->whereHas('categories', function ($q) use ($category) {
@@ -60,13 +65,14 @@ class VideoController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(): Response
     {
         Gate::authorize('create', Video::class);
-        return Inertia::render('Videos/Create');
+        return Inertia::render('Videos/Create', [
+            'authors' => \App\Models\Author::orderBy('name')->get(['id', 'name']),
+            'publishers' => \App\Models\Publisher::orderBy('name')->get(['id', 'name']),
+            'categories' => \App\Models\Category::orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
     /**
@@ -76,9 +82,9 @@ class VideoController extends Controller
     {
         Gate::authorize('create', Video::class);
         $data = $request->validated();
-        
+
         if (!isset($data['type'])) {
-             $data['type'] = 'video';
+            $data['type'] = 'video';
         }
 
         if ($request->hasFile('cover')) {
@@ -89,7 +95,8 @@ class VideoController extends Controller
             $data['file_path'] = $request->file('file')->store('videos', 'public');
         }
 
-        $video = $this->manager->create($data);
+        $data['type'] = 'video';
+        $this->mediaManager->createMedia($data);
 
         return redirect()->route('videos.index')
             ->with('message', 'تم إنشاء الفيديو بنجاح');
@@ -102,7 +109,7 @@ class VideoController extends Controller
     {
         Gate::authorize('view', $video);
         return Inertia::render('Videos/Show', [
-            'video' => $video->load(['tags', 'categories', 'comments.user']),
+            'video' => $video->load(['tags', 'categories', 'authors', 'versions.publisher', 'comments.user']),
         ]);
     }
 
@@ -113,7 +120,10 @@ class VideoController extends Controller
     {
         Gate::authorize('update', $video);
         return Inertia::render('Videos/Edit', [
-            'video' => $video->load(['tags', 'categories']),
+            'video' => $video->load(['tags', 'categories', 'authors', 'versions']),
+            'authors' => \App\Models\Author::orderBy('name')->get(['id', 'name']),
+            'publishers' => \App\Models\Publisher::orderBy('name')->get(['id', 'name']),
+            'categories' => \App\Models\Category::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -133,7 +143,7 @@ class VideoController extends Controller
             $data['file_path'] = $request->file('file')->store('videos', 'public');
         }
 
-        $this->manager->update($video, $data);
+        $this->mediaManager->updateMedia($video, $data);
 
         return redirect()->route('videos.show', $video)
             ->with('message', 'تم تحديث الفيديو بنجاح');

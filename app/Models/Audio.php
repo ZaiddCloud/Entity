@@ -7,11 +7,35 @@ class Audio extends Entity
     protected $table = 'audios';
 
     protected $fillable = [
-        'title', 'slug', 'duration', 'format',
-        'bitrate', 'sample_rate', 'file_size',
-        'description', 'cover_path', 'file_path',
-        'created_at', 'updated_at'
+        'title',
+        'slug',
+        'duration',
+        'format',
+        'bitrate',
+        'sample_rate',
+        'file_size',
+        'description',
+        'cover_path',
+        'file_path',
+        'created_at',
+        'updated_at'
     ];
+
+    /**
+     * العلاقة مع النسخ (Versions - Polymorphic)
+     */
+    public function versions()
+    {
+        return $this->morphMany(Version::class, 'versionable');
+    }
+
+    /**
+     * العلاقة مع المؤلفين (Authors - Polymorphic)
+     */
+    public function authors()
+    {
+        return $this->morphToMany(Author::class, 'authorable');
+    }
 
     /**
      * خصائص إضافية للصوت

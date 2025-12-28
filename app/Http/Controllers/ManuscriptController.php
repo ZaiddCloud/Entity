@@ -19,11 +19,13 @@ class ManuscriptController extends Controller
 {
     protected $manager;
     protected $query;
+    protected $mediaManager;
 
-    public function __construct(EntityManagerService $manager, EntityQueryService $query)
+    public function __construct(EntityManagerService $manager, EntityQueryService $query, \App\Services\MediaManagerService $mediaManager)
     {
         $this->manager = $manager;
         $this->query = $query;
+        $this->mediaManager = $mediaManager;
     }
 
     /**
@@ -33,10 +35,13 @@ class ManuscriptController extends Controller
     {
         Gate::authorize('viewAny', Manuscript::class);
         $filters = $request->only(['search', 'category', 'tag']);
-        
-        $manuscripts = Manuscript::with(['tags', 'categories'])
+
+        $manuscripts = Manuscript::with(['tags', 'categories', 'authors', 'versions.publisher'])
             ->when($request->search, function ($query, $search) {
-                $query->where('title', 'like', "%{$search}%");
+                $query->where('title', 'like', "%{$search}%")
+                    ->orWhereHas('authors', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
             })
             ->when($request->category, function ($query, $category) {
                 $query->whereHas('categories', function ($q) use ($category) {
@@ -60,13 +65,14 @@ class ManuscriptController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(): Response
     {
         Gate::authorize('create', Manuscript::class);
-        return Inertia::render('Manuscripts/Create');
+        return Inertia::render('Manuscripts/Create', [
+            'authors' => \App\Models\Author::orderBy('name')->get(['id', 'name']),
+            'publishers' => \App\Models\Publisher::orderBy('name')->get(['id', 'name']),
+            'categories' => \App\Models\Category::orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
     /**
@@ -76,9 +82,9 @@ class ManuscriptController extends Controller
     {
         Gate::authorize('create', Manuscript::class);
         $data = $request->validated();
-        
+
         if (!isset($data['type'])) {
-             $data['type'] = 'manuscript';
+            $data['type'] = 'manuscript';
         }
 
         if ($request->hasFile('cover')) {
@@ -89,7 +95,8 @@ class ManuscriptController extends Controller
             $data['file_path'] = $request->file('file')->store('manuscripts', 'public');
         }
 
-        $manuscript = $this->manager->create($data);
+        $data['type'] = 'manuscript';
+        $this->mediaManager->createMedia($data);
 
         return redirect()->route('manuscripts.index')
             ->with('message', 'تم إنشاء المخطوطة بنجاح');
@@ -102,7 +109,7 @@ class ManuscriptController extends Controller
     {
         Gate::authorize('view', $manuscript);
         return Inertia::render('Manuscripts/Show', [
-            'manuscript' => $manuscript->load(['tags', 'categories', 'comments.user']),
+            'manuscript' => $manuscript->load(['tags', 'categories', 'authors', 'versions.publisher', 'comments.user']),
         ]);
     }
 
@@ -113,7 +120,10 @@ class ManuscriptController extends Controller
     {
         Gate::authorize('update', $manuscript);
         return Inertia::render('Manuscripts/Edit', [
-            'manuscript' => $manuscript->load(['tags', 'categories']),
+            'manuscript' => $manuscript->load(['tags', 'categories', 'authors', 'versions']),
+            'authors' => \App\Models\Author::orderBy('name')->get(['id', 'name']),
+            'publishers' => \App\Models\Publisher::orderBy('name')->get(['id', 'name']),
+            'categories' => \App\Models\Category::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -133,7 +143,7 @@ class ManuscriptController extends Controller
             $data['file_path'] = $request->file('file')->store('manuscripts', 'public');
         }
 
-        $this->manager->update($manuscript, $data);
+        $this->mediaManager->updateMedia($manuscript, $data);
 
         return redirect()->route('manuscripts.show', $manuscript)
             ->with('message', 'تم تحديث المخطوطة بنجاح');
