@@ -35,7 +35,7 @@ package "MySQL (Structured Data)" {
         *category_id : uuid
         *published_at : datetime
         --
-        +content() : HasOne (to MongoDB)
+        +child() : HasOne/HasMany (to MongoDB)
         +authors() : BelongsToMany
     }
 
@@ -52,7 +52,7 @@ package "MySQL (Structured Data)" {
 ' ======================================================================================
 package "MongoDB (Unstructured Content)" {
 
-    class "BookContent" as CONTENT <<MONGO_COLOR>> {
+    class "BookChild" as CHILD <<MONGO_COLOR>> {
         *_id : ObjectId <PK>
         *book_id : uuid <Indexed>
         *language : string
@@ -99,7 +99,7 @@ note left of BOOK
 end note
 
 ' Relationships
-BOOK "1" -right- "1" CONTENT : "Has Content (book_id)"
-CONTENT *-- JSON : "Stores Document"
+BOOK "1" -right- "n" CHILD : "Has Children (book_id)"
+CHILD *-- JSON : "Stores Document"
 
 @enduml
