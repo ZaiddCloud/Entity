@@ -4,6 +4,7 @@ use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\AudioController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\BookController;
+use App\Http\Controllers\BookContentController;
 use App\Http\Controllers\BookerController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CollectionController;
@@ -46,6 +47,10 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('audios', AudioController::class);
     Route::resource('videos', VideoController::class);
     Route::resource('manuscripts', ManuscriptController::class);
+
+    // Book Reader Routes
+    Route::get('books/{book}/reader', [BookContentController::class, 'show'])->name('books.reader');
+    Route::get('book-contents/{child}', [BookContentController::class, 'getChildContent'])->name('book-contents.show');
 // routes/web.php or routes/api.php
 
     Route::get('authors', [AuthorController::class, 'index'])->name('authors.index');
