@@ -46,7 +46,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('audios', AudioController::class);
     Route::resource('videos', VideoController::class);
     Route::resource('manuscripts', ManuscriptController::class);
+// routes/web.php or routes/api.php
 
+    Route::get('authors', [AuthorController::class, 'index'])->name('authors.index');
     // Taxonomy and Organization
     Route::post('categories/bulk-destroy', [CategoryController::class, 'bulkDestroy'])->name('categories.bulk-destroy');
     Route::resource('categories', CategoryController::class);

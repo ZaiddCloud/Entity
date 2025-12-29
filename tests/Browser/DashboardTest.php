@@ -3,13 +3,13 @@
 namespace Tests\Browser;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 
 class DashboardTest extends DuskTestCase
 {
-    use RefreshDatabase;
+    use DatabaseTruncation;
 
     /**
      * Test that authenticated user can access dashboard

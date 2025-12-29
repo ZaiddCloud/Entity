@@ -6,13 +6,13 @@ use App\Models\User;
 use App\Models\Book;
 use App\Models\Author;
 use App\Models\Series;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 
 class GlobalSearchTest extends DuskTestCase
 {
-    use RefreshDatabase;
+    use DatabaseTruncation;
 
     /**
      * Test global search redirects to search page
@@ -24,7 +24,7 @@ class GlobalSearchTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/search?q=test')
-                ->pause(2000)
+                ->assertPathIs('/search')
                 ->assertPresent('[data-page]');
         });
     }
@@ -41,8 +41,9 @@ class GlobalSearchTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user, $book, $author) {
             $browser->loginAs($user)
                 ->visit('/search?q=Philosophy')
-                ->pause(2000)
-                ->assertPresent('[data-page]');
+                ->assertSee('Philosophy Book')
+                ->visit('/search?q=Al-Farabi')
+                ->assertSee('Al-Farabi');
         });
     }
 
@@ -56,8 +57,7 @@ class GlobalSearchTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/search?q=nonexistent_query_12345')
-                ->pause(2000)
-                ->assertPresent('[data-page]');
+                ->waitForText('عذراً، لم نجد ما تبحث عنه');
         });
     }
 }

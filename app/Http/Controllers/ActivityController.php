@@ -19,10 +19,12 @@ class ActivityController extends Controller
 
         $activities = Activity::with('user')
             ->when($request->search, function ($query, $search) {
-                $query->where('description', 'like', "%{$search}%")
+                $query->where(function ($q) use ($search) {
+                    $q->where('description', 'like', "%{$search}%")
                       ->orWhereHas('user', function ($q) use ($search) {
                           $q->where('name', 'like', "%{$search}%");
                       });
+                });
             })
             ->when($request->type, function ($query, $type) {
                 $query->where('activity_type', $type);

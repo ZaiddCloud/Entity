@@ -5,13 +5,13 @@ namespace Tests\Browser;
 use App\Models\User;
 use App\Models\Book;
 use App\Models\Author;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 
 class BooksPageTest extends DuskTestCase
 {
-    use RefreshDatabase;
+    use DatabaseTruncation;
 
     /**
      * Test that books index page loads correctly
@@ -23,7 +23,7 @@ class BooksPageTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/books')
-                ->pause(2000)
+                ->assertSee('المكتبة') // Assuming Arabic title based on other files
                 ->assertPresent('[data-page]');
         });
     }
@@ -34,15 +34,16 @@ class BooksPageTest extends DuskTestCase
     public function test_books_displayed_in_table(): void
     {
         $user = User::factory()->create();
-        $author = Author::factory()->create(['name' => 'Test Author']);
-        $book = Book::factory()->create(['title' => 'Test Book Title']);
+        $author = Author::factory()->create(['name' => 'Unique Author Name']);
+        $book = Book::factory()->create(['title' => 'Unique Book Title']);
         $book->authors()->attach($author);
 
         $this->browse(function (Browser $browser) use ($user, $book) {
             $browser->loginAs($user)
                 ->visit('/books')
-                ->pause(2000)
-                ->assertPresent('[data-page]');
+                ->waitForText('Unique Book Title')
+                ->assertSee('Unique Book Title')
+                ->assertSee('Unique Author Name');
         });
     }
 
@@ -52,14 +53,15 @@ class BooksPageTest extends DuskTestCase
     public function test_search_filters_books(): void
     {
         $user = User::factory()->create();
-        $book1 = Book::factory()->create(['title' => 'First Book']);
-        $book2 = Book::factory()->create(['title' => 'Second Book']);
+        Book::factory()->create(['title' => 'Target Book']);
+        Book::factory()->create(['title' => 'Ignored Book']);
 
-        $this->browse(function (Browser $browser) use ($user, $book1, $book2) {
+        $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
-                ->visit('/books')
-                ->pause(2000)
-                ->assertPresent('[data-page]');
+                ->visit('/books?search=Target') // Direct URL search to be robust
+                ->waitForText('Target Book')
+                ->assertSee('Target Book')
+                ->assertDontSee('Ignored Book');
         });
     }
 
@@ -69,13 +71,12 @@ class BooksPageTest extends DuskTestCase
     public function test_pagination_exists(): void
     {
         $user = User::factory()->create();
-        Book::factory()->count(15)->create();
+        Book::factory()->count(50)->create();
 
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/books')
-                ->pause(2000)
-                ->assertPresent('[data-page]');
+                ->assertPresent('.flex.flex-wrap'); // Matches pagination component class
         });
     }
 
@@ -85,13 +86,12 @@ class BooksPageTest extends DuskTestCase
     public function test_can_navigate_to_book_details(): void
     {
         $user = User::factory()->create();
-        $book = Book::factory()->create();
+        $book = Book::factory()->create(['title' => 'Details Book']);
 
         $this->browse(function (Browser $browser) use ($user, $book) {
             $browser->loginAs($user)
                 ->visit('/books/' . $book->slug)
-                ->pause(2000)
-                ->assertPresent('[data-page]');
+                ->assertSee('Details Book');
         });
     }
 }

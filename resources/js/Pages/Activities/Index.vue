@@ -52,6 +52,7 @@
                                 <th scope="col" class="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">المستخدم المسؤول</th>
                                 <th scope="col" class="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">نوع العملية</th>
                                 <th scope="col" class="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">نوع المحتوى</th>
+                                <th scope="col" class="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">الوصف</th>
                                 <th scope="col" class="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest text-left">التوقيت الزمنـي</th>
                                 <th scope="col" class="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">التفاصيل</th>
                             </tr>
@@ -85,6 +86,11 @@
                                 <td class="px-8 py-6 whitespace-nowrap text-center">
                                     <span class="text-[10px] font-black text-gray-500 bg-gray-100 dark:bg-white/5 px-2 py-1 rounded-md uppercase">
                                         {{ activity.entity_type.split('\\').pop() }}
+                                    </span>
+                                </td>
+                                <td class="px-8 py-6 whitespace-nowrap text-right">
+                                    <span class="text-sm text-gray-700 dark:text-gray-300 font-bold">
+                                        {{ activity.description }}
                                     </span>
                                 </td>
                                 <td class="px-8 py-6 whitespace-nowrap text-left" dir="ltr">

@@ -48,9 +48,12 @@ class AuthorController extends Controller
     /**
      * Show the form for creating a new resource.
      */
+    /**
+     * Show the form for creating a new resource.
+     */
     public function create()
     {
-        //
+        return Inertia::render('Authors/Create');
     }
 
     /**
@@ -58,38 +61,67 @@ class AuthorController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'bio' => 'nullable|string',
+            'birth_year' => 'nullable|integer|min:-2000|max:' . (date('Y') + 1),
+            'death_year' => 'nullable|integer|min:-2000|max:' . (date('Y') + 1),
+        ]);
+
+        Author::create($validated);
+
+        return redirect()->route('authors.index')
+            ->with('success', 'تم إضافة المؤلف بنجاح');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Author $author)
     {
-        //
+        $author->loadCount(['books', 'videos', 'audios', 'manuscripts']);
+        
+        return Inertia::render('Authors/Show', [
+            'author' => $author,
+        ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Author $author)
     {
-        //
+        return Inertia::render('Authors/Edit', [
+            'author' => $author,
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Author $author)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'bio' => 'nullable|string',
+            'birth_year' => 'nullable|integer|min:-2000|max:' . (date('Y') + 1),
+            'death_year' => 'nullable|integer|min:-2000|max:' . (date('Y') + 1),
+        ]);
+
+        $author->update($validated);
+
+        return redirect()->route('authors.index')
+            ->with('success', 'تم تحديث بيانات المؤلف بنجاح');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Author $author)
     {
-        //
+        $author->delete();
+
+        return redirect()->route('authors.index')
+            ->with('success', 'تم حذف المؤلف بنجاح');
     }
 }
