@@ -1,0 +1,105 @@
+@startuml
+
+' ========== Basic Settings ==========
+skinparam defaultFontName "Arial"
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam backgroundColor #F9F9F9
+skinparam arrowColor #333333
+skinparam arrowFontSize 13
+skinparam linetype ortho
+
+title "Hybrid Architecture: MySQL + MongoDB (Book Content)"
+
+' ========== Colors & Legend ==========
+!define MYSQL_COLOR  #E3F2FD
+!define MONGO_COLOR  #E8F5E9
+!define JSON_COLOR   #FFF3E0
+
+legend right
+  | Color | Database Type |
+  | <MYSQL_COLOR> | Relational (MySQL) |
+  | <MONGO_COLOR> | Document (MongoDB) |
+  | <JSON_COLOR> | JSON Structure |
+endlegend
+
+' ======================================================================================
+' 1. Relational Layer (MySQL)
+' ======================================================================================
+package "MySQL (Structured Data)" {
+    
+    class "Book" as BOOK <<MYSQL_COLOR>> {
+        *id : uuid <PK>
+        *title : string
+        *author_id : uuid
+        *category_id : uuid
+        *published_at : datetime
+        --
+        +content() : HasOne (to MongoDB)
+        +authors() : BelongsToMany
+    }
+
+    class "Author" as AUTHOR <<MYSQL_COLOR>> {
+        *id : uuid
+        *name : string
+    }
+
+    BOOK o-- AUTHOR : Relatiional Link
+}
+
+' ======================================================================================
+' 2. Document Layer (MongoDB)
+' ======================================================================================
+package "MongoDB (Unstructured Content)" {
+
+    class "BookContent" as CONTENT <<MONGO_COLOR>> {
+        *_id : ObjectId <PK>
+        *book_id : uuid <Indexed>
+        *language : string
+        *version : string
+        *last_updated : timestamp
+        --
+        +book() : BelongsTo (MySQL)
+    }
+
+    object "Content Structure (JSON)" as JSON <<JSON_COLOR>> {
+        {
+            "chapters": [
+                {
+                    "title": "Introduction",
+                    "order": 1,
+                    "blocks": [
+                        { "type": "text", "content": "..." },
+                        { "type": "image", "src": "s3://..." },
+                        { "type": "quote", "text": "..." }
+                    ]
+                },
+                {
+                    "title": "Chapter 1",
+                    "sections": [ ... ]
+                }
+            ]
+        }
+    }
+}
+
+' ======================================================================================
+' 3. Integration & Logic
+' ======================================================================================
+note right of CONTENT
+  **Flexible Schema:**
+  Stores hierarchical data (Chapters > Sections > Blocks).
+  Supports rich media references and diverse content types.
+end note
+
+note left of BOOK
+  **Relational Integrity:**
+  Handles metadata, search indexing,
+  and relationships (Authors, Reviews).
+end note
+
+' Relationships
+BOOK "1" -right- "1" CONTENT : "Has Content (book_id)"
+CONTENT *-- JSON : "Stores Document"
+
+@enduml
