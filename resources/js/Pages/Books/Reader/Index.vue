@@ -36,6 +36,8 @@
             >
                 <div class="p-4 sticky top-0 bg-white z-10 border-b border-slate-100 mb-2">
                     <input 
+                        id="sidebar-search"
+                        name="sidebar-search"
                         type="text" 
                         placeholder="ابحث في الفهرس..." 
                         class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
@@ -91,19 +93,26 @@
 
                             <!-- Content Blocks -->
                             <div class="space-y-10">
-                                <BlockRenderer 
-                                    v-for="block in contentBlocks" 
-                                    :key="block.id" 
-                                    :block="block" 
-                                />
-                            </div>
-
-                            <!-- Empty State -->
-                            <div v-if="contentBlocks.length === 0" class="py-20 text-center border-2 border-dashed border-slate-200 rounded-2xl bg-white/50">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-slate-200 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                <p class="text-slate-400 font-medium">هذا القسم لا يحتوي على محتوى حالياً.</p>
+                                <template v-if="contentBlocks.length > 0">
+                                    <BlockRenderer 
+                                        v-for="block in contentBlocks" 
+                                        :key="block.id" 
+                                        :block="block" 
+                                    />
+                                </template>
+                                <div v-else class="py-12 px-8 bg-amber-50/30 rounded-3xl border border-amber-100/50">
+                                    <div class="flex items-center gap-4 mb-6">
+                                        <div class="p-3 bg-amber-100 rounded-2xl text-amber-700">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </div>
+                                        <h3 class="text-lg font-bold text-amber-900">وصف القسم</h3>
+                                    </div>
+                                    <p class="text-slate-600 leading-relaxed italic">
+                                        {{ metadata.description || 'هذا القسم يعمل كمنظم للفصول والمواد العلمية التالية، لا يحتوي على نص مباشر حالياً.' }}
+                                    </p>
+                                </div>
                             </div>
 
                             <!-- Footer Navigation -->
@@ -153,10 +162,13 @@ const props = defineProps({
 const hierarchy = ref(props.initialHierarchy);
 const selectedId = ref(props.childId);
 const currentChapter = ref(props.initialContent);
-const contentBlocks = ref(props.initialContent?.content_blocks || []);
+const contentBlocks = computed(() => currentChapter.value?.content_blocks || []);
 const loading = ref(false);
 const sidebarCollapsed = ref(false);
 const isDark = ref(false);
+
+// Metadata for the current chapter/volume
+const metadata = computed(() => currentChapter.value?.metadata || {});
 
 const rootItems = computed(() => {
     return hierarchy.value.filter(item => !item.parent_id);
@@ -166,16 +178,15 @@ const rootItems = computed(() => {
 // Though Inertia will handle the prop updates, we might want to sync local state
 watch(() => props.childId, (newId) => {
     selectedId.value = newId;
-    if (newId && (!currentChapter.value || currentChapter.value.id !== newId)) {
-        if (props.initialContent && props.initialContent.id === newId) {
-             currentChapter.value = props.initialContent;
-             contentBlocks.value = props.initialContent.content_blocks || [];
-        } else {
-            // If for some reason props didn't update content yet
-            fetchChapterContent(newId);
-        }
-    }
 });
+
+watch(() => props.initialContent, (newContent) => {
+    if (newContent) {
+        currentChapter.value = newContent;
+    } else if (!props.childId) {
+        currentChapter.value = null;
+    }
+}, { immediate: true });
 
 const fetchChapterContent = async (id) => {
     if (!id) return;

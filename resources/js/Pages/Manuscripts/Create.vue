@@ -42,6 +42,7 @@ const submit = () => {
                                 <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">العنوان</label>
                                 <input
                                     id="title"
+                                    name="title"
                                     type="text"
                                     class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
                                     v-model="form.title"
@@ -56,6 +57,7 @@ const submit = () => {
                                 <label for="authors" class="block text-sm font-medium text-gray-700 dark:text-gray-300">المؤلف / الناسخ</label>
                                 <select
                                     id="authors"
+                                    name="author_ids[]"
                                     multiple
                                     class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm h-32"
                                     v-model="form.author_ids"
@@ -73,6 +75,7 @@ const submit = () => {
                                 <label for="publisher" class="block text-sm font-medium text-gray-700 dark:text-gray-300">المكتبة / المصدر</label>
                                 <select
                                     id="publisher"
+                                    name="publisher_id"
                                     class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
                                     v-model="form.publisher_id"
                                 >
@@ -89,6 +92,7 @@ const submit = () => {
                                     <label for="century" class="block text-sm font-medium text-gray-700 dark:text-gray-300">القرن</label>
                                     <input
                                         id="century"
+                                        name="century"
                                         type="text"
                                         placeholder="مثلاً: القرن الثامن الهجري"
                                         class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
@@ -99,6 +103,7 @@ const submit = () => {
                                     <label for="pages" class="block text-sm font-medium text-gray-700 dark:text-gray-300">عدد الأوراق</label>
                                     <input
                                         id="pages"
+                                        name="pages"
                                         type="number"
                                         class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
                                         v-model="form.pages"
@@ -110,6 +115,7 @@ const submit = () => {
                                 <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">الوصف</label>
                                 <textarea
                                     id="description"
+                                    name="description"
                                     rows="4"
                                     class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
                                     v-model="form.description"
@@ -121,6 +127,7 @@ const submit = () => {
                                 <label for="cover" class="block text-sm font-medium text-gray-700 dark:text-gray-300">صورة الغلاف (اختياري)</label>
                                 <input
                                     id="cover"
+                                    name="cover"
                                     type="file"
                                     class="mt-1 block w-full text-sm text-gray-500 hover:file:bg-indigo-100 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 transition"
                                     @input="form.cover = $event.target.files[0]"
@@ -133,6 +140,7 @@ const submit = () => {
                                 <label for="file" class="block text-sm font-medium text-gray-700 dark:text-gray-300">ملف المخطوطة (PDF)</label>
                                 <input
                                     id="file"
+                                    name="file"
                                     type="file"
                                     class="mt-1 block w-full text-sm text-gray-500 hover:file:bg-indigo-100 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 transition"
                                     @input="form.file = $event.target.files[0]"

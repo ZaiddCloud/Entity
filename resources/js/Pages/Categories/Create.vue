@@ -34,6 +34,7 @@ const submit = () => {
                                 <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">الاسم</label>
                                 <input
                                     id="name"
+                                    name="name"
                                     type="text"
                                     class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
                                     v-model="form.name"
@@ -47,6 +48,7 @@ const submit = () => {
                                 <label for="parent_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">التصنيف الأب</label>
                                 <select
                                     id="parent_id"
+                                    name="parent_id"
                                     class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
                                     v-model="form.parent_id"
                                 >
@@ -60,6 +62,7 @@ const submit = () => {
                                 <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">الوصف</label>
                                 <textarea
                                     id="description"
+                                    name="description"
                                     rows="4"
                                     class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
                                     v-model="form.description"

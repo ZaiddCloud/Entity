@@ -31,6 +31,8 @@
                         <input
                             v-model="search"
                             type="text"
+                            id="audio-search-input"
+                            name="search"
                             placeholder="بحث في التسجيلات..."
                             class="w-full pr-12 pl-4 py-3 bg-gray-50 dark:bg-white/5 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-black focus:ring-4 focus:ring-indigo-500/10 rounded-2xl text-sm font-medium transition-all"
                         />
@@ -38,7 +40,7 @@
                     
                     <div class="flex items-center gap-3">
                         <div class="w-48 relative">
-                            <select
+                            <select id="audio-category-filter" name="category"
                                 v-model="category"
                                 class="w-full pr-10 pl-4 py-3 bg-gray-50 dark:bg-white/5 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-black focus:ring-4 focus:ring-indigo-500/10 rounded-2xl text-xs font-bold transition-all appearance-none cursor-pointer"
                             >

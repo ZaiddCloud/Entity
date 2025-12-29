@@ -54,7 +54,7 @@
                         <thead class="bg-gray-50/50 dark:bg-white/2">
                             <tr>
                                 <th scope="col" class="px-8 py-5 text-right">
-                                    <input type="checkbox" v-model="allSelected" class="rounded-lg border-gray-300 dark:border-white/10 dark:bg-black text-indigo-600 shadow-sm focus:ring-indigo-500" />
+                                    <input id="categories-select-all" name="select_all" type="checkbox" v-model="allSelected" class="rounded-lg border-gray-300 dark:border-white/10 dark:bg-black text-indigo-600 shadow-sm focus:ring-indigo-500" />
                                 </th>
                                 <th scope="col" class="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">اسم التصنيف</th>
                                 <th scope="col" class="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">التصنيف الأعلى</th>
@@ -65,7 +65,7 @@
                         <tbody class="divide-y divide-gray-50 dark:divide-white/5">
                             <tr v-for="category in categories.data" :key="category.id" class="group hover:bg-gray-50/50 dark:hover:bg-white/2 transition-colors">
                                 <td class="px-8 py-6 whitespace-nowrap">
-                                    <input type="checkbox" :value="category.id" v-model="selectedIds" class="rounded-lg border-gray-300 dark:border-white/10 dark:bg-black text-indigo-600 shadow-sm focus:ring-indigo-500" />
+                                    <input :id="'category-select-' + category.id" name="selected_ids[]" type="checkbox" :value="category.id" v-model="selectedIds" class="rounded-lg border-gray-300 dark:border-white/10 dark:bg-black text-indigo-600 shadow-sm focus:ring-indigo-500" />
                                 </td>
                                 <td class="px-8 py-6 whitespace-nowrap">
                                     <div class="text-sm font-black text-gray-900 dark:text-white">{{ category.name }}</div>

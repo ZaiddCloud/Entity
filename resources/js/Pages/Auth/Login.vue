@@ -66,6 +66,8 @@
                     <div class="flex items-center justify-between">
                         <label class="flex items-center space-x-2 space-x-reverse cursor-pointer">
                             <input 
+                                id="remember"
+                                name="remember"
                                 type="checkbox" 
                                 v-model="form.remember" 
                                 class="w-4 h-4 rounded border-gray-600 bg-black/20 text-purple-600 focus:ring-purple-500/50" 

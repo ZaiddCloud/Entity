@@ -32,6 +32,7 @@ const submit = () => {
                                 <label for="content" class="block font-medium text-sm text-gray-700 dark:text-gray-300">المحتوى</label>
                                 <textarea
                                     id="content"
+                                    name="content"
                                     v-model="form.content"
                                     class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 rounded-md shadow-sm"
                                     rows="5"

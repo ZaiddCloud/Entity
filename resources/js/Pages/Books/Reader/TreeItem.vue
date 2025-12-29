@@ -1,6 +1,7 @@
 <template>
     <div class="mb-1">
         <div 
+            @click="handleClick"
             class="flex items-center group cursor-pointer py-2 px-3 rounded-xl transition-all duration-200 select-none relative"
             :class="[
                 selectedId === item._id ? 'bg-amber-50 text-amber-900 border border-amber-200/50 shadow-sm' : 'hover:bg-slate-100 text-slate-600',
@@ -35,6 +36,7 @@
                 class="text-sm font-medium flex-1 truncate" 
                 :class="{ 'font-bold': hasChildren || selectedId === item._id }"
                 preserve-scroll
+                @click.stop="handleClick"
             >
                 {{ item.title }}
             </Link>
@@ -69,7 +71,8 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
+import { usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
     item: Object,
@@ -81,6 +84,7 @@ const props = defineProps({
     }
 });
 
+const page = usePage();
 const emit = defineEmits(['select']);
 
 const isOpen = ref(false);
@@ -91,10 +95,20 @@ const children = computed(() => {
 
 const hasChildren = computed(() => children.value.length > 0);
 
-const handleClick = () => {
+const handleClick = (e) => {
+    // Prevent double execution if Link was clicked (Link has @click.stop="handleClick")
+    // But actually, we want the toggle to happen.
     if (hasChildren.value) {
         isOpen.value = !isOpen.value;
     }
+    
+    // If clicking the row but not the link itself, trigger navigation manually
+    if (!e.target.closest('a')) {
+        router.visit(route('books.reader', [page.props.book.slug, props.item._id]), {
+            preserveScroll: true
+        });
+    }
+
     emit('select', props.item);
 };
 </script>

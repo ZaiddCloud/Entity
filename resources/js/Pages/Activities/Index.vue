@@ -31,6 +31,8 @@
                     </div>
                     <div class="w-full sm:w-64">
                         <select
+                            id="activity-type-filter"
+                            name="type"
                             v-model="type"
                             class="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-black focus:ring-4 focus:ring-indigo-500/10 rounded-2xl text-sm font-black appearance-none"
                         >

@@ -29,6 +29,7 @@
                         <div class="relative group">
                             <input 
                                 id="name" 
+                                name="name"
                                 type="text" 
                                 v-model="form.name" 
                                 required 
@@ -49,6 +50,7 @@
                         <div class="relative group">
                             <input 
                                 id="email" 
+                                name="email"
                                 type="email" 
                                 v-model="form.email" 
                                 required 
@@ -68,6 +70,7 @@
                         <div class="relative group">
                             <input 
                                 id="password" 
+                                name="password"
                                 type="password" 
                                 v-model="form.password" 
                                 required 
@@ -87,6 +90,7 @@
                         <div class="relative group">
                             <input 
                                 id="password_confirmation" 
+                                name="password_confirmation"
                                 type="password" 
                                 v-model="form.password_confirmation" 
                                 required 

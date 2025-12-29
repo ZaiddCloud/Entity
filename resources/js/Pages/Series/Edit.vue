@@ -34,6 +34,7 @@ const submit = () => {
                                 <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">العنوان</label>
                                 <input
                                     id="title"
+                                    name="title"
                                     type="text"
                                     class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
                                     v-model="form.title"
@@ -47,6 +48,7 @@ const submit = () => {
                                 <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">الوصف</label>
                                 <textarea
                                     id="description"
+                                    name="description"
                                     rows="4"
                                     class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
                                     v-model="form.description"
@@ -58,6 +60,7 @@ const submit = () => {
                                 <label for="order_column" class="block text-sm font-medium text-gray-700 dark:text-gray-300">الترتيب</label>
                                 <input
                                     id="order_column"
+                                    name="order_column"
                                     type="number"
                                     class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
                                     v-model="form.order_column"

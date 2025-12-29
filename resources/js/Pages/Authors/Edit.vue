@@ -36,6 +36,7 @@ const submit = () => {
                             <label for="name" class="block font-medium text-sm text-gray-700 dark:text-gray-300">اسم المؤلف</label>
                             <input
                                 id="name"
+                                name="name"
                                 v-model="form.name"
                                 type="text"
                                 class="mt-1 block w-full border-gray-300 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-2xl shadow-sm"
@@ -50,6 +51,7 @@ const submit = () => {
                                 <label for="birth_year" class="block font-medium text-sm text-gray-700 dark:text-gray-300">سنة الميلاد</label>
                                 <input
                                     id="birth_year"
+                                    name="birth_year"
                                     v-model="form.birth_year"
                                     type="number"
                                     class="mt-1 block w-full border-gray-300 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-2xl shadow-sm"
@@ -61,6 +63,7 @@ const submit = () => {
                                 <label for="death_year" class="block font-medium text-sm text-gray-700 dark:text-gray-300">سنة الوفاة (اختياري)</label>
                                 <input
                                     id="death_year"
+                                    name="death_year"
                                     v-model="form.death_year"
                                     type="number"
                                     class="mt-1 block w-full border-gray-300 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-2xl shadow-sm"
@@ -73,6 +76,7 @@ const submit = () => {
                             <label for="bio" class="block font-medium text-sm text-gray-700 dark:text-gray-300">نبذة عن المؤلف</label>
                             <textarea
                                 id="bio"
+                                name="bio"
                                 v-model="form.bio"
                                 class="mt-1 block w-full border-gray-300 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-2xl shadow-sm min-h-[150px]"
                             ></textarea>

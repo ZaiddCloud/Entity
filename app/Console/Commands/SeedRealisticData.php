@@ -20,6 +20,8 @@ use App\Models\Comment;
 use App\Models\Note;
 use App\Models\Collection;
 use App\Models\Series;
+use App\Models\BookChild;
+use App\Services\BookContentService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -46,6 +48,26 @@ class SeedRealisticData extends Command
     {
         $count = (int) $this->option('count');
         $this->info("Starting exhaustive realistic data seeding (Count: {$count} for each type)...");
+
+        // 0. Clear Existing Data
+        $this->warn("Clearing existing data...");
+        \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
+        Book::truncate();
+        Audio::truncate();
+        Video::truncate();
+        Manuscript::truncate();
+        Author::truncate();
+        Publisher::truncate();
+        Booker::truncate();
+        Category::truncate();
+        Tag::truncate();
+        Activity::truncate();
+        Comment::truncate();
+        Note::truncate();
+        Collection::truncate();
+        Series::truncate();
+        BookChild::truncate();
+        \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
 
         // 1. Core Users
         $admin = User::firstOrCreate(
@@ -169,6 +191,76 @@ class SeedRealisticData extends Command
 
                 $entity = $modelClass::create($attributes);
                 $allEntities->push($entity);
+
+                // --- NEW: MongoDB Digital Content Seeding (Comprehensive) ---
+                if ($type === 'book') {
+                    $contentService = new BookContentService();
+                    BookChild::where('book_id', $entity->id)->delete();
+
+                    $volCount = rand(2, 4);
+                    for ($v = 1; $v <= $volCount; $v++) {
+                        $volume = $contentService->addChild($entity, [
+                            'type' => 'volume',
+                            'title' => "المجلد {$v}",
+                            'order' => $v,
+                            'metadata' => ['description' => "يحتوي هذا المجلد على مجموعة من الأجزاء الهامة."]
+                        ]);
+
+                        $subCount = rand(2, 3);
+                        for ($s = 1; $s <= $subCount; $s++) {
+                            $subBook = $contentService->addChild($entity, [
+                                'parent_id' => $volume->id,
+                                'type' => 'sub-book',
+                                'title' => ($s === 1 ? 'كتاب العلم' : ($s === 2 ? 'كتاب الإيمان' : 'كتاب الرقائق')),
+                                'order' => $s
+                            ]);
+
+                            $chapCount = rand(5, 12);
+                            for ($c = 1; $c <= $chapCount; $c++) {
+                                $chapter = $contentService->addChild($entity, [
+                                    'parent_id' => $subBook->id,
+                                    'type' => 'chapter',
+                                    'title' => "باب رقم {$c}: في بيان فضل " . ($s === 1 ? 'الطلب' : 'العمل'),
+                                    'order' => $c
+                                ]);
+
+                                // Add 5-10 content blocks for "comprehensiveness"
+                                $blockCount = rand(5, 10);
+                                for ($b_idx = 1; $b_idx <= $blockCount; $b_idx++) {
+                                    $blockType = (rand(1, 10) > 7) ? 'verse' : 'paragraph';
+                                    
+                                    if ($blockType === 'paragraph') {
+                                        $hasFootnote = rand(1, 10) > 4;
+                                        $body = "هذا نص علمي دقيق يتناول المسائل المتعلقة بالباب {$c}. ويسترسل المؤلف في ذكر الأدلة العقلية والنقلية التي تؤيد المذهب المختار في هذا الموضع. " . 
+                                               ($hasFootnote ? "ويقول في حاشيته: انظر ما ذكره ابن حجر [1] في الفتح." : "وهذا البيان كافٍ لمن أراد التفقه في أصول هذه المسألة.");
+                                        
+                                        $contentService->addBlock($chapter, [
+                                            'type' => 'paragraph',
+                                            'body' => $body,
+                                            'annotations' => $hasFootnote ? [[
+                                                'type' => 'footnote',
+                                                'marker' => '[1]',
+                                                'content' => 'ابن حجر العسقلاني، فتح الباري شرح صحيح البخاري، دار المعرفة، ج1، ص 45.'
+                                            ]] : []
+                                        ]);
+                                    } else {
+                                        $contentService->addBlock($chapter, [
+                                            'type' => 'verse',
+                                            'first_part' => 'إِذا نَطَقَ السَفيهُ فَلا تُجِبهُ',
+                                            'second_part' => 'فَخَيرٌ مِن إِجابَتِهِ السُكوتُ',
+                                            'annotations' => [[
+                                                'type' => 'comment',
+                                                'author' => 'المحقق',
+                                                'content' => 'هذه الأبيات توضح الموقف الأخلاقي المناسب في مثل هذه السجالات العلمية.'
+                                            ]]
+                                        ]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                // --- END MongoDB Seeding ---
 
                 // 6. Ecosystem Logic (Polymorphic Authors & Versions)
 

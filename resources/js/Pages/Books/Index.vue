@@ -31,6 +31,8 @@
                         <input
                             v-model="search"
                             type="text"
+                            id="book-search-input"
+                            name="search"
                             placeholder="بحث عن عنوان، مؤلف، أو موضوع..."
                             class="w-full pr-12 pl-4 py-3 bg-gray-50 dark:bg-white/5 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-black focus:ring-4 focus:ring-indigo-500/10 rounded-2xl text-sm font-medium transition-all"
                         />
@@ -38,7 +40,7 @@
                     
                     <div class="flex items-center gap-3">
                         <div class="w-48 relative">
-                            <select
+                            <select id="category-filter" name="category"
                                 v-model="category"
                                 class="w-full pr-10 pl-4 py-3 bg-gray-50 dark:bg-white/5 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-black focus:ring-4 focus:ring-indigo-500/10 rounded-2xl text-xs font-bold transition-all appearance-none cursor-pointer"
                             >
@@ -51,7 +53,7 @@
                         </div>
 
                         <div class="w-48 relative text-right">
-                            <select
+                            <select id="tag-filter" name="tag"
                                 v-model="tag"
                                 class="w-full pr-10 pl-4 py-3 bg-gray-50 dark:bg-white/5 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-black focus:ring-4 focus:ring-indigo-500/10 rounded-2xl text-xs font-bold transition-all appearance-none cursor-pointer"
                             >
