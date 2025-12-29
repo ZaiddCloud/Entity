@@ -11,9 +11,14 @@ class BookChild extends Model
 
     protected $fillable = [
         'book_id',
+        'parent_id',
+        'type',
+        'title',
+        'order',
         'language',
         'version',
-        'chapters', // This will store the hierarchical JSON structure
+        'content_blocks',
+        'metadata',
         'last_updated',
     ];
 

@@ -3,10 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use MongoDB\Laravel\Eloquent\HybridRelations;
 
 class Book extends Entity
 {
-    use HasFactory;
+    use HasFactory, HybridRelations;
     protected $table = 'books';
 
     protected $fillable = [
@@ -30,6 +31,14 @@ class Book extends Entity
     }
 
 
+
+    /**
+     * العلاقة مع المحتوى في MongoDB (فصول، أجزاء، إلخ)
+     */
+    public function children()
+    {
+        return $this->hasMany(BookChild::class, 'book_id', 'id');
+    }
 
     /**
      * العلاقة مع المواضيع (Topics)

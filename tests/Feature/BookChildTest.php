@@ -23,7 +23,7 @@ class BookChildTest extends TestCase
         $content = BookChild::create([
             'book_id' => $book->id,
             'language' => 'ar',
-            'chapters' => [
+            'content_blocks' => [
                 [
                     'title' => 'Chapter 1: The Beginning',
                     'blocks' => [
@@ -39,8 +39,8 @@ class BookChildTest extends TestCase
         
         // Find it back from MongoDB
         $retrieved = BookChild::find($content->id);
-        $this->assertEquals('Chapter 1: The Beginning', $retrieved->chapters[0]['title']);
-        $this->assertEquals('Hello from MongoDB!', $retrieved->chapters[0]['blocks'][0]['content']);
+        $this->assertEquals('Chapter 1: The Beginning', $retrieved->content_blocks[0]['title']);
+        $this->assertEquals('Hello from MongoDB!', $retrieved->content_blocks[0]['blocks'][0]['content']);
     }
 
     /** @test */
@@ -48,24 +48,93 @@ class BookChildTest extends TestCase
     {
         $content = BookChild::create([
             'book_id' => 'some-id',
-            'chapters' => [['title' => 'Old Title']]
+            'content_blocks' => [['title' => 'Old Title']]
         ]);
 
         $content->update([
-            'chapters' => [['title' => 'New Title']]
+            'content_blocks' => [['title' => 'New Title']]
         ]);
 
-        $this->assertEquals('New Title', BookChild::find($content->id)->chapters[0]['title']);
+        $this->assertEquals('New Title', BookChild::find($content->id)->content_blocks[0]['title']);
     }
 
     /** @test */
-    public function it_can_delete_mongodb_content()
+    public function a_book_can_access_its_mongodb_children()
     {
-        $content = BookChild::create(['book_id' => 'delete-me']);
-        $id = $content->id;
+        $book = Book::factory()->create();
+        
+        BookChild::create([
+            'book_id' => $book->id,
+            'title' => 'Chapter 1'
+        ]);
 
-        $content->delete();
+        $this->assertCount(1, $book->children);
+        $this->assertEquals('Chapter 1', $book->children->first()->title);
+    }
 
-        $this->assertNull(BookChild::find($id));
+    /** @test */
+    public function book_content_service_can_manage_hierarchy()
+    {
+        $service = new \App\Services\BookContentService();
+        $book = Book::factory()->create();
+
+        // Add a Part
+        $part = $service->addChild($book, [
+            'type' => 'part',
+            'title' => 'Part One',
+            'order' => 1
+        ]);
+
+        // Add a Chapter under that Part
+        $chapter = $service->addChild($book, [
+            'parent_id' => $part->id,
+            'type' => 'chapter',
+            'title' => 'Chapter One',
+            'order' => 1
+        ]);
+
+        $hierarchy = $service->getHierarchy($book);
+
+        $this->assertCount(2, $hierarchy);
+        $this->assertEquals('chapter', $hierarchy->where('title', 'Chapter One')->first()->type);
+        $this->assertEquals($part->id, $hierarchy->where('title', 'Chapter One')->first()->parent_id);
+    }
+
+    /** @test */
+    public function it_can_add_annotated_blocks_via_service()
+    {
+        $service = new \App\Services\BookContentService();
+        $child = BookChild::create(['book_id' => '123', 'title' => 'Masala 1']);
+
+        $service->addBlock($child, [
+            'body' => 'Main text content',
+            'annotations' => [
+                ['type' => 'footnote', 'content' => 'Footnote 1']
+            ]
+        ]);
+
+        $updatedChild = BookChild::find($child->id);
+        $this->assertCount(1, $updatedChild->content_blocks);
+        $this->assertEquals('Main text content', $updatedChild->content_blocks[0]['body']);
+        $this->assertEquals('footnote', $updatedChild->content_blocks[0]['annotations'][0]['type']);
+    }
+
+    /** @test */
+    public function deleting_a_book_deletes_its_mongodb_children()
+    {
+        $book = Book::factory()->create();
+        
+        BookChild::create([
+            'book_id' => $book->id,
+            'title' => 'Chapter to be deleted'
+        ]);
+
+        $this->assertCount(1, BookChild::where('book_id', $book->id)->get());
+
+        // Delete the MySQL book
+        $book->delete();
+
+        // Check if MongoDB children are gone
+        $this->assertCount(0, BookChild::where('book_id', $book->id)->get());
     }
 }
