@@ -85,32 +85,37 @@ defineProps({
                                     <img :src="'/storage/' + (book.versions?.[0]?.cover_path || book.cover_path)" alt="Cover" class="w-48 h-auto rounded-lg shadow-md object-cover">
                                 </div>
                                 
+                                <!-- Digital Reader (Primary Action) -->
+                                <div class="mb-8">
+                                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">القراءة الرقمية</h3>
+                                    <Link 
+                                        :href="route('books.reader', book.slug)"
+                                        class="inline-flex items-center px-6 py-3 bg-gradient-to-l from-amber-600 to-amber-500 text-white rounded-xl hover:from-amber-700 hover:to-amber-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all shadow-lg hover:shadow-amber-500/20 group scale-100 hover:scale-[1.02] active:scale-95"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 ml-2 group-hover:animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                        </svg>
+                                        <div class="text-right">
+                                            <div class="font-black text-sm">فتح القارئ الرقمي</div>
+                                            <div class="text-[10px] opacity-80 font-bold">تجربة قراءة حديثة مع هوامش تفاعلية</div>
+                                        </div>
+                                    </Link>
+                                </div>
+
                                 <!-- File Download Logic -->
                                 <div v-if="book.versions?.[0]?.file_path || book.file_path" class="mb-6">
-                                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">ملف الكتاب</h3>
+                                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">ملفات التحميل</h3>
                                     <div class="flex flex-wrap gap-3">
                                         <a 
                                             :href="'/storage/' + (book.versions?.[0]?.file_path || book.file_path)" 
                                             target="_blank"
-                                            class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition shadow-sm"
+                                            class="inline-flex items-center px-4 py-2 bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 rounded-md hover:bg-slate-200 dark:hover:bg-white/10 focus:outline-none transition"
                                         >
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                             </svg>
-                                            تحميل الملف
-                                            <span v-if="book.versions?.[0]" class="text-xs mr-2 opacity-75">({{ book.versions[0].format }})</span>
+                                            تحميل نسخة ({{ book.versions?.[0]?.format || 'PDF' }})
                                         </a>
-
-                                        <!-- New MongoDB Reader Link -->
-                                        <Link 
-                                            :href="route('books.reader', book.slug)"
-                                            class="inline-flex items-center px-4 py-2 bg-gradient-to-l from-amber-600 to-amber-500 text-white rounded-md hover:from-amber-700 hover:to-amber-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition shadow-md group"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2 group-hover:animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                                            </svg>
-                                            قراءة النص الرقمي (جديد ✨)
-                                        </Link>
                                     </div>
                                 </div>
 

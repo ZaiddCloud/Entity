@@ -49,7 +49,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('manuscripts', ManuscriptController::class);
 
     // Book Reader Routes
-    Route::get('books/{book}/reader', [BookContentController::class, 'show'])->name('books.reader');
+    Route::get('books/{book}/reader/{child?}', [BookContentController::class, 'show'])->name('books.reader');
     Route::get('book-contents/{child}', [BookContentController::class, 'getChildContent'])->name('book-contents.show');
 // routes/web.php or routes/api.php
 

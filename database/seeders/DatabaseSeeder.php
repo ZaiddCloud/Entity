@@ -47,6 +47,7 @@ class DatabaseSeeder extends Seeder
             SeriesSeeder::class,
             TagSeeder::class,
             VideoSeeder::class,
+            BookContentSeeder::class,
         ]);
     }
 }

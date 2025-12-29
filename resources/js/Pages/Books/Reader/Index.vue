@@ -137,7 +137,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import TreeItem from './TreeItem.vue';
@@ -145,13 +145,15 @@ import BlockRenderer from './BlockRenderer.vue';
 
 const props = defineProps({
     book: Object,
-    initialHierarchy: Array
+    initialHierarchy: Array,
+    initialContent: Object,
+    childId: String
 });
 
 const hierarchy = ref(props.initialHierarchy);
-const selectedId = ref(null);
-const currentChapter = ref(null);
-const contentBlocks = ref([]);
+const selectedId = ref(props.childId);
+const currentChapter = ref(props.initialContent);
+const contentBlocks = ref(props.initialContent?.content_blocks || []);
 const loading = ref(false);
 const sidebarCollapsed = ref(false);
 const isDark = ref(false);
@@ -160,19 +162,38 @@ const rootItems = computed(() => {
     return hierarchy.value.filter(item => !item.parent_id);
 });
 
-const selectChapter = async (item) => {
-    selectedId.value = item._id;
+// Watch for URL changes to load content without full page reload if possible
+// Though Inertia will handle the prop updates, we might want to sync local state
+watch(() => props.childId, (newId) => {
+    selectedId.value = newId;
+    if (newId && (!currentChapter.value || currentChapter.value.id !== newId)) {
+        if (props.initialContent && props.initialContent.id === newId) {
+             currentChapter.value = props.initialContent;
+             contentBlocks.value = props.initialContent.content_blocks || [];
+        } else {
+            // If for some reason props didn't update content yet
+            fetchChapterContent(newId);
+        }
+    }
+});
+
+const fetchChapterContent = async (id) => {
+    if (!id) return;
     loading.value = true;
-    
     try {
-        const response = await axios.get(route('book-contents.show', item._id));
-        currentChapter.value = { ...item, ...response.data };
+        const response = await axios.get(route('book-contents.show', id));
+        currentChapter.value = { id, ...response.data };
         contentBlocks.value = response.data.content_blocks || [];
     } catch (error) {
         console.error("Error loading chapter content:", error);
     } finally {
         loading.value = false;
     }
+};
+
+const selectChapter = (item) => {
+    // This now just handles UI state if needed, navigation is in TreeItem
+    selectedId.value = item._id;
 };
 
 const getTypeName = (type) => {

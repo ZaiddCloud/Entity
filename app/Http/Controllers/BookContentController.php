@@ -20,11 +20,27 @@ class BookContentController extends Controller
     /**
      * عارض الكتاب الرئيسي
      */
-    public function show(Book $book)
+    public function show(Book $book, $childId = null)
     {
+        $initialContent = null;
+        if ($childId) {
+            $child = BookChild::where('book_id', $book->id)->where('_id', $childId)->first();
+            if ($child) {
+                $initialContent = [
+                    'id' => $child->_id,
+                    'title' => $child->title,
+                    'type' => $child->type,
+                    'content_blocks' => $child->content_blocks ?? [],
+                    'metadata' => $child->metadata ?? []
+                ];
+            }
+        }
+
         return Inertia::render('Books/Reader/Index', [
             'book' => $book->only(['id', 'title', 'slug', 'author']),
-            'initialHierarchy' => $this->contentService->getHierarchy($book)
+            'initialHierarchy' => $this->contentService->getHierarchy($book),
+            'initialContent' => $initialContent,
+            'childId' => $childId
         ]);
     }
 

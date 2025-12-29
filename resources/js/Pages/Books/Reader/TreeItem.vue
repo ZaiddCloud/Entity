@@ -6,7 +6,6 @@
                 selectedId === item._id ? 'bg-amber-50 text-amber-900 border border-amber-200/50 shadow-sm' : 'hover:bg-slate-100 text-slate-600',
                 isOpen ? 'mb-1' : ''
             ]"
-            @click="handleClick"
             :style="{ paddingRight: (level * 16 + 12) + 'px' }"
         >
             <!-- Indentation Line for children -->
@@ -30,9 +29,15 @@
                 {{ item.type[0] }}
             </span>
 
-            <span class="text-sm font-medium flex-1 truncate" :class="{ 'font-bold': hasChildren || selectedId === item._id }">
+            <!-- Real Link -->
+            <Link 
+                :href="route('books.reader', [$page.props.book.slug, item._id])"
+                class="text-sm font-medium flex-1 truncate" 
+                :class="{ 'font-bold': hasChildren || selectedId === item._id }"
+                preserve-scroll
+            >
                 {{ item.title }}
-            </span>
+            </Link>
 
             <!-- Status Dots -->
             <div v-if="selectedId === item._id" class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></div>
@@ -64,6 +69,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { Link } from '@inertiajs/vue3';
 
 const props = defineProps({
     item: Object,
