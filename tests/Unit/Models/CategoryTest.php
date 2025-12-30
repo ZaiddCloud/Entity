@@ -4,6 +4,7 @@
 namespace Tests\Unit\Models;
 
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 use App\Models\Category;
 use App\Models\Book;
 use App\Models\Video;

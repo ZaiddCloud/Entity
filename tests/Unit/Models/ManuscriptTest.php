@@ -3,6 +3,7 @@
 namespace Tests\Unit\Models;
 
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 use App\Models\Manuscript;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 

@@ -6,6 +6,7 @@ use App\Models\Book;
 use App\Models\BookChild;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class BookChildTest extends TestCase
 {

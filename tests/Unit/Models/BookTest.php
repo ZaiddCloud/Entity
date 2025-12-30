@@ -5,6 +5,7 @@ namespace Tests\Unit\Models;
 
 use App\Models\User;
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 use App\Models\Book;
 use App\Models\Tag;
 use App\Models\Activity;
@@ -14,7 +15,7 @@ class BookTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function book_extends_entity_abstract_class()
     {
         $book = new Book();

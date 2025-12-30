@@ -4,6 +4,7 @@ namespace Tests\Unit\Models;
 
 use App\Models\User;
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 use App\Models\Activity;
 use App\Models\Comment;
 use App\Models\Note;

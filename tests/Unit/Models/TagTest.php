@@ -4,6 +4,7 @@ namespace Tests\Unit\Models;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 use App\Models\Tag;
 use App\Models\Book;
 use App\Models\Video;

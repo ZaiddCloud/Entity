@@ -8,12 +8,13 @@ use App\Models\Tag;
 use App\Models\Category;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\Test;
 
 class ArabicSlugTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function it_generates_arabic_slugs_for_books()
     {
         $book = Book::create([
@@ -25,7 +26,7 @@ class ArabicSlugTest extends TestCase
         $this->assertEquals('كتاب-جديد', $book->slug);
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_arabic_slugs_for_tags()
     {
         $tag = Tag::create([
@@ -35,7 +36,7 @@ class ArabicSlugTest extends TestCase
         $this->assertEquals('برمجة-لارايفل', $tag->slug);
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_arabic_slugs_for_categories()
     {
         $category = Category::create([
@@ -45,7 +46,7 @@ class ArabicSlugTest extends TestCase
         $this->assertEquals('قسم-التكنولوجيا', $category->slug);
     }
 
-    /** @test */
+    #[Test]
     public function it_handles_mixed_arabic_and_english_slugs()
     {
         $tag = Tag::create([
@@ -55,7 +56,7 @@ class ArabicSlugTest extends TestCase
         $this->assertEquals('laravel-بالعربي', $tag->slug);
     }
 
-    /** @test */
+    #[Test]
     public function it_ensures_unique_arabic_slugs()
     {
         Book::create([
