@@ -131,19 +131,6 @@
             </aside>
         </main>
 
-        <!-- Floating Bubble Menu (TipTap) Placeholder -->
-        <bubble-menu :editor="editor" v-if="editor" class="bubble-menu glass-effect p-1 rounded-xl shadow-2xl border border-white/20 flex gap-1">
-             <button @click="editor.chain().focus().toggleBold().run()" :class="{ 'is-active': editor.isActive('bold') }" class="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-colors">
-                <BoldIcon class="w-4 h-4" />
-             </button>
-             <button @click="editor.chain().focus().toggleItalic().run()" :class="{ 'is-active': editor.isActive('italic') }" class="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-colors">
-                <ItalicIcon class="w-4 h-4" />
-             </button>
-             <button @click="editor.chain().focus().toggleLink().run()" :class="{ 'is-active': editor.isActive('link') }" class="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-colors">
-                <LinkIcon class="w-4 h-4" />
-             </button>
-        </bubble-menu>
-
         <!-- Smart Navigator (Bottom Bar) -->
         <footer class="z-50">
             <SmartNavigator @jump="handleJump" @search="handleSearch" />
@@ -153,7 +140,8 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { Editor, EditorContent, BubbleMenu } from '@tiptap/vue-3'
+import { route } from 'ziggy-js'
+import { Editor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import Link from '@tiptap/extension-link'
@@ -200,6 +188,7 @@ const modes = [
 ]
 
 const editor = ref(null)
+const editorRef = ref(null)
 
 const layoutClass = computed(() => {
     if (mode.value === 'split') return 'flex flex-row-reverse'
