@@ -1,106 +1,92 @@
-@startuml
-
-' ========== إعدادات أساسية ==========
-skinparam defaultFontName "Arial"
-skinparam shadowing false
-skinparam roundcorner 10
-skinparam backgroundColor #F9F9F9
-skinparam arrowColor #333333
-skinparam arrowFontSize 13
-skinparam linetype ortho
-
-title "خطة اختبار نظام الكتاب الجديد (Book Ecosystem Testing Plan)"
-
-' ========== الألوان ==========
-!define UNIT_COLOR      #E1F5FE
-!define FEATURE_COLOR   #E8EAF6
-!define SERVICE_COLOR   #F3E5F5
-!define REFACTOR_COLOR  #FFEBEE
-
-' ======================================================================================
-' 1. Unit Tests (اختبارات الوحدات)
-' ======================================================================================
-package "Unit Tests (New Models)" <<UNIT_COLOR>> {
-    
-    class "BookUnitRefactorTest" {
-        + test_book_has_versions_relation()
-        + test_book_authors_relation()
-        + test_book_bookers_polymorphic_relation()
+@startmindmap
+<style>
+mindmapDiagram {
+    node {
+        BackgroundColor #FFE0B2
+        BorderColor #F57C00
+        FontColor #BF360C
     }
-
-    class "VersionTest" {
-        + test_version_belongs_to_book()
-        + test_version_belongs_to_publisher()
-        + test_isbn_format_validation()
-        + test_file_path_integrity()
+    .tdd {
+        BackgroundColor #E1F5FE
+        BorderColor #0288D1
     }
-
-    class "AuthorTest" {
-        + test_author_has_books_relation()
-        + test_author_slug_generation()
+    .complete {
+        BackgroundColor #C8E6C9
+        BorderColor #2E7D32
     }
-
-    class "BookerTest" {
-        + test_booker_morph_relation()
-        + test_role_attribute_in_pivot()
+    .parser {
+        BackgroundColor #B3E5FC
+        BorderColor #01579B
+    }
+    .deep {
+        BackgroundColor #F3E5F5
+        BorderColor #7B1FA2
+    }
+    .toolbar_full {
+        BackgroundColor #FFF9C4
+        BorderColor #FBC02D
     }
 }
+</style>
 
-' ======================================================================================
-' 2. Service Logic Tests (اختبارات المنطق)
-' ======================================================================================
-package "Logic Tests (Services)" <<SERVICE_COLOR>> {
-    
-    class "BookManagerServiceTest" {
-        + test_create_book_creates_version_automatically()
-        + test_create_book_attaches_authors()
-        + test_transaction_rolls_back_on_failure()
-    }
+* BookEditor Exhaustive Testing Suite (TDD) 🧪
+** Backend Logic (PHPUnit) <<complete>>
+*** Markdown Parser <<parser>>
+**** Heading Level Detection (H1-H8) <<deep>>
+**** Relative Depth Hierarchy Creation
+**** Semantic Paragraph Attachment
+**** Ultra-Deep Nesting Stability (Level 8)
+*** Hierarchy Management
+**** Support: sub-book, part, bab, chapter, masala
+**** Recursive Move & Delete logic
+**** Mixed-type reordering
+*** Unit Metadata & Tags
+**** Custom Tagging (e.g. "Translated")
+**** Title-level Footnotes
+**** Admin Commentary (Metadata)
+*** Sync & Security
+**** Manual Edit Lock (Sync Skip)
+**** Conflict Warning Alerts
+*** Versioning
+**** Snapshot creation & Restoration
 
-    class "BookQueryServiceTest" {
-        + test_filter_by_author()
-        + test_filter_by_publisher()
-        + test_filter_by_topic()
-    }
-}
+** Frontend Experience (Dusk) <<complete>>
+*** Pillar 1: Identity & UX
+**** Rich Toolbar (100% Tools) <<toolbar_full>>
+***** Styling: Bold, Italic, U, S, Code, Link
+***** Scientific: Super/Subscript
+***** Alignment: L, C, R, J
+***** Blocks: H1-H8, Quote, Code Block
+***** Lists: Bullet, Order, Task
+***** Utils: HR, Hard Break
+**** Glass Side Annotations (Hover/Edit/Save)
+**** Paragraph Handles (Drag & Drop)
+**** Floating Bubble Menu
+**** Smart Insertion (Ctrl+K)
+**** Typography & Style (Amiri/Outfit)
+**** Auto-Direction Logic (RTL/LTR)
+**** Marker Visual Distinction
+*** Pillar 2: Environment
+**** Entry: Index "Edit"
+**** Triple Mode Transitions
+**** Smart Navigator (Jump-by-digit, Search)
+*** Pillar 3, 4 & 5: Features & Persistence
+**** Tree Move UI Logic
+**** Version Browsing UI
+**** Export UI: Format & Scope selection
+**** Offline & Stubbing (Methodical Recovery)
+***** LocalStorage Auto-save
+***** Hydration from MongoDB
+***** Extension Integrity Verification
+***** Conflict Alert Recovery
 
-' ======================================================================================
-' 3. Feature Tests (اختبارات الميزات الكاملة)
-' ======================================================================================
-package "Feature Tests (Integration)" <<FEATURE_COLOR>> {
-    
-    class "BookWorkflowTest" {
-        + test_user_can_create_book_with_full_details()
-        + test_user_can_add_new_version_to_existing_book()
-        + test_book_page_shows_all_versions()
-    }
-    
-    class "MediaWorkflowTest" {
-        + test_audio_links_to_author()
-        + test_video_links_to_booker()
-    }
-}
+** Meta-Validation (The Guard)
+*** Constitutional Audit (All Pillars Covered)
+*** Architectural Fidelity (Matches Plan.md)
+*** Design Token Compliance (Fonts/Glass/Tokens)
 
-' ======================================================================================
-' 4. Refactoring Tests (اختبارات الكود القديم)
-' ======================================================================================
-package "Refactoring Safety Tests" <<REFACTOR_COLOR>> {
-    
-    class "LegacyStorageSyncTest" {
-        + test_storage_sync_creates_versions_instead_of_modifying_book()
-        + test_old_book_routes_redirect_correctly()
-    }
-}
+** Integration
+*** Export Drivers: PDF, Word, MD, JSON
+*** Recovery: LocalStorage boot check
 
-' ========== العلاقات ==========
-
-' الوحدة أولاً
-BookUnitRefactorTest --> BookManagerServiceTest : Validates Model basics
-
-' ثم الخدمة
-BookManagerServiceTest --> BookWorkflowTest : Validates Business Logic
-
-' أخيراً الميزات
-BookWorkflowTest ..> LegacyStorageSyncTest : Ensure backward compatibility
-
-@enduml
+@endmindmap
