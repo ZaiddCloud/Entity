@@ -20,7 +20,24 @@ class BookChild extends Model
         'content_blocks',
         'metadata',
         'last_updated',
+        'is_manually_edited',
+        'versions',
     ];
+
+    /**
+     * Create a snapshot of current content blocks.
+     */
+    public function createVersion($description = 'Manual Edit')
+    {
+        $versions = $this->versions ?? [];
+        $versions[] = [
+            'content_blocks' => $this->content_blocks,
+            'created_at' => now()->toISOString(),
+            'description' => $description,
+        ];
+        $this->versions = $versions;
+        $this->save();
+    }
 
     /**
      * Relationship to the Book (MySQL)

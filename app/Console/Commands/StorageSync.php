@@ -148,7 +148,11 @@ class StorageSync extends Command
         $this->comment("    Parsing headers for: {$book->title} ({$extension})");
 
         $service = new \App\Services\BookContentService();
-        \App\Models\BookChild::where('book_id', $book->id)->delete();
+
+        // Protect manually edited chapters
+        \App\Models\BookChild::where('book_id', $book->id)
+            ->where('is_manually_edited', '!=', true)
+            ->delete();
 
         $content = Storage::disk('public')->get($filePath);
         $nodes = [];
@@ -356,6 +360,18 @@ class StorageSync extends Command
                 5 => 'masala'
             ];
             $type = $typeMap[$level] ?? 'chapter';
+
+            // Check if a manually edited version already exists
+            $existingProtected = \App\Models\BookChild::where('book_id', $book->id)
+                ->where('title', $nodeData['title'])
+                ->where('is_manually_edited', true)
+                ->first();
+
+            if ($existingProtected) {
+                $this->warn("      [!] Skipping manually edited chapter: {$nodeData['title']}");
+                $parentsStack[$level] = $existingProtected->id;
+                continue;
+            }
 
             $node = $service->addChild($book, [
                 'parent_id' => $parentId,
