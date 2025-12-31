@@ -48,7 +48,7 @@
                 <nav class="px-2 pb-10">
                     <TreeItem 
                         v-for="item in rootItems" 
-                        :key="item._id" 
+                        :key="item.id" 
                         :item="item" 
                         :all-items="hierarchy"
                         :selected-id="selectedId"
@@ -80,7 +80,7 @@
                             <p class="text-slate-400 text-sm animate-pulse">جاري تحميل المحتوى...</p>
                         </div>
 
-                        <div v-else-if="currentChapter" :key="currentChapter._id" class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <div v-else-if="currentChapter" :key="currentChapter.id" class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
                             <!-- Chapter Header -->
                             <div class="text-center mb-12">
                                 <span class="inline-block px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-bold mb-4 tracking-wider uppercase">
@@ -216,7 +216,7 @@ const fetchChapterContent = async (id) => {
 
 const selectChapter = (item) => {
     // This now just handles UI state if needed, navigation is in TreeItem
-    selectedId.value = item._id;
+    selectedId.value = item.id;
 };
 
 const getTypeName = (type) => {

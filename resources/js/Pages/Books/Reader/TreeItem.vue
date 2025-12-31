@@ -4,7 +4,7 @@
             @click="handleClick"
             class="flex items-center group cursor-pointer py-2 px-3 rounded-xl transition-all duration-200 select-none relative"
             :class="[
-                selectedId === item._id ? 'bg-amber-50 text-amber-900 border border-amber-200/50 shadow-sm' : 'hover:bg-slate-100 text-slate-600',
+                selectedId === item.id ? 'bg-amber-50 text-amber-900 border border-amber-200/50 shadow-sm' : 'hover:bg-slate-100 text-slate-600',
                 isOpen ? 'mb-1' : ''
             ]"
             :style="{ paddingRight: (level * 16 + 12) + 'px' }"
@@ -32,17 +32,17 @@
 
             <!-- Real Link -->
             <Link 
-                :href="route('books.reader', [$page.props.book.slug, item._id])"
+                :href="route('books.reader', [$page.props.book.slug, item.id])"
                 class="text-sm font-medium flex-1 truncate" 
-                :class="{ 'font-bold': hasChildren || selectedId === item._id }"
+                :class="{ 'font-bold': hasChildren || selectedId === item.id }"
                 preserve-scroll
-                @click.stop="handleClick"
+                @click="handleClick"
             >
                 {{ item.title }}
             </Link>
 
             <!-- Status Dots -->
-            <div v-if="selectedId === item._id" class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></div>
+            <div v-if="selectedId === item.id" class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></div>
         </div>
 
         <!-- Recursive Children -->
@@ -57,7 +57,7 @@
             <div v-if="isOpen && hasChildren" class="overflow-hidden">
                 <TreeItem 
                     v-for="child in children" 
-                    :key="child._id" 
+                    :key="child.id" 
                     :item="child" 
                     :all-items="allItems"
                     :selected-id="selectedId"
@@ -90,7 +90,7 @@ const emit = defineEmits(['select']);
 const isOpen = ref(false);
 
 const children = computed(() => {
-    return props.allItems.filter(i => i.parent_id === props.item._id);
+    return props.allItems.filter(i => i.parent_id === props.item.id);
 });
 
 const hasChildren = computed(() => children.value.length > 0);
@@ -104,7 +104,7 @@ const handleClick = (e) => {
     
     // If clicking the row but not the link itself, trigger navigation manually
     if (!e.target.closest('a')) {
-        router.visit(route('books.reader', [page.props.book.slug, props.item._id]), {
+        router.visit(route('books.reader', [page.props.book.slug, props.item.id]), {
             preserveScroll: true
         });
     }
