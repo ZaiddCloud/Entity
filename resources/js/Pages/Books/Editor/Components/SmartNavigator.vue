@@ -17,8 +17,23 @@
                 <HashIcon class="w-3 h-3 text-slate-400" />
                 <input 
                     type="text" 
-                    placeholder="Jump to..." 
-                    class="bg-transparent border-none p-0 text-xs focus:ring-0 w-20 text-slate-600 dark:text-slate-400 font-medium"
+                    placeholder="Jump by digit..." 
+                    v-model="jumpQuery"
+                    @keyup.enter="handleJump"
+                    class="bg-transparent border-none p-0 text-xs focus:ring-0 w-24 text-slate-600 dark:text-slate-400 font-medium placeholder:text-slate-300"
+                />
+            </div>
+            
+            <div class="h-4 w-px bg-slate-200 dark:bg-slate-800"></div>
+
+            <!-- Global Search -->
+            <div class="flex items-center gap-2">
+                <SearchIcon class="w-3 h-3 text-slate-400" />
+                <input 
+                    type="text" 
+                    placeholder="Search in book..." 
+                    v-model="searchQuery"
+                    class="bg-transparent border-none p-0 text-xs focus:ring-0 w-32 text-slate-600 dark:text-slate-400 font-medium placeholder:text-slate-300"
                 />
             </div>
         </div>
@@ -43,9 +58,20 @@
 
 <script setup>
 import { ref } from 'vue'
-import { NavigationIcon, HashIcon } from 'lucide-vue-next'
+import { NavigationIcon, HashIcon, SearchIcon } from 'lucide-vue-next'
+
+const emit = defineEmits(['jump', 'search'])
 
 const isExpanded = ref(false)
+const jumpQuery = ref('')
+const searchQuery = ref('')
+
+const handleJump = () => {
+    if (jumpQuery.value) {
+        emit('jump', jumpQuery.value)
+        jumpQuery.value = ''
+    }
+}
 </script>
 
 <style scoped>

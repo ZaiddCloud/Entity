@@ -103,9 +103,15 @@
                 tooltip="كتلة برمجية"
             />
             <ToolbarButton 
-                @click="editor.chain().focus().setHorizontalRule().run()"
+                @click="setHorizontalRule"
                 :icon="MinusIcon"
                 tooltip="فاصل أفقي"
+            />
+            <ToolbarButton 
+                @click="addFootnote"
+                :active="editor.isActive('scholarlyFootnote')"
+                :icon="MessageSquarePlusIcon"
+                tooltip="إضافة هامش (شرح)"
             />
         </div>
     </div>
@@ -128,12 +134,24 @@ import {
     SubscriptIcon,
     QuoteIcon,
     CodeIcon,
-    MinusIcon
+    MinusIcon,
+    MessageSquarePlusIcon
 } from 'lucide-vue-next'
 
-defineProps({
+const props = defineProps({
     editor: Object
 })
+
+const addFootnote = () => {
+    const marker = prompt('أدخل رمز الهامش (مثلاً: [1] أو *):', '*')
+    if (marker) {
+        props.editor.chain().focus().setFootnote({ marker, content: '' }).run()
+    }
+}
+
+const setHorizontalRule = () => {
+    props.editor.chain().focus().setHorizontalRule().run()
+}
 </script>
 
 <style scoped>

@@ -57,9 +57,17 @@
             <!-- Editor Content -->
             <div :class="['editor-scroller flex-1 overflow-y-auto px-4 py-12 scroll-smooth', mode === 'split' ? 'w-1/2' : 'w-full']">
                 <div :class="['mx-auto transition-all duration-500', contentMaxWidth]">
-                    <div ref="editorRef" class="prose prose-slate dark:prose-invert max-w-none prose-lg">
-                        <!-- TipTap Editor Instance will be here -->
-                        <editor-content :editor="editor" />
+                    <div ref="editorRef" class="prose prose-slate dark:prose-invert max-w-none prose-lg relative">
+                        <!-- Block Handle -->
+                        <BlockHandle 
+                            :visible="handleVisible" 
+                            :top="handleTop" 
+                            :left="handleLeft"
+                            @add="handleBlockAdd"
+                        />
+
+                        <!-- TipTap Editor Instance -->
+                        <editor-content :editor="editor" @mouseover="updateHandlePosition" />
                     </div>
                 </div>
             </div>
@@ -67,10 +75,38 @@
             <!-- Split Preview Area -->
             <div v-if="mode === 'split'" class="preview-area w-1/2 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-y-auto p-12 rtl">
                 <div class="prose prose-slate dark:prose-invert max-w-none prose-lg reader-content">
-                    <!-- Static preview of the content -->
                     <div v-html="previewHtml"></div>
                 </div>
             </div>
+
+            <!-- Annotation Sidebar (Scholarly Panel) -->
+            <aside v-if="mode !== 'split'" class="annotation-sidebar w-80 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-6 flex flex-col gap-4 overflow-y-auto overflow-x-hidden">
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <MessageSquareIcon class="w-4 h-4" />
+                    Annotations / Footnotes
+                </div>
+                
+                <div v-if="activeFootnote" class="footnote-editor animate-in slide-in-from-right-4 duration-300">
+                    <div class="flex items-center justify-between mb-3">
+                         <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-700 text-[10px] font-bold">
+                            MARKER: {{ activeFootnote.marker || '*' }}
+                         </span>
+                         <button @click="removeFootnote" class="text-xs text-red-500 hover:underline">إزالة الهامش</button>
+                    </div>
+                    <textarea 
+                        v-model="activeFootnote.content"
+                        @input="updateFootnoteContent"
+                        class="w-full h-48 p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                        placeholder="اكتب الهامش هنا..."
+                    ></textarea>
+                    <p class="text-[10px] text-slate-400 mt-2 italic">* التعديلات تُحفظ تلقائياً في النص</p>
+                </div>
+                
+                <div v-else class="h-full flex flex-col items-center justify-center text-center opacity-30 select-none py-12">
+                    <BookOpenIcon class="w-12 h-12 mb-4 text-slate-300" />
+                    <p class="text-sm font-medium">حدد هامشاً في النص لتعديله أو أضف هامشاً جديداً</p>
+                </div>
+            </aside>
         </main>
 
         <!-- Floating Bubble Menu (TipTap) Placeholder -->
@@ -88,7 +124,7 @@
 
         <!-- Smart Navigator (Bottom Bar) -->
         <footer class="z-50">
-            <SmartNavigator />
+            <SmartNavigator @jump="handleJump" @search="handleSearch" />
         </footer>
     </div>
 </template>
@@ -104,6 +140,8 @@ import Subscript from '@tiptap/extension-subscript'
 import Superscript from '@tiptap/extension-superscript'
 import Toolbar from './Components/Toolbar.vue'
 import SmartNavigator from './Components/SmartNavigator.vue'
+import BlockHandle from './Components/BlockHandle.vue'
+import { ScholarlyFootnote } from './Extensions/ScholarlyFootnote'
 import { 
     ArrowLeftIcon, 
     MonitorIcon, 
@@ -111,7 +149,10 @@ import {
     ColumnsIcon,
     BoldIcon,
     ItalicIcon,
-    LinkIcon
+    LinkIcon,
+    MessageSquareIcon,
+    BookOpenIcon,
+    GripVerticalIcon
 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -155,6 +196,13 @@ const typeLabels = {
 const typeLabel = computed(() => typeLabels[props.type] || 'وحدة')
 
 const previewHtml = ref('')
+const activeFootnote = ref(null)
+
+// Block Handle State
+const handleVisible = ref(false)
+const handleTop = ref(0)
+const handleLeft = ref(0)
+const activeNodePos = ref(null)
 
 const handleSave = async () => {
     isSaving.value = true
@@ -182,6 +230,7 @@ onMounted(() => {
             }),
             Subscript,
             Superscript,
+            ScholarlyFootnote,
         ],
         autofocus: true,
         editable: true,
@@ -192,8 +241,68 @@ onMounted(() => {
         onCreate({ editor }) {
             previewHtml.value = editor.getHTML()
         },
+        onSelectionUpdate({ editor }) {
+            const attrs = editor.getAttributes('scholarlyFootnote')
+            if (attrs && attrs.marker !== undefined) {
+                activeFootnote.value = { ...attrs }
+            } else {
+                activeFootnote.value = null
+            }
+        },
     })
 })
+
+const updateFootnoteContent = () => {
+    if (activeFootnote.value) {
+        editor.value.chain().focus().setFootnote({ 
+            content: activeFootnote.value.content,
+            marker: activeFootnote.value.marker 
+        }).run()
+    }
+}
+
+const removeFootnote = () => {
+    editor.value.chain().focus().unsetFootnote().run()
+    activeFootnote.value = null
+}
+
+const updateHandlePosition = (event) => {
+    if (!editor.value) return
+    
+    const view = editor.value.view
+    const pos = view.posAtCoords({ left: event.clientX, top: event.clientY })
+    
+    if (pos) {
+        const node = view.state.doc.nodeAt(pos.pos) || view.state.doc.resolve(pos.pos).parent
+        const nodeDOM = view.nodeDOM(view.state.doc.resolve(pos.pos).before()) || event.target.closest('.ProseMirror > *')
+        
+        if (nodeDOM) {
+            const rect = nodeDOM.getBoundingClientRect()
+            const containerRect = editorRef.value.getBoundingClientRect()
+            
+            handleVisible.value = true
+            handleTop.value = rect.top - containerRect.top + 4
+            handleLeft.value = rect.right - containerRect.left // Position exactly at the right edge
+            activeNodePos.value = pos.pos
+        }
+    }
+}
+
+const handleBlockAdd = () => {
+    if (activeNodePos.value !== null) {
+        editor.value.chain().focus().insertContentAt(activeNodePos.value, { type: 'paragraph' }).run()
+    }
+}
+
+const handleJump = (query) => {
+    console.log('Jumping to:', query)
+    // Here we would find the node with this digit or title and scroll to it
+    // For now, let's just log
+}
+
+const handleSearch = (query) => {
+    console.log('Searching for:', query)
+}
 
 onBeforeUnmount(() => {
     editor.value.destroy()
@@ -230,5 +339,21 @@ onBeforeUnmount(() => {
 .bubble-menu button.is-active {
     background: rgba(var(--color-primary-rgb), 0.1);
     color: var(--color-primary);
+}
+
+:deep(.ProseMirror span[data-footnote]) {
+  vertical-align: super;
+  font-size: 0.75em;
+  font-weight: bold;
+  color: #b45309; /* amber-700 */
+  background: #fef3c7; /* amber-100 */
+  padding: 0 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 0 2px;
+}
+
+:deep(.ProseMirror span[data-footnote]:hover) {
+  background: #fde68a; /* amber-200 */
 }
 </style>

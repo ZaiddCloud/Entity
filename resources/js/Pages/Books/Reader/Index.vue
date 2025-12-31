@@ -185,6 +185,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import LinkItem from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
+import { ScholarlyFootnote } from '../Editor/Extensions/ScholarlyFootnote';
 
 const props = defineProps({
     book: Object,
@@ -286,6 +287,7 @@ const updateReaderEditor = () => {
                 Underline,
                 LinkItem,
                 TextAlign.configure({ types: ['heading', 'paragraph'] }),
+                ScholarlyFootnote,
             ],
             editable: false,
         });
@@ -448,5 +450,17 @@ const toggleDarkMode = () => {
     background-color: #fef3c7; /* amber-100 */
     opacity: 0.5;
     border: 2px dashed #d97706; /* amber-600 */
+}
+
+:deep(.ProseMirror span[data-footnote]) {
+  vertical-align: super;
+  font-size: 0.75em;
+  font-weight: bold;
+  color: #b45309; /* amber-700 */
+  background: #fef3c7; /* amber-100 */
+  padding: 0 4px;
+  border-radius: 4px;
+  cursor: help;
+  margin: 0 2px;
 }
 </style>
