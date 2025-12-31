@@ -44,6 +44,28 @@
                 >
                     حفظ التعديلات
                 </button>
+
+                <div class="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
+
+                <!-- Export Dropdown -->
+                <div class="relative group">
+                    <button class="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
+                        <DownloadIcon class="w-4 h-4" />
+                        تصدير
+                        <ChevronDownIcon class="w-4 h-4" />
+                    </button>
+                    <div class="absolute left-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[100] transform origin-top-left scale-95 group-hover:scale-100 p-2 flex flex-col gap-1">
+                        <button @click="handleExport('pdf')" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300">
+                             <FileTextIcon class="w-4 h-4 text-red-500" /> PDF Document
+                        </button>
+                        <button @click="handleExport('docx')" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300">
+                             <FileTextIcon class="w-4 h-4 text-blue-500" /> Word Document
+                        </button>
+                        <button @click="handleExport('md')" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300">
+                             <FileCodeIcon class="w-4 h-4 text-slate-500" /> Markdown File
+                        </button>
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -152,7 +174,11 @@ import {
     LinkIcon,
     MessageSquareIcon,
     BookOpenIcon,
-    GripVerticalIcon
+    GripVerticalIcon,
+    DownloadIcon,
+    ChevronDownIcon,
+    FileTextIcon,
+    FileCodeIcon
 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -207,10 +233,13 @@ const activeNodePos = ref(null)
 const handleSave = async () => {
     isSaving.value = true
     const json = editor.value.getJSON()
-    // In TipTap format, we might need to convert this back or save as is
-    // For now, let's assume we save the content_blocks as the editor's JSON output
     emit('save', json.content)
     setTimeout(() => { isSaving.value = false }, 1000)
+}
+
+const handleExport = (format) => {
+    const url = route('api.book-children.export', { child: props.childId, format: format })
+    window.open(url, '_blank')
 }
 
 onMounted(() => {
