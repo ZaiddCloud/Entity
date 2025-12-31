@@ -32,7 +32,7 @@ class StorageSync extends Command
     protected $config = [
         'books' => [
             'model' => Book::class,
-            'extensions' => ['pdf', 'epub', 'mobi', 'docx'],
+            'extensions' => ['pdf', 'epub', 'mobi', 'docx', 'md', 'txt', 'odt'],
         ],
         'audios' => [
             'model' => Audio::class,
@@ -129,9 +129,260 @@ class StorageSync extends Command
 
                 $count++;
                 $this->line("  [+] Synced: {$title}");
+
+                // 4. If it's a Book and the file is a source format, sync its content hierarchy
+                if ($modelClass === Book::class && in_array($extension, ['md', 'txt', 'docx'])) {
+                    $this->syncBookContentFromHeaders($entity, $filePath, $extension);
+                }
             }
         }
 
         $this->info("Synced {$count} items for {$dir}.");
+    }
+
+    /**
+     * Sync book content by parsing headers within the file.
+     */
+    protected function syncBookContentFromHeaders(Book $book, string $filePath, string $extension)
+    {
+        $this->comment("    Parsing headers for: {$book->title} ({$extension})");
+
+        $service = new \App\Services\BookContentService();
+        \App\Models\BookChild::where('book_id', $book->id)->delete();
+
+        $content = Storage::disk('public')->get($filePath);
+        $nodes = [];
+
+        if ($extension === 'md' || $extension === 'txt') {
+            $nodes = $this->parseMarkdownHeaders($content);
+        } elseif ($extension === 'docx') {
+            $nodes = $this->parseDocxHeaders($filePath);
+        }
+
+        if (empty($nodes)) {
+            $this->warn("      No headers found in the file structure.");
+            return;
+        }
+
+        $this->buildHierarchy($service, $book, $nodes);
+    }
+
+    private function parseMarkdownHeaders(string $content): array
+    {
+        // 1. Extract Footnote Definitions
+        $lineList = explode("\n", $content);
+        $footnotes = [];
+        $cleanLines = [];
+
+        foreach ($lineList as $line) {
+            if (preg_match('/^\[\^(\d+)\]:\s*(.+)$/', trim($line), $matches)) {
+                $footnotes[$matches[1]] = trim($matches[2]);
+            } else {
+                $cleanLines[] = $line;
+            }
+        }
+        $content = implode("\n", $cleanLines);
+
+        // 2. Parse Headers
+        $lines = explode("\n", $content);
+        $nodes = [];
+        $currentText = [];
+
+        foreach ($lines as $line) {
+            if (preg_match('/^(#{1,6})\s+(.+)$/', trim($line), $matches)) {
+                if (!empty($nodes)) {
+                    $nodes[count($nodes) - 1]['text'] = implode("\n", $currentText);
+                    $currentText = [];
+                }
+
+                $nodes[] = [
+                    'level' => strlen($matches[1]),
+                    'title' => $matches[2],
+                    'text' => ''
+                ];
+            } else {
+                $currentText[] = $line;
+            }
+        }
+
+        if (!empty($nodes)) {
+            $nodes[count($nodes) - 1]['text'] = implode("\n", $currentText);
+        }
+
+        // 3. Map Footnotes to Nodes (simple auto-mapping for now)
+        foreach ($nodes as &$node) {
+            $node['annotations'] = [];
+            if (preg_match_all('/\[\^(\d+)\]/', $node['text'], $matches)) {
+                foreach ($matches[1] as $id) {
+                    if (isset($footnotes[$id])) {
+                        $node['annotations'][] = [
+                            'type' => 'footnote',
+                            'marker' => "[$id]",
+                            'content' => $footnotes[$id]
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $nodes;
+    }
+
+    private function parseDocxHeaders(string $filePath): array
+    {
+        $fullPath = Storage::disk('public')->path($filePath);
+        $zip = new \ZipArchive();
+        $nodes = [];
+        $docxFootnotes = [];
+
+        if ($zip->open($fullPath) === true) {
+            // A. Extract Footnotes mapping
+            $footnoteXml = $zip->getFromName('word/footnotes.xml');
+            if ($footnoteXml) {
+                $fXml = new \SimpleXMLElement($footnoteXml);
+                $fXml->registerXPathNamespace('w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
+                foreach ($fXml->xpath('//w:footnote') as $fn) {
+                    $attr = $fn->attributes('http://schemas.openxmlformats.org/wordprocessingml/2006/main');
+                    $id = (string) ($attr['id'] ?? '');
+                    $text = strip_tags($fn->asXML());
+                    if (!empty($id) && !empty(trim($text))) {
+                        $docxFootnotes[$id] = trim($text);
+                    }
+                }
+            }
+
+            // B. Process Document
+            $xmlString = $zip->getFromName('word/document.xml');
+            $zip->close();
+            if (!$xmlString)
+                return [];
+
+            $xml = new \SimpleXMLElement($xmlString);
+            $xml->registerXPathNamespace('w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
+
+            $paragraphs = $xml->xpath('//w:p');
+            $currentText = [];
+            $currentAnnotations = [];
+
+            foreach ($paragraphs as $p) {
+                // Style/Header check
+                $isHeader = false;
+                $level = 0;
+                $style = $p->xpath('.//w:pPr/w:pStyle/@w:val');
+                if (!empty($style)) {
+                    $styleName = (string) $style[0];
+                    if (preg_match('/Heading(\d+)/i', $styleName, $matches)) {
+                        $isHeader = true;
+                        $level = (int) $matches[1];
+                    }
+                }
+
+                // Text and Footnote references
+                $pText = '';
+                foreach ($p->xpath('.//w:r') as $r) {
+                    // Check for text
+                    foreach ($r->xpath('.//w:t') as $t) {
+                        $pText .= (string) $t;
+                    }
+                    // Check for footnote reference
+                    $fnRefs = $r->xpath('.//w:footnoteReference');
+                    foreach ($fnRefs as $ref) {
+                        $attr = $ref->attributes('http://schemas.openxmlformats.org/wordprocessingml/2006/main');
+                        $id = (string) ($attr['id'] ?? '');
+
+                        if (!empty($id) && isset($docxFootnotes[$id])) {
+                            $marker = "[" . (count($currentAnnotations) + 1) . "]";
+                            $pText .= $marker;
+                            $currentAnnotations[] = [
+                                'type' => 'footnote',
+                                'marker' => $marker,
+                                'content' => $docxFootnotes[$id]
+                            ];
+                        }
+                    }
+                }
+
+                if ($isHeader && !empty(trim($pText))) {
+                    if (!empty($nodes)) {
+                        $nodes[count($nodes) - 1]['text'] = implode("\n\n", $currentText);
+                        $nodes[count($nodes) - 1]['annotations'] = $currentAnnotations;
+                        $currentText = [];
+                        $currentAnnotations = [];
+                    }
+                    $nodes[] = [
+                        'level' => $level,
+                        'title' => trim($pText),
+                        'text' => '',
+                        'annotations' => []
+                    ];
+                } else {
+                    if (!empty(trim($pText))) {
+                        $currentText[] = $pText;
+                    }
+                }
+            }
+
+            if (!empty($nodes)) {
+                $nodes[count($nodes) - 1]['text'] = implode("\n\n", $currentText);
+                $nodes[count($nodes) - 1]['annotations'] = $currentAnnotations;
+            }
+        }
+        return $nodes;
+    }
+
+    private function buildHierarchy($service, $book, array $nodes)
+    {
+        $parentsStack = []; // Initializing stack for hierarchy tracking
+        $order = 1;
+
+        foreach ($nodes as $nodeData) {
+            $level = $nodeData['level'];
+
+            // Find parent: The closest level above the current level in the stack
+            $parentId = null;
+            for ($l = $level - 1; $l >= 1; $l--) {
+                if (isset($parentsStack[$l])) {
+                    $parentId = $parentsStack[$l];
+                    break;
+                }
+            }
+
+            // Map level to type name for aesthetics
+            $typeMap = [
+                1 => 'sub-book',
+                2 => 'part',
+                3 => 'door',
+                4 => 'chapter',
+                5 => 'masala'
+            ];
+            $type = $typeMap[$level] ?? 'chapter';
+
+            $node = $service->addChild($book, [
+                'parent_id' => $parentId,
+                'type' => $type,
+                'title' => $nodeData['title'],
+                'order' => $order++
+            ]);
+
+            // Save this node as potential parent for next items
+            $parentsStack[$level] = $node->id;
+
+            // Clear any deeper levels from stack as we have moved back up or stayed at same depth
+            foreach ($parentsStack as $l => $id) {
+                if ($l > $level)
+                    unset($parentsStack[$l]);
+            }
+
+            // Add text content if present
+            if (!empty(trim($nodeData['text']))) {
+                $service->addBlock($node, [
+                    'type' => 'paragraph',
+                    'body' => trim($nodeData['text']),
+                    'annotations' => $nodeData['annotations'] ?? []
+                ]);
+            }
+        }
+
+        $this->info("      Successfully built hierarchy with " . count($nodes) . " nodes.");
     }
 }
