@@ -1,0 +1,73 @@
+@startmindmap
+<style>
+mindmapDiagram {
+    node {
+        BackgroundColor #E3F2FD
+        BorderColor #1976D2
+        FontColor #0D47A1
+    }
+    .pillar {
+        BackgroundColor #FFF9C4
+        BorderColor #FBC02D
+    }
+    .constitution {
+        BackgroundColor #E8F5E9
+        BorderColor #388E3C
+        FontColor #1B5E20
+    }
+}
+</style>
+
+* BookEditor Main Pillars (Constitution) 🖋️
+** المحور الأول: الهوية والروح (Identity)
+*** Base: TipTap Headless Engine
+*** Toolbar: TinyMCE Style (Rich & Traditional)
+*** Annotations: CKEditor Style (Interactive Glassmorphism)
+*** Block Handles: Editor.js Style (Drag & Drop)
+*** Navigation
+**** Slash Menu & Markdown Shortcuts
+**** Smart Keyboard Menu (Ctrl+K)
+**** Smart Hierarchy Navigator (Bottom Bar)
+*** Visuals
+**** High-end Typography (Milkdown)
+**** Deep RTL Support (Arabic Focus)
+**** Floating Bubble Menu (Lexical)
+
+** المحور الثاني: بيئة التحرير (Environment)
+*** Entry: Book Index "Edit" Button
+*** Workspace Modes
+**** In-place Mode (Reader Context)
+**** Full-Screen Mode (Dedicated Space)
+**** Split View Mode (Editor + Preview)
+
+** المحور الثالث: نطاق العمل (Scope)
+*** Content Editing (Text, Headings, Footnotes)
+*** Structure Management
+**** Paragraph Level (Drag & Drop)
+**** Hierarchy Level (Chapters & Moves)
+*** Advanced Protections
+**** Version History (Timeline & Undo/Redo)
+**** Sync Protection (Manual vs Auto-Sync)
+**** Auto-Direction (Mixed RTL/LTR)
+**** Offline Persistence (LocalStorage)
+
+** المحور الرابع: خيارات التصدير (Export)
+*** PDF (Print & Official)
+*** Word (.docx) (External review)
+*** Markdown (.md) (Sync compatible)
+*** JSON (Data structure backup)
+*** Flexible Scope (Single Chapter to Full Book)
+
+left side
+
+** Constitution Summary
+***:<b>الهوية</b>
+TipTap, TinyMCE Style, CKEditor Sidebars;
+***:<b>البيئة</b>
+3 Workspace Modes (In-place, Full, Split);
+***:<b>النطاق</b>
+Deep Structure Control, History, Sync Protection;
+***:<b>التصدير</b>
+Multi-format (PDF, Word, MD, JSON);
+
+@endmindmap
