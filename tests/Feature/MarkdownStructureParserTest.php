@@ -39,7 +39,7 @@ class MarkdownStructureParserTest extends TestCase
 
         $this->assertCount(2, $structure[0]['blocks']); // Intro has 2 paragraphs
         $this->assertCount(1, $structure[1]['blocks']); // Deep has 1 paragraph
-        $this->assertEquals('Paragraph 1', $structure[0]['blocks'][0]['content']);
+        $this->assertEquals('Paragraph 1', $structure[0]['blocks'][0]['content'][0]['text']);
     }
 
     /**

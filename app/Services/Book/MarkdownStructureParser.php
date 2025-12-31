@@ -43,7 +43,12 @@ class MarkdownStructureParser
             } elseif ($currentIndex !== -1) {
                 $nodes[$currentIndex]['blocks'][] = [
                     'type' => 'paragraph',
-                    'content' => $line
+                    'content' => [
+                        [
+                            'type' => 'text',
+                            'text' => $line
+                        ]
+                    ]
                 ];
             }
         }

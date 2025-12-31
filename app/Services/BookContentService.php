@@ -45,12 +45,20 @@ class BookContentService
     public function addBlock(BookChild $child, array $block): BookChild
     {
         $blocks = $child->content_blocks ?? [];
-        $blocks[] = array_merge([
-            'id' => uniqid('b_'),
-            'type' => 'paragraph',
-            'body' => '',
-            'annotations' => []
-        ], $block);
+
+        if (isset($block['body'])) {
+            $blocks[] = [
+                'type' => 'paragraph',
+                'content' => [
+                    [
+                        'type' => 'text',
+                        'text' => $block['body']
+                    ]
+                ]
+            ];
+        } else {
+            $blocks[] = $block;
+        }
 
         $child->update(['content_blocks' => $blocks, 'last_updated' => now()]);
 

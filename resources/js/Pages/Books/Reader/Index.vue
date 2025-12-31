@@ -25,10 +25,32 @@
                 </button>
                 <div class="h-6 w-px bg-slate-200 mx-2"></div>
                 <span class="text-sm font-medium text-slate-600">المحقق: {{"غير محدد"}}</span>
+                <div class="h-6 w-px bg-slate-200 mx-2"></div>
+                <button 
+                    v-if="currentChapter"
+                    @click="showEditor = true" 
+                    class="btn-secondary px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    تعديل
+                </button>
             </div>
         </header>
 
         <div class="flex flex-1 overflow-hidden relative">
+            <!-- Full Editor Workspace Overlay -->
+            <transition name="editor-fade">
+                <EditorContainer 
+                    v-if="showEditor" 
+                    :title="currentChapter.title"
+                    :type="currentChapter.type"
+                    :initial-content="currentChapter.content_blocks"
+                    @close="showEditor = false"
+                    @save="handleSave"
+                />
+            </transition>
             <!-- Sidebar: Hierarchy -->
             <aside 
                 class="w-80 bg-white border-l border-slate-200 overflow-y-auto transition-all duration-300 z-10"
@@ -100,16 +122,11 @@
                                 <div class="w-24 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent mx-auto mt-8"></div>
                             </div>
 
-                            <!-- Content Blocks -->
-                            <div class="space-y-10">
-                                <template v-if="contentBlocks.length > 0">
-                                    <BlockRenderer 
-                                        v-for="block in contentBlocks" 
-                                        :key="block.id" 
-                                        :block="block" 
-                                    />
-                                </template>
-                                <div v-else class="py-12 px-8 bg-amber-50/30 rounded-3xl border border-amber-100/50">
+                            <!-- Content Blocks (Unified TipTap Reader) -->
+                            <div class="reader-container prose prose-slate dark:prose-invert max-w-none prose-lg animate-in fade-in duration-1000">
+                                <editor-content v-if="readerEditor" :editor="readerEditor" />
+                                
+                                <div v-if="!contentBlocks.length" class="py-12 px-8 bg-amber-50/30 rounded-3xl border border-amber-100/50">
                                     <div class="flex items-center gap-4 mb-6">
                                         <div class="p-3 bg-amber-100 rounded-2xl text-amber-700">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -155,13 +172,19 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, provide } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import TreeItem from './TreeItem.vue';
 import BlockRenderer from './BlockRenderer.vue';
 import { debounce } from 'lodash';
 import Draggable from 'vuedraggable';
+import EditorContainer from '../Editor/EditorContainer.vue';
+import { Editor, EditorContent } from '@tiptap/vue-3';
+import StarterKit from '@tiptap/starter-kit';
+import Underline from '@tiptap/extension-underline';
+import LinkItem from '@tiptap/extension-link';
+import TextAlign from '@tiptap/extension-text-align';
 
 const props = defineProps({
     book: Object,
@@ -178,6 +201,9 @@ const loading = ref(false);
 const sidebarCollapsed = ref(false);
 const isDark = ref(false);
 const searchQuery = ref('');
+const showEditor = ref(false);
+const isSaving = ref(false);
+const readerEditor = ref(null);
 
 // Metadata for the current chapter/volume
 const metadata = computed(() => currentChapter.value?.metadata || {});
@@ -235,10 +261,36 @@ watch(() => props.childId, (newId) => {
 watch(() => props.initialContent, (newContent) => {
     if (newContent) {
         currentChapter.value = newContent;
+        updateReaderEditor();
     } else if (!props.childId) {
         currentChapter.value = null;
+        if (readerEditor.value) readerEditor.value.destroy();
+        readerEditor.value = null;
     }
 }, { immediate: true });
+
+const updateReaderEditor = () => {
+    if (readerEditor.value) {
+        readerEditor.value.commands.setContent({
+            type: 'doc',
+            content: currentChapter.value.content_blocks || []
+        });
+    } else {
+        readerEditor.value = new Editor({
+            content: {
+                type: 'doc',
+                content: currentChapter.value.content_blocks || []
+            },
+            extensions: [
+                StarterKit,
+                Underline,
+                LinkItem,
+                TextAlign.configure({ types: ['heading', 'paragraph'] }),
+            ],
+            editable: false,
+        });
+    }
+};
 
 const fetchChapterContent = async (id) => {
     if (!id) return;
@@ -257,6 +309,21 @@ const fetchChapterContent = async (id) => {
 const selectChapter = (item) => {
     // This now just handles UI state if needed, navigation is in TreeItem
     selectedId.value = item.id;
+};
+
+const handleSave = async (content) => {
+    isSaving.value = true;
+    try {
+        await axios.post(route('api.book-children.save', currentChapter.value.id), {
+            content_blocks: content
+        });
+        currentChapter.value.content_blocks = content;
+        // Optional: show toast
+    } catch (error) {
+        console.error("Save failed:", error);
+    } finally {
+        isSaving.value = false;
+    }
 };
 
 const getTypeName = (type) => {
@@ -307,7 +374,6 @@ const toggleExpand = (id) => {
 const isExpanded = (id) => expandedIds.value.has(id);
 
 // Provide to recursive children
-import { provide } from 'vue';
 provide('sidebarContext', {
     expandedIds,
     toggleExpand,
@@ -344,6 +410,23 @@ const toggleDarkMode = () => {
 .fade-slide-leave-to {
     opacity: 0;
     transform: translateY(-20px);
+}
+
+.editor-fade-enter-active,
+.editor-fade-leave-active {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.editor-fade-enter-from,
+.editor-fade-leave-to {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+}
+
+.editor-view {
+    position: absolute;
+    inset: 0;
+    z-index: 100;
 }
 
 /* Custom Scrollbar */
