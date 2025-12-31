@@ -41,6 +41,7 @@ class GlobalSearchTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user, $book, $author) {
             $browser->loginAs($user)
                 ->visit('/search?q=Philosophy')
+                ->waitForText('Philosophy Book')
                 ->assertSee('Philosophy Book')
                 ->visit('/search?q=Al-Farabi')
                 ->assertSee('Al-Farabi');

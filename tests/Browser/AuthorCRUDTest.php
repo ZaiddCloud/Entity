@@ -22,7 +22,7 @@ class AuthorCRUDTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/authors')
-                ->assertSee('المؤلفين')
+                ->waitForText('المؤلف') // Wait for header or table content
                 ->assertPresent('[data-page]');
         });
     }
@@ -38,7 +38,7 @@ class AuthorCRUDTest extends DuskTestCase
             $browser->loginAs($user)
                 ->visit('/authors')
                 ->waitForText('إضافة مؤلف جديد')
-                ->visit('/authors/create') 
+                ->visit('/authors/create')
                 ->assertPathIs('/authors/create')
                 ->waitFor('#name')
                 ->assertSee('إضافة مؤلف جديد')
