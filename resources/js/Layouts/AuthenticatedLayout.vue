@@ -7,6 +7,7 @@ defineProps({
 });
 
 const isSidebarOpen = ref(true);
+const isUserMenuOpen = ref(false);
 const toggleSidebar = () => {
     isSidebarOpen.value = !isSidebarOpen.value;
 };
@@ -169,17 +170,37 @@ const checkActive = (routeName) => {
                             <span class="text-sm font-black dark:text-white">{{ $page.props.auth.user.name }}</span>
                             <span class="text-[10px] text-gray-400 mt-1 uppercase tracking-tighter">مسؤول النظام</span>
                         </div>
-                        <div class="relative group">
-                            <button class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center p-0.5 border border-gray-200 dark:border-white/10 overflow-hidden">
+                        <div class="relative">
+                            <button 
+                                @click="isUserMenuOpen = !isUserMenuOpen"
+                                class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center p-0.5 border border-gray-200 dark:border-white/10 overflow-hidden"
+                            >
                                 <div class="w-full h-full rounded-lg bg-linear-to-tr from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center">
                                     <span class="text-xs font-black">{{ $page.props.auth.user.name.charAt(0) }}</span>
                                 </div>
                             </button>
                             
-                            <!-- Simple Dropdown Placeholder -->
-                            <div class="absolute left-0 top-12 w-48 bg-white dark:bg-[#0f0f0f] rounded-2xl shadow-2xl border border-gray-100 dark:border-white/5 py-2 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200">
-                                <Link :href="route('logout')" method="post" as="button" class="w-full text-right px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">تسجيل الخروج</Link>
+                            <!-- Dropdown Menu -->
+                            <div 
+                                v-if="isUserMenuOpen"
+                                class="absolute left-0 top-12 w-48 bg-white dark:bg-[#0f0f0f] rounded-2xl shadow-2xl border border-gray-100 dark:border-white/5 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+                            >
+                                <Link 
+                                    :href="route('logout')" 
+                                    method="post" 
+                                    as="button" 
+                                    class="w-full text-right px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+                                >
+                                    تسجيل الخروج
+                                </Link>
                             </div>
+                            
+                            <!-- Backdrop to close menu when clicking outside -->
+                            <div 
+                                v-if="isUserMenuOpen" 
+                                @click="isUserMenuOpen = false" 
+                                class="fixed inset-0 z-40"
+                            ></div>
                         </div>
                     </div>
                 </div>

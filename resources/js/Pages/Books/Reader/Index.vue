@@ -40,6 +40,7 @@
                         name="sidebar-search"
                         type="text" 
                         placeholder="ابحث في الفهرس..." 
+                        v-model="searchQuery"
                         class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                     />
                 </div>
@@ -151,6 +152,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import TreeItem from './TreeItem.vue';
 import BlockRenderer from './BlockRenderer.vue';
+import { debounce } from 'lodash';
 
 const props = defineProps({
     book: Object,
@@ -166,13 +168,23 @@ const contentBlocks = computed(() => currentChapter.value?.content_blocks || [])
 const loading = ref(false);
 const sidebarCollapsed = ref(false);
 const isDark = ref(false);
+const searchQuery = ref('');
 
 // Metadata for the current chapter/volume
 const metadata = computed(() => currentChapter.value?.metadata || {});
 
 const rootItems = computed(() => {
+    if (searchQuery.value.trim()) {
+        // Flat list of matches when searching
+        return hierarchy.value.filter(item => 
+            item.title.toLowerCase().includes(searchQuery.value.toLowerCase())
+        );
+    }
     return hierarchy.value.filter(item => !item.parent_id);
 });
+
+// Helper to determine if we are in search mode for the template
+const isSearching = computed(() => !!searchQuery.value.trim());
 
 // Watch for URL changes to load content without full page reload if possible
 // Though Inertia will handle the prop updates, we might want to sync local state
