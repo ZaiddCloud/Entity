@@ -217,12 +217,12 @@ class SeedRealisticData extends Command
                                 'order' => $p
                             ]);
 
-                            // Level 3: Door (الباب)
-                            $doorCount = rand(2, 4);
-                            for ($d = 1; $d <= $doorCount; $d++) {
-                                $door = $contentService->addChild($entity, [
+                            // Level 3: Bab (الباب)
+                            $babCount = rand(2, 4);
+                            for ($d = 1; $d <= $babCount; $d++) {
+                                $bab = $contentService->addChild($entity, [
                                     'parent_id' => $part->id,
-                                    'type' => 'door',
+                                    'type' => 'bab',
                                     'title' => "باب في " . ($d === 1 ? 'فضل العلم' : 'أهمية العمل'),
                                     'order' => $d
                                 ]);
@@ -231,7 +231,7 @@ class SeedRealisticData extends Command
                                 $chapCount = rand(2, 5);
                                 for ($c = 1; $c <= $chapCount; $c++) {
                                     $chapter = $contentService->addChild($entity, [
-                                        'parent_id' => $door->id,
+                                        'parent_id' => $bab->id,
                                         'type' => 'chapter',
                                         'title' => "فصل {$c}: تفصيل المسائل",
                                         'order' => $c

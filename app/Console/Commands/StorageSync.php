@@ -351,7 +351,7 @@ class StorageSync extends Command
             $typeMap = [
                 1 => 'sub-book',
                 2 => 'part',
-                3 => 'door',
+                3 => 'bab',
                 4 => 'chapter',
                 5 => 'masala'
             ];

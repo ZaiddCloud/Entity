@@ -263,7 +263,7 @@ const getTypeName = (type) => {
     const types = {
         'sub-book': 'كتاب فرعي',
         'part': 'جزء',
-        'door': 'باب',
+        'bab': 'باب',
         'chapter': 'فصل',
         'masala': 'مسألة',
         // Fallbacks or others
