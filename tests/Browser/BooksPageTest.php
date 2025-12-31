@@ -23,7 +23,7 @@ class BooksPageTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/books')
-                ->assertSee('المكتبة') // Assuming Arabic title based on other files
+                ->waitForText('المكتبة')
                 ->assertPresent('[data-page]');
         });
     }
@@ -76,6 +76,7 @@ class BooksPageTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/books')
+                ->waitFor('.flex.flex-wrap')
                 ->assertPresent('.flex.flex-wrap'); // Matches pagination component class
         });
     }
@@ -91,6 +92,7 @@ class BooksPageTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user, $book) {
             $browser->loginAs($user)
                 ->visit('/books/' . $book->slug)
+                ->waitForText('Details Book')
                 ->assertSee('Details Book');
         });
     }
