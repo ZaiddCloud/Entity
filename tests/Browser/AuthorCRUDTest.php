@@ -74,6 +74,7 @@ class AuthorCRUDTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user, $author) {
             $browser->loginAs($user)
                 ->visit('/authors/' . $author->id)
+                ->waitForText('نبذة تعريفية')
                 ->assertSee('Author Details');
         });
     }

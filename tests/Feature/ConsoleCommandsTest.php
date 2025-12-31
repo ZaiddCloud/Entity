@@ -102,7 +102,7 @@ class ConsoleCommandsTest extends TestCase
         Storage::disk('public')->put('audios/test-audio.mp3', 'dummy content');
         Storage::disk('public')->put('videos/test-video.mp4', 'dummy content');
         Storage::disk('public')->put('manuscripts/test-ms.jpg', 'dummy content');
-        Storage::disk('public')->put('books/invalid.txt', 'dummy content'); // Should be ignored
+        Storage::disk('public')->put('books/ignored.exe', 'dummy content'); // Truly ignored
 
         // 2. Run Sync
         $this->artisan('storage:sync')
@@ -130,7 +130,7 @@ class ConsoleCommandsTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('manuscripts', ['title' => 'Test Ms']);
-        $this->assertDatabaseCount('books', 1); // invalid.txt ignored
+        $this->assertDatabaseCount('books', 1); // ignored.exe ignored
 
         // 4. Test --force flag (using Audio as it uses the standard updateOrCreate logic)
         $audio = Audio::first();
