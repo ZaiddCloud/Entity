@@ -197,63 +197,75 @@ class SeedRealisticData extends Command
                     $contentService = new BookContentService();
                     BookChild::where('book_id', $entity->id)->delete();
 
-                    $volCount = rand(2, 4);
-                    for ($v = 1; $v <= $volCount; $v++) {
-                        $volume = $contentService->addChild($entity, [
-                            'type' => 'volume',
-                            'title' => "المجلد {$v}",
-                            'order' => $v,
-                            'metadata' => ['description' => "يحتوي هذا المجلد على مجموعة من الأجزاء الهامة."]
+                    // Level 1: Sub-book (الكتاب الفرعي)
+                    $subBookCount = rand(1, 2);
+                    for ($sb = 1; $sb <= $subBookCount; $sb++) {
+                        $subBook = $contentService->addChild($entity, [
+                            'type' => 'sub-book',
+                            'title' => "كتاب " . ($sb === 1 ? 'المقدمات' : 'الأحكام'),
+                            'order' => $sb,
+                            'metadata' => ['description' => "كتاب فرعي رقم {$sb}."]
                         ]);
 
-                        $subCount = rand(2, 3);
-                        for ($s = 1; $s <= $subCount; $s++) {
-                            $subBook = $contentService->addChild($entity, [
-                                'parent_id' => $volume->id,
-                                'type' => 'sub-book',
-                                'title' => ($s === 1 ? 'كتاب العلم' : ($s === 2 ? 'كتاب الإيمان' : 'كتاب الرقائق')),
-                                'order' => $s
+                        // Level 2: Part (الجزء)
+                        $partCount = rand(2, 3);
+                        for ($p = 1; $p <= $partCount; $p++) {
+                            $part = $contentService->addChild($entity, [
+                                'parent_id' => $subBook->id,
+                                'type' => 'part',
+                                'title' => "الجزء {$p}",
+                                'order' => $p
                             ]);
 
-                            $chapCount = rand(5, 12);
-                            for ($c = 1; $c <= $chapCount; $c++) {
-                                $chapter = $contentService->addChild($entity, [
-                                    'parent_id' => $subBook->id,
-                                    'type' => 'chapter',
-                                    'title' => "باب رقم {$c}: في بيان فضل " . ($s === 1 ? 'الطلب' : 'العمل'),
-                                    'order' => $c
+                            // Level 3: Door (الباب)
+                            $doorCount = rand(2, 4);
+                            for ($d = 1; $d <= $doorCount; $d++) {
+                                $door = $contentService->addChild($entity, [
+                                    'parent_id' => $part->id,
+                                    'type' => 'door',
+                                    'title' => "باب في " . ($d === 1 ? 'فضل العلم' : 'أهمية العمل'),
+                                    'order' => $d
                                 ]);
 
-                                // Add 5-10 content blocks for "comprehensiveness"
-                                $blockCount = rand(5, 10);
-                                for ($b_idx = 1; $b_idx <= $blockCount; $b_idx++) {
-                                    $blockType = (rand(1, 10) > 7) ? 'verse' : 'paragraph';
-                                    
-                                    if ($blockType === 'paragraph') {
-                                        $hasFootnote = rand(1, 10) > 4;
-                                        $body = "هذا نص علمي دقيق يتناول المسائل المتعلقة بالباب {$c}. ويسترسل المؤلف في ذكر الأدلة العقلية والنقلية التي تؤيد المذهب المختار في هذا الموضع. " . 
-                                               ($hasFootnote ? "ويقول في حاشيته: انظر ما ذكره ابن حجر [1] في الفتح." : "وهذا البيان كافٍ لمن أراد التفقه في أصول هذه المسألة.");
-                                        
-                                        $contentService->addBlock($chapter, [
-                                            'type' => 'paragraph',
-                                            'body' => $body,
-                                            'annotations' => $hasFootnote ? [[
-                                                'type' => 'footnote',
-                                                'marker' => '[1]',
-                                                'content' => 'ابن حجر العسقلاني، فتح الباري شرح صحيح البخاري، دار المعرفة، ج1، ص 45.'
-                                            ]] : []
+                                // Level 4: Chapter (الفصل)
+                                $chapCount = rand(2, 5);
+                                for ($c = 1; $c <= $chapCount; $c++) {
+                                    $chapter = $contentService->addChild($entity, [
+                                        'parent_id' => $door->id,
+                                        'type' => 'chapter',
+                                        'title' => "فصل {$c}: تفصيل المسائل",
+                                        'order' => $c
+                                    ]);
+
+                                    // Level 5: Masala (المسألة)
+                                    $masalaCount = rand(3, 8);
+                                    for ($m = 1; $m <= $masalaCount; $m++) {
+                                        $masala = $contentService->addChild($entity, [
+                                            'parent_id' => $chapter->id,
+                                            'type' => 'masala',
+                                            'title' => "مسألة {$m}: هل يجوز كذا؟",
+                                            'order' => $m
                                         ]);
-                                    } else {
-                                        $contentService->addBlock($chapter, [
-                                            'type' => 'verse',
-                                            'first_part' => 'إِذا نَطَقَ السَفيهُ فَلا تُجِبهُ',
-                                            'second_part' => 'فَخَيرٌ مِن إِجابَتِهِ السُكوتُ',
-                                            'annotations' => [[
-                                                'type' => 'comment',
-                                                'author' => 'المحقق',
-                                                'content' => 'هذه الأبيات توضح الموقف الأخلاقي المناسب في مثل هذه السجالات العلمية.'
-                                            ]]
-                                        ]);
+
+                                        // Content Blocks (Paragraphs) within Masala
+                                        $blockCount = rand(3, 7);
+                                        for ($b_idx = 1; $b_idx <= $blockCount; $b_idx++) {
+                                            $hasFootnote = rand(1, 10) > 6;
+                                            $body = "هذه المسألة تتناول حكماً دقيقاً في هذا الباب. وقد اختلف العلماء فيها على قولين، والراجح ما ذكره المصنف في هذا الموضع. " .
+                                                ($hasFootnote ? "انظر الحاشية [1] لمزيد من التفصيل." : "والأدلة ظاهرة.");
+
+                                            $contentService->addBlock($masala, [
+                                                'type' => 'paragraph',
+                                                'body' => $body,
+                                                'annotations' => $hasFootnote ? [
+                                                    [
+                                                        'type' => 'footnote',
+                                                        'marker' => '[1]',
+                                                        'content' => 'تعليق تفصيلي من المحقق يوضح المسألة.'
+                                                    ]
+                                                ] : []
+                                            ]);
+                                        }
                                     }
                                 }
                             }

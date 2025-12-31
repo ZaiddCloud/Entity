@@ -37,4 +37,6 @@ Route::middleware(['auth:sanctum'])->name('api.')->group(function () {
     Route::apiResource('comments', CommentController::class);
     Route::apiResource('notes', NoteController::class);
     Route::apiResource('deletions', DeletionController::class)->only(['index', 'show']);
+    // Order Management
+    Route::post('books/{book}/contents/reorder', [App\Http\Controllers\Api\BookContentOrderController::class, 'update'])->name('books.contents.reorder');
 });

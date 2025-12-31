@@ -53,7 +53,21 @@ class BookContentService
         ], $block);
 
         $child->update(['content_blocks' => $blocks, 'last_updated' => now()]);
-        
+
         return $child;
+    }
+    /**
+     * Batch update order of content items.
+     */
+    public function updateOrder(Book $book, array $items): void
+    {
+        foreach ($items as $item) {
+            BookChild::where('book_id', $book->id)
+                ->where('_id', $item['id'])
+                ->update([
+                    'order' => $item['order'],
+                    'parent_id' => $item['parent_id'] ?? null
+                ]);
+        }
     }
 }

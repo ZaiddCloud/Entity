@@ -49,8 +49,13 @@ class ReaderNavigationTest extends DuskTestCase
                 ->pause(1000) // Small pause for Vue to render
 
                 // Check if content loaded
-                ->screenshot('reader_navigation_success')
-                ->assertSee('Content for Chapter 1');
+                ->assertSee('Content for Chapter 1')
+
+                // 5. Persistence Check
+                // The sidebar item should still be visible because the parent should remain open
+                // (In this flat test case, it's a root item, so it's always visible. 
+                // To test persistence properly, we need a nested structure).
+            ;
         });
     }
 }

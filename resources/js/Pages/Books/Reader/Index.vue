@@ -46,14 +46,22 @@
                 </div>
                 
                 <nav class="px-2 pb-10">
-                    <TreeItem 
-                        v-for="item in rootItems" 
-                        :key="item.id" 
-                        :item="item" 
-                        :all-items="hierarchy"
-                        :selected-id="selectedId"
-                        @select="selectChapter"
-                    />
+                    <Draggable 
+                        v-model="rootItems" 
+                        item-key="id" 
+                        group="hierarchy" 
+                        ghost-class="ghost"
+                        @end="onRootDragEnd"
+                    >
+                        <template #item="{ element }">
+                            <TreeItem 
+                                :item="element" 
+                                :all-items="hierarchy"
+                                :selected-id="selectedId"
+                                @select="selectChapter"
+                            />
+                        </template>
+                    </Draggable>
                 </nav>
             </aside>
 
@@ -153,6 +161,7 @@ import axios from 'axios';
 import TreeItem from './TreeItem.vue';
 import BlockRenderer from './BlockRenderer.vue';
 import { debounce } from 'lodash';
+import Draggable from 'vuedraggable';
 
 const props = defineProps({
     book: Object,
@@ -173,15 +182,46 @@ const searchQuery = ref('');
 // Metadata for the current chapter/volume
 const metadata = computed(() => currentChapter.value?.metadata || {});
 
-const rootItems = computed(() => {
-    if (searchQuery.value.trim()) {
-        // Flat list of matches when searching
-        return hierarchy.value.filter(item => 
-            item.title.toLowerCase().includes(searchQuery.value.toLowerCase())
-        );
+const rootItems = computed({
+    get() {
+        if (searchQuery.value.trim()) {
+            return hierarchy.value.filter(item => 
+                item.title.toLowerCase().includes(searchQuery.value.toLowerCase())
+            );
+        }
+        return hierarchy.value.filter(item => !item.parent_id).sort((a, b) => a.order - b.order);
+    },
+    set(newVal) {
+        // When root items are reordered, we need to update the order in the main hierarchy array
+        // This is a bit complex because hierarchy contains ALL items.
+        // We probably need to just trigger the backend update and then maybe refresh.
+        // Or simpler: We update the 'order' property of the items in 'hierarchy' matching these IDs.
+        newVal.forEach((item, index) => {
+            const hierarchyItem = hierarchy.value.find(h => h.id === item.id);
+            if (hierarchyItem) {
+                hierarchyItem.order = index;
+            }
+        });
     }
-    return hierarchy.value.filter(item => !item.parent_id);
 });
+
+const onRootDragEnd = () => {
+    // 1. Get filtered root items in their new order
+    const updates = rootItems.value.map((child, index) => ({
+        id: child.id,
+        order: index,
+        parent_id: null
+    }));
+
+    // 2. Send to backend
+    axios.post(route('api.books.contents.reorder', props.book.slug), {
+        items: updates
+    }).then(() => {
+        console.log('Root order updated');
+    }).catch(err => {
+        console.error('Failed to adjust root order', err);
+    });
+};
 
 // Helper to determine if we are in search mode for the template
 const isSearching = computed(() => !!searchQuery.value.trim());
@@ -221,14 +261,58 @@ const selectChapter = (item) => {
 
 const getTypeName = (type) => {
     const types = {
-        'part': 'جزء',
         'sub-book': 'كتاب فرعي',
+        'part': 'جزء',
+        'door': 'باب',
         'chapter': 'فصل',
         'masala': 'مسألة',
-        'section': 'مبحث'
+        // Fallbacks or others
+        'section': 'قسم',
+        'prologue': 'تمهيد'
     };
     return types[type] || 'قسم';
 };
+
+// Persistence Logic
+// Initialize from LocalStorage
+const getStoredExpanded = () => {
+    if (typeof window === 'undefined') return new Set();
+    const key = `book_reader_expanded_${props.book.id}`;
+    try {
+        const stored = localStorage.getItem(key);
+        return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch (e) {
+        return new Set();
+    }
+};
+
+const expandedIds = ref(getStoredExpanded());
+
+// Save to LocalStorage whenever it changes
+watch(expandedIds, (newSet) => {
+    const key = `book_reader_expanded_${props.book.id}`;
+    localStorage.setItem(key, JSON.stringify(Array.from(newSet)));
+}, { deep: true });
+
+const toggleExpand = (id) => {
+    const newSet = new Set(expandedIds.value);
+    if (newSet.has(id)) {
+        newSet.delete(id);
+    } else {
+        newSet.add(id);
+    }
+    expandedIds.value = newSet;
+};
+
+const isExpanded = (id) => expandedIds.value.has(id);
+
+// Provide to recursive children
+import { provide } from 'vue';
+provide('sidebarContext', {
+    expandedIds,
+    toggleExpand,
+    isExpanded
+});
 
 const toggleDarkMode = () => {
     isDark.value = !isDark.value;
@@ -275,5 +359,11 @@ const toggleDarkMode = () => {
 }
 ::-webkit-scrollbar-thumb:hover {
     background: #cbd5e1;
+}
+
+.ghost {
+    background-color: #fef3c7; /* amber-100 */
+    opacity: 0.5;
+    border: 2px dashed #d97706; /* amber-600 */
 }
 </style>

@@ -2,7 +2,7 @@
     <div class="mb-1">
         <div 
             @click="handleClick"
-            class="flex items-center group cursor-pointer py-2 px-3 rounded-xl transition-all duration-200 select-none relative"
+            class="flex items-center group cursor-pointer py-2 px-3 rounded-xl transition-all duration-200 select-none relative border border-transparent"
             :class="[
                 selectedId === item.id ? 'bg-amber-50 text-amber-900 border border-amber-200/50 shadow-sm' : 'hover:bg-slate-100 text-slate-600',
                 isOpen ? 'mb-1' : ''
@@ -17,7 +17,7 @@
                 v-if="hasChildren" 
                 class="ml-2 w-5 h-5 flex items-center justify-center rounded-md transition-transform duration-300"
                 :class="{ 'rotate-90': isOpen }"
-                @click.stop="isOpen = !isOpen"
+                @click.stop="toggleExpand(item.id)"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" />
@@ -26,15 +26,21 @@
             <div v-else class="ml-2 w-5"></div>
 
             <!-- Type Icon -->
-            <span class="ml-2 opacity-50 text-[10px] font-bold uppercase tracking-widest hidden group-hover:inline-block">
-                {{ item.type[0] }}
+            <span 
+                class="ml-2 opacity-50 text-[10px] font-bold uppercase tracking-widest hidden group-hover:inline-block bg-slate-200 px-1 rounded"
+                :title="item.type"
+            >
+                {{ item.type_label || item.type[0] }}
             </span>
 
             <!-- Real Link -->
             <Link 
                 :href="route('books.reader', [$page.props.book.slug, item.id])"
-                class="text-sm font-medium flex-1 truncate" 
-                :class="{ 'font-bold': hasChildren || selectedId === item.id }"
+                class="flex-1 truncate transition-colors duration-200" 
+                :class="[
+                    headingClasses,
+                    { 'text-amber-700': selectedId === item.id }
+                ]"
                 preserve-scroll
                 @click="handleClick"
             >
@@ -54,25 +60,34 @@
             leave-from-class="transform translate-y-0 opacity-100"
             leave-to-class="transform -translate-y-2 opacity-0"
         >
-            <div v-if="isOpen && hasChildren" class="overflow-hidden">
-                <TreeItem 
-                    v-for="child in children" 
-                    :key="child.id" 
-                    :item="child" 
-                    :all-items="allItems"
-                    :selected-id="selectedId"
-                    :level="level + 1"
-                    @select="$emit('select', $event)"
-                />
+            <div v-if="isOpen && hasChildren" class="overflow-hidden pl-2">
+                <Draggable 
+                    v-model="localChildren" 
+                    item-key="id"
+                    group="hierarchy" 
+                    ghost-class="ghost"
+                    @end="onDragEnd"
+                >
+                    <template #item="{ element }">
+                        <TreeItem 
+                            :item="element" 
+                            :all-items="allItems"
+                            :selected-id="selectedId"
+                            :level="level + 1"
+                            @select="$emit('select', $event)"
+                        />
+                    </template>
+                </Draggable>
             </div>
         </Transition>
     </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
-import { usePage } from '@inertiajs/vue3';
+import { computed, inject, ref, watch } from 'vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import Draggable from 'vuedraggable';
+import axios from 'axios';
 
 const props = defineProps({
     item: Object,
@@ -87,22 +102,73 @@ const props = defineProps({
 const page = usePage();
 const emit = defineEmits(['select']);
 
-const isOpen = ref(false);
+// Injected State from Index.vue
+const { toggleExpand, isExpanded } = inject('sidebarContext');
 
-const children = computed(() => {
-    return props.allItems.filter(i => i.parent_id === props.item.id);
+// Helper to get open state
+const isOpen = computed(() => isExpanded(props.item.id));
+
+// Children Logic for Sorting
+// We need a local writable copy for Draggable
+const localChildren = ref([]);
+
+// Helper for labels (Same as Index.vue, ideal to extract to shared file)
+const getTypeLabel = (type) => {
+    const types = {
+        'sub-book': 'كتاب فرعي',
+        'part': 'جزء',
+        'door': 'باب',
+        'chapter': 'فصل',
+        'masala': 'مسألة',
+        'section': 'مبحث'
+    };
+    return types[type] || type;
+};
+
+const headingClasses = computed(() => {
+    // Special Types that need distinct styling regardless of level
+    if (props.item.type === 'masala') {
+        return 'font-normal text-slate-500 text-xs italic';
+    }
+
+    // Dynamic Hierarchy based on Nesting Depth (Level)
+    // Level 0 (Root) -> Boldest
+    // Level 1 -> Bold
+    // Level 2 -> Semi-bold
+    // Level 3+ -> Normal
+    switch (props.level) {
+        case 0:
+            return 'font-extrabold text-slate-900 text-base';
+        case 1:
+            return 'font-bold text-slate-800 text-sm';
+        case 2:
+            return 'font-semibold text-slate-700 text-sm';
+        case 3:
+            return 'font-medium text-slate-700 text-sm';
+        default:
+            return 'font-normal text-slate-600 text-sm';
+    }
 });
 
-const hasChildren = computed(() => children.value.length > 0);
+// Sync localChildren with props when they change (initial load or external update)
+const computeChildren = () => {
+    return props.allItems
+        .filter(i => String(i.parent_id) === String(props.item.id))
+        .map(i => ({ ...i, type_label: getTypeLabel(i.type) })) // Augment with label
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+};
+
+watch(() => props.allItems, () => {
+    localChildren.value = computeChildren();
+}, { immediate: true, deep: true });
+
+const hasChildren = computed(() => localChildren.value.length > 0);
 
 const handleClick = (e) => {
-    // Prevent double execution if Link was clicked (Link has @click.stop="handleClick")
-    // But actually, we want the toggle to happen.
     if (hasChildren.value) {
-        isOpen.value = !isOpen.value;
+        toggleExpand(props.item.id);
     }
     
-    // If clicking the row but not the link itself, trigger navigation manually
     if (!e.target.closest('a')) {
         router.visit(route('books.reader', [page.props.book.slug, props.item.id]), {
             preserveScroll: true
@@ -110,5 +176,26 @@ const handleClick = (e) => {
     }
 
     emit('select', props.item);
+};
+
+// Handle Drag Drop
+const onDragEnd = () => {
+    // 1. Update orders locally based on new index
+    const updates = localChildren.value.map((child, index) => ({
+        id: child.id,
+        order: index,
+        parent_id: props.item.id
+    }));
+
+    // 2. Send to backend
+    axios.post(route('api.books.contents.reorder', page.props.book.slug), {
+        items: updates
+    }).then(() => {
+        // Optional: Show toast
+        console.log('Order updated');
+    }).catch(err => {
+        console.error('Failed to update order', err);
+        // Revert on failure if needed
+    });
 };
 </script>
