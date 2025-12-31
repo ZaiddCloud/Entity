@@ -16,6 +16,9 @@ createInertiaApp({
         return createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue, Ziggy)
+            .directive('tooltip', (el, binding) => {
+                el.title = binding.value || '';
+            })
             .mount(el);
     },
     progress: {
