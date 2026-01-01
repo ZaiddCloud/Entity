@@ -13,14 +13,14 @@
                     <p class="text-xs text-slate-500 dark:text-slate-400">جاري القراءة...</p>
                 </div>
             </div>
-            
+
             <div class="flex items-center gap-3">
                 <div class="h-6 w-px bg-slate-200 mx-2"></div>
                 <span class="text-sm font-medium text-slate-600">المحقق: {{"غير محدد"}}</span>
                 <div class="h-6 w-px bg-slate-200 mx-2"></div>
-                <button 
+                <button
                     v-if="currentChapter"
-                    @click="showEditor = true" 
+                    @click="showEditor = true"
                     class="btn-secondary px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -34,8 +34,8 @@
         <div class="flex flex-1 overflow-hidden relative">
             <!-- Full Editor Workspace Overlay -->
             <transition name="editor-fade">
-                <EditorContainer 
-                    v-if="showEditor" 
+                <EditorContainer
+                    v-if="showEditor"
                     :title="currentChapter.title"
                     :type="currentChapter.type"
                     :initial-content="currentChapter.content_blocks"
@@ -44,25 +44,25 @@
                 />
             </transition>
             <!-- Sidebar: Hierarchy -->
-            <aside 
+            <aside
                 class="w-80 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 overflow-y-auto transition-all duration-300 z-10"
                 :class="{ '-mr-80': sidebarCollapsed }"
             >
                 <div class="p-4 sticky top-0 bg-white dark:bg-slate-800 z-10 border-b border-slate-100 dark:border-slate-700 mb-2">
-                    <input 
+                    <input
                         id="sidebar-search"
                         name="sidebar-search"
-                        type="text" 
-                        placeholder="ابحث في الفهرس..." 
+                        type="text"
+                        placeholder="ابحث في الفهرس..."
                         v-model="searchQuery"
                         class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all dark:text-slate-100 dark:placeholder-slate-400"
                     />
-                    
+
                     <div class="flex items-center justify-between mt-3 px-1">
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">الفهرس</span>
                         <div class="flex items-center gap-1">
-                            <button 
-                                @click="expandAll" 
+                            <button
+                                @click="expandAll"
                                 class="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors text-slate-400 hover:text-amber-600 group"
                                 title="توسيع الكل"
                             >
@@ -71,8 +71,8 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 5l-7 7-7-7" class="opacity-50" />
                                 </svg>
                             </button>
-                            <button 
-                                @click="collapseAll" 
+                            <button
+                                @click="collapseAll"
                                 class="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors text-slate-400 hover:text-amber-600"
                                 title="طي الكل"
                             >
@@ -84,18 +84,18 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <nav class="px-2 pb-10">
-                    <Draggable 
-                        v-model="rootItems" 
-                        item-key="id" 
-                        group="hierarchy" 
+                    <Draggable
+                        v-model="rootItems"
+                        item-key="id"
+                        group="hierarchy"
                         ghost-class="ghost"
                         @end="onRootDragEnd"
                     >
                         <template #item="{ element }">
-                            <TreeItem 
-                                :item="element" 
+                            <TreeItem
+                                :item="element"
                                 :all-items="hierarchy"
                                 :selected-id="selectedId"
                                 @select="selectChapter"
@@ -108,8 +108,8 @@
             <!-- Main Content Area -->
             <main class="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12 relative bg-[#fcfbf9] dark:bg-slate-900 selection:bg-amber-100 dark:selection:bg-amber-900">
                 <!-- Toggle Sidebar Button (Vertical) -->
-                <button 
-                    @click="sidebarCollapsed = !sidebarCollapsed" 
+                <button
+                    @click="sidebarCollapsed = !sidebarCollapsed"
                     class="absolute top-1/2 -right-3 -translate-y-1/2 p-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full shadow-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all z-20 group"
                     :class="{ 'rotate-180 -left-3 right-auto': sidebarCollapsed }"
                 >
@@ -119,8 +119,8 @@
                 </button>
 
                 <div class="max-w-3xl mx-auto min-h-screen">
-                    <Transition 
-                        name="fade-slide" 
+                    <Transition
+                        name="fade-slide"
                         mode="out-in"
                     >
                         <div v-if="loading" key="loading" class="flex flex-col items-center justify-center pt-32 space-y-4">
@@ -143,7 +143,7 @@
                             <!-- Content Blocks (Unified TipTap Reader) -->
                             <div class="reader-container prose prose-slate dark:prose-invert max-w-none prose-lg animate-in fade-in duration-1000">
                                 <editor-content v-if="readerEditor" :editor="readerEditor" />
-                                
+
                                 <div v-if="!contentBlocks.length" class="py-12 px-8 bg-amber-50/30 rounded-3xl border border-amber-100/50">
                                     <div class="flex items-center gap-4 mb-6">
                                         <div class="p-3 bg-amber-100 rounded-2xl text-amber-700">
@@ -161,8 +161,8 @@
 
                             <!-- Footer Navigation -->
                             <div class="pt-20 pb-10 flex justify-between items-center border-t border-slate-100">
-                                <button 
-                                    @click="navigateTo(prevChapter)" 
+                                <button
+                                    @click="navigateTo(prevChapter)"
                                     :disabled="!prevChapter"
                                     :class="{'opacity-50 cursor-not-allowed': !prevChapter, 'group hover:text-amber-600': prevChapter}"
                                     class="flex items-center gap-2 text-slate-500 transition-colors"
@@ -174,8 +174,8 @@
                                         {{ prevChapter ? prevChapter.title : 'البداية' }}
                                     </span>
                                 </button>
-                                
-                                <button 
+
+                                <button
                                     @click="navigateTo(nextChapter)"
                                     :disabled="!nextChapter"
                                     :class="{'opacity-50 cursor-not-allowed': !nextChapter, 'group hover:text-amber-600': nextChapter}"
@@ -245,7 +245,7 @@ const rootItems = computed({
     get() {
         const query = searchQuery.value.trim().toLowerCase();
         if (query) {
-            return hierarchy.value.filter(item => 
+            return hierarchy.value.filter(item =>
                 item.title.toLowerCase().includes(query)
             );
         }
