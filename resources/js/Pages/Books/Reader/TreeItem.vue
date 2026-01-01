@@ -4,13 +4,13 @@
             @click="handleClick"
             class="flex items-center group cursor-pointer py-2 px-3 rounded-xl transition-all duration-200 select-none relative border border-transparent"
             :class="[
-                selectedId === item.id ? 'bg-amber-50 text-amber-900 border border-amber-200/50 shadow-sm' : 'hover:bg-slate-100 text-slate-600',
+                selectedId === item.id ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-900 dark:text-amber-400 border border-amber-200/50 dark:border-amber-700/50 shadow-sm' : 'hover:bg-slate-100 dark:hover:bg-slate-700/50 text-slate-600 dark:text-slate-400',
                 isOpen ? 'mb-1' : ''
             ]"
             :style="{ paddingRight: (level * 16 + 12) + 'px' }"
         >
             <!-- Indentation Line for children -->
-            <div v-if="level > 0" class="absolute right-4 top-0 bottom-0 w-px bg-slate-200/50"></div>
+            <div v-if="level > 0" class="absolute right-4 top-0 bottom-0 w-px bg-slate-200/50 dark:bg-slate-700/50"></div>
 
             <!-- Toggle Icon -->
             <div 
@@ -27,7 +27,7 @@
 
             <!-- Type Icon -->
             <span 
-                class="ml-2 opacity-50 text-[10px] font-bold uppercase tracking-widest hidden group-hover:inline-block bg-slate-200 px-1 rounded"
+                class="ml-2 opacity-50 text-[10px] font-bold uppercase tracking-widest hidden group-hover:inline-block bg-slate-200 dark:bg-slate-700 px-1 rounded dark:text-slate-300"
                 :title="item.type"
             >
                 {{ item.type_label || item.type[0] }}
@@ -36,12 +36,14 @@
             <!-- Real Link -->
             <Link 
                 :href="route('books.reader', [$page.props.book.slug, item.id])"
+                :only="['initialContent', 'childId']"
                 class="flex-1 truncate transition-colors duration-200" 
                 :class="[
                     headingClasses,
                     { 'text-amber-700': selectedId === item.id }
                 ]"
                 preserve-scroll
+                preserve-state
                 @click="handleClick"
             >
                 {{ item.title }}
@@ -109,10 +111,9 @@ const { toggleExpand, isExpanded } = inject('sidebarContext');
 const isOpen = computed(() => isExpanded(props.item.id));
 
 // Children Logic for Sorting
-// We need a local writable copy for Draggable
 const localChildren = ref([]);
 
-// Helper for labels (Same as Index.vue, ideal to extract to shared file)
+// Helper for labels
 const getTypeLabel = (type) => {
     const types = {
         'sub-book': 'كتاب فرعي',
@@ -126,41 +127,31 @@ const getTypeLabel = (type) => {
 };
 
 const headingClasses = computed(() => {
-    // Special Types that need distinct styling regardless of level
     if (props.item.type === 'masala') {
-        return 'font-normal text-slate-500 text-xs italic';
+        return 'font-normal text-slate-500 dark:text-slate-400 text-xs italic';
     }
 
-    // Dynamic Hierarchy based on Nesting Depth (Level)
-    // Level 0 (Root) -> Boldest
-    // Level 1 -> Bold
-    // Level 2 -> Semi-bold
-    // Level 3+ -> Normal
     switch (props.level) {
-        case 0:
-            return 'font-extrabold text-slate-900 text-base';
-        case 1:
-            return 'font-bold text-slate-800 text-sm';
-        case 2:
-            return 'font-semibold text-slate-700 text-sm';
-        case 3:
-            return 'font-medium text-slate-700 text-sm';
-        default:
-            return 'font-normal text-slate-600 text-sm';
+        case 0: return 'font-extrabold text-slate-900 dark:text-slate-100 text-base';
+        case 1: return 'font-bold text-slate-800 dark:text-slate-200 text-sm';
+        case 2: return 'font-semibold text-slate-700 dark:text-slate-300 text-sm';
+        case 3: return 'font-medium text-slate-700 dark:text-slate-300 text-sm';
+        default: return 'font-normal text-slate-600 dark:text-slate-400 text-sm';
     }
 });
 
-// Sync localChildren with props when they change (initial load or external update)
+// Sync localChildren efficiently
 const computeChildren = () => {
+    if (!props.allItems) return [];
     return props.allItems
         .filter(i => String(i.parent_id) === String(props.item.id))
-        .map(i => ({ ...i, type_label: getTypeLabel(i.type) })) // Augment with label
+        .map(i => ({ ...i, type_label: getTypeLabel(i.type) }))
         .sort((a, b) => (a.order || 0) - (b.order || 0));
 };
 
 watch(() => props.allItems, () => {
     localChildren.value = computeChildren();
-}, { immediate: true, deep: true });
+}, { immediate: true });
 
 const hasChildren = computed(() => localChildren.value.length > 0);
 
@@ -171,7 +162,9 @@ const handleClick = (e) => {
     
     if (!e.target.closest('a')) {
         router.visit(route('books.reader', [page.props.book.slug, props.item.id]), {
-            preserveScroll: true
+            preserveScroll: true,
+            preserveState: true,
+            only: ['initialContent', 'childId']
         });
     }
 

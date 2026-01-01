@@ -7,4 +7,7 @@
 
 @theme {
     --font-sans: 'Cairo', ui-sans-serif, system-ui, sans-serif;
+    --breakpoint-xs: 320px;
 }
+
+@custom-variant dark (&:where(.dark, .dark *));
