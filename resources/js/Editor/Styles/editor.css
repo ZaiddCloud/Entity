@@ -1,0 +1,89 @@
+/* Entity Editor Styles */
+
+.entity-editor {
+    font-family: 'Amiri', 'Traditional Arabic', serif;
+    direction: rtl;
+}
+
+/* Editor Container */
+.editor-container {
+    background: #f9fafb;
+    min-height: 100vh;
+}
+
+/* Paper Sheet */
+.editor-paper {
+    background: white;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+    border-radius: 2px;
+    padding: 4rem;
+    margin: 2rem auto;
+    max-width: 850px;
+}
+
+/* Typography */
+.editor-content {
+    font-size: 18px;
+    line-height: 2;
+    color: #1f2937;
+}
+
+.editor-content h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: #111827;
+}
+
+.editor-content h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-top: 1.75rem;
+    margin-bottom: 0.875rem;
+    color: #111827;
+}
+
+.editor-content h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: #111827;
+}
+
+.editor-content p {
+    margin-bottom: 1.25rem;
+    text-align: justify;
+}
+
+.editor-content ul,
+.editor-content ol {
+    margin-bottom: 1.25rem;
+    padding-right: 2rem;
+}
+
+.editor-content li {
+    margin-bottom: 0.5rem;
+}
+
+/* Selection */
+.editor-content ::selection {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+/* Focus */
+.editor-content:focus {
+    outline: none;
+}
+
+/* Placeholder */
+.editor-content .is-empty::before {
+    content: attr(data-placeholder);
+    float: right;
+    color: #9ca3af;
+    pointer-events: none;
+    height: 0;
+}
