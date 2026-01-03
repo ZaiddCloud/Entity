@@ -11,6 +11,7 @@ export const useEditorStore = defineStore('editor', () => {
     const isSaving = ref(false)
     const lastSaved = ref(null)
     const editor = ref(null)
+    const resourceData = ref(null)
 
     // Getters
     const documentTitle = computed(() => currentChild.value?.title || 'مستند جديد')
@@ -38,16 +39,31 @@ export const useEditorStore = defineStore('editor', () => {
         isToolbarPinned.value = !isToolbarPinned.value
     }
 
+    const setEditorMode = (mode) => {
+        editorMode.value = mode
+        resourceData.value = null
+    }
+
+    const setResourceData = (data) => {
+        resourceData.value = data
+    }
+
+    const setTitle = (title) => {
+        if (currentChild.value) currentChild.value.title = title
+    }
+
     const executeCommand = (command, value = null) => {
         if (!editor.value) return
 
-        // Basic TipTap mapping
         const chain = editor.value.chain().focus()
 
         const commands = {
             bold: () => chain.toggleBold().run(),
             italic: () => chain.toggleItalic().run(),
             underline: () => chain.toggleUnderline().run(),
+            heading: () => chain.toggleHeading({ level: value }).run(),
+            bulletList: () => chain.toggleBulletList().run(),
+            orderedList: () => chain.toggleOrderedList().run(),
             strike: () => chain.toggleStrike().run(),
             undo: () => chain.undo().run(),
             redo: () => chain.redo().run(),
@@ -55,9 +71,15 @@ export const useEditorStore = defineStore('editor', () => {
             alignCenter: () => chain.setTextAlign('center').run(),
             alignLeft: () => chain.setTextAlign('left').run(),
             alignJustify: () => chain.setTextAlign('justify').run(),
+            insertHeritagePoetry: () => chain.setHeritagePoetry().run(),
+            insertQuranicVerse: () => chain.setQuranicVerse().run(),
         }
 
-        if (commands[command]) commands[command]()
+        if (commands[command]) {
+            commands[command]()
+        } else if (command === 'textAlign') {
+            chain.setTextAlign(value).run()
+        }
     }
 
     const isActive = (name, attributes = {}) => {
@@ -65,15 +87,30 @@ export const useEditorStore = defineStore('editor', () => {
         return editor.value.isActive(name, attributes)
     }
 
+    const getSavePayload = () => {
+        if (!editor.value) return null
+
+        let resourceId = null
+        if (editorMode.value === 'book') {
+            resourceId = currentBook.value?.id
+        } else {
+            resourceId = resourceData.value?.id
+        }
+
+        return {
+            mode: editorMode.value,
+            resource_id: resourceId,
+            content: editor.value.getJSON(),
+            title: documentTitle.value
+        }
+    }
+
     const save = async () => {
         if (!currentBook.value || isSaving.value) return
 
         isSaving.value = true
         try {
-            // Mock API call - in production this uses axios
             console.log('Saving to server...', content.value)
-            // await axios.post(`/studio/${currentBook.value.id}/save`, { ... })
-
             lastSaved.value = new Date()
             if (currentChild.value) {
                 currentChild.value.content = content.value
@@ -100,9 +137,10 @@ export const useEditorStore = defineStore('editor', () => {
 
     return {
         currentBook, currentChild, content, isToolbarPinned,
-        editorMode, isSaving, lastSaved, editor,
+        editorMode, resourceData, isSaving, lastSaved, editor,
         documentTitle, hasUnsavedChanges,
         setEditor, loadDocument, updateContent, togglePin,
-        executeCommand, isActive, save, startAutoSave, stopAutoSave
+        executeCommand, isActive, save, startAutoSave, stopAutoSave,
+        setEditorMode, setResourceData, getSavePayload, setTitle
     }
 })

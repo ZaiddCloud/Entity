@@ -41,7 +41,7 @@ Route::post('logout', [App\Http\Controllers\Auth\LoginController::class, 'destro
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/search', [GlobalSearchController::class, 'index'])->name('search');
-    
+
     // Editor Test Route
     Route::get('/editor-test', [App\Http\Controllers\EditorTestController::class, 'index'])->name('editor.test');
 
@@ -51,11 +51,13 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('audios', AudioController::class);
     Route::resource('videos', VideoController::class);
     Route::resource('manuscripts', ManuscriptController::class);
+    Route::get('manuscripts/{manuscript}/editor/{child}', [ManuscriptController::class, 'editor'])->name('manuscripts.editor');
 
-    // Book Reader Routes
+    // Book Reader & Editor Routes
     Route::get('books/{book}/reader/{child?}', [BookContentController::class, 'show'])->name('books.reader');
+    Route::get('books/{book}/editor/{child}', [BookController::class, 'editor'])->name('books.editor');
     Route::get('book-contents/{child}', [BookContentController::class, 'getChildContent'])->name('book-contents.show');
-// routes/web.php or routes/api.php
+    // routes/web.php or routes/api.php
 
     Route::get('authors', [AuthorController::class, 'index'])->name('authors.index');
     // Taxonomy and Organization

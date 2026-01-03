@@ -1,0 +1,16 @@
+export const TOOLBAR_COMMANDS = {
+    BOLD: 'bold',
+    ITALIC: 'italic',
+    UNDERLINE: 'underline',
+    STRIKE: 'strike',
+    HEADING: 'heading',
+    PARAGRAPH: 'setParagraph',
+    BULLET_LIST: 'bulletList',
+    ORDERED_LIST: 'orderedList',
+    UNDO: 'undo',
+    REDO: 'redo',
+    TEXT_ALIGN: 'textAlign',
+    HERITAGE_POETRY: 'insertHeritagePoetry',
+    QURANIC_VERSE: 'insertQuranicVerse',
+    FOOTNOTE: 'insertFootnote',
+}

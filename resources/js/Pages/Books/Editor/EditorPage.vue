@@ -14,13 +14,32 @@ const props = defineProps({
     child: {
         type: Object,
         required: true
+    },
+    // New polymorphic props from Controller
+    editor_mode: {
+        type: String,
+        default: 'book' // 'book', 'manuscript', 'audio', 'video'
+    },
+    resource_data: {
+        type: Object,
+        default: null
     }
 })
 
 const store = useEditorStore()
 const editorRef = ref(null)
 
+// Static imports for stability in tests and simple view
+import ManuscriptViewer from './Components/Viewers/ManuscriptViewer.vue'
+import MediaPlayer from './Components/Viewers/MediaPlayer.vue'
+
 onMounted(() => {
+    // Initialize polymorphic state
+    store.setEditorMode(props.editor_mode)
+    if (props.resource_data) {
+        store.setResourceData(props.resource_data)
+    }
+
     store.loadDocument(props.book, props.child)
     store.startAutoSave()
 })
@@ -40,8 +59,17 @@ const handleToolbarCommand = ({ command, value }) => {
             <EditorToolbar @command="handleToolbarCommand" />
         </template>
 
-        <template #sidebar>
-
+        <!-- Dynamic Viewer Slot -->
+        <template #viewer v-if="['manuscript', 'audio', 'video'].includes(store.editorMode)">
+            <ManuscriptViewer 
+                v-if="store.editorMode === 'manuscript'" 
+                :resource="store.resourceData"
+            />
+            <MediaPlayer 
+                v-else-if="['audio', 'video'].includes(store.editorMode)"
+                :mode="store.editorMode"
+                :resource="store.resourceData"
+            />
         </template>
 
         <!-- Main Paper Sheet -->

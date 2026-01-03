@@ -4,21 +4,20 @@ namespace App\Models;
 
 use MongoDB\Laravel\Eloquent\Model;
 
-class BookChild extends Model
+class ManuscriptChild extends Model
 {
     protected $connection = 'mongodb';
-    protected $collection = 'book_children';
+    protected $collection = 'manuscript_children';
 
     protected $fillable = [
-        'book_id',
+        'manuscript_id',
         'slug',
-        'type',
+        'type', // e.g., 'page', 'section'
         'title',
         'order',
-        'language',
-        'version',
-        'content_blocks',
-        'metadata',
+        'content_blocks', // transcription content
+        'metadata', // can hold specific page metadata
+        'resource_url', // URL to the specific page image/pdf page if applicable
         'last_updated',
         'is_manually_edited',
         'versions',
@@ -40,10 +39,10 @@ class BookChild extends Model
     }
 
     /**
-     * Relationship to the Book (MySQL)
+     * Relationship to the Manuscript (MySQL)
      */
-    public function book()
+    public function manuscript()
     {
-        return $this->belongsTo(Book::class, 'book_id', 'id');
+        return $this->belongsTo(Manuscript::class, 'manuscript_id', 'id');
     }
 }

@@ -35,7 +35,7 @@ const editor = useEditor({
     ],
     editorProps: {
         attributes: {
-            class: 'prose prose-lg max-w-none focus:outline-none min-h-[800px] p-16',
+            class: 'prose prose-lg max-w-none focus:outline-none min-h-[800px] p-10 lg:p-14',
             dir: 'rtl'
         }
     },

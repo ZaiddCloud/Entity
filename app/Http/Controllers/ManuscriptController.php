@@ -150,6 +150,32 @@ class ManuscriptController extends Controller
     }
 
     /**
+     * عارض محرر المخطوطات
+     */
+    public function editor(Manuscript $manuscript, $childSlug): Response
+    {
+        Gate::authorize('update', $manuscript);
+
+        $child = \App\Models\ManuscriptChild::where('manuscript_id', $manuscript->id)
+            ->where('slug', $childSlug)
+            ->firstOrFail();
+
+        return Inertia::render('Books/Editor/EditorPage', [
+            'book' => $manuscript->only(['id', 'title', 'slug', 'author']),
+            'child' => [
+                'id' => $child->_id,
+                'title' => $child->title,
+                'content' => $child->content_blocks ?? [],
+            ],
+            'editor_mode' => 'manuscript',
+            'resource_data' => [
+                'url' => $manuscript->file_path ? asset('storage/' . $manuscript->file_path) : null,
+                'type' => 'pdf', // Or detect from extension
+            ]
+        ]);
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(Manuscript $manuscript): RedirectResponse

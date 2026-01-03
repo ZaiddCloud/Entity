@@ -164,6 +164,28 @@ class BookController extends Controller
     }
 
     /**
+     * عارض محرر الكتاب
+     */
+    public function editor(Book $book, $childSlug): Response
+    {
+        Gate::authorize('update', $book);
+
+        $child = \App\Models\BookChild::where('book_id', $book->id)
+            ->where('slug', $childSlug)
+            ->firstOrFail();
+
+        return Inertia::render('Books/Editor/EditorPage', [
+            'book' => $book->only(['id', 'title', 'slug', 'author']),
+            'child' => [
+                'id' => $child->_id,
+                'title' => $child->title,
+                'content' => $child->content_blocks ?? [],
+            ],
+            'editor_mode' => 'book',
+        ]);
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(Book $book): RedirectResponse
