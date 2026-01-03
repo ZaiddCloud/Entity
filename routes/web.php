@@ -41,6 +41,10 @@ Route::post('logout', [App\Http\Controllers\Auth\LoginController::class, 'destro
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/search', [GlobalSearchController::class, 'index'])->name('search');
+    
+    // Editor Test Route
+    Route::get('/editor-test', [App\Http\Controllers\EditorTestController::class, 'index'])->name('editor.test');
+
 
     // Web Resource Routes
     Route::resource('books', BookController::class);
