@@ -3,7 +3,7 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import EditorLayout from './EditorLayout.vue'
 import EditorToolbar from './Components/Toolbar/EditorToolbar.vue'
 import TiptapEditor from './Components/Content/TiptapEditor.vue'
-import EditorSidebar from './Components/Sidebar/EditorSidebar.vue'
+
 import { useEditorStore } from './Store/editorStore'
 
 const props = defineProps({
@@ -41,7 +41,7 @@ const handleToolbarCommand = ({ command, value }) => {
         </template>
 
         <template #sidebar>
-            <EditorSidebar />
+
         </template>
 
         <!-- Main Paper Sheet -->
