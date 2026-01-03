@@ -1,90 +1,45 @@
 <script setup>
-defineProps({
+const props = defineProps({
     isPinned: {
         type: Boolean,
         default: false
     }
 })
 
-const emit = defineEmits(['pin', 'minimize', 'maximize', 'close'])
+const emit = defineEmits(['pin', 'close', 'minimize', 'maximize'])
 </script>
 
 <template>
-    <div class="window-controls flex items-center gap-2">
-        <!-- زر التثبيت -->
+    <div class="flex items-center gap-1">
+        <!-- Pin Button -->
         <button 
-            class="control-btn pin-btn"
-            :class="{ 'pinned': isPinned }"
+            class="w-6 h-6 flex items-center justify-center rounded transition-colors"
+            :class="isPinned ? 'text-blue-600 bg-blue-50' : 'text-gray-400 hover:bg-gray-100'"
             @click="emit('pin')"
-            title="تثبيت شريط الأدوات"
+            title="تثبيت الشريط"
         >
-            📌
+            <svg class="w-3 h-3 transform rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+            </svg>
         </button>
 
-        <div class="w-px h-4 bg-gray-300"></div>
+        <div class="h-4 w-px bg-gray-300 mx-1"></div>
 
-        <!-- أزرار التحكم بالنافذة -->
-        <button 
-            class="control-btn minimize-btn"
-            @click="emit('minimize')"
-            title="تصغير"
-        >
-            ➖
+        <!-- System Controls -->
+        <button class="w-6 h-6 flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 rounded" title="تصغير">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+            </svg>
         </button>
-
-        <button 
-            class="control-btn maximize-btn"
-            @click="emit('maximize')"
-            title="تكبير"
-        >
-            ⬜
+        <button class="w-6 h-6 flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 rounded" title="تكبير">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+            </svg>
         </button>
-
-        <button 
-            class="control-btn close-btn"
-            @click="emit('close')"
-            title="إغلاق"
-        >
-            ✖️
+        <button class="w-6 h-6 flex items-center justify-center text-gray-400 hover:bg-red-500 hover:text-white rounded transition-colors" title="إغلاق">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
         </button>
     </div>
 </template>
-
-<style scoped>
-.window-controls {
-    -webkit-app-region: no-drag;
-}
-
-.control-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border: none;
-    background: transparent;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    font-size: 12px;
-}
-
-.control-btn:hover {
-    background: #f3f4f6;
-}
-
-.pin-btn.pinned {
-    background: #dbeafe;
-    color: #2563eb;
-}
-
-.close-btn:hover {
-    background: #fee2e2;
-    color: #dc2626;
-}
-
-.minimize-btn:hover,
-.maximize-btn:hover {
-    background: #e0e7ff;
-}
-</style>

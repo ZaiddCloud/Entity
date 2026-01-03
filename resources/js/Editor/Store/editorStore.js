@@ -60,6 +60,11 @@ export const useEditorStore = defineStore('editor', () => {
         if (commands[command]) commands[command]()
     }
 
+    const isActive = (name, attributes = {}) => {
+        if (!editor.value) return false
+        return editor.value.isActive(name, attributes)
+    }
+
     const save = async () => {
         if (!currentBook.value || isSaving.value) return
 
@@ -98,6 +103,6 @@ export const useEditorStore = defineStore('editor', () => {
         editorMode, isSaving, lastSaved, editor,
         documentTitle, hasUnsavedChanges,
         setEditor, loadDocument, updateContent, togglePin,
-        executeCommand, save, startAutoSave, stopAutoSave
+        executeCommand, isActive, save, startAutoSave, stopAutoSave
     }
 })

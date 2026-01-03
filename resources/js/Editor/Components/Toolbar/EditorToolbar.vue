@@ -1,9 +1,10 @@
 <script setup>
-import { computed } from 'vue'
+import { ref } from 'vue'
 import { useEditorStore } from '../../Store/editorStore'
-import ToolbarSection from './ToolbarSection.vue'
 import WindowControls from './WindowControls.vue'
 import FilenameBadge from './FilenameBadge.vue'
+import MegaMenu from './MegaMenu.vue'
+import ToolbarItem from './ToolbarItem.vue'
 import { TOOLBAR_COMMANDS } from '../../Constants/toolbarItems'
 
 const emit = defineEmits(['command'])
@@ -13,126 +14,158 @@ const executeCommand = (command, value = null) => {
     emit('command', { command, value })
 }
 
-// الأقسام الخمسة الرئيسية
-const basicsSection = [
-    { icon: '💾', label: 'حفظ', command: 'save', shortcut: 'Ctrl+S' },
-    { icon: '↩️', label: 'تراجع', command: TOOLBAR_COMMANDS.UNDO, shortcut: 'Ctrl+Z' },
-    { icon: '↪️', label: 'إعادة', command: TOOLBAR_COMMANDS.REDO, shortcut: 'Ctrl+Y' },
-    { type: 'separator' },
-    { icon: 'B', label: 'غامق', command: TOOLBAR_COMMANDS.BOLD, shortcut: 'Ctrl+B', active: 'bold' },
-    { icon: 'I', label: 'مائل', command: TOOLBAR_COMMANDS.ITALIC, shortcut: 'Ctrl+I', active: 'italic' },
-    { icon: 'U', label: 'تسطير', command: TOOLBAR_COMMANDS.UNDERLINE, shortcut: 'Ctrl+U', active: 'underline' },
-]
-
-const organizationSection = [
-    { 
-        type: 'dropdown', 
-        label: 'هيكلية', 
-        icon: '📋',
-        default: 'فقرة',
-        items: [
-            { label: 'فقرة', value: 'paragraph', command: 'setParagraph' },
-            { label: 'عنوان 1', value: 'h1', command: 'setHeading', args: { level: 1 } },
-            { label: 'عنوان 2', value: 'h2', command: 'setHeading', args: { level: 2 } },
-            { label: 'عنوان 3', value: 'h3', command: 'setHeading', args: { level: 3 } },
-        ]
-    },
-    { icon: '📝', label: 'قائمة نقطية', command: TOOLBAR_COMMANDS.BULLET_LIST },
-    { icon: '🔢', label: 'قائمة مرقمة', command: TOOLBAR_COMMANDS.ORDERED_LIST },
-    { type: 'separator' },
-    { icon: '➡️', label: 'محاذاة يمين', command: TOOLBAR_COMMANDS.ALIGN_RIGHT },
-    { icon: '↔️', label: 'توسيط', command: TOOLBAR_COMMANDS.ALIGN_CENTER },
-    { icon: '⬅️', label: 'محاذاة يسار', command: TOOLBAR_COMMANDS.ALIGN_LEFT },
-    { icon: '↕️', label: 'ضبط', command: TOOLBAR_COMMANDS.ALIGN_JUSTIFY },
-]
-
-const attachmentsSection = [
-    { icon: '🖼️', label: 'صورة', command: 'insertImage' },
-    { icon: '🎵', label: 'صوت', command: 'insertAudio' },
-    { icon: '🎬', label: 'فيديو', command: 'insertVideo' },
-    { type: 'separator' },
-    { icon: '📖', label: 'شعر', command: 'insertPoetry' },
-    { icon: '📿', label: 'آية قرآنية', command: 'insertQuranic' },
-    { icon: '📌', label: 'حاشية', command: 'insertFootnote' },
-]
-
-const editorModeSection = [
-    { icon: '✏️', label: 'تحرير', command: 'setMode', args: 'edit', active: store.editorMode === 'edit' },
-    { icon: '👁️', label: 'معاينة', command: 'setMode', args: 'preview', active: store.editorMode === 'preview' },
-    { icon: '⚡', label: 'مزدوج', command: 'setMode', args: 'split', active: store.editorMode === 'split' },
-]
-
-const utilitiesSection = [
-    { icon: '🔍', label: 'بحث', command: 'search', shortcut: 'Ctrl+F' },
-    { icon: '📤', label: 'تصدير', command: 'export' },
-    { icon: '⚙️', label: 'إعدادات', command: 'settings' },
-]
+// Special command for links
+const createLink = () => {
+    const url = prompt('أدخل الرابط:', 'https://')
+    if (url) executeCommand('setLink', url)
+}
 </script>
 
 <template>
-    <div class="editor-toolbar bg-white border-b border-gray-200 shadow-sm" dir="rtl">
-        <!-- الصف الأول: شارة اسم الملف + أزرار النافذة -->
-        <div class="flex items-center justify-between h-8 px-4 bg-gray-50 border-b border-gray-100">
-            <FilenameBadge :filename="store.documentTitle" />
+    <header class="glass-toolbar z-50 fixed top-0 left-0 right-0 px-4 flex items-center justify-between" dir="rtl">
+        <!-- يمين: اسم الملف -->
+        <FilenameBadge :filename="store.documentTitle" />
+
+        <!-- وسط: الأقسام الخمسة -->
+        <div class="flex-1 flex items-center justify-center px-4 gap-2">
+            
+            <!-- 1. التنظيم -->
+            <div class="relative group px-3 py-1 cursor-pointer rounded hover:bg-gray-100 transition-colors">
+                <span class="text-sm font-medium text-gray-700">هيكلية</span>
+                <MegaMenu width="w-48">
+                    <ToolbarItem label="فقرة" command="setParagraph" @click="executeCommand('setParagraph')" />
+                    <div class="h-px bg-gray-100 my-1"></div>
+                    <ToolbarItem label="📚 كتاب فرعي" highlight />
+                    <ToolbarItem label="📑 جزء" highlight />
+                    <ToolbarItem label="🚪 باب" highlight />
+                    <ToolbarItem label="📂 فصل" />
+                    <ToolbarItem label="💡 مسألة" class="italic" />
+                    <div class="h-px bg-gray-100 my-1"></div>
+                    <ToolbarItem label="🗺️ عرض الشجرة" />
+                    <ToolbarItem label="📍 القسم الحالي" active />
+                </MegaMenu>
+            </div>
+
+            <div class="w-px h-4 bg-gray-300 mx-1"></div>
+
+            <!-- 2. تراث -->
+            <div class="relative group px-3 py-1 cursor-pointer rounded hover:bg-gray-100 transition-colors">
+                <span class="text-sm font-medium text-amber-700">تراث</span>
+                <MegaMenu width="w-56">
+                    <p class="text-[10px] text-amber-600 px-2 py-1 font-bold">أدوات تراثية</p>
+                    <ToolbarItem label="✒️ بيت شعر" @click="executeCommand('insertPoetry')" />
+                    <ToolbarItem label="📖 آية (رسم عثماني)" @click="executeCommand('insertQuranic')" />
+                    <ToolbarItem label="🏛️ سند/متن" />
+                    <div class="h-px bg-gray-100 my-1"></div>
+                    <p class="text-[10px] text-blue-600 px-2 py-1 font-bold">تحقيق علمي</p>
+                    <ToolbarItem label="📑 إدارة الحواشي" />
+                    <ToolbarItem label="📌 إدراج حاشية" @click="executeCommand('insertFootnote')" />
+                    <ToolbarItem label="⏳ ختم زمن" />
+                </MegaMenu>
+            </div>
+
+            <!-- 3. أدوات -->
+            <div class="relative group px-3 py-1 cursor-pointer rounded hover:bg-gray-100 transition-colors">
+                <span class="text-sm font-medium text-gray-700">أدوات</span>
+                <MegaMenu width="w-64">
+                    <div class="p-2">
+                        <input type="text" placeholder="بحث..." class="w-full text-xs p-1.5 border rounded mb-1 text-right bg-gray-50 focus:bg-white transition-colors outline-none focus:border-blue-400">
+                        <input type="text" placeholder="استبدال..." class="w-full text-xs p-1.5 border rounded mb-2 text-right bg-gray-50 focus:bg-white transition-colors outline-none focus:border-blue-400">
+                        <button class="w-full bg-blue-600 text-white text-xs font-bold py-1 px-2 rounded hover:bg-blue-700 transition-colors">تنفيذ</button>
+                    </div>
+                    <div class="h-px bg-gray-100 my-1"></div>
+                    <ToolbarItem label="💾 حفظ" icon="" shortcut="Ctrl+S" active @click="executeCommand('save')" />
+                    <div class="relative group/sub">
+                        <ToolbarItem label="📤 تصدير" />
+                        <!-- Sub menu could be added here -->
+                    </div>
+                     <ToolbarItem label="⚙️ إعدادات" />
+                </MegaMenu>
+            </div>
+
+            <!-- 4. الأساسيات -->
+             <div class="relative group px-3 py-1 cursor-pointer rounded hover:bg-gray-100 transition-colors">
+                <span class="text-sm font-medium text-gray-700">الأساسيات</span>
+                <MegaMenu width="w-56">
+                    <div class="grid grid-cols-2 gap-1">
+                        <ToolbarItem label="تراجع" icon="↩️" shortcut="Ctrl+Z" @click="executeCommand('undo')" />
+                        <ToolbarItem label="إعادة" icon="↪️" shortcut="Ctrl+Y" @click="executeCommand('redo')" />
+                    </div>
+                    <div class="h-px bg-gray-100 my-1"></div>
+                    <ToolbarItem label="قص" icon="✂️" />
+                    <ToolbarItem label="نسخ" icon="📋" />
+                    <ToolbarItem label="لصق" icon="📥" />
+                    <div class="h-px bg-gray-100 my-1"></div>
+                    <div class="grid grid-cols-2 gap-1">
+                        <ToolbarItem label="عريض" icon="B" shortcut="Ctrl+B" font-bold @click="executeCommand('bold')" :active="store.isActive('bold')" />
+                        <ToolbarItem label="مائل" icon="I" shortcut="Ctrl+I" italic @click="executeCommand('italic')" :active="store.isActive('italic')" />
+                        <ToolbarItem label="تسطير" icon="U" shortcut="Ctrl+U" underline @click="executeCommand('underline')" :active="store.isActive('underline')" />
+                         <ToolbarItem label="مسح" icon="✨" danger @click="executeCommand('unsetAllMarks')" />
+                    </div>
+                     <div class="h-px bg-gray-100 my-1"></div>
+                     <div class="grid grid-cols-4 gap-1">
+                         <button class="text-lg hover:bg-gray-100 rounded" title="يمين" @click="executeCommand('setTextAlign', 'right')">➡️</button>
+                         <button class="text-lg hover:bg-gray-100 rounded" title="توسيط" @click="executeCommand('setTextAlign', 'center')">↔️</button>
+                         <button class="text-lg hover:bg-gray-100 rounded" title="يسار" @click="executeCommand('setTextAlign', 'left')">⬅️</button>
+                         <button class="text-lg hover:bg-gray-100 rounded" title="ضبط" @click="executeCommand('setTextAlign', 'justify')">↕️</button>
+                     </div>
+                </MegaMenu>
+            </div>
+
+            <div class="w-px h-4 bg-gray-300 mx-1"></div>
+
+            <!-- 5. المرفقات -->
+            <div class="relative group px-3 py-1 cursor-pointer rounded hover:bg-gray-100 transition-colors">
+                <span class="text-sm font-bold text-blue-600">المرفقات</span>
+                <MegaMenu width="w-48">
+                    <ToolbarItem label="🖼️ صورة" @click="executeCommand('insertImage')" />
+                    <ToolbarItem label="🎧 صوت" @click="executeCommand('insertAudio')" />
+                    <ToolbarItem label="🎬 فيديو" @click="executeCommand('insertVideo')" />
+                    <div class="h-px bg-gray-100 my-1"></div>
+                    <ToolbarItem label="🔗 رابط تشعبي" @click="createLink" />
+                    <ToolbarItem label="📊 جدول" />
+                </MegaMenu>
+            </div>
+
+             <!-- 6. نوع المحرر -->
+            <div class="relative group px-3 py-1 cursor-pointer rounded hover:bg-gray-100 transition-colors ml-auto mr-4">
+                <span class="text-sm font-bold text-purple-700">نوع المحرر</span>
+                 <MegaMenu width="w-40">
+                    <ToolbarItem label="📖 كتاب" :active="store.editorMode === 'book'" @click="executeCommand('setMode', 'book')" />
+                    <ToolbarItem label="🎤 صوت" :active="store.editorMode === 'audio'" @click="executeCommand('setMode', 'audio')" />
+                    <ToolbarItem label="📜 مخطوط" :active="store.editorMode === 'manuscript'" @click="executeCommand('setMode', 'manuscript')" />
+                </MegaMenu>
+            </div>
+
+        </div>
+
+        <!-- يسار: أزرار التحكم -->
+        <div class="flex items-center gap-2">
+            <div class="w-px h-4 bg-gray-300 mx-2"></div>
             <WindowControls @pin="store.togglePin" :is-pinned="store.isToolbarPinned" />
         </div>
-
-        <!-- الصف الثاني: الأقسام الخمسة -->
-        <div class="flex items-center gap-6 px-4 py-2">
-            <!-- القسم 1: الأساسيات -->
-            <ToolbarSection 
-                title="الأساسيات" 
-                :items="basicsSection" 
-                @command="executeCommand"
-            />
-
-            <div class="w-px h-8 bg-gray-300"></div>
-
-            <!-- القسم 2: التنظيم -->
-            <ToolbarSection 
-                title="التنظيم" 
-                :items="organizationSection" 
-                @command="executeCommand"
-            />
-
-            <div class="w-px h-8 bg-gray-300"></div>
-
-            <!-- القسم 3: المرفقات -->
-            <ToolbarSection 
-                title="المرفقات" 
-                :items="attachmentsSection" 
-                @command="executeCommand"
-            />
-
-            <div class="w-px h-8 bg-gray-300"></div>
-
-            <!-- القسم 4: وضع المحرر -->
-            <ToolbarSection 
-                title="الوضع" 
-                :items="editorModeSection" 
-                @command="executeCommand"
-            />
-
-            <div class="w-px h-8 bg-gray-300"></div>
-
-            <!-- القسم 5: الأدوات -->
-            <ToolbarSection 
-                title="الأدوات" 
-                :items="utilitiesSection" 
-                @command="executeCommand"
-            />
-        </div>
-    </div>
+    </header>
 </template>
 
 <style scoped>
-.editor-toolbar {
+.glass-toolbar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+    height: 42px;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
+}
+
+/* Prevent text selection on toolbar */
+.glass-toolbar {
     user-select: none;
     -webkit-app-region: drag;
 }
 
-.editor-toolbar button,
-.editor-toolbar select {
+/* Allow clicking on buttons */
+.glass-toolbar button, 
+.glass-toolbar .cursor-pointer,
+.glass-toolbar input {
     -webkit-app-region: no-drag;
 }
 </style>

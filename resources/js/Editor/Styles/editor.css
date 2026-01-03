@@ -1,76 +1,72 @@
-/* Entity Editor Styles */
+/* Entity Editor Styles - v2.0 (New Design) */
 
-.entity-editor {
-    font-family: 'Amiri', 'Traditional Arabic', serif;
-    direction: rtl;
+/* Fonts will be handled via CDN for now, later via local files */
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Noto+Kufi+Arabic:wght@100..900&display=swap');
+
+:root {
+    --font-ui: 'Noto Kufi Arabic', sans-serif;
+    --font-content: 'Amiri', serif;
+    --color-bg: #f3f4f6;
+    --color-paper: #ffffff;
+    --color-text: #1f2937;
+    --toolbar-height: 42px;
+}
+
+body {
+    font-family: var(--font-ui);
+    background-color: var(--color-bg);
 }
 
 /* Editor Container */
 .editor-container {
-    background: #f9fafb;
+    background: var(--color-bg);
     min-height: 100vh;
 }
 
 /* Paper Sheet */
 .editor-paper {
-    background: white;
-    box-shadow: 0 0 50px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e5e7eb;
+    background: var(--color-paper);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
     border-radius: 2px;
     padding: 4rem;
-    margin: 2rem auto;
+    margin-top: 20px;
     max-width: 850px;
+    transition: all 0.3s;
 }
 
 /* Typography */
 .editor-content {
-    font-size: 18px;
-    line-height: 2;
-    color: #1f2937;
+    font-family: var(--font-content);
+    font-size: 22px;
+    line-height: 2.2;
+    color: var(--color-text);
 }
 
 .editor-content h1 {
     font-size: 2.5rem;
     font-weight: 700;
     margin-top: 2rem;
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
     color: #111827;
+    text-align: center;
 }
 
 .editor-content h2 {
     font-size: 2rem;
     font-weight: 700;
     margin-top: 1.75rem;
-    margin-bottom: 0.875rem;
-    color: #111827;
-}
-
-.editor-content h3 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-top: 1.5rem;
-    margin-bottom: 0.75rem;
+    margin-bottom: 1rem;
     color: #111827;
 }
 
 .editor-content p {
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
     text-align: justify;
-}
-
-.editor-content ul,
-.editor-content ol {
-    margin-bottom: 1.25rem;
-    padding-right: 2rem;
-}
-
-.editor-content li {
-    margin-bottom: 0.5rem;
 }
 
 /* Selection */
 .editor-content ::selection {
-    background: #dbeafe;
+    background: #eff6ff;
     color: #1e40af;
 }
 
@@ -86,4 +82,27 @@
     color: #9ca3af;
     pointer-events: none;
     height: 0;
+}
+
+/* Toolbar Translations */
+.toolbar-hidden {
+    transform: translateY(-95%);
+    opacity: 0.1;
+    pointer-events: none; /* Prevent clicks when hidden */
+}
+
+.toolbar-visible {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Interaction Zone for hovering */
+.toolbar-trigger-zone {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 10px;
+    z-index: 101;
 }
