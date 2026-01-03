@@ -33,10 +33,9 @@ const doResize = (e) => {
     if (!isResizing.value) return
     
     // Calculate new width percentage based on X position
-    // Since we are in RTL, X=0 is right side of screen? No, X is always from left.
-    // In RTL, aside is on the right.
-    // Width of aside = (WindowWidth - e.clientX) / WindowWidth * 100
-    const width = ((window.innerWidth - e.clientX) / window.innerWidth) * 100
+    // After layout reversal: viewer is on LEFT, editor is on RIGHT
+    // Width of viewer (left side) = e.clientX / window.innerWidth * 100
+    const width = (e.clientX / window.innerWidth) * 100
     
     // Constraints
     if (width > 20 && width < 80) {
