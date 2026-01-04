@@ -102,6 +102,23 @@ defineProps({
                                     </Link>
                                 </div>
 
+                                <!-- Content Editor (MongoDB) -->
+                                <div class="mb-8">
+                                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">تحرير المحتوى</h3>
+                                    <Link 
+                                        :href="`/editor/book/chapter-1-${book.slug.substring(0, 4)}`"
+                                        class="inline-flex items-center px-6 py-3 bg-gradient-to-l from-blue-600 to-blue-500 text-white rounded-xl hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-lg hover:shadow-blue-500/20 group scale-100 hover:scale-[1.02] active:scale-95"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 ml-2 group-hover:rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                        <div class="text-right">
+                                            <div class="font-black text-sm">فتح محرر المحتوى</div>
+                                            <div class="text-[10px] opacity-80 font-bold">تحرير النصوص والفصول (MongoDB)</div>
+                                        </div>
+                                    </Link>
+                                </div>
+
                                 <!-- File Download Logic -->
                                 <div v-if="book.versions?.[0]?.file_path || book.file_path" class="mb-6">
                                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">ملفات التحميل</h3>
