@@ -95,24 +95,31 @@ class EntityContentService
         // بيانات خاصة حسب النوع
         if (class_basename($entity) === 'Audio' || class_basename($entity) === 'Video') {
             $resourceData['duration'] = $entity->duration ?? 0;
-        } elseif (class_basename($entity) === 'Manuscript') {
-             // Load versions for Manuscript Viewer
-             $versions = $entity->versions()->with('publisher')->get();
+        } elseif (in_array(class_basename($entity), ['Manuscript', 'Audio', 'Video'])) {
+             // Load versions for Manuscript, Audio, and Video Viewers
+             $versions = $entity->versions()->with('publisher')->get(); 
+             
              $resourceData['versions'] = $versions->map(function($v) {
-                 $title = "الطبعة " . ($v->edition_number ?? '1');
+                 // Title construction logic
+                 $title = "الإصدار " . ($v->edition_number ?? '1'); // Generic fallback
+                 
+                 // Specific logic per type if needed
                  if ($v->publisher) {
                      $title .= " - " . $v->publisher->name;
+                 } elseif ($v->title) {
+                     $title = $v->title;
                  }
+                 
                  return [
                      'title' => $title,
                      'url' => $v->file_path ? asset('storage/' . $v->file_path) : null
                  ];
              })->toArray();
              
-             // Fallback if no versions found but main file exists
+             // Fallback: If no versions, add the main entity file as "Original"
              if (empty($resourceData['versions']) && $entity->file_path) {
                  $resourceData['versions'][] = [
-                     'title' => 'النسخة الأصلية',
+                     'title' => 'الملف الأساسي',
                      'url' => asset('storage/' . $entity->file_path)
                  ];
              }
