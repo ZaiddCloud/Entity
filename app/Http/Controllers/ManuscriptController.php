@@ -27,9 +27,19 @@ class ManuscriptController extends Controller
     /**
      * عارض محرر المخطوطات (الموحد)
      */
-    public function editor(Manuscript $manuscript, $childSlug): Response
+    public function show(Manuscript $manuscript): Response
     {
-        return $this->renderEditor($manuscript, $childSlug);
+        Gate::authorize('view', $manuscript);
+        
+        $firstContent = \App\Models\EntityContent::where('entity_type', 'manuscript')
+            ->where('entity_id', $manuscript->id)
+            ->orderBy('order')
+            ->first();
+
+        return Inertia::render('Manuscripts/Show', [
+            'manuscript' => $manuscript->load(['tags', 'categories', 'comments.user', 'versions.publisher']),
+            'first_content_slug' => $firstContent?->slug,
+        ]);
     }
     public function index(Request $request): Response
     {
@@ -102,16 +112,6 @@ class ManuscriptController extends Controller
             ->with('message', 'تم إنشاء المخطوطة بنجاح');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Manuscript $manuscript): Response
-    {
-        Gate::authorize('view', $manuscript);
-        return Inertia::render('Manuscripts/Show', [
-            'manuscript' => $manuscript->load(['tags', 'categories', 'authors', 'versions.publisher', 'comments.user']),
-        ]);
-    }
 
     /**
      * Show the form for editing the specified resource.

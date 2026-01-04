@@ -60,17 +60,15 @@ const handleToolbarCommand = ({ command, value }) => {
     if (command === 'togglePin') {
         store.togglePin()
     } else if (command === 'goto') {
-        // Handle navigation to a specific node
-        console.log('Navigating to:', value.slug)
-        // In a real app, this would use Inertia to visit the new slug
-        // For testing, we might just log it or simulate a reload
+        // Go to specific node
+        router.visit(route('editor.show', { type: store.editorMode, slug: value.slug }))
     } else if (command === 'prev' || command === 'next') {
         const target = store.navigation[command]
         if (target) {
-            console.log(`Navigating to ${command}:`, target.slug)
+            router.visit(route('editor.show', { type: store.editorMode, slug: target.slug }))
         }
     } else if (['minimize', 'maximize'].includes(command)) {
-        console.log(`Window command: ${command}`)
+        // Handle window controls if needed, or leave for future implementation
     } else {
         store.executeCommand(command, value)
     }
@@ -95,6 +93,7 @@ const handleToolbarCommand = ({ command, value }) => {
                 :resource="store.resourceData"
             />
         </template>
+
 
         <!-- Main Paper Sheet -->
         <div class="bg-white shadow-xl min-h-[1100px] border border-gray-200 rounded-sm overflow-hidden mb-20 relative">

@@ -194,83 +194,82 @@ class SeedRealisticData extends Command
 
                 // --- NEW: MongoDB Digital Content Seeding (Comprehensive) ---
                 if ($type === 'book') {
-                    $contentService = new BookContentService();
-                    BookChild::where('book_id', $entity->id)->delete();
-
                     // Level 1: Sub-book (الكتاب الفرعي)
                     $subBookCount = rand(1, 2);
                     for ($sb = 1; $sb <= $subBookCount; $sb++) {
-                        $subBook = $contentService->addChild($entity, [
+                        $subBook = \App\Models\EntityContent::create([
+                            'entity_id' => $entity->id,
+                            'entity_type' => 'book',
                             'type' => 'sub-book',
                             'title' => "كتاب " . ($sb === 1 ? 'المقدمات' : 'الأحكام'),
+                            'content' => '<p>مقدمة للكتاب الفرعي...</p>',
+                            'slug' => 'sub-book-' . $sb . '-' . substr($entity->slug, 0, 4),
                             'order' => $sb,
-                            'metadata' => ['description' => "كتاب فرعي رقم {$sb}."]
                         ]);
 
                         // Level 2: Part (الجزء)
-                        $partCount = rand(2, 3);
+                        $partCount = rand(1, 2);
                         for ($p = 1; $p <= $partCount; $p++) {
-                            $part = $contentService->addChild($entity, [
+                            $part = \App\Models\EntityContent::create([
+                                'entity_id' => $entity->id,
+                                'entity_type' => 'book',
                                 'parent_id' => $subBook->id,
                                 'type' => 'part',
                                 'title' => "الجزء {$p}",
+                                'content' => '<p>مقدمة الجزء...</p>',
+                                'slug' => 'part-' . $p . '-sb-' . $sb . '-' . substr($entity->slug, 0, 4),
                                 'order' => $p
                             ]);
 
-                            // Level 3: Bab (الباب)
-                            $babCount = rand(2, 4);
-                            for ($d = 1; $d <= $babCount; $d++) {
-                                $bab = $contentService->addChild($entity, [
+                            // Level 3: Chapter (الفصل) - For simplicity, skipping Bab level
+                            $chapCount = rand(2, 4);
+                            for ($c = 1; $c <= $chapCount; $c++) {
+                                $chapter = \App\Models\EntityContent::create([
+                                    'entity_id' => $entity->id,
+                                    'entity_type' => 'book',
                                     'parent_id' => $part->id,
-                                    'type' => 'bab',
-                                    'title' => "باب في " . ($d === 1 ? 'فضل العلم' : 'أهمية العمل'),
-                                    'order' => $d
+                                    'type' => 'chapter',
+                                    'title' => "فصل {$c}: في المسائل المهمة",
+                                    'content' => "<p>هذا هو محتوى الفصل رقم {$c}. يحتوي على نصوص وتفريعات.</p>",
+                                    'slug' => 'chapter-' . $c . '-p-' . $p . '-' . substr($entity->slug, 0, 4),
+                                    'order' => $c
                                 ]);
-
-                                // Level 4: Chapter (الفصل)
-                                $chapCount = rand(2, 5);
-                                for ($c = 1; $c <= $chapCount; $c++) {
-                                    $chapter = $contentService->addChild($entity, [
-                                        'parent_id' => $bab->id,
-                                        'type' => 'chapter',
-                                        'title' => "فصل {$c}: تفصيل المسائل",
-                                        'order' => $c
-                                    ]);
-
-                                    // Level 5: Masala (المسألة)
-                                    $masalaCount = rand(3, 8);
-                                    for ($m = 1; $m <= $masalaCount; $m++) {
-                                        $masala = $contentService->addChild($entity, [
-                                            'parent_id' => $chapter->id,
-                                            'type' => 'masala',
-                                            'title' => "مسألة {$m}: هل يجوز كذا؟",
-                                            'order' => $m
-                                        ]);
-
-                                        // Content Blocks (Paragraphs) within Masala
-                                        $blockCount = rand(3, 7);
-                                        for ($b_idx = 1; $b_idx <= $blockCount; $b_idx++) {
-                                            $hasFootnote = rand(1, 10) > 6;
-                                            $body = "هذه المسألة تتناول حكماً دقيقاً في هذا الباب. وقد اختلف العلماء فيها على قولين، والراجح ما ذكره المصنف في هذا الموضع. " .
-                                                ($hasFootnote ? "انظر الحاشية [1] لمزيد من التفصيل." : "والأدلة ظاهرة.");
-
-                                            $contentService->addBlock($masala, [
-                                                'type' => 'paragraph',
-                                                'body' => $body,
-                                                'annotations' => $hasFootnote ? [
-                                                    [
-                                                        'type' => 'footnote',
-                                                        'marker' => '[1]',
-                                                        'content' => 'تعليق تفصيلي من المحقق يوضح المسألة.'
-                                                    ]
-                                                ] : []
-                                            ]);
-                                        }
-                                    }
-                                }
                             }
                         }
                     }
+                } elseif ($type === 'manuscript') {
+                     // Create a dummy "Page" content for Manuscript
+                     \App\Models\EntityContent::create([
+                        'entity_id' => $entity->id,
+                        'entity_type' => 'manuscript',
+                        'type' => 'page',
+                        'title' => 'الصفحة الأولى',
+                        'slug' => 'page-1-' . substr($entity->slug, 0, 4),
+                        'content' => '<p>محتوى الصفحة الأولى من المخطوطة...</p>',
+                        'order' => 1,
+                    ]);
+                } elseif ($type === 'audio') {
+                    // Create a dummy "Segment" for Audio
+                     \App\Models\EntityContent::create([
+                        'entity_id' => $entity->id,
+                        'entity_type' => 'audio',
+                        'type' => 'segment',
+                        'title' => 'المقطع الأول',
+                        'slug' => 'segment-1-' . substr($entity->slug, 0, 4),
+                        'content' => '<p>تفريغ نصي للمقطع الأول...</p>',
+                        'order' => 1,
+                    ]);
+                } elseif ($type === 'video') {
+                    // Create a dummy "Scene" for Video
+                     \App\Models\EntityContent::create([
+                        'entity_id' => $entity->id,
+                        'entity_type' => 'video',
+                        'type' => 'scene',
+                        'title' => 'المشهد الأول',
+                        'slug' => 'scene-1-' . substr($entity->slug, 0, 4),
+                        'content' => '<p>وصف ومحتوى المشهد الأول...</p>',
+                        'order' => 1,
+                    ]);
                 }
                 // --- END MongoDB Seeding ---
 

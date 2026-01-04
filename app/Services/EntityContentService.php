@@ -95,6 +95,27 @@ class EntityContentService
         // بيانات خاصة حسب النوع
         if (class_basename($entity) === 'Audio' || class_basename($entity) === 'Video') {
             $resourceData['duration'] = $entity->duration ?? 0;
+        } elseif (class_basename($entity) === 'Manuscript') {
+             // Load versions for Manuscript Viewer
+             $versions = $entity->versions()->with('publisher')->get();
+             $resourceData['versions'] = $versions->map(function($v) {
+                 $title = "الطبعة " . ($v->edition_number ?? '1');
+                 if ($v->publisher) {
+                     $title .= " - " . $v->publisher->name;
+                 }
+                 return [
+                     'title' => $title,
+                     'url' => $v->file_path ? asset('storage/' . $v->file_path) : null
+                 ];
+             })->toArray();
+             
+             // Fallback if no versions found but main file exists
+             if (empty($resourceData['versions']) && $entity->file_path) {
+                 $resourceData['versions'][] = [
+                     'title' => 'النسخة الأصلية',
+                     'url' => asset('storage/' . $entity->file_path)
+                 ];
+             }
         }
 
         return [

@@ -122,8 +122,15 @@ class BookController extends Controller
     public function show(Book $book): Response
     {
         Gate::authorize('view', $book);
+        
+        $firstContent = \App\Models\EntityContent::where('entity_type', 'book')
+            ->where('entity_id', $book->id)
+            ->orderBy('order')
+            ->first();
+
         return Inertia::render('Books/Show', [
             'book' => $book->load(['tags', 'categories', 'comments.user']),
+            'first_content_slug' => $firstContent?->slug,
         ]);
     }
 

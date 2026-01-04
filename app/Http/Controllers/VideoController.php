@@ -27,9 +27,19 @@ class VideoController extends Controller
     /**
      * عارض محرر الفيديو (الموحد)
      */
-    public function editor(Video $video, $childSlug): Response
+    public function show(Video $video): Response
     {
-        return $this->renderEditor($video, $childSlug);
+        Gate::authorize('view', $video);
+        
+        $firstContent = \App\Models\EntityContent::where('entity_type', 'video')
+            ->where('entity_id', $video->id)
+            ->orderBy('order')
+            ->first();
+
+        return Inertia::render('Videos/Show', [
+            'video' => $video->load(['tags', 'categories', 'comments.user', 'versions.publisher', 'authors']),
+            'first_content_slug' => $firstContent?->slug,
+        ]);
     }
 
     /**
@@ -106,16 +116,6 @@ class VideoController extends Controller
             ->with('message', 'تم إنشاء الفيديو بنجاح');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Video $video): Response
-    {
-        Gate::authorize('view', $video);
-        return Inertia::render('Videos/Show', [
-            'video' => $video->load(['tags', 'categories', 'authors', 'versions.publisher', 'comments.user']),
-        ]);
-    }
 
     /**
      * Show the form for editing the specified resource.

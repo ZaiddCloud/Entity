@@ -27,9 +27,19 @@ class AudioController extends Controller
     /**
      * عارض محرر الملفات الصوتية (الموحد)
      */
-    public function editor(Audio $audio, $childSlug): Response
+    public function show(Audio $audio): Response
     {
-        return $this->renderEditor($audio, $childSlug);
+        Gate::authorize('view', $audio);
+        
+        $firstContent = \App\Models\EntityContent::where('entity_type', 'audio')
+            ->where('entity_id', $audio->id)
+            ->orderBy('order')
+            ->first();
+
+        return Inertia::render('Audio/Show', [
+            'audio' => $audio->load(['tags', 'categories', 'comments.user', 'versions.publisher', 'authors']),
+            'first_content_slug' => $firstContent?->slug,
+        ]);
     }
 
     /**
@@ -106,16 +116,6 @@ class AudioController extends Controller
             ->with('message', 'تم إنشاء الملف الصوتي بنجاح');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Audio $audio): Response
-    {
-        Gate::authorize('view', $audio);
-        return Inertia::render('Audio/Show', [
-            'audio' => $audio->load(['tags', 'categories', 'authors', 'versions.publisher', 'comments.user']),
-        ]);
-    }
 
     /**
      * Show the form for editing the specified resource.
