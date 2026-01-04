@@ -17,9 +17,12 @@ use App\Http\Requests\UpdateEntityRequest;
 
 class BookController extends Controller
 {
+    use Traits\HasEditor;
+
     protected $manager;
     protected $query;
     protected $mediaManager;
+    protected $editorService;
 
     public function __construct(EntityManagerService $manager, EntityQueryService $query, \App\Services\MediaManagerService $mediaManager)
     {
@@ -28,9 +31,15 @@ class BookController extends Controller
         $this->mediaManager = $mediaManager;
     }
 
+    // ... existing index, create, store methods ...
+
     /**
-     * Display a listing of the resource.
+     * عارض محرر الكتاب (الموحد)
      */
+    public function editor(Book $book, $childSlug): Response
+    {
+        return $this->renderEditor($book, $childSlug);
+    }
     public function index(Request $request): Response
     {
         Gate::authorize('viewAny', Book::class);
@@ -163,27 +172,7 @@ class BookController extends Controller
             ->with('message', 'تم تحديث الكتاب بنجاح');
     }
 
-    /**
-     * عارض محرر الكتاب
-     */
-    public function editor(Book $book, $childSlug): Response
-    {
-        Gate::authorize('update', $book);
 
-        $child = \App\Models\BookChild::where('book_id', $book->id)
-            ->where('slug', $childSlug)
-            ->firstOrFail();
-
-        return Inertia::render('Books/Editor/EditorPage', [
-            'book' => $book->only(['id', 'title', 'slug', 'author']),
-            'child' => [
-                'id' => $child->_id,
-                'title' => $child->title,
-                'content' => $child->content_blocks ?? [],
-            ],
-            'editor_mode' => 'book',
-        ]);
-    }
 
     /**
      * Remove the specified resource from storage.

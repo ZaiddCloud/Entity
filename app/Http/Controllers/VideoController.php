@@ -17,15 +17,19 @@ use App\Http\Requests\UpdateEntityRequest;
 
 class VideoController extends Controller
 {
+    use Traits\HasEditor;
+
     protected $manager;
     protected $query;
     protected $mediaManager;
+    // ... existing properties/methods ...
 
-    public function __construct(EntityManagerService $manager, EntityQueryService $query, \App\Services\MediaManagerService $mediaManager)
+    /**
+     * عارض محرر الفيديو (الموحد)
+     */
+    public function editor(Video $video, $childSlug): Response
     {
-        $this->manager = $manager;
-        $this->query = $query;
-        $this->mediaManager = $mediaManager;
+        return $this->renderEditor($video, $childSlug);
     }
 
     /**

@@ -7,11 +7,11 @@ import TiptapEditor from './Components/Content/TiptapEditor.vue'
 import { useEditorStore } from './Store/editorStore'
 
 const props = defineProps({
-    book: {
+    entity: {
         type: Object,
         required: true
     },
-    child: {
+    contentNode: {
         type: Object,
         required: true
     },
@@ -40,7 +40,7 @@ onMounted(() => {
         store.setResourceData(props.resource_data)
     }
 
-    store.loadDocument(props.book, props.child)
+    store.loadDocument(props.entity, props.contentNode)
     store.startAutoSave()
 })
 

@@ -17,15 +17,19 @@ use App\Http\Requests\UpdateEntityRequest;
 
 class AudioController extends Controller
 {
+    use Traits\HasEditor;
+
     protected $manager;
     protected $query;
     protected $mediaManager;
+    // ... existing properties/methods ...
 
-    public function __construct(EntityManagerService $manager, EntityQueryService $query, \App\Services\MediaManagerService $mediaManager)
+    /**
+     * عارض محرر الملفات الصوتية (الموحد)
+     */
+    public function editor(Audio $audio, $childSlug): Response
     {
-        $this->manager = $manager;
-        $this->query = $query;
-        $this->mediaManager = $mediaManager;
+        return $this->renderEditor($audio, $childSlug);
     }
 
     /**

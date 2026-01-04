@@ -49,7 +49,11 @@ Route::middleware(['auth'])->group(function () {
     // Web Resource Routes
     Route::resource('books', BookController::class);
     Route::resource('audios', AudioController::class);
+    Route::get('audios/{audio}/editor/{child}', [AudioController::class, 'editor'])->name('audios.editor');
+
     Route::resource('videos', VideoController::class);
+    Route::get('videos/{video}/editor/{child}', [VideoController::class, 'editor'])->name('videos.editor');
+
     Route::resource('manuscripts', ManuscriptController::class);
     Route::get('manuscripts/{manuscript}/editor/{child}', [ManuscriptController::class, 'editor'])->name('manuscripts.editor');
 

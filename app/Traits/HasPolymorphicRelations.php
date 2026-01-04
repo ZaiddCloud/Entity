@@ -269,4 +269,13 @@ trait HasPolymorphicRelations
 
         return null;
     }
+
+    /**
+     * العلاقة الموحدة مع المحتوى في MongoDB (Unified Content)
+     */
+    public function contents()
+    {
+        return $this->hasMany(\App\Models\EntityContent::class, 'entity_id', 'id')
+            ->where('entity_type', strtolower(class_basename($this)));
+    }
 }

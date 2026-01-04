@@ -17,20 +17,20 @@ use App\Http\Requests\UpdateEntityRequest;
 
 class ManuscriptController extends Controller
 {
+    use Traits\HasEditor;
+
     protected $manager;
     protected $query;
     protected $mediaManager;
-
-    public function __construct(EntityManagerService $manager, EntityQueryService $query, \App\Services\MediaManagerService $mediaManager)
-    {
-        $this->manager = $manager;
-        $this->query = $query;
-        $this->mediaManager = $mediaManager;
-    }
+    // ...
 
     /**
-     * Display a listing of the resource.
+     * عارض محرر المخطوطات (الموحد)
      */
+    public function editor(Manuscript $manuscript, $childSlug): Response
+    {
+        return $this->renderEditor($manuscript, $childSlug);
+    }
     public function index(Request $request): Response
     {
         Gate::authorize('viewAny', Manuscript::class);
@@ -149,31 +149,7 @@ class ManuscriptController extends Controller
             ->with('message', 'تم تحديث المخطوطة بنجاح');
     }
 
-    /**
-     * عارض محرر المخطوطات
-     */
-    public function editor(Manuscript $manuscript, $childSlug): Response
-    {
-        Gate::authorize('update', $manuscript);
 
-        $child = \App\Models\ManuscriptChild::where('manuscript_id', $manuscript->id)
-            ->where('slug', $childSlug)
-            ->firstOrFail();
-
-        return Inertia::render('Books/Editor/EditorPage', [
-            'book' => $manuscript->only(['id', 'title', 'slug', 'author']),
-            'child' => [
-                'id' => $child->_id,
-                'title' => $child->title,
-                'content' => $child->content_blocks ?? [],
-            ],
-            'editor_mode' => 'manuscript',
-            'resource_data' => [
-                'url' => $manuscript->file_path ? asset('storage/' . $manuscript->file_path) : null,
-                'type' => 'pdf', // Or detect from extension
-            ]
-        ]);
-    }
 
     /**
      * Remove the specified resource from storage.

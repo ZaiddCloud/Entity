@@ -3,8 +3,8 @@ import { ref, computed } from 'vue'
 
 export const useEditorStore = defineStore('editor', () => {
     // State
-    const currentBook = ref(null)
-    const currentChild = ref(null)
+    const currentEntity = ref(null)
+    const currentContentNode = ref(null)
     const content = ref('')
     const isToolbarPinned = ref(false)
     const editorMode = ref('book')
@@ -14,10 +14,10 @@ export const useEditorStore = defineStore('editor', () => {
     const resourceData = ref(null)
 
     // Getters
-    const documentTitle = computed(() => currentChild.value?.title || 'مستند جديد')
+    const documentTitle = computed(() => currentContentNode.value?.title || 'مستند جديد')
 
     const hasUnsavedChanges = computed(() => {
-        return content.value !== (currentChild.value?.content || '')
+        return content.value !== (currentContentNode.value?.content || '')
     })
 
     // Actions
@@ -25,10 +25,10 @@ export const useEditorStore = defineStore('editor', () => {
         editor.value = editorInstance
     }
 
-    const loadDocument = (book, child) => {
-        currentBook.value = book
-        currentChild.value = child
-        content.value = child.content || ''
+    const loadDocument = (entity, contentNode) => {
+        currentEntity.value = entity
+        currentContentNode.value = contentNode
+        content.value = contentNode.content || ''
     }
 
     const updateContent = (newContent) => {
@@ -49,7 +49,7 @@ export const useEditorStore = defineStore('editor', () => {
     }
 
     const setTitle = (title) => {
-        if (currentChild.value) currentChild.value.title = title
+        if (currentContentNode.value) currentContentNode.value.title = title
     }
 
     const executeCommand = (command, value = null) => {
@@ -91,10 +91,12 @@ export const useEditorStore = defineStore('editor', () => {
         if (!editor.value) return null
 
         let resourceId = null
-        if (editorMode.value === 'book') {
-            resourceId = currentBook.value?.id
+        if (editorMode.value === 'book' || editorMode.value === 'manuscript' || editorMode.value === 'audio' || editorMode.value === 'video') {
+             // For all main entities supported by this store
+            resourceId = currentEntity.value?.id
         } else {
-            resourceId = resourceData.value?.id
+            // Fallback if resourceData is used separately (e.g. maybe polymorphic handling logic differs)
+            resourceId = resourceData.value?.id || currentEntity.value?.id
         }
 
         return {
@@ -106,14 +108,14 @@ export const useEditorStore = defineStore('editor', () => {
     }
 
     const save = async () => {
-        if (!currentBook.value || isSaving.value) return
+        if (!currentEntity.value || isSaving.value) return
 
         isSaving.value = true
         try {
             console.log('Saving to server...', content.value)
             lastSaved.value = new Date()
-            if (currentChild.value) {
-                currentChild.value.content = content.value
+            if (currentContentNode.value) {
+                currentContentNode.value.content = content.value
             }
             return true
         } catch (error) {
@@ -136,7 +138,7 @@ export const useEditorStore = defineStore('editor', () => {
     }
 
     return {
-        currentBook, currentChild, content, isToolbarPinned,
+        currentEntity, currentContentNode, content, isToolbarPinned,
         editorMode, resourceData, isSaving, lastSaved, editor,
         documentTitle, hasUnsavedChanges,
         setEditor, loadDocument, updateContent, togglePin,
