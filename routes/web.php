@@ -42,6 +42,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/search', [GlobalSearchController::class, 'index'])->name('search');
 
+    // Unified Smart Editor Routes
+    Route::get('/editor/resume', [App\Http\Controllers\UnifiedEditorController::class, 'resume'])->name('editor.resume');
+    Route::get('/editor/{type}/{slug}', [App\Http\Controllers\UnifiedEditorController::class, 'show'])->name('editor.show');
+
     // Editor Test Route
     Route::get('/editor-test', [App\Http\Controllers\EditorTestController::class, 'index'])->name('editor.test');
 

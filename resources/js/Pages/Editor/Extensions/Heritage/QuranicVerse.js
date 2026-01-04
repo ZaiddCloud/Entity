@@ -1,6 +1,6 @@
 import { Node, mergeAttributes } from '@tiptap/core'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
-import QuranicVerseView from '../../Components/Extensions/Views/QuranicVerseView.vue'
+import QuranicVerseView from '../Views/QuranicVerseView.vue'
 
 export const QuranicVerse = Node.create({
     name: 'quranicVerse',

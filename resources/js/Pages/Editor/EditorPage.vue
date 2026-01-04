@@ -23,6 +23,14 @@ const props = defineProps({
     resource_data: {
         type: Object,
         default: null
+    },
+    hierarchy: {
+        type: Array,
+        default: () => []
+    },
+    navigation: {
+        type: Object,
+        default: () => ({ prev: null, next: null })
     }
 })
 
@@ -40,7 +48,7 @@ onMounted(() => {
         store.setResourceData(props.resource_data)
     }
 
-    store.loadDocument(props.entity, props.contentNode)
+    store.loadDocument(props.entity, props.contentNode, props.hierarchy, props.navigation)
     store.startAutoSave()
 })
 
@@ -49,7 +57,23 @@ onUnmounted(() => {
 })
 
 const handleToolbarCommand = ({ command, value }) => {
-    store.executeCommand(command, value)
+    if (command === 'togglePin') {
+        store.togglePin()
+    } else if (command === 'goto') {
+        // Handle navigation to a specific node
+        console.log('Navigating to:', value.slug)
+        // In a real app, this would use Inertia to visit the new slug
+        // For testing, we might just log it or simulate a reload
+    } else if (command === 'prev' || command === 'next') {
+        const target = store.navigation[command]
+        if (target) {
+            console.log(`Navigating to ${command}:`, target.slug)
+        }
+    } else if (['minimize', 'maximize'].includes(command)) {
+        console.log(`Window command: ${command}`)
+    } else {
+        store.executeCommand(command, value)
+    }
 }
 </script>
 

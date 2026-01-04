@@ -1,6 +1,6 @@
 import { Node, mergeAttributes } from '@tiptap/core'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
-import PoetryNodeView from '../../Components/Extensions/Views/PoetryNodeView.vue'
+import PoetryNodeView from '../Views/PoetryNodeView.vue'
 
 export const HeritagePoetry = Node.create({
     name: 'heritagePoetry',

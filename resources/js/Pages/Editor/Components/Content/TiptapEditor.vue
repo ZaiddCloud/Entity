@@ -5,6 +5,9 @@ import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import TextAlign from '@tiptap/extension-text-align'
 import Placeholder from '@tiptap/extension-placeholder'
+import HeritagePoetry from '../../Extensions/Heritage/HeritagePoetry'
+import QuranicVerse from '../../Extensions/Heritage/QuranicVerse'
+import ScientificFootnote from '../../Extensions/Scientific/ScientificFootnote'
 
 const props = defineProps({
     modelValue: {
@@ -31,7 +34,10 @@ const editor = useEditor({
         }),
         Placeholder.configure({
             placeholder: 'ابدأ الكتابة هنا...'
-        })
+        }),
+        HeritagePoetry,
+        QuranicVerse,
+        ScientificFootnote
     ],
     editorProps: {
         attributes: {

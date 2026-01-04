@@ -25,9 +25,19 @@ class EditorTestController extends Controller
             'content' => '<p>هذا نص تدريبي للمحرر المتعدد الأنماط...</p><p>يمكنك تجربة الأنماط المختلفة عبر تغيير رابط التحميل.</p>',
         ];
 
-        return Inertia::render('Books/Editor/EditorPage', [
-            'book' => $book,
-            'child' => $child,
+        return Inertia::render('Editor/EditorPage', [
+            'entity' => $book,
+            'contentNode' => $child,
+            'hierarchy' => [
+                ['_id' => '1', 'title' => 'المقدمة', 'slug' => 'intro', 'type' => 'chapter', 'parent_id' => null, 'order' => 1],
+                ['_id' => '2', 'title' => 'الباب الأول', 'slug' => 'part-1', 'type' => 'chapter', 'parent_id' => null, 'order' => 2],
+                ['_id' => '3', 'title' => 'الفصل الأول', 'slug' => 'chapter-1', 'type' => 'page', 'parent_id' => '2', 'order' => 1],
+                ['_id' => '4', 'title' => 'الفصل الثاني', 'slug' => 'chapter-2', 'type' => 'page', 'parent_id' => '2', 'order' => 2],
+            ],
+            'navigation' => [
+                'prev' => ['slug' => 'intro', 'title' => 'المقدمة'],
+                'next' => ['slug' => 'chapter-1', 'title' => 'الفصل الأول'],
+            ],
             'editor_mode' => $mode,
             'resource_data' => $mode === 'manuscript' ? [
                 'versions' => [

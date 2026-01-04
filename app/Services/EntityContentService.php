@@ -60,13 +60,31 @@ class EntityContentService
      */
     public function prepareEditorData(Entity $entity, string $slug): array
     {
-        // 1. جلب المحتوى من MongoDB
         $node = EntityContent::where('entity_id', $entity->id)
             ->where('entity_type', strtolower(class_basename($entity)))
             ->where('slug', $slug)
             ->firstOrFail();
 
-        // 2. تحضير بيانات المصدر (Resource Data)
+        // 2. جلب الهيكلية (Hierarchy)
+        $hierarchy = EntityContent::where('entity_id', $entity->id)
+            ->where('entity_type', strtolower(class_basename($entity)))
+            ->orderBy('order')
+            ->get(['_id', 'title', 'slug', 'type', 'order', 'parent_id']);
+
+        // 3. حساب الملاحة (Navigation)
+        $prev = EntityContent::where('entity_id', $entity->id)
+            ->where('entity_type', strtolower(class_basename($entity)))
+            ->where('order', '<', $node->order)
+            ->orderBy('order', 'desc')
+            ->first(['slug', 'title']);
+
+        $next = EntityContent::where('entity_id', $entity->id)
+            ->where('entity_type', strtolower(class_basename($entity)))
+            ->where('order', '>', $node->order)
+            ->orderBy('order', 'asc')
+            ->first(['slug', 'title']);
+
+        // 4. تحضير بيانات المصدر (Resource Data)
         $resourceData = [
             'id' => $entity->id,
             'title' => $entity->title,
@@ -82,6 +100,11 @@ class EntityContentService
         return [
             'entity' => $entity,
             'contentNode' => $node,
+            'hierarchy' => $hierarchy,
+            'navigation' => [
+                'prev' => $prev,
+                'next' => $next,
+            ],
             'editor_mode' => strtolower(class_basename($entity)),
             'resource_data' => $resourceData
         ];

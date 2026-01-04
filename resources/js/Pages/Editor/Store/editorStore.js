@@ -12,6 +12,8 @@ export const useEditorStore = defineStore('editor', () => {
     const lastSaved = ref(null)
     const editor = ref(null)
     const resourceData = ref(null)
+    const hierarchy = ref([])
+    const navigation = ref({ prev: null, next: null })
 
     // Getters
     const documentTitle = computed(() => currentContentNode.value?.title || 'مستند جديد')
@@ -25,10 +27,12 @@ export const useEditorStore = defineStore('editor', () => {
         editor.value = editorInstance
     }
 
-    const loadDocument = (entity, contentNode) => {
+    const loadDocument = (entity, contentNode, hierarchyData = [], navigationData = {}) => {
         currentEntity.value = entity
         currentContentNode.value = contentNode
         content.value = contentNode.content || ''
+        hierarchy.value = hierarchyData
+        navigation.value = navigationData
     }
 
     const updateContent = (newContent) => {
@@ -92,7 +96,7 @@ export const useEditorStore = defineStore('editor', () => {
 
         let resourceId = null
         if (editorMode.value === 'book' || editorMode.value === 'manuscript' || editorMode.value === 'audio' || editorMode.value === 'video') {
-             // For all main entities supported by this store
+            // For all main entities supported by this store
             resourceId = currentEntity.value?.id
         } else {
             // Fallback if resourceData is used separately (e.g. maybe polymorphic handling logic differs)
@@ -140,6 +144,7 @@ export const useEditorStore = defineStore('editor', () => {
     return {
         currentEntity, currentContentNode, content, isToolbarPinned,
         editorMode, resourceData, isSaving, lastSaved, editor,
+        hierarchy, navigation,
         documentTitle, hasUnsavedChanges,
         setEditor, loadDocument, updateContent, togglePin,
         executeCommand, isActive, save, startAutoSave, stopAutoSave,
