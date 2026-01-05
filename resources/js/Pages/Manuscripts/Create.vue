@@ -28,145 +28,171 @@ const submit = () => {
 <template>
     <AuthenticatedLayout title="إضافة مخطوطة جديدة">
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            <h2 class="font-black text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 إضافة مخطوطة جديدة
             </h2>
         </template>
 
         <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900 dark:text-gray-100">
-                        <form @submit.prevent="submit" class="space-y-6">
-                            <div>
-                                <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">العنوان</label>
-                                <input
-                                    id="title"
-                                    name="title"
-                                    type="text"
-                                    class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
-                                    v-model="form.title"
-                                    required
-                                    autofocus
-                                />
-                                <div v-if="form.errors.title" class="mt-2 text-sm text-red-600">{{ form.errors.title }}</div>
-                            </div>
+            <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+                <Card class="!p-8">
+                    <form @submit.prevent="submit" class="space-y-6">
+                        <!-- Heading -->
+                        <div class="mb-8 border-b border-gray-100 dark:border-white/5 pb-4">
+                            <h3 class="text-lg font-black text-gray-900 dark:text-white">بيانات المخطوطة</h3>
+                            <p class="text-sm text-gray-500">أدخل المعلومات الأساسية للمخطوطة الأثرية</p>
+                        </div>
 
+                        <!-- Title -->
+                        <div>
+                            <InputLabel for="title">شهرة المخطوطة (العنوان)</InputLabel>
+                            <TextInput
+                                id="title"
+                                v-model="form.title"
+                                type="text"
+                                class="mt-1 block w-full"
+                                required
+                                autofocus
+                                placeholder="مثلاً: فتح الباري شرح صحيح البخاري"
+                            />
+                            <div v-if="form.errors.title" class="mt-2 text-sm text-red-600">{{ form.errors.title }}</div>
+                        </div>
+
+                        <!-- Authors & Publisher -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Authors (Multi-Select) -->
-                            <div>
-                                <label for="authors" class="block text-sm font-medium text-gray-700 dark:text-gray-300">المؤلف / الناسخ</label>
-                                <select
-                                    id="authors"
-                                    name="author_ids[]"
-                                    multiple
-                                    class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm h-32"
-                                    v-model="form.author_ids"
-                                >
-                                    <option v-for="author in authors" :key="author.id" :value="author.id">
-                                        {{ author.name }}
-                                    </option>
-                                </select>
-                                <p class="text-xs text-gray-500 mt-1">اضغط Ctrl لتحديد أكثر من مؤلف</p>
+                            <div class="md:col-span-2">
+                                <InputLabel for="authors">المؤلف / الناسخ</InputLabel>
+                                <div class="mt-1 relative">
+                                    <select
+                                        id="authors"
+                                        multiple
+                                        v-model="form.author_ids"
+                                        class="block w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-black/20 dark:text-gray-300 focus:border-emerald-500 focus:ring-emerald-500/20 shadow-sm h-32 text-sm transition-all text-center md:text-right"
+                                    >
+                                        <option v-for="author in authors" :key="author.id" :value="author.id">
+                                            {{ author.name }}
+                                        </option>
+                                    </select>
+                                    <p class="text-xs text-gray-400 mt-2 font-bold flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                        اضغط على Ctrl (أو Cmd) لتحديد عدة مؤلفين
+                                    </p>
+                                </div>
                                 <div v-if="form.errors.author_ids" class="mt-2 text-sm text-red-600">{{ form.errors.author_ids }}</div>
                             </div>
 
                             <!-- Publisher -->
-                            <div>
-                                <label for="publisher" class="block text-sm font-medium text-gray-700 dark:text-gray-300">المكتبة / المصدر</label>
-                                <select
+                            <div class="md:col-span-2">
+                                <InputLabel for="publisher">المكتبة / المصدر</InputLabel>
+                                <SelectInput
                                     id="publisher"
-                                    name="publisher_id"
-                                    class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
                                     v-model="form.publisher_id"
-                                >
-                                    <option value="">اختر مصدر...</option>
-                                    <option v-for="publisher in publishers" :key="publisher.id" :value="publisher.id">
-                                        {{ publisher.name }}
-                                    </option>
-                                </select>
+                                    :options="publishers"
+                                    placeholder="اختر مصدر المخطوطة..."
+                                    class="mt-1 block w-full"
+                                />
                                 <div v-if="form.errors.publisher_id" class="mt-2 text-sm text-red-600">{{ form.errors.publisher_id }}</div>
                             </div>
+                        </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label for="century" class="block text-sm font-medium text-gray-700 dark:text-gray-300">القرن</label>
-                                    <input
-                                        id="century"
-                                        name="century"
-                                        type="text"
-                                        placeholder="مثلاً: القرن الثامن الهجري"
-                                        class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
-                                        v-model="form.century"
-                                    />
-                                </div>
-                                <div>
-                                    <label for="pages" class="block text-sm font-medium text-gray-700 dark:text-gray-300">عدد الأوراق</label>
-                                    <input
-                                        id="pages"
-                                        name="pages"
-                                        type="number"
-                                        class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
-                                        v-model="form.pages"
-                                    />
-                                </div>
-                            </div>
-
+                        <!-- Details Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
-                                <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">الوصف</label>
-                                <textarea
-                                    id="description"
-                                    name="description"
-                                    rows="4"
-                                    class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
-                                    v-model="form.description"
-                                ></textarea>
-                                <div v-if="form.errors.description" class="mt-2 text-sm text-red-600">{{ form.errors.description }}</div>
-                            </div>
-
-                            <div>
-                                <label for="cover" class="block text-sm font-medium text-gray-700 dark:text-gray-300">صورة الغلاف (اختياري)</label>
-                                <input
-                                    id="cover"
-                                    name="cover"
-                                    type="file"
-                                    class="mt-1 block w-full text-sm text-gray-500 hover:file:bg-indigo-100 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 transition"
-                                    @input="form.cover = $event.target.files[0]"
-                                    accept="image/*"
+                                <InputLabel for="century" :optional="true">القرن الهجري</InputLabel>
+                                <TextInput
+                                    id="century"
+                                    v-model="form.century"
+                                    type="text"
+                                    class="mt-1 block w-full"
+                                    placeholder="مثلاً: القرن الثامن"
                                 />
-                                <div v-if="form.errors.cover" class="mt-2 text-sm text-red-600">{{ form.errors.cover }}</div>
+                            </div>
+                            <div>
+                                <InputLabel for="pages" :optional="true">عدد الأوراق</InputLabel>
+                                <TextInput
+                                    id="pages"
+                                    v-model="form.pages"
+                                    type="number"
+                                    class="mt-1 block w-full"
+                                    placeholder="0"
+                                />
+                            </div>
+                            <div>
+                                <InputLabel for="published_year" :optional="true">سنة النسخ (رقمياً)</InputLabel>
+                                <TextInput
+                                    id="published_year"
+                                    v-model="form.published_year"
+                                    type="number"
+                                    class="mt-1 block w-full"
+                                    placeholder="مثلاً: 1445"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div>
+                            <InputLabel for="description" :optional="true">ملاحظات / وصف</InputLabel>
+                            <textarea
+                                id="description"
+                                v-model="form.description"
+                                rows="4"
+                                class="mt-1 block w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-black/20 dark:text-gray-300 focus:border-emerald-500 focus:ring-emerald-500/20 shadow-sm text-sm transition-all"
+                                placeholder="أضف أي تفاصيل إضافية حول المخطوطة..."
+                            ></textarea>
+                            <div v-if="form.errors.description" class="mt-2 text-sm text-red-600">{{ form.errors.description }}</div>
+                        </div>
+
+                        <!-- File Uploads -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100 dark:border-white/5">
+                            <div>
+                                <InputLabel for="cover" :optional="true">صورة الغلاف</InputLabel>
+                                <div class="mt-1 flex items-center justify-center w-full">
+                                    <label for="cover" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 dark:border-gray-700 border-dashed rounded-2xl cursor-pointer bg-gray-50 dark:bg-white/5 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <svg class="w-8 h-8 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                            <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-bold">اضغط للرفع</span> أو اسحب الصورة</p>
+                                        </div>
+                                        <input id="cover" type="file" @input="form.cover = $event.target.files[0]" accept="image/*" class="hidden" />
+                                    </label>
+                                </div>
+                                <div v-if="form.cover" class="mt-2 text-xs text-emerald-500 font-bold text-center">
+                                    تم اختيار: {{ form.cover.name }}
+                                </div>
                             </div>
 
                             <div>
-                                <label for="file" class="block text-sm font-medium text-gray-700 dark:text-gray-300">ملف المخطوطة (PDF)</label>
-                                <input
-                                    id="file"
-                                    name="file"
-                                    type="file"
-                                    class="mt-1 block w-full text-sm text-gray-500 hover:file:bg-indigo-100 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 transition"
-                                    @input="form.file = $event.target.files[0]"
-                                    accept="application/pdf"
-                                />
-                                <progress v-if="form.progress" :value="form.progress.percentage" max="100" class="w-full mt-2">
-                                    {{ form.progress.percentage }}%
+                                <InputLabel for="file">ملف المخطوطة (PDF)</InputLabel>
+                                <div class="mt-1 flex items-center justify-center w-full">
+                                    <label for="file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 dark:border-gray-700 border-dashed rounded-2xl cursor-pointer bg-gray-50 dark:bg-white/5 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <svg class="w-8 h-8 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                            <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-bold">اضغط للرفع</span> (PDF)</p>
+                                        </div>
+                                        <input id="file" type="file" @input="form.file = $event.target.files[0]" accept="application/pdf" class="hidden" />
+                                    </label>
+                                </div>
+                                <div v-if="form.file" class="mt-2 text-xs text-emerald-500 font-bold text-center">
+                                    تم اختيار: {{ form.file.name }}
+                                </div>
+                                <progress v-if="form.progress" :value="form.progress.percentage" max="100" class="w-full mt-2 h-1 bg-gray-200 rounded-full overflow-hidden">
+                                    <div class="h-full bg-emerald-500" :style="{ width: form.progress.percentage + '%' }"></div>
                                 </progress>
                                 <div v-if="form.errors.file" class="mt-2 text-sm text-red-600">{{ form.errors.file }}</div>
                             </div>
+                        </div>
 
-                            <div class="flex items-center justify-end">
-                                <Link :href="route('manuscripts.index')" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 underline decoration-none mr-4">
-                                    إلغاء
-                                </Link>
-                                <button
-                                    type="submit"
-                                    class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring ring-indigo-300 disabled:opacity-25 transition ease-in-out duration-150"
-                                    :disabled="form.processing"
-                                >
-                                    حفظ
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                        <!-- Actions -->
+                        <div class="flex items-center justify-end gap-4 pt-4 border-t border-gray-100 dark:border-white/5">
+                            <Link :href="route('manuscripts.index')" class="text-sm font-bold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors">
+                                إلغاء
+                            </Link>
+                            <PrimaryButton class="bg-emerald-600 hover:bg-emerald-500" :disabled="form.processing">
+                                حفظ المخطوطة
+                            </PrimaryButton>
+                        </div>
+                    </form>
+                </Card>
             </div>
         </div>
     </AuthenticatedLayout>

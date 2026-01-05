@@ -20,6 +20,7 @@ use App\Models\Comment;
 use App\Models\Note;
 use App\Models\Collection;
 use App\Models\Series;
+use App\Models\Shelf;
 use App\Models\BookChild;
 use App\Services\BookContentService;
 use Illuminate\Support\Facades\Hash;
@@ -66,7 +67,9 @@ class SeedRealisticData extends Command
         Note::truncate();
         Collection::truncate();
         Series::truncate();
+        Shelf::truncate();
         BookChild::truncate();
+        \App\Models\EntityContent::truncate();
         \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
 
         // 1. Core Users
@@ -151,6 +154,14 @@ class SeedRealisticData extends Command
                     ['title' => 'وثائقي العمارة الإسلامية', 'author' => 'مركز التراث'],
                     ['title' => 'ندوة المخطوطات الدولية', 'author' => 'مؤسسة التراث'],
                 ]
+            ],
+            'shelf' => [
+                'items' => [
+                    ['location_code' => 'A-101', 'capacity' => 50],
+                    ['location_code' => 'B-202', 'capacity' => 100],
+                    ['location_code' => 'C-303', 'capacity' => 75],
+                    ['location_code' => 'D-404', 'capacity' => 120],
+                ]
             ]
         ];
 
@@ -168,9 +179,24 @@ class SeedRealisticData extends Command
                     'manuscript' => Manuscript::class,
                     'audio' => Audio::class,
                     'video' => Video::class,
+                    'shelf' => Shelf::class,
                 };
 
                 $itemData = $set['items'][$i % count($set['items'])];
+                
+                if ($type === 'shelf') {
+                    $location_code = $itemData['location_code'];
+                    if ($i >= count($set['items'])) {
+                        $location_code .= "-" . ($i + 1);
+                    }
+                    $entity = Shelf::create([
+                        'location_code' => $location_code,
+                        'capacity' => $itemData['capacity']
+                    ]);
+                    $bar->advance();
+                    continue;
+                }
+
                 $title = $itemData['title'];
 
                 // If we are creating more than the unique titles, add a suffix to avoid duplicate slugs
@@ -307,6 +333,7 @@ class SeedRealisticData extends Command
                             'video' => 'mp4',
                         },
                         'file_path' => null, // Placeholder
+                        'shelf_id' => (rand(1, 10) > 3) ? Shelf::inRandomOrder()->first()?->id : null,
                     ]);
                 }
 

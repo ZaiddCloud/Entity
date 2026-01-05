@@ -1,6 +1,10 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
+import Card from '@/Components/Card.vue';
+import TextInput from '@/Components/TextInput.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
 
 const props = defineProps({
     book: Object,
@@ -34,168 +38,165 @@ const submit = () => {
 <template>
     <AuthenticatedLayout :title="'تعديل: ' + book.title">
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            <h2 class="font-black text-2xl dark:text-white leading-tight">
                 تعديل الكتاب: {{ book.title }}
             </h2>
         </template>
 
         <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900 dark:text-gray-100">
-                        <form @submit.prevent="submit" class="space-y-6">
-                            <!-- Title -->
-                            <div>
-                                <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">عنوان الكتاب</label>
-                                <input
-                                    id="title"
-                                    name="title"
-                                    type="text"
-                                    class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
-                                    v-model="form.title"
-                                    required
-                                    autofocus
-                                />
-                                <div v-if="form.errors.title" class="mt-2 text-sm text-red-600">{{ form.errors.title }}</div>
-                            </div>
+            <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+                <Card>
+                    <form @submit.prevent="submit" class="space-y-8">
+                        <!-- Title -->
+                        <div>
+                            <label for="title" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">عنوان الكتاب</label>
+                            <TextInput
+                                id="title"
+                                type="text"
+                                class="w-full"
+                                v-model="form.title"
+                                required
+                                autofocus
+                            />
+                            <div v-if="form.errors.title" class="mt-2 text-xs font-bold text-rose-500">{{ form.errors.title }}</div>
+                        </div>
 
-                            <!-- Authors (Multi-Select) -->
-                            <div>
-                                <label for="authors" class="block text-sm font-medium text-gray-700 dark:text-gray-300">المؤلفون</label>
+                        <!-- Authors (Multi-Select) -->
+                        <div>
+                            <label for="authors" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">المؤلفون</label>
+                            <div class="relative">
                                 <select
                                     id="authors"
-                                    name="author_ids[]"
                                     multiple
-                                    class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm h-32"
+                                    class="block w-full border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-black focus:ring-4 focus:ring-indigo-500/10 rounded-2xl text-sm font-medium transition-all bg-gray-50 dark:bg-white/5 h-32 custom-scrollbar"
                                     v-model="form.author_ids"
                                 >
-                                    <option v-for="author in authors" :key="author.id" :value="author.id">
+                                    <option v-for="author in authors" :key="author.id" :value="author.id" class="py-2 px-4">
                                         {{ author.name }}
                                     </option>
                                 </select>
-                                <p class="text-xs text-gray-500 mt-1">اضغط Ctrl لتحديد أكثر من مؤلف</p>
-                                <div v-if="form.errors.author_ids" class="mt-2 text-sm text-red-600">{{ form.errors.author_ids }}</div>
+                                <div class="absolute top-2 left-2 pointer-events-none">
+                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                                </div>
                             </div>
+                            <p class="text-[10px] font-bold text-gray-400 mt-2">اضغط Ctrl (أو Cmd) لتحديد أكثر من مؤلف</p>
+                            <div v-if="form.errors.author_ids" class="mt-2 text-xs font-bold text-rose-500">{{ form.errors.author_ids }}</div>
+                        </div>
 
-                            <!-- Publisher -->
+                        <!-- Publisher -->
+                        <div>
+                            <label for="publisher" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">الناشر</label>
+                            <SelectInput
+                                id="publisher"
+                                class="w-full"
+                                v-model="form.publisher_id"
+                                :options="publishers"
+                                placeholder="اختر ناشر..."
+                            />
+                            <div v-if="form.errors.publisher_id" class="mt-2 text-xs font-bold text-rose-500">{{ form.errors.publisher_id }}</div>
+                        </div>
+
+                        <!-- Version Details Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label for="publisher" class="block text-sm font-medium text-gray-700 dark:text-gray-300">الناشر</label>
-                                <select
-                                    id="publisher"
-                                    name="publisher_id"
-                                    class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
-                                    v-model="form.publisher_id"
-                                >
-                                    <option value="">اختر ناشر...</option>
-                                    <option v-for="publisher in publishers" :key="publisher.id" :value="publisher.id">
-                                        {{ publisher.name }}
-                                    </option>
-                                </select>
-                                <div v-if="form.errors.publisher_id" class="mt-2 text-sm text-red-600">{{ form.errors.publisher_id }}</div>
-                            </div>
-
-                            <!-- Version Details Grid -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label for="isbn" class="block text-sm font-medium text-gray-700 dark:text-gray-300">ISBN</label>
-                                    <input
-                                        id="isbn"
-                                        name="isbn"
-                                        type="text"
-                                        class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
-                                        v-model="form.isbn"
-                                    />
-                                    <div v-if="form.errors.isbn" class="mt-2 text-sm text-red-600">{{ form.errors.isbn }}</div>
-                                </div>
-                                <div>
-                                    <label for="pages" class="block text-sm font-medium text-gray-700 dark:text-gray-300">عدد الصفحات</label>
-                                    <input
-                                        id="pages"
-                                        name="pages"
-                                        type="number"
-                                        class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
-                                        v-model="form.pages"
-                                    />
-                                </div>
-                                <div>
-                                    <label for="published_year" class="block text-sm font-medium text-gray-700 dark:text-gray-300">سنة النشر</label>
-                                    <input
-                                        id="published_year"
-                                        name="published_year"
-                                        type="number"
-                                        class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
-                                        v-model="form.published_year"
-                                    />
-                                </div>
-                                <div>
-                                    <label for="edition_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300">رقم الطبعة</label>
-                                    <input
-                                        id="edition_number"
-                                        name="edition_number"
-                                        type="number"
-                                        class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
-                                        v-model="form.edition_number"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">الوصف</label>
-                                <textarea
-                                    id="description"
-                                    name="description"
-                                    rows="4"
-                                    class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
-                                    v-model="form.description"
-                                ></textarea>
-                                <div v-if="form.errors.description" class="mt-2 text-sm text-red-600">{{ form.errors.description }}</div>
-                            </div>
-
-                            <div>
-                                <label for="cover" class="block text-sm font-medium text-gray-700 dark:text-gray-300">تحديث صورة الغلاف (اختياري)</label>
-                                <input
-                                    id="cover"
-                                    name="cover"
-                                    type="file"
-                                    class="mt-1 block w-full text-sm text-gray-500 hover:file:bg-indigo-100 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 transition"
-                                    @input="form.cover = $event.target.files[0]"
-                                    accept="image/*"
+                                <label for="isbn" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">ISBN</label>
+                                <TextInput
+                                    id="isbn"
+                                    type="text"
+                                    class="w-full"
+                                    v-model="form.isbn"
                                 />
-                                <div v-if="form.errors.cover" class="mt-2 text-sm text-red-600">{{ form.errors.cover }}</div>
+                                <div v-if="form.errors.isbn" class="mt-2 text-xs font-bold text-rose-500">{{ form.errors.isbn }}</div>
+                            </div>
+                            <div>
+                                <label for="pages" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">عدد الصفحات</label>
+                                <TextInput
+                                    id="pages"
+                                    type="number"
+                                    class="w-full"
+                                    v-model="form.pages"
+                                />
+                            </div>
+                            <div>
+                                <label for="published_year" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">سنة النشر</label>
+                                <TextInput
+                                    id="published_year"
+                                    type="number"
+                                    class="w-full"
+                                    v-model="form.published_year"
+                                />
+                            </div>
+                            <div>
+                                <label for="edition_number" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">رقم الطبعة</label>
+                                <TextInput
+                                    id="edition_number"
+                                    type="number"
+                                    class="w-full"
+                                    v-model="form.edition_number"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div>
+                            <label for="description" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">الوصف</label>
+                            <textarea
+                                id="description"
+                                rows="4"
+                                class="block w-full border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-black focus:ring-4 focus:ring-indigo-500/10 rounded-2xl text-sm font-medium transition-all bg-gray-50 dark:bg-white/5"
+                                v-model="form.description"
+                            ></textarea>
+                            <div v-if="form.errors.description" class="mt-2 text-xs font-bold text-rose-500">{{ form.errors.description }}</div>
+                        </div>
+
+                        <!-- Files -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="cover" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">تحديث صورة الغلاف (اختياري)</label>
+                                <div class="relative group">
+                                     <input
+                                        id="cover"
+                                        type="file"
+                                        class="block w-full text-xs text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-all bg-gray-50 dark:bg-white/5 rounded-2xl p-2 cursor-pointer"
+                                        @input="form.cover = $event.target.files[0]"
+                                        accept="image/*"
+                                    />
+                                </div>
+                                <div v-if="form.errors.cover" class="mt-2 text-xs font-bold text-rose-500">{{ form.errors.cover }}</div>
                             </div>
 
                             <div>
-                                <label for="file" class="block text-sm font-medium text-gray-700 dark:text-gray-300">تحديث ملف الكتاب (PDF - اختياري)</label>
+                                <label for="file" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">تحديث ملف الكتاب (PDF - اختياري)</label>
                                 <input
                                     id="file"
-                                    name="file"
                                     type="file"
-                                    class="mt-1 block w-full text-sm text-gray-500 hover:file:bg-indigo-100 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 transition"
+                                    class="block w-full text-xs text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-all bg-gray-50 dark:bg-white/5 rounded-2xl p-2 cursor-pointer"
                                     @input="form.file = $event.target.files[0]"
                                     accept="application/pdf"
                                 />
-                                <div v-if="form.errors.file" class="mt-2 text-sm text-red-600">{{ form.errors.file }}</div>
-                                <progress v-if="form.progress" :value="form.progress.percentage" max="100" class="w-full mt-2 h-2 rounded bg-gray-200">
+                                <div v-if="form.errors.file" class="mt-2 text-xs font-bold text-rose-500">{{ form.errors.file }}</div>
+                                <progress v-if="form.progress" :value="form.progress.percentage" max="100" class="w-full mt-4 h-1.5 rounded-full bg-gray-100 [&::-webkit-progress-value]:bg-indigo-600 [&::-moz-progress-bar]:bg-indigo-600 overflow-hidden">
                                     {{ form.progress.percentage }}%
                                 </progress>
                             </div>
+                        </div>
 
-                            <div class="flex items-center justify-end">
-                                <Link :href="route('books.show', book.slug)" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 underline decoration-none mr-4">
-                                    إلغاء
-                                </Link>
-                                <button
-                                    type="submit"
-                                    class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring ring-indigo-300 disabled:opacity-25 transition ease-in-out duration-150"
-                                    :disabled="form.processing"
-                                >
-                                    تحديث البيانات
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                        <div class="flex items-center justify-end gap-4 pt-6">
+                            <Link :href="route('books.show', book.slug)" class="text-sm font-bold text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
+                                إلغاء
+                            </Link>
+                            <PrimaryButton
+                                type="submit"
+                                :class="{ 'opacity-25': form.processing }"
+                                :disabled="form.processing"
+                            >
+                                تحديث البيانات
+                            </PrimaryButton>
+                        </div>
+                    </form>
+                </Card>
             </div>
         </div>
     </AuthenticatedLayout>
 </template>
+

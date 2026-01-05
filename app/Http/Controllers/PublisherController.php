@@ -50,7 +50,7 @@ class PublisherController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('Publishers/Create');
     }
 
     /**
@@ -58,38 +58,75 @@ class PublisherController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'country_code' => 'nullable|string|max:3',
+            'logo' => 'nullable|image|max:2048',
+        ]);
+
+        $data['slug'] = \Illuminate\Support\Str::slug($data['name']);
+        
+        if ($request->hasFile('logo')) {
+            $data['logo_path'] = $request->file('logo')->store('logos', 'public');
+        }
+
+        Publisher::create($data);
+
+        return redirect()->route('publishers.index')
+            ->with('message', 'تم إنشاء دار النشر بنجاح');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Publisher $publisher)
     {
-        //
+        return Inertia::render('Publishers/Show', [
+            'publisher' => $publisher->loadCount(['books', 'videos', 'audios', 'manuscripts']),
+        ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Publisher $publisher)
     {
-        //
+        return Inertia::render('Publishers/Edit', [
+            'publisher' => $publisher,
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Publisher $publisher)
     {
-        //
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'country_code' => 'nullable|string|max:3',
+            'logo' => 'nullable|image|max:2048',
+        ]);
+
+        $data['slug'] = \Illuminate\Support\Str::slug($data['name']);
+        
+        if ($request->hasFile('logo')) {
+            $data['logo_path'] = $request->file('logo')->store('logos', 'public');
+        }
+
+        $publisher->update($data);
+
+        return redirect()->route('publishers.index')
+            ->with('message', 'تم تحديث دار النشر بنجاح');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Publisher $publisher)
     {
-        //
+        $publisher->delete();
+
+        return redirect()->route('publishers.index')
+            ->with('message', 'تم حذف دار النشر بنجاح');
     }
 }

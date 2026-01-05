@@ -1,6 +1,10 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import Card from '@/Components/Card.vue';
+import TextInput from '@/Components/TextInput.vue';
+import InputLabel from '@/Components/InputLabel.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
 
 const props = defineProps({
     author: Object,
@@ -23,82 +27,82 @@ const submit = () => {
 
     <AuthenticatedLayout title="تعديل بيانات المؤلف">
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="font-black text-2xl dark:text-white leading-tight">تعديل بيانات المؤلف</h2>
+            <div class="flex items-center gap-4">
+                <Link :href="route('authors.index')" class="w-10 h-10 rounded-xl bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                </Link>
+                <div>
+                    <h2 class="font-black text-2xl dark:text-white leading-tight">تعديل بيانات المؤلف</h2>
+                    <p class="text-xs text-gray-400 font-bold mt-1">تحديث معلومات وبيانات المؤلف</p>
+                </div>
             </div>
         </template>
 
-        <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-[#0a0a0a] overflow-hidden shadow-sm sm:rounded-[2.5rem] border border-gray-100 dark:border-white/5">
-                <div class="p-8 sm:p-12">
-                    <form @submit.prevent="submit" class="space-y-6 max-w-2xl">
+        <div class="max-w-3xl mx-auto py-8">
+            <Card>
+                <form @submit.prevent="submit" class="space-y-6">
+                    <div>
+                        <InputLabel for="name" value="اسم المؤلف" />
+                        <TextInput
+                            id="name"
+                            v-model="form.name"
+                            type="text"
+                            class="mt-1 block w-full"
+                            placeholder="مثال: ابن تيمية"
+                            required
+                            autofocus
+                        />
+                        <div v-if="form.errors.name" class="text-red-500 text-sm mt-1 font-bold">{{ form.errors.name }}</div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6">
                         <div>
-                            <label for="name" class="block font-medium text-sm text-gray-700 dark:text-gray-300">اسم المؤلف</label>
-                            <input
-                                id="name"
-                                name="name"
-                                v-model="form.name"
-                                type="text"
-                                class="mt-1 block w-full border-gray-300 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-2xl shadow-sm"
-                                required
-                                autofocus
+                            <InputLabel for="birth_year" value="سنة الميلاد (هجري)" />
+                            <TextInput
+                                id="birth_year"
+                                v-model="form.birth_year"
+                                type="number"
+                                class="mt-1 block w-full"
+                                placeholder="مثال: 661"
                             />
-                            <div v-if="form.errors.name" class="text-red-500 text-sm mt-1">{{ form.errors.name }}</div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-6">
-                            <div>
-                                <label for="birth_year" class="block font-medium text-sm text-gray-700 dark:text-gray-300">سنة الميلاد</label>
-                                <input
-                                    id="birth_year"
-                                    name="birth_year"
-                                    v-model="form.birth_year"
-                                    type="number"
-                                    class="mt-1 block w-full border-gray-300 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-2xl shadow-sm"
-                                />
-                                <div v-if="form.errors.birth_year" class="text-red-500 text-sm mt-1">{{ form.errors.birth_year }}</div>
-                            </div>
-
-                            <div>
-                                <label for="death_year" class="block font-medium text-sm text-gray-700 dark:text-gray-300">سنة الوفاة (اختياري)</label>
-                                <input
-                                    id="death_year"
-                                    name="death_year"
-                                    v-model="form.death_year"
-                                    type="number"
-                                    class="mt-1 block w-full border-gray-300 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-2xl shadow-sm"
-                                />
-                                <div v-if="form.errors.death_year" class="text-red-500 text-sm mt-1">{{ form.errors.death_year }}</div>
-                            </div>
+                            <div v-if="form.errors.birth_year" class="text-red-500 text-sm mt-1 font-bold">{{ form.errors.birth_year }}</div>
                         </div>
 
                         <div>
-                            <label for="bio" class="block font-medium text-sm text-gray-700 dark:text-gray-300">نبذة عن المؤلف</label>
-                            <textarea
-                                id="bio"
-                                name="bio"
-                                v-model="form.bio"
-                                class="mt-1 block w-full border-gray-300 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-2xl shadow-sm min-h-[150px]"
-                            ></textarea>
-                            <div v-if="form.errors.bio" class="text-red-500 text-sm mt-1">{{ form.errors.bio }}</div>
+                            <InputLabel for="death_year" value="سنة الوفاة (هجري)" :optional="true" />
+                            <TextInput
+                                id="death_year"
+                                v-model="form.death_year"
+                                type="number"
+                                class="mt-1 block w-full"
+                                placeholder="مثال: 728"
+                            />
+                            <div v-if="form.errors.death_year" class="text-red-500 text-sm mt-1 font-bold">{{ form.errors.death_year }}</div>
                         </div>
+                    </div>
 
-                        <div class="flex items-center gap-4 pt-4">
-                            <button
-                                type="submit"
-                                :class="{ 'opacity-25': form.processing }"
-                                :disabled="form.processing"
-                                class="inline-flex items-center px-6 py-3 bg-indigo-600 border border-transparent rounded-2xl font-black text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                            >
-                                حفظ التغييرات
-                            </button>
-                            <Link :href="route('authors.index')" class="text-sm font-bold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                                إلغاء
-                            </Link>
-                        </div>
-                    </form>
-                </div>
-            </div>
+                    <div>
+                        <InputLabel for="bio" value="نبذة عن المؤلف" :optional="true" />
+                        <textarea
+                            id="bio"
+                            v-model="form.bio"
+                            class="mt-1 block w-full border-gray-200 dark:border-white/10 dark:bg-black/20 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl shadow-sm text-sm min-h-[150px]"
+                            placeholder="اكتب نبذة مختصرة عن حياة المؤلف ومسيرته العلمية..."
+                        ></textarea>
+                        <div v-if="form.errors.bio" class="text-red-500 text-sm mt-1 font-bold">{{ form.errors.bio }}</div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-4 pt-4 border-t border-gray-100 dark:border-white/5">
+                        <Link :href="route('authors.index')" class="text-xs font-black text-gray-400 hover:text-gray-600 transition-colors">
+                            إلغاء
+                        </Link>
+                        <PrimaryButton :disabled="form.processing" class="!bg-emerald-600 hover:!bg-emerald-500 !shadow-emerald-500/20">
+                            <span v-if="form.processing">جاري الحفظ...</span>
+                            <span v-else>حفظ التغييرات</span>
+                        </PrimaryButton>
+                    </div>
+                </form>
+            </Card>
         </div>
     </AuthenticatedLayout>
 </template>
