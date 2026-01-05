@@ -290,22 +290,25 @@ class SeedRealisticData extends Command
                     $entity->bookers()->attach($bookers->random()->id, ['role' => $role]);
                 }
 
-                // Create Version
-                Version::create([
-                    'versionable_id' => $entity->id,
-                    'versionable_type' => $type, // Matches morphMap
-                    'publisher_id' => $publishers->random()->id,
-                    'isbn' => ($type === 'book') ? Str::random(13) : null,
-                    'pages' => ($type === 'book' || $type === 'manuscript') ? rand(100, 1000) : null,
-                    'published_year' => rand(1900, 2024),
-                    'edition_number' => rand(1, 5),
-                    'format' => match ($type) {
-                        'book', 'manuscript' => 'pdf',
-                        'audio' => 'mp3',
-                        'video' => 'mp4',
-                    },
-                    'file_path' => null, // Placeholder
-                ]);
+                // Create 3 Versions for each entity (Manuscripts, Audio, etc.)
+                for ($v = 1; $v <= 3; $v++) {
+                    Version::create([
+                        'versionable_id' => $entity->id,
+                        'versionable_type' => $type, // Matches morphMap
+                        'publisher_id' => $publishers->random()->id,
+                        'title' => ($type === 'audio' || $type === 'video') ? "تسجيل {$v}" : "الطبعة {$v}",
+                        'isbn' => ($type === 'book') ? Str::random(13) : null,
+                        'pages' => ($type === 'book' || $type === 'manuscript') ? rand(100, 1000) : null,
+                        'published_year' => rand(1900, 2024),
+                        'edition_number' => $v,
+                        'format' => match ($type) {
+                            'book', 'manuscript' => 'pdf',
+                            'audio' => 'mp3',
+                            'video' => 'mp4',
+                        },
+                        'file_path' => null, // Placeholder
+                    ]);
+                }
 
                 // Relationships (Every entity MUST have these)
                 $entity->categories()->attach($categories->random(1)->pluck('id'));

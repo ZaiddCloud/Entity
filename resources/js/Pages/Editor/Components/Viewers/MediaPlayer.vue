@@ -1,11 +1,12 @@
 <script setup>
 import { ref, computed } from 'vue'
+import { router } from '@inertiajs/vue3'
 
 defineOptions({
   name: 'MediaPlayer'
 })
 
-const props = defineProps(['resource', 'mode'])
+const props = defineProps(['resource', 'mode', 'hierarchy'])
 
 const isPlaying = ref(false)
 const currentTime = ref(0)
@@ -30,6 +31,10 @@ const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60)
     const secs = Math.floor(seconds % 60)
     return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
+const gotoSegment = (segment) => {
+    router.visit(route('editor.show', { type: props.mode, slug: segment.slug }))
 }
 
 const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2]
@@ -132,6 +137,30 @@ const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2]
                         <p class="text-[9px] text-slate-500 mb-1 uppercase font-bold text-center">الختم الزمني</p>
                         <button class="text-[10px] text-blue-400 hover:text-blue-300 font-bold">إدراج [02:42]</button>
                     </div>
+                </div>
+            </div>
+
+            <!-- Segments Index (Hierarchy) -->
+            <div v-if="hierarchy && hierarchy.length > 0" class="mt-10 p-4 border-t border-slate-800">
+                <h4 class="text-[10px] text-slate-500 uppercase font-bold mb-3">فهرس المقاطع</h4>
+                <div class="space-y-1">
+                    <button 
+                        v-for="item in hierarchy" 
+                        :key="item._id"
+                        @click="gotoSegment(item)"
+                        class="w-full flex items-center gap-3 p-2 rounded-lg text-left transition-all group"
+                        :class="[
+                            $page.url.includes(item.slug) 
+                                ? 'bg-blue-500/10 border border-blue-500/20 text-blue-400' 
+                                : 'hover:bg-slate-800/50 text-slate-400 hover:text-white border border-transparent'
+                        ]"
+                    >
+                        <div class="w-6 h-6 rounded flex items-center justify-center bg-slate-900 text-[10px]">
+                            {{ item.order }}
+                        </div>
+                        <span class="text-[10px] font-medium truncate flex-1">{{ item.title }}</span>
+                        <i v-if="$page.url.includes(item.slug)" class="fas fa-play text-[8px] animate-pulse"></i>
+                    </button>
                 </div>
             </div>
 

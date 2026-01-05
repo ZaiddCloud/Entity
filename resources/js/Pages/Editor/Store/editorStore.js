@@ -117,13 +117,28 @@ export const useEditorStore = defineStore('editor', () => {
         isSaving.value = true
         try {
             console.log('Saving to server...', content.value)
-            lastSaved.value = new Date()
-            if (currentContentNode.value) {
-                currentContentNode.value.content = content.value
+
+            // Construct route manually or use Ziggy if available globally
+            // route('editor.save', {type: editorMode.value, slug: currentContentNode.value.slug})
+            // Since we are inside store, let's assume valid data
+            const type = editorMode.value
+            const slug = currentContentNode.value.slug
+
+            const response = await axios.post(`/editor/${type}/${slug}/save`, {
+                content: content.value
+            })
+
+            if (response.data.last_saved) {
+                lastSaved.value = new Date(response.data.last_saved)
+                if (currentContentNode.value) {
+                    currentContentNode.value.content = content.value
+                }
+                return true
             }
-            return true
+            return false
         } catch (error) {
             console.error('Save failed', error)
+            alert('فشل الحفظ: ' + (error.response?.data?.message || error.message))
             return false
         } finally {
             isSaving.value = false

@@ -40,6 +40,35 @@ class UnifiedEditorController extends Controller
         $data = $this->contentService->prepareEditorData($entity, $slug);
 
         return Inertia::render('Editor/EditorPage', $data);
+    } // Added missing brace
+
+    /**
+     * حفظ المحتوى: /editor/{type}/{slug}/save
+     */
+    public function save(Request $request, string $type, string $slug)
+    {
+        $request->validate([
+            'content' => 'required', // JSON or Array
+        ]);
+
+        $entity = $this->resolveEntity($type, $slug);
+        Gate::authorize('update', $entity); // Ensure user can edit this entity
+
+        // Update the specific content node
+        $node = \App\Models\EntityContent::where('entity_type', $type)
+            ->where('slug', $slug)
+            ->firstOrFail();
+
+        $node->update([
+            'content' => $request->content,
+            'last_updated_at' => now(),
+            'last_editor_id' => $request->user()->id
+        ]);
+
+        return response()->json([
+            'message' => 'تم الحفظ بنجاح',
+            'last_saved' => now()->toIso8601String()
+        ]);
     }
 
     /**

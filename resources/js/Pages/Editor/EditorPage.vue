@@ -40,6 +40,8 @@ const editorRef = ref(null)
 // Static imports for stability in tests and simple view
 import ManuscriptViewer from './Components/Viewers/ManuscriptViewer.vue'
 import MediaPlayer from './Components/Viewers/MediaPlayer.vue'
+import AudioSegmentEditor from './Components/Content/AudioSegmentEditor.vue'
+import VideoSceneEditor from './Components/Content/VideoSceneEditor.vue'
 
 onMounted(() => {
     // Initialize polymorphic state
@@ -91,6 +93,7 @@ const handleToolbarCommand = ({ command, value }) => {
                 v-else-if="['audio', 'video'].includes(store.editorMode)"
                 :mode="store.editorMode"
                 :resource="store.resourceData"
+                :hierarchy="store.hierarchy"
             />
         </template>
 
@@ -98,9 +101,18 @@ const handleToolbarCommand = ({ command, value }) => {
         <!-- Main Paper Sheet -->
         <div class="bg-white shadow-xl min-h-[1100px] border border-gray-200 rounded-sm overflow-hidden mb-20 relative">
             <TiptapEditor 
+                v-if="store.editorMode === 'book' || store.editorMode === 'manuscript'"
                 ref="editorRef"
                 v-model="store.content"
                 @set-editor="store.setEditor"
+            />
+            <AudioSegmentEditor
+                v-else-if="store.editorMode === 'audio'"
+                v-model="store.content"
+            />
+            <VideoSceneEditor
+                v-else-if="store.editorMode === 'video'"
+                v-model="store.content"
             />
         </div>
     </EditorLayout>

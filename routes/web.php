@@ -45,6 +45,7 @@ Route::middleware(['auth'])->group(function () {
     // Unified Smart Editor Routes
     Route::get('/editor/resume', [App\Http\Controllers\UnifiedEditorController::class, 'resume'])->name('editor.resume');
     Route::get('/editor/{type}/{slug}', [App\Http\Controllers\UnifiedEditorController::class, 'show'])->name('editor.show');
+    Route::post('/editor/{type}/{slug}/save', [App\Http\Controllers\UnifiedEditorController::class, 'save'])->name('editor.save');
 
     // Editor Test Route
     Route::get('/editor-test', [App\Http\Controllers\EditorTestController::class, 'index'])->name('editor.test');

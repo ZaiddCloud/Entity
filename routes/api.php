@@ -40,10 +40,6 @@ Route::middleware(['auth:sanctum'])->name('api.')->group(function () {
     // Order Management
     Route::post('books/{book}/contents/reorder', [App\Http\Controllers\Api\BookContentOrderController::class, 'update'])->name('books.contents.reorder');
 
-    // Book Editor API
-    Route::post('book-children/{child}/save', [App\Http\Controllers\Api\BookEditorController::class, 'save'])->name('book-children.save');
-    Route::post('book-children/{child}/restore/{versionIndex}', [App\Http\Controllers\Api\BookEditorController::class, 'restore'])->name('book-children.restore');
-
     // Export Engine
     Route::get('books/{book}/export/{format}', [App\Http\Controllers\Api\BookExportController::class, 'exportBook'])->name('books.export');
     Route::get('book-children/{child}/export/{format}', [App\Http\Controllers\Api\BookExportController::class, 'exportChild'])->name('book-children.export');
