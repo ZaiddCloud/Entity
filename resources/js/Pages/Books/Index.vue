@@ -11,7 +11,6 @@
                         <p class="text-xs text-gray-400 font-bold mt-1">تصفح وإدارة كافة المخطوطات والكتب المسجلة</p>
                     </div>
                 </div>
-                <!-- New Component: PrimaryButton -->
                 <Link :href="route('books.create')">
                     <PrimaryButton>إضافة عمل جديد</PrimaryButton>
                 </Link>
@@ -20,14 +19,12 @@
 
         <div class="space-y-8">
             <!-- Search & Filters -->
-            <!-- New Component: Card -->
             <Card>
                 <div class="flex flex-wrap gap-4 items-center">
                     <div class="flex-1 min-w-[300px] relative group">
                         <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                         </div>
-                        <!-- New Component: TextInput -->
                         <TextInput
                             v-model="search"
                             id="book-search-input"
@@ -38,7 +35,6 @@
                     
                     <div class="flex items-center gap-3">
                         <div class="w-48">
-                            <!-- New Component: SelectInput -->
                             <SelectInput
                                 v-model="category"
                                 :options="categories"
@@ -47,7 +43,6 @@
                         </div>
 
                         <div class="w-48">
-                            <!-- New Component: SelectInput -->
                             <SelectInput
                                 v-model="tag"
                                 :options="tags"
@@ -55,7 +50,6 @@
                             />
                         </div>
 
-                        <!-- New Component: IconButton -->
                         <IconButton
                             @click="search = ''; category = undefined; tag = undefined"
                             color="rose"
@@ -68,65 +62,57 @@
             </Card>
 
             <!-- Table View -->
-            <!-- New Component: Card -->
-            <Card class="!p-0 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-100 dark:divide-white/5">
-                        <thead class="bg-gray-50/50 dark:bg-white/2">
-                            <tr>
-                                <th scope="col" class="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">الرقم التسلسلي</th>
-                                <th scope="col" class="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">عنوان العمل</th>
-                                <th scope="col" class="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">المؤلف</th>
-                                <th scope="col" class="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">الأوسمة</th>
-                                <th scope="col" class="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-50 dark:divide-white/5">
-                            <tr v-for="book in books.data" :key="book.id" class="group hover:bg-gray-50/50 dark:hover:bg-white/2 transition-colors">
-                                <td class="px-8 py-6 whitespace-nowrap text-sm font-black font-mono text-gray-300 dark:text-gray-600 group-hover:text-indigo-500 transition-colors">
-                                    {{ book.formatted_serial_number }}
-                                </td>
-                                <td class="px-8 py-6 whitespace-nowrap">
-                                    <div class="text-sm font-black text-gray-900 dark:text-white">{{ book.title }}</div>
-                                    <div class="text-[10px] text-gray-400 font-bold mt-1 uppercase tracking-tighter">تاريخ الإضافة: {{ formatDate(book.created_at) }}</div>
-                                </td>
-                                <td class="px-8 py-6 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    <div v-if="book.authors && book.authors.length" class="flex flex-wrap gap-2">
-                                        <!-- New Component: Badge -->
-                                        <Badge v-for="author in book.authors" :key="author.id" color="gray">
-                                            {{ author.name }}
-                                        </Badge>
-                                    </div>
-                                    <span v-else class="text-gray-400 italic text-xs">غير محدد</span>
-                                </td>
-                                <td class="px-8 py-6 whitespace-nowrap">
-                                    <div class="flex flex-wrap gap-1">
-                                        <!-- New Component: Badge -->
-                                        <Badge v-for="tag in book.tags" :key="tag.id" color="blue">
-                                            #{{ tag.name }}
-                                        </Badge>
-                                    </div>
-                                </td>
-                                <td class="px-8 py-6 whitespace-nowrap text-left text-sm font-medium">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <!-- New Component: IconButton -->
-                                        <IconButton :href="route('books.show', book.slug)" color="indigo" title="عرض التفاصيل">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                        </IconButton>
-                                        <IconButton :href="route('books.edit', book.slug)" color="emerald" title="تعديل">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                        </IconButton>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <!-- Pagination -->
-                <div class="px-8 py-6 bg-gray-50/50 dark:bg-white/2 border-t border-gray-100 dark:border-white/5">
+            <Table>
+                <TableHead>
+                    <TableHeaderCell>الرقم التسلسلي</TableHeaderCell>
+                    <TableHeaderCell>عنوان العمل</TableHeaderCell>
+                    <TableHeaderCell>المؤلف</TableHeaderCell>
+                    <TableHeaderCell>الأوسمة</TableHeaderCell>
+                    <TableHeaderCell align="left">الإجراءات</TableHeaderCell>
+                </TableHead>
+                <TableBody>
+                    <TableRow v-for="book in books.data" :key="book.id">
+                        <TableCell>
+                            <span class="font-black font-mono text-gray-300 dark:text-gray-600 group-hover:text-indigo-500 transition-colors">
+                                {{ book.formatted_serial_number }}
+                            </span>
+                        </TableCell>
+                        <TableCell>
+                            <div class="font-black text-gray-900 dark:text-white">{{ book.title }}</div>
+                            <div class="text-[10px] text-gray-400 font-bold mt-1 uppercase tracking-tighter">تاريخ الإضافة: {{ formatDate(book.created_at) }}</div>
+                        </TableCell>
+                        <TableCell>
+                            <div v-if="book.authors && book.authors.length" class="flex flex-wrap gap-2">
+                                <Badge v-for="author in book.authors" :key="author.id" color="gray">
+                                    {{ author.name }}
+                                </Badge>
+                            </div>
+                            <span v-else class="text-gray-400 italic text-xs">غير محدد</span>
+                        </TableCell>
+                        <TableCell>
+                            <div class="flex flex-wrap gap-1">
+                                <Badge v-for="tag in book.tags" :key="tag.id" color="blue">
+                                    #{{ tag.name }}
+                                </Badge>
+                            </div>
+                        </TableCell>
+                        <TableCell class="text-left">
+                            <div class="flex items-center justify-end gap-2">
+                                <IconButton :href="route('books.show', book.slug)" color="indigo" title="عرض التفاصيل">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                </IconButton>
+                                <IconButton :href="route('books.edit', book.slug)" color="emerald" title="تعديل">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                </IconButton>
+                            </div>
+                        </TableCell>
+                    </TableRow>
+                </TableBody>
+                
+                <template #pagination>
                     <Pagination :links="books.links" />
-                </div>
-            </Card>
+                </template>
+            </Table>
         </div>
     </AuthenticatedLayout>
 </template>
@@ -141,6 +127,14 @@ import Card from '@/Components/Card.vue';
 import Badge from '@/Components/Badge.vue';
 import IconButton from '@/Components/IconButton.vue';
 
+// Table Components
+import Table from '@/Components/Table/Table.vue';
+import TableHead from '@/Components/Table/TableHead.vue';
+import TableBody from '@/Components/Table/TableBody.vue';
+import TableRow from '@/Components/Table/TableRow.vue';
+import TableHeaderCell from '@/Components/Table/TableHeaderCell.vue';
+import TableCell from '@/Components/Table/TableCell.vue';
+
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import debounce from 'lodash/debounce';
@@ -150,11 +144,12 @@ const props = defineProps({
     filters: Object,
     categories: Array,
     tags: Array,
+    // Add authors prop if passed from controller, otherwise handle locally
 });
 
-const search = ref(props.filters.search);
-const category = ref(props.filters.category);
-const tag = ref(props.filters.tag);
+const search = ref(props.filters?.search || '');
+const category = ref(props.filters?.category || '');
+const tag = ref(props.filters?.tag || '');
 
 watch([search, category, tag], debounce(() => {
     router.get(route('books.index'), {
@@ -175,4 +170,5 @@ const formatDate = (dateString) => {
     });
 };
 </script>
+
 
