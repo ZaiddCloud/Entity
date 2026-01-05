@@ -1,5 +1,5 @@
 <template>
-    <div class="flex flex-col h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans" dir="rtl">
+    <div class="flex flex-col h-screen bg-amber-50/30 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans" dir="rtl">
         <!-- Top Navigation -->
         <header class="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-6 shadow-sm z-20">
             <div class="flex items-center gap-4">
@@ -9,8 +9,7 @@
                     </svg>
                 </Link>
                 <div>
-                    <h1 class="text-xl font-bold text-slate-800 dark:text-slate-100">{{ book.title }}</h1>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">جاري القراءة...</p>
+                    <h1 class="text-xl font-bold text-slate-800 dark:text-slate-100 font-serif">{{ book.title }}</h1>
                 </div>
             </div>
 
@@ -18,31 +17,21 @@
                 <div class="h-6 w-px bg-slate-200 mx-2"></div>
                 <span class="text-sm font-medium text-slate-600">المحقق: {{"غير محدد"}}</span>
                 <div class="h-6 w-px bg-slate-200 mx-2"></div>
-                <button
+                <!-- Edit Button: Redirects to the Unified Editor -->
+                <Link
                     v-if="currentChapter"
-                    @click="showEditor = true"
-                    class="btn-secondary px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2"
+                    :href="route('editor.show', { type: 'book', slug: currentChapter.id })" 
+                    class="btn-secondary px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 text-indigo-600 hover:bg-indigo-50 transition-colors"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                     تعديل
-                </button>
+                </Link>
             </div>
         </header>
 
         <div class="flex flex-1 overflow-hidden relative">
-            <!-- Full Editor Workspace Overlay -->
-            <transition name="editor-fade">
-                <EditorContainer
-                    v-if="showEditor"
-                    :title="currentChapter.title"
-                    :type="currentChapter.type"
-                    :initial-content="currentChapter.content_blocks"
-                    @close="showEditor = false"
-                    @save="handleSave"
-                />
-            </transition>
             <!-- Sidebar: Hierarchy -->
             <aside
                 class="w-80 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 overflow-y-auto transition-all duration-300 z-10"
@@ -86,22 +75,15 @@
                 </div>
 
                 <nav class="px-2 pb-10">
-                    <Draggable
-                        v-model="rootItems"
-                        item-key="id"
-                        group="hierarchy"
-                        ghost-class="ghost"
-                        @end="onRootDragEnd"
-                    >
-                        <template #item="{ element }">
-                            <TreeItem
-                                :item="element"
-                                :all-items="hierarchy"
-                                :selected-id="selectedId"
-                                @select="selectChapter"
-                            />
-                        </template>
-                    </Draggable>
+                    <!-- Read-only Hierarchy Tree -->
+                    <div v-for="item in rootItems" :key="item.id">
+                         <TreeItem
+                            :item="item"
+                            :all-items="hierarchy"
+                            :selected-id="selectedId"
+                            @select="navigateToChapter"
+                        />
+                    </div>
                 </nav>
             </aside>
 
@@ -142,9 +124,14 @@
 
                             <!-- Content Blocks (Unified TipTap Reader) -->
                             <div class="reader-container prose prose-slate dark:prose-invert max-w-none prose-lg animate-in fade-in duration-1000">
-                                <editor-content v-if="readerEditor" :editor="readerEditor" />
+                                <!-- Reusing the Unified Editor Component in Read-Only Mode -->
+                                <TiptapEditor 
+                                    v-if="currentChapter.content_blocks"
+                                    :model-value="currentChapter.content_blocks"
+                                    :editable="false"
+                                />
 
-                                <div v-if="!contentBlocks.length" class="py-12 px-8 bg-amber-50/30 rounded-3xl border border-amber-100/50">
+                                <div v-if="!currentChapter.content_blocks || !currentChapter.content_blocks.length" class="py-12 px-8 bg-amber-50/30 rounded-3xl border border-amber-100/50">
                                     <div class="flex items-center gap-4 mb-6">
                                         <div class="p-3 bg-amber-100 rounded-2xl text-amber-700">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -206,19 +193,11 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, provide } from 'vue';
-import { Link, usePage, router } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import TreeItem from './TreeItem.vue';
-import BlockRenderer from './BlockRenderer.vue';
-import { debounce } from 'lodash';
-import Draggable from 'vuedraggable';
-import EditorContainer from '../Editor/EditorContainer.vue';
-import { Editor, EditorContent } from '@tiptap/vue-3';
-import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
-import LinkItem from '@tiptap/extension-link';
-import TextAlign from '@tiptap/extension-text-align';
-import { ScholarlyFootnote } from '../Editor/Extensions/ScholarlyFootnote';
+// Use the Unified Editor Engine
+import TiptapEditor from '../../Editor/Components/Content/TiptapEditor.vue';
 
 const props = defineProps({
     book: Object,
@@ -230,102 +209,36 @@ const props = defineProps({
 const hierarchy = ref(props.initialHierarchy);
 const selectedId = ref(props.childId);
 const currentChapter = ref(props.initialContent);
-const contentBlocks = computed(() => currentChapter.value?.content_blocks || []);
 const loading = ref(false);
 const sidebarCollapsed = ref(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
 const searchQuery = ref('');
-const showEditor = ref(false);
-const isSaving = ref(false);
-const readerEditor = ref(null);
 
 // Metadata for the current chapter/volume
 const metadata = computed(() => currentChapter.value?.metadata || {});
 
-const rootItems = computed({
-    get() {
-        const query = searchQuery.value.trim().toLowerCase();
-        if (query) {
-            return hierarchy.value.filter(item =>
-                item.title.toLowerCase().includes(query)
-            );
-        }
-        return hierarchy.value
-            .filter(item => !item.parent_id)
-            .sort((a, b) => (a.order || 0) - (b.order || 0));
-    },
-    set(newVal) {
-        // When root items are reordered, we need to update the order in the main hierarchy array
-        // This is a bit complex because hierarchy contains ALL items.
-        // We probably need to just trigger the backend update and then maybe refresh.
-        // Or simpler: We update the 'order' property of the items in 'hierarchy' matching these IDs.
-        newVal.forEach((item, index) => {
-            const hierarchyItem = hierarchy.value.find(h => h.id === item.id);
-            if (hierarchyItem) {
-                hierarchyItem.order = index;
-            }
-        });
+const rootItems = computed(() => {
+    const query = searchQuery.value.trim().toLowerCase();
+    if (query) {
+        return hierarchy.value.filter(item =>
+            item.title.toLowerCase().includes(query)
+        );
     }
+    return hierarchy.value
+        .filter(item => !item.parent_id)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
 });
 
-const onRootDragEnd = () => {
-    // 1. Get filtered root items in their new order
-    const updates = rootItems.value.map((child, index) => ({
-        id: child.id,
-        order: index,
-        parent_id: null
-    }));
-
-    // 2. Send to backend
-    axios.post(route('api.books.contents.reorder', props.book.slug), {
-        items: updates
-    }).then(() => {
-        console.log('Root order updated');
-    }).catch(err => {
-        console.error('Failed to adjust root order', err);
-    });
-};
-
-// Helper to determine if we are in search mode for the template
-const isSearching = computed(() => !!searchQuery.value.trim());
-
-// Watch for URL changes to load content without full page reload if possible
-// Though Inertia will handle the prop updates, we might want to sync local state
+// Watch for URL changes to sync state
 watch(() => props.childId, (newId) => {
     selectedId.value = newId;
-});
-
-const updateReaderEditor = () => {
-    if (readerEditor.value) {
-        readerEditor.value.commands.setContent({
-            type: 'doc',
-            content: currentChapter.value.content_blocks || []
-        });
-    } else {
-        readerEditor.value = new Editor({
-            content: {
-                type: 'doc',
-                content: currentChapter.value.content_blocks || []
-            },
-            extensions: [
-                StarterKit,
-                Underline,
-                LinkItem,
-                TextAlign.configure({ types: ['heading', 'paragraph'] }),
-                ScholarlyFootnote,
-            ],
-            editable: false,
-        });
+    if (newId && (!currentChapter.value || currentChapter.value.id !== newId)) {
+        fetchChapterContent(newId);
     }
-};
+});
 
 watch(() => props.initialContent, (newContent) => {
     if (newContent) {
         currentChapter.value = newContent;
-        updateReaderEditor();
-    } else if (!props.childId) {
-        currentChapter.value = null;
-        if (readerEditor.value) readerEditor.value.destroy();
-        readerEditor.value = null;
     }
 }, { immediate: true });
 
@@ -335,7 +248,6 @@ const fetchChapterContent = async (id) => {
     try {
         const response = await axios.get(route('book-contents.show', id));
         currentChapter.value = { id, ...response.data };
-        contentBlocks.value = response.data.content_blocks || [];
     } catch (error) {
         console.error("Error loading chapter content:", error);
     } finally {
@@ -343,24 +255,8 @@ const fetchChapterContent = async (id) => {
     }
 };
 
-const selectChapter = (item) => {
-    // This now just handles UI state if needed, navigation is in TreeItem
-    selectedId.value = item.id;
-};
-
-const handleSave = async (content) => {
-    isSaving.value = true;
-    try {
-        await axios.post(route('api.book-children.save', currentChapter.value.id), {
-            content_blocks: content
-        });
-        currentChapter.value.content_blocks = content;
-        // Optional: show toast
-    } catch (error) {
-        console.error("Save failed:", error);
-    } finally {
-        isSaving.value = false;
-    }
+const navigateToChapter = (item) => {
+    router.visit(route('books.reader', [props.book.slug, item.id]));
 };
 
 // Navigation Logic
@@ -407,8 +303,7 @@ const getTypeName = (type) => {
     return types[type] || 'قسم';
 };
 
-// Persistence Logic
-// Initialize from LocalStorage
+// Persistence Logic for Sidebar
 const getStoredExpanded = () => {
     if (typeof window === 'undefined') return new Set();
     const key = `book_reader_expanded_${props.book.id}`;
@@ -460,12 +355,6 @@ provide('sidebarContext', {
     toggleExpand,
     isExpanded
 });
-
-onMounted(() => {
-    if (sidebarCollapsed.value) {
-      // Ensure initial state is responsive
-    }
-});
 </script>
 
 <style scoped>
@@ -494,23 +383,6 @@ onMounted(() => {
     transform: translateY(-20px);
 }
 
-.editor-fade-enter-active,
-.editor-fade-leave-active {
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.editor-fade-enter-from,
-.editor-fade-leave-to {
-    opacity: 0;
-    transform: scale(0.95) translateY(10px);
-}
-
-.editor-view {
-    position: absolute;
-    inset: 0;
-    z-index: 100;
-}
-
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
     width: 6px;
@@ -519,28 +391,10 @@ onMounted(() => {
     background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
+    background: #cbd5e1;
     border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #cbd5e1;
-}
-
-.ghost {
-    background-color: #fef3c7; /* amber-100 */
-    opacity: 0.5;
-    border: 2px dashed #d97706; /* amber-600 */
-}
-
-:deep(.ProseMirror span[data-footnote]) {
-  vertical-align: super;
-  font-size: 0.75em;
-  font-weight: bold;
-  color: #b45309; /* amber-700 */
-  background: #fef3c7; /* amber-100 */
-  padding: 0 4px;
-  border-radius: 4px;
-  cursor: help;
-  margin: 0 2px;
+    background: #94a3b8;
 }
 </style>

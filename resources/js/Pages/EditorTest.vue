@@ -1,5 +1,5 @@
 <script setup>
-import { EditorPage } from '../Editor'
+import EditorPage from './Editor/EditorPage.vue'
 
 const props = defineProps({
     book: {
