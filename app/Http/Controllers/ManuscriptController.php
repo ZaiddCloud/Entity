@@ -27,20 +27,7 @@ class ManuscriptController extends Controller
     /**
      * عارض محرر المخطوطات (الموحد)
      */
-    public function show(Manuscript $manuscript): Response
-    {
-        Gate::authorize('view', $manuscript);
-        
-        $firstContent = \App\Models\EntityContent::where('entity_type', 'manuscript')
-            ->where('entity_id', $manuscript->id)
-            ->orderBy('order')
-            ->first();
-
-        return Inertia::render('Manuscripts/Show', [
-            'manuscript' => $manuscript->load(['tags', 'categories', 'comments.user', 'versions.publisher']),
-            'first_content_slug' => $firstContent?->slug,
-        ]);
-    }
+    
     public function index(Request $request): Response
     {
         Gate::authorize('viewAny', Manuscript::class);
@@ -82,6 +69,21 @@ class ManuscriptController extends Controller
             'authors' => \App\Models\Author::orderBy('name')->get(['id', 'name']),
             'publishers' => \App\Models\Publisher::orderBy('name')->get(['id', 'name']),
             'categories' => \App\Models\Category::orderBy('name')->get(['id', 'name']),
+        ]);
+    }
+
+    public function show(Manuscript $manuscript): Response
+    {
+        Gate::authorize('view', $manuscript);
+        
+        $firstContent = \App\Models\EntityContent::where('entity_type', 'manuscript')
+            ->where('entity_id', $manuscript->id)
+            ->orderBy('order')
+            ->first();
+
+        return Inertia::render('Manuscripts/Show', [
+            'manuscript' => $manuscript->load(['tags', 'categories', 'comments.user', 'versions.publisher']),
+            'first_content_slug' => $firstContent?->slug,
         ]);
     }
 
