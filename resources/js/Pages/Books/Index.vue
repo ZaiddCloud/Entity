@@ -11,73 +11,65 @@
                         <p class="text-xs text-gray-400 font-bold mt-1">تصفح وإدارة كافة المخطوطات والكتب المسجلة</p>
                     </div>
                 </div>
-                <Link
-                    :href="route('books.create')"
-                    class="w-full sm:w-auto px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black text-xs transition-all shadow-xl shadow-indigo-500/20 active:scale-95 text-center"
-                >
-                    إضافة عمل جديد
+                <!-- New Component: PrimaryButton -->
+                <Link :href="route('books.create')">
+                    <PrimaryButton>إضافة عمل جديد</PrimaryButton>
                 </Link>
             </div>
         </template>
 
         <div class="space-y-8">
             <!-- Search & Filters -->
-            <div class="bg-white dark:bg-[#0a0a0a] border border-gray-100 dark:border-white/5 rounded-[2.5rem] p-8 shadow-sm">
+            <!-- New Component: Card -->
+            <Card>
                 <div class="flex flex-wrap gap-4 items-center">
                     <div class="flex-1 min-w-[300px] relative group">
                         <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                         </div>
-                        <input
+                        <!-- New Component: TextInput -->
+                        <TextInput
                             v-model="search"
-                            type="text"
                             id="book-search-input"
-                            name="search"
                             placeholder="بحث عن عنوان، مؤلف، أو موضوع..."
-                            class="w-full pr-12 pl-4 py-3 bg-gray-50 dark:bg-white/5 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-black focus:ring-4 focus:ring-indigo-500/10 rounded-2xl text-sm font-medium transition-all"
+                            class="w-full pr-12 pl-4"
                         />
                     </div>
                     
                     <div class="flex items-center gap-3">
-                        <div class="w-48 relative">
-                            <select id="category-filter" name="category"
+                        <div class="w-48">
+                            <!-- New Component: SelectInput -->
+                            <SelectInput
                                 v-model="category"
-                                class="w-full pr-10 pl-4 py-3 bg-gray-50 dark:bg-white/5 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-black focus:ring-4 focus:ring-indigo-500/10 rounded-2xl text-xs font-bold transition-all appearance-none cursor-pointer"
-                            >
-                                <option :value="undefined">كل التصنيفات</option>
-                                <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-                            </select>
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                            </div>
+                                :options="categories"
+                                placeholder="كل التصنيفات"
+                            />
                         </div>
 
-                        <div class="w-48 relative text-right">
-                            <select id="tag-filter" name="tag"
+                        <div class="w-48">
+                            <!-- New Component: SelectInput -->
+                            <SelectInput
                                 v-model="tag"
-                                class="w-full pr-10 pl-4 py-3 bg-gray-50 dark:bg-white/5 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-black focus:ring-4 focus:ring-indigo-500/10 rounded-2xl text-xs font-bold transition-all appearance-none cursor-pointer"
-                            >
-                                <option :value="undefined">كل الوسوم</option>
-                                <option v-for="t in tags" :key="t.id" :value="t.id">{{ t.name }}</option>
-                            </select>
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                            </div>
+                                :options="tags"
+                                placeholder="كل الوسوم"
+                            />
                         </div>
 
-                        <button
+                        <!-- New Component: IconButton -->
+                        <IconButton
                             @click="search = ''; category = undefined; tag = undefined"
-                            class="p-3 text-gray-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-2xl transition-all"
+                            color="rose"
                             title="إعادة تعيين"
                         >
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                        </button>
+                        </IconButton>
                     </div>
                 </div>
-            </div>
+            </Card>
 
             <!-- Table View -->
-            <div class="bg-white dark:bg-[#0a0a0a] border border-gray-100 dark:border-white/5 rounded-[2.5rem] shadow-sm overflow-hidden">
+            <!-- New Component: Card -->
+            <Card class="!p-0 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-100 dark:divide-white/5">
                         <thead class="bg-gray-50/50 dark:bg-white/2">
@@ -100,27 +92,30 @@
                                 </td>
                                 <td class="px-8 py-6 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                     <div v-if="book.authors && book.authors.length" class="flex flex-wrap gap-2">
-                                        <span v-for="author in book.authors" :key="author.id" class="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs font-bold text-gray-600 dark:text-gray-300">
+                                        <!-- New Component: Badge -->
+                                        <Badge v-for="author in book.authors" :key="author.id" color="gray">
                                             {{ author.name }}
-                                        </span>
+                                        </Badge>
                                     </div>
                                     <span v-else class="text-gray-400 italic text-xs">غير محدد</span>
                                 </td>
                                 <td class="px-8 py-6 whitespace-nowrap">
                                     <div class="flex flex-wrap gap-1">
-                                        <span v-for="tag in book.tags" :key="tag.id" class="px-2 py-0.5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-md text-[10px] font-black">
+                                        <!-- New Component: Badge -->
+                                        <Badge v-for="tag in book.tags" :key="tag.id" color="blue">
                                             #{{ tag.name }}
-                                        </span>
+                                        </Badge>
                                     </div>
                                 </td>
                                 <td class="px-8 py-6 whitespace-nowrap text-left text-sm font-medium">
                                     <div class="flex items-center justify-end gap-2">
-                                        <Link :href="route('books.show', book.slug)" class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl transition-all" title="عرض التفاصيل">
+                                        <!-- New Component: IconButton -->
+                                        <IconButton :href="route('books.show', book.slug)" color="indigo" title="عرض التفاصيل">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                        </Link>
-                                        <Link :href="route('books.edit', book.slug)" class="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl transition-all" title="تعديل">
+                                        </IconButton>
+                                        <IconButton :href="route('books.edit', book.slug)" color="emerald" title="تعديل">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                        </Link>
+                                        </IconButton>
                                     </div>
                                 </td>
                             </tr>
@@ -131,7 +126,7 @@
                 <div class="px-8 py-6 bg-gray-50/50 dark:bg-white/2 border-t border-gray-100 dark:border-white/5">
                     <Pagination :links="books.links" />
                 </div>
-            </div>
+            </Card>
         </div>
     </AuthenticatedLayout>
 </template>
@@ -139,6 +134,13 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+import TextInput from '@/Components/TextInput.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import Card from '@/Components/Card.vue';
+import Badge from '@/Components/Badge.vue';
+import IconButton from '@/Components/IconButton.vue';
+
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import debounce from 'lodash/debounce';
@@ -173,3 +175,4 @@ const formatDate = (dateString) => {
     });
 };
 </script>
+
