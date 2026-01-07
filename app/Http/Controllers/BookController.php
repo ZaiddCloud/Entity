@@ -122,9 +122,8 @@ class BookController extends Controller
     public function show(Book $book): Response
     {
         Gate::authorize('view', $book);
-        
-        $firstContent = \App\Models\EntityContent::where('entity_type', 'book')
-            ->where('entity_id', $book->id)
+
+        $firstContent = \App\Models\BookChild::where('book_id', $book->id)
             ->orderBy('order')
             ->first();
 

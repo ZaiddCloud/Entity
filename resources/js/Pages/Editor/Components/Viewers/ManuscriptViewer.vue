@@ -111,7 +111,14 @@ onUnmounted(() => {
     <div class="h-full bg-gray-50 flex flex-col border-l border-gray-200 overflow-hidden">
         <!-- Versions Toolbar -->
         <div class="flex items-center justify-between border-b border-gray-200 bg-white px-2">
-            <div class="flex overflow-x-auto no-scrollbar">
+            <div class="flex items-center gap-4 overflow-hidden">
+                <!-- Manuscript Title -->
+                <div v-if="resource?.title" class="text-sm font-bold text-gray-700 whitespace-nowrap border-l pl-4 ml-2 my-2">
+                    <i class="fas fa-book-open text-gray-400 ml-2"></i>
+                    {{ resource.title }}
+                </div>
+
+                <div class="flex overflow-x-auto no-scrollbar">
                 <button 
                     v-for="(version, index) in versions" 
                     :key="index"
@@ -125,7 +132,9 @@ onUnmounted(() => {
                 >
                     {{ version.title }}
                 </button>
+
             </div>
+            </div> <!-- Closing the gap-4 wrapper -->
             
             <!-- Compare Mode Toggle -->
             <div class="flex items-center gap-2 border-r border-gray-100 pr-3 mr-1">
@@ -150,7 +159,9 @@ onUnmounted(() => {
                     <!-- Version Header -->
                     <div class="px-2 py-1 bg-gray-50 border-b border-gray-100 flex justify-between items-center shrink-0">
                         <div class="flex items-center gap-2 overflow-hidden">
-                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tight truncate">{{ version.title }}</span>
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tight truncate">
+                                {{ resource?.title }} - {{ version.title }}
+                            </span>
                             <!-- Simplified Shot Number Input -->
                             <div class="flex items-center bg-white border border-gray-200 rounded px-1 h-5 hover:border-blue-200 transition-colors">
                                 <input 
@@ -169,7 +180,14 @@ onUnmounted(() => {
                     <!-- Viewer Area -->
                     <div class="flex-1 flex flex-col items-center justify-center p-4">
                         <div class="w-full h-full flex flex-col items-center justify-center">
-                            <div class="w-full max-w-lg bg-gray-50/50 border border-gray-100 rounded-sm p-4 text-center">
+                            <!-- Image Renderer -->
+                            <div v-if="version.url && (version.url.endsWith('.jpg') || version.url.endsWith('.jpeg') || version.url.endsWith('.png') || version.url.endsWith('.webp'))" 
+                                 class="w-full h-full flex items-center justify-center bg-gray-900 rounded-sm overflow-hidden relative">
+                                <img :src="version.url" class="max-w-full max-h-full object-contain" alt="Manuscript Page" />
+                            </div>
+                            
+                            <!-- Placeholder / PDF Renderer -->
+                            <div v-else class="w-full max-w-lg bg-gray-50/50 border border-gray-100 rounded-sm p-4 text-center">
                                 <div class="aspect-[3/4] bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg mb-4">
                                     <div class="text-gray-400">
                                         <p class="text-[10px]">نسخة التحقيق: {{ version.title }}</p>

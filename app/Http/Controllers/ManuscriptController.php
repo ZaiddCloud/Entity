@@ -27,7 +27,7 @@ class ManuscriptController extends Controller
     /**
      * عارض محرر المخطوطات (الموحد)
      */
-    
+
     public function index(Request $request): Response
     {
         Gate::authorize('viewAny', Manuscript::class);
@@ -75,9 +75,8 @@ class ManuscriptController extends Controller
     public function show(Manuscript $manuscript): Response
     {
         Gate::authorize('view', $manuscript);
-        
-        $firstContent = \App\Models\EntityContent::where('entity_type', 'manuscript')
-            ->where('entity_id', $manuscript->id)
+
+        $firstContent = \App\Models\ManuscriptPage::where('manuscript_id', $manuscript->id)
             ->orderBy('order')
             ->first();
 

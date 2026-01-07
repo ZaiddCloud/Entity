@@ -17,7 +17,7 @@ use App\Models\Series;
 use App\Observers\EntityAuditObserver;
 use App\Observers\EntityCacheObserver;
 use App\Observers\EntityLifecycleObserver;
-use App\Observers\BookObserver;
+use App\Observers\EntityContentObserver;
 use App\Models\BookChild;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Event;
@@ -102,6 +102,7 @@ class AppServiceProvider extends ServiceProvider
         $lifecycleObserver = app(EntityLifecycleObserver::class);
         $auditObserver = app(EntityAuditObserver::class);
         $cacheObserver = app(EntityCacheObserver::class);
+        $contentObserver = app(EntityContentObserver::class);
 
         // قائمة الموديلات التي تحتاج observers
         $entityModels = [
@@ -116,14 +117,14 @@ class AppServiceProvider extends ServiceProvider
             $modelClass::observe($lifecycleObserver);
             $modelClass::observe($auditObserver);
             $modelClass::observe($cacheObserver);
+            $modelClass::observe($contentObserver);
         }
 
         // تسجيل cache observer فقط لـ Tag و Category
         Tag::observe($cacheObserver);
         Category::observe($cacheObserver);
 
-        // تسجيل BookObserver لمزامنة الحذف مع MongoDB
-        Book::observe(BookObserver::class);
+
     }
 
     /**

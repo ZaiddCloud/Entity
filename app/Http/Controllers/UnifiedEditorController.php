@@ -7,6 +7,11 @@ use App\Models\Audio;
 use App\Models\Video;
 use App\Models\Manuscript;
 use App\Models\Entity;
+use App\Models\BookChild;
+use App\Models\ManuscriptPage;
+use App\Models\AudioSegment;
+use App\Models\VideoSegment;
+use App\Models\EntityContent;
 use App\Services\EntityContentService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -45,6 +50,9 @@ class UnifiedEditorController extends Controller
     /**
      * حفظ المحتوى: /editor/{type}/{slug}/save
      */
+    /**
+     * حفظ المحتوى: /editor/{type}/{slug}/save
+     */
     public function save(Request $request, string $type, string $slug)
     {
         $request->validate([
@@ -52,16 +60,16 @@ class UnifiedEditorController extends Controller
         ]);
 
         $entity = $this->resolveEntity($type, $slug);
-        Gate::authorize('update', $entity); // Ensure user can edit this entity
+        Gate::authorize('update', $entity);
 
-        // Update the specific content node
-        $node = \App\Models\EntityContent::where('entity_type', $type)
-            ->where('slug', $slug)
-            ->firstOrFail();
+        // Update the specific content node using the specific model
+        $modelClass = $this->getContentModelClass($type);
+
+        $node = $modelClass::where('slug', $slug)->firstOrFail();
 
         $node->update([
             'content' => $request->content,
-            'last_updated_at' => now(),
+            'last_updated' => now(),
             'last_editor_id' => $request->user()->id
         ]);
 
@@ -82,9 +90,8 @@ class UnifiedEditorController extends Controller
         if (!$book)
             return redirect()->route('dashboard');
 
-        $node = \App\Models\EntityContent::where('entity_id', $book->id)
-            ->where('entity_type', 'book')
-            ->first();
+        // Resume now searches BookChild
+        $node = BookChild::where('book_id', $book->id)->first();
 
         if (!$node)
             return redirect()->route('dashboard');
@@ -97,7 +104,7 @@ class UnifiedEditorController extends Controller
      */
     protected function resolveEntity(string $type, string $slug): Entity
     {
-        $model = match ($type) {
+        $entityModel = match ($type) {
             'book' => Book::class,
             'audio' => Audio::class,
             'video' => Video::class,
@@ -105,11 +112,32 @@ class UnifiedEditorController extends Controller
             default => abort(404, "Unknown entity type")
         };
 
-        // نبحث عن الكيان الذي يملك هذا الـ ContentNode
-        $node = \App\Models\EntityContent::where('entity_type', $type)
-            ->where('slug', $slug)
-            ->firstOrFail();
+        $contentModel = $this->getContentModelClass($type);
+        $node = $contentModel::where('slug', $slug)->firstOrFail();
 
-        return $model::findOrFail($node->entity_id);
+        // Determine foreign key based on type
+        $foreignKey = match ($type) {
+            'book' => 'book_id',
+            'manuscript' => 'manuscript_id',
+            'audio' => 'audio_id',
+            'video' => 'video_id',
+            default => 'entity_id'
+        };
+
+        return $entityModel::findOrFail($node->$foreignKey);
+    }
+
+    /**
+     * Helper to get model class name
+     */
+    protected function getContentModelClass(string $type): string
+    {
+        return match ($type) {
+            'book' => BookChild::class,
+            'manuscript' => ManuscriptPage::class,
+            'audio' => AudioSegment::class,
+            'video' => VideoSegment::class,
+            default => EntityContent::class,
+        };
     }
 }

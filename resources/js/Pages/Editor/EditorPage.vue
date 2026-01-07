@@ -59,7 +59,9 @@ onUnmounted(() => {
 })
 
 const handleToolbarCommand = ({ command, value }) => {
-    if (command === 'togglePin') {
+    if (command === 'save') {
+        store.save()
+    } else if (command === 'togglePin') {
         store.togglePin()
     } else if (command === 'goto') {
         // Go to specific node

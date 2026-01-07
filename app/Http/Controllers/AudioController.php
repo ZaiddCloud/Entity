@@ -30,9 +30,8 @@ class AudioController extends Controller
     public function show(Audio $audio): Response
     {
         Gate::authorize('view', $audio);
-        
-        $firstContent = \App\Models\EntityContent::where('entity_type', 'audio')
-            ->where('entity_id', $audio->id)
+
+        $firstContent = \App\Models\AudioSegment::where('audio_id', $audio->id)
             ->orderBy('order')
             ->first();
 

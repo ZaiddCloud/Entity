@@ -30,9 +30,8 @@ class VideoController extends Controller
     public function show(Video $video): Response
     {
         Gate::authorize('view', $video);
-        
-        $firstContent = \App\Models\EntityContent::where('entity_type', 'video')
-            ->where('entity_id', $video->id)
+
+        $firstContent = \App\Models\VideoSegment::where('video_id', $video->id)
             ->orderBy('order')
             ->first();
 

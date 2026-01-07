@@ -137,22 +137,62 @@ class SeedRealisticData extends Command
             ],
             'manuscript' => [
                 'items' => [
-                    ['title' => 'مخطوط كليلة ودمنة', 'author' => 'ابن المقفع'],
-                    ['title' => 'رسالة الشافعي الأصلية', 'author' => 'الشافعي'],
-                    ['title' => 'مصحف مذهب نادر', 'author' => 'مجهول'],
+                    [
+                        'title' => 'مخطوط كليلة ودمنة',
+                        'author' => 'ابن المقفع',
+                        'file_source' => 'https://upload.wikimedia.org/wikipedia/commons/5/52/Avicenna_Canon_of_Medicine.jpg',
+                        'filename' => 'manuscripts/sample-1.jpg'
+                    ],
+                    [
+                        'title' => 'رسالة الشافعي الأصلية',
+                        'author' => 'الشافعي',
+                        'file_source' => 'https://upload.wikimedia.org/wikipedia/commons/5/52/Avicenna_Canon_of_Medicine.jpg',
+                        'filename' => 'manuscripts/sample-2.jpg'
+                    ],
+                    [
+                        'title' => 'مصحف مذهب نادر',
+                        'author' => 'مجهول',
+                        'file_source' => 'https://upload.wikimedia.org/wikipedia/commons/5/52/Avicenna_Canon_of_Medicine.jpg',
+                        'filename' => 'manuscripts/sample-3.jpg'
+                    ],
                 ]
             ],
             'audio' => [
                 'items' => [
-                    ['title' => 'شرح ألفية ابن مالك', 'author' => 'ابن مالك'],
-                    ['title' => 'تلاوات المنشاوي', 'author' => 'المنشاوي'],
-                    ['title' => 'محاضرة في التاريخ', 'author' => 'د. السويدان'],
+                    [
+                        'title' => 'شرح ألفية ابن مالك',
+                        'author' => 'ابن مالك',
+                        'file_source' => 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+                        'filename' => 'audio/sample-1.mp3'
+                    ],
+                    [
+                        'title' => 'تلاوات المنشاوي',
+                        'author' => 'المنشاوي',
+                        'file_source' => 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+                        'filename' => 'audio/sample-2.mp3'
+                    ],
+                    [
+                        'title' => 'محاضرة في التاريخ',
+                        'author' => 'د. السويدان',
+                        'file_source' => 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+                        'filename' => 'audio/sample-3.mp3'
+                    ],
                 ]
             ],
             'video' => [
                 'items' => [
-                    ['title' => 'وثائقي العمارة الإسلامية', 'author' => 'مركز التراث'],
-                    ['title' => 'ندوة المخطوطات الدولية', 'author' => 'مؤسسة التراث'],
+                    [
+                        'title' => 'وثائقي العمارة الإسلامية',
+                        'author' => 'مركز التراث',
+                        'file_source' => 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
+                        'filename' => 'videos/sample-1.mp4'
+                    ],
+                    [
+                        'title' => 'ندوة المخطوطات الدولية',
+                        'author' => 'مؤسسة التراث',
+                        'file_source' => 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4',
+                        'filename' => 'videos/sample-2.mp4'
+                    ],
                 ]
             ],
             'shelf' => [
@@ -183,7 +223,7 @@ class SeedRealisticData extends Command
                 };
 
                 $itemData = $set['items'][$i % count($set['items'])];
-                
+
                 if ($type === 'shelf') {
                     $location_code = $itemData['location_code'];
                     if ($i >= count($set['items'])) {
@@ -211,21 +251,32 @@ class SeedRealisticData extends Command
 
                 if ($type === 'manuscript') {
                     $attributes['century'] = rand(1, 14);
+                    // Handle Real Manuscript Images
+                    if (isset($itemData['file_source'])) {
+                        $this->ensureFileExists($itemData['file_source'], $itemData['filename']);
+                        $attributes['cover_path'] = $itemData['filename'];
+                        $attributes['file_path'] = $itemData['filename'];
+                    }
                 } elseif ($type === 'audio' || $type === 'video') {
                     $attributes['duration'] = rand(300, 3600);
+
+                    // Handle Real Audio/Video Files
+                    if (isset($itemData['file_source'])) {
+                        $this->ensureFileExists($itemData['file_source'], $itemData['filename']);
+                        $attributes['file_path'] = $itemData['filename'];
+                    }
                 }
 
                 $entity = $modelClass::create($attributes);
                 $allEntities->push($entity);
 
                 // --- NEW: MongoDB Digital Content Seeding (Comprehensive) ---
+                $contentService = app(\App\Services\EntityContentService::class);
                 if ($type === 'book') {
                     // Level 1: Sub-book (الكتاب الفرعي)
                     $subBookCount = rand(1, 2);
                     for ($sb = 1; $sb <= $subBookCount; $sb++) {
-                        $subBook = \App\Models\EntityContent::create([
-                            'entity_id' => $entity->id,
-                            'entity_type' => 'book',
+                        $subBook = $contentService->createNode($entity, [
                             'type' => 'sub-book',
                             'title' => "كتاب " . ($sb === 1 ? 'المقدمات' : 'الأحكام'),
                             'content' => '<p>مقدمة للكتاب الفرعي...</p>',
@@ -236,9 +287,7 @@ class SeedRealisticData extends Command
                         // Level 2: Part (الجزء)
                         $partCount = rand(1, 2);
                         for ($p = 1; $p <= $partCount; $p++) {
-                            $part = \App\Models\EntityContent::create([
-                                'entity_id' => $entity->id,
-                                'entity_type' => 'book',
+                            $part = $contentService->createNode($entity, [
                                 'parent_id' => $subBook->id,
                                 'type' => 'part',
                                 'title' => "الجزء {$p}",
@@ -250,9 +299,7 @@ class SeedRealisticData extends Command
                             // Level 3: Chapter (الفصل) - For simplicity, skipping Bab level
                             $chapCount = rand(2, 4);
                             for ($c = 1; $c <= $chapCount; $c++) {
-                                $chapter = \App\Models\EntityContent::create([
-                                    'entity_id' => $entity->id,
-                                    'entity_type' => 'book',
+                                $chapter = $contentService->createNode($entity, [
                                     'parent_id' => $part->id,
                                     'type' => 'chapter',
                                     'title' => "فصل {$c}: في المسائل المهمة",
@@ -264,21 +311,20 @@ class SeedRealisticData extends Command
                         }
                     }
                 } elseif ($type === 'manuscript') {
-                     // Create a dummy "Page" content for Manuscript
-                     \App\Models\EntityContent::create([
-                        'entity_id' => $entity->id,
-                        'entity_type' => 'manuscript',
-                        'type' => 'page',
-                        'title' => 'الصفحة الأولى',
-                        'slug' => 'page-1-' . substr($entity->slug, 0, 4),
-                        'content' => '<p>محتوى الصفحة الأولى من المخطوطة...</p>',
-                        'order' => 1,
-                    ]);
+                    // Create 5 "Pages" for Manuscript
+                    for ($p = 1; $p <= 5; $p++) {
+                        $pageTitles = [1 => 'الأولى', 2 => 'الثانية', 3 => 'الثالثة', 4 => 'الرابعة', 5 => 'الخامسة'];
+                        $contentService->createNode($entity, [
+                            'type' => 'page',
+                            'title' => 'الصفحة ' . ($pageTitles[$p] ?? $p),
+                            'slug' => "page-{$p}-" . substr($entity->slug, 0, 4),
+                            'content' => "<p>محتوى الصفحة {$p} من المخطوطة " . $entity->title . "...</p>",
+                            'order' => $p,
+                        ]);
+                    }
                 } elseif ($type === 'audio') {
                     // Create a dummy "Segment" for Audio
-                     \App\Models\EntityContent::create([
-                        'entity_id' => $entity->id,
-                        'entity_type' => 'audio',
+                    $contentService->createNode($entity, [
                         'type' => 'segment',
                         'title' => 'المقطع الأول',
                         'slug' => 'segment-1-' . substr($entity->slug, 0, 4),
@@ -287,9 +333,7 @@ class SeedRealisticData extends Command
                     ]);
                 } elseif ($type === 'video') {
                     // Create a dummy "Scene" for Video
-                     \App\Models\EntityContent::create([
-                        'entity_id' => $entity->id,
-                        'entity_type' => 'video',
+                    $contentService->createNode($entity, [
                         'type' => 'scene',
                         'title' => 'المشهد الأول',
                         'slug' => 'scene-1-' . substr($entity->slug, 0, 4),
@@ -316,13 +360,20 @@ class SeedRealisticData extends Command
                     $entity->bookers()->attach($bookers->random()->id, ['role' => $role]);
                 }
 
-                // Create 3 Versions for each entity (Manuscripts, Audio, etc.)
-                for ($v = 1; $v <= 3; $v++) {
+                // Create Versions for each entity (Manuscripts: 4, Others: 3)
+                $versionCount = ($type === 'manuscript') ? 4 : 3;
+                for ($v = 1; $v <= $versionCount; $v++) {
+                    $vTitle = match ($type) {
+                        'audio', 'video' => "تسجيل {$v}",
+                        'book' => "الطبعة {$v}",
+                        'manuscript' => "النسخة " . match ($v) { 1 => 'أ', 2 => 'ب', 3 => 'ج', 4 => 'د', default => $v},
+                    };
+
                     Version::create([
                         'versionable_id' => $entity->id,
                         'versionable_type' => $type, // Matches morphMap
                         'publisher_id' => $publishers->random()->id,
-                        'title' => ($type === 'audio' || $type === 'video') ? "تسجيل {$v}" : "الطبعة {$v}",
+                        'title' => $vTitle,
                         'isbn' => ($type === 'book') ? Str::random(13) : null,
                         'pages' => ($type === 'book' || $type === 'manuscript') ? rand(100, 1000) : null,
                         'published_year' => rand(1900, 2024),
@@ -332,7 +383,7 @@ class SeedRealisticData extends Command
                             'audio' => 'mp3',
                             'video' => 'mp4',
                         },
-                        'file_path' => null, // Placeholder
+                        'file_path' => $entity->file_path ?? null,
                         'shelf_id' => (rand(1, 10) > 3) ? Shelf::inRandomOrder()->first()?->id : null,
                     ]);
                 }
@@ -403,5 +454,39 @@ class SeedRealisticData extends Command
         }
 
         $this->info("Seeding completed successfully with all relationships!");
+    }
+    /**
+     * Helper to download sample files if they don't exist
+     */
+    protected function ensureFileExists($url, $path)
+    {
+        $fullPath = storage_path('app/public/' . $path);
+
+        // Ensure directory exists
+        $directory = dirname($fullPath);
+        if (!is_dir($directory)) {
+            mkdir($directory, 0755, true);
+        }
+
+        if (!file_exists($fullPath)) {
+            $this->info("Downloading sample file: $path ...");
+
+            // Use stream context to avoid some rudimentary blockers or timeouts
+            $arrContextOptions = array(
+                "ssl" => array(
+                    "verify_peer" => false,
+                    "verify_peer_name" => false,
+                ),
+            );
+
+            $content = @file_get_contents($url, false, stream_context_create($arrContextOptions));
+
+            if ($content) {
+                file_put_contents($fullPath, $content);
+                $this->info("Downloaded: $path");
+            } else {
+                $this->warn("Failed to download: $url");
+            }
+        }
     }
 }

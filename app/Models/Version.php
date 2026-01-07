@@ -17,6 +17,7 @@ class Version extends Model
         'publisher_id',
         'language_id',
         'shelf_id',
+        'title',
         'file_path',
         'cover_path',
         'format',
@@ -48,5 +49,10 @@ class Version extends Model
     public function shelf()
     {
         return $this->belongsTo(Shelf::class);
+    }
+
+    public function getFileUrlAttribute()
+    {
+        return $this->file_path ? asset('storage/' . $this->file_path) : null;
     }
 }
