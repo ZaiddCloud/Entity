@@ -90,6 +90,7 @@ const handleToolbarCommand = ({ command, value }) => {
             <ManuscriptViewer 
                 v-if="store.editorMode === 'manuscript'" 
                 :resource="store.resourceData"
+                :current-node="store.currentContentNode"
             />
             <MediaPlayer 
                 v-else-if="['audio', 'video'].includes(store.editorMode)"

@@ -21,13 +21,13 @@
 
             <!-- Icon by Type -->
             <span class="text-xs ml-2 opacity-60">
-                <template v-if="item.type === 'chapter'">📂</template>
-                <template v-else-if="item.type === 'page'">📄</template>
-                <template v-else-if="item.type === 'folio'">🖼️</template>
+                <template v-if="item?.type === 'chapter'">📂</template>
+                <template v-else-if="item?.type === 'page'">📄</template>
+                <template v-else-if="item?.type === 'folio'">🖼️</template>
                 <template v-else>🔸</template>
             </span>
 
-            <span class="text-[11px] truncate flex-1">{{ item.title }}</span>
+            <span class="text-[11px] truncate flex-1">{{ item?.title }}</span>
         </div>
 
         <!-- Recursive Children -->

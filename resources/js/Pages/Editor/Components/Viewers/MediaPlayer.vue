@@ -13,6 +13,7 @@ const currentTime = ref(0)
 const duration = ref(360) // 6:00
 const playbackSpeed = ref(1)
 const activeVersionIndex = ref(0)
+const mediaRef = ref(null)
 
 const versions = computed(() => {
     if (props.resource?.versions && Array.isArray(props.resource.versions)) {
@@ -26,7 +27,38 @@ const versions = computed(() => {
 
 const activeVersion = computed(() => versions.value[activeVersionIndex.value] || {})
 
-const togglePlay = () => isPlaying.value = !isPlaying.value
+const togglePlay = () => {
+    if (!mediaRef.value) return
+    if (isPlaying.value) {
+        mediaRef.value.pause()
+    } else {
+        mediaRef.value.play()
+    }
+}
+
+const skip = (seconds) => {
+    if (!mediaRef.value) return
+    mediaRef.value.currentTime += seconds
+}
+
+const seekMedia = (event) => {
+    if (!mediaRef.value) return
+    const rect = event.currentTarget.getBoundingClientRect()
+    const x = event.clientX - rect.left
+    const percent = x / rect.width
+    mediaRef.value.currentTime = percent * duration.value
+}
+
+const updateSpeed = () => {
+    if (!mediaRef.value) return
+    mediaRef.value.playbackRate = playbackSpeed.value
+}
+
+const insertTimestamp = () => {
+    // This will be implemented when connected to the content editor
+    alert(`Timestamp inserted: [${formatTime(currentTime.value)}]`)
+}
+
 const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60)
     const secs = Math.floor(seconds % 60)
@@ -98,20 +130,65 @@ const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2]
 
             <!-- Controls -->
             <div class="space-y-6">
-                <!-- Progress -->
+                <!-- Actual Media Element -->
+                <div class="hidden">
+                    <audio 
+                        v-if="mode === 'audio' && activeVersion?.url" 
+                        ref="mediaRef"
+                        :src="activeVersion.url"
+                        @timeupdate="currentTime = $event.target.currentTime"
+                        @durationchange="duration = $event.target.duration"
+                        @play="isPlaying = true"
+                        @pause="isPlaying = false"
+                    ></audio>
+                    <video 
+                        v-if="mode === 'video' && activeVersion?.url" 
+                        ref="mediaRef"
+                        :src="activeVersion.url"
+                        @timeupdate="currentTime = $event.target.currentTime"
+                        @durationchange="duration = $event.target.duration"
+                        @play="isPlaying = true"
+                        @pause="isPlaying = false"
+                    ></video>
+                </div>
+
+                <!-- Video Display for Video Mode -->
+                <div v-if="mode === 'video' && activeVersion?.url" class="aspect-video bg-black rounded-lg overflow-hidden mb-4 border border-slate-700 shadow-2xl">
+                    <video 
+                        class="w-full h-full"
+                        :src="activeVersion.url"
+                        @timeupdate="currentTime = $event.target.currentTime"
+                        @durationchange="duration = $event.target.duration"
+                        @play="isPlaying = true"
+                        @pause="isPlaying = false"
+                        controls
+                    ></video>
+                </div>
+
+                <!-- Progress Bar -->
                 <div class="space-y-2">
-                    <div class="h-1 bg-slate-800 rounded-full relative overflow-hidden">
-                        <div class="absolute left-0 top-0 bottom-0 bg-blue-500" style="width: 45%"></div>
+                    <div 
+                        class="h-1.5 bg-slate-800 rounded-full relative cursor-pointer overflow-hidden group"
+                        @click="seekMedia"
+                    >
+                        <div 
+                            class="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-100" 
+                            :style="{ width: (currentTime / duration) * 100 + '%' }"
+                        ></div>
+                        <div 
+                            class="absolute top-0 bottom-0 w-0.5 bg-white opacity-0 group-hover:opacity-100 transition-opacity"
+                            :style="{ left: (currentTime / duration) * 100 + '%' }"
+                        ></div>
                     </div>
                     <div class="flex justify-between text-[10px] font-mono text-slate-500 uppercase tracking-tighter">
-                        <span>{{ formatTime(162) }}</span>
+                        <span>{{ formatTime(currentTime) }}</span>
                         <span>{{ formatTime(duration) }}</span>
                     </div>
                 </div>
 
                 <!-- Playback Actions -->
                 <div class="flex items-center justify-center gap-6">
-                    <button class="text-slate-500 hover:text-white transition-colors" title="إرجاع 5 ثواني">
+                    <button @click="skip(-5)" class="text-slate-500 hover:text-white transition-colors" title="إرجاع 5 ثواني">
                         <i class="fas fa-undo-alt text-lg"></i>
                     </button>
                     <button 
@@ -120,7 +197,7 @@ const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2]
                     >
                         <i :class="isPlaying ? 'fas fa-pause' : 'fas fa-play'" class="text-xl"></i>
                     </button>
-                    <button class="text-slate-500 hover:text-white transition-colors" title="تقديم 5 ثواني">
+                    <button @click="skip(5)" class="text-slate-500 hover:text-white transition-colors" title="تقديم 5 ثواني">
                         <i class="fas fa-redo-alt text-lg"></i>
                     </button>
                 </div>
@@ -129,13 +206,13 @@ const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2]
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-slate-800/30 rounded-lg p-2 border border-slate-700/30">
                         <p class="text-[9px] text-slate-500 mb-1 uppercase font-bold text-center">السرعة</p>
-                        <select v-model="playbackSpeed" class="w-full bg-transparent text-xs text-white border-none focus:ring-0 cursor-pointer text-center">
+                        <select v-model="playbackSpeed" @change="updateSpeed" class="w-full bg-transparent text-xs text-white border-none focus:ring-0 cursor-pointer text-center">
                             <option v-for="s in speeds" :key="s" :value="s" class="bg-slate-800">{{ s }}x</option>
                         </select>
                     </div>
                     <div class="bg-slate-800/30 rounded-lg p-2 border border-slate-700/30 flex flex-col items-center justify-center">
                         <p class="text-[9px] text-slate-500 mb-1 uppercase font-bold text-center">الختم الزمني</p>
-                        <button class="text-[10px] text-blue-400 hover:text-blue-300 font-bold">إدراج [02:42]</button>
+                        <button @click="insertTimestamp" class="text-[10px] text-blue-400 hover:text-blue-300 font-bold">إدراج [{{ formatTime(currentTime) }}]</button>
                     </div>
                 </div>
             </div>

@@ -26,6 +26,14 @@ class StorageSync extends Command
      */
     protected $description = 'Scan storage directories and sync files with the database';
 
+    protected $contentService;
+
+    public function __construct(\App\Services\EntityContentService $contentService)
+    {
+        parent::__construct();
+        $this->contentService = $contentService;
+    }
+
     /**
      * Mapping of directories to models and their allowed extensions.
      */
@@ -34,7 +42,7 @@ class StorageSync extends Command
             'model' => Book::class,
             'extensions' => ['pdf', 'epub', 'mobi', 'docx', 'md', 'txt', 'odt'],
         ],
-        'audios' => [
+        'audio' => [
             'model' => Audio::class,
             'extensions' => ['mp3', 'wav', 'm4a', 'aac'],
         ],
@@ -54,6 +62,13 @@ class StorageSync extends Command
     public function handle()
     {
         $this->info('Starting storage synchronization...');
+
+        // Wipe existing content collections to ensure a fresh sync
+        \App\Models\BookChild::truncate();
+        \App\Models\ManuscriptPage::truncate();
+        \App\Models\AudioSegment::truncate();
+        \App\Models\VideoSegment::truncate();
+        $this->info('Cleared existing content collections.');
 
         foreach ($this->config as $dir => $settings) {
             $this->syncDirectory($dir, $settings['model'], $settings['extensions']);
@@ -75,46 +90,66 @@ class StorageSync extends Command
             return;
         }
 
-        $files = Storage::disk('public')->files($dir);
+        // 1. Special handling for Manuscripts (Folder Bundles)
+        if ($modelClass === Manuscript::class) {
+            $this->syncManuscriptBundles($dir, $extensions);
+        }
+
+        // 2. Discover files recursively
+        $files = Storage::disk('public')->allFiles($dir);
         $count = 0;
 
         foreach ($files as $filePath) {
             $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
 
             if (!in_array($extension, $extensions)) {
+                $this->warn("Skipping file (ext: $extension): $filePath");
                 continue;
             }
 
-            $fileName = pathinfo($filePath, PATHINFO_FILENAME);
-            $title = Str::headline($fileName);
-            $slug = Str::slug($title);
+            // For manuscripts, if it's inside a subdirectory, skip it here if it's an image (already handled as bundle)
+            if ($modelClass === Manuscript::class && dirname($filePath) !== $dir) {
+                if (in_array($extension, ['jpg', 'png', 'jpeg', 'tiff']))
+                    continue;
+            }
+            $this->info("Processing file: $filePath");
 
             $fileName = pathinfo($filePath, PATHINFO_FILENAME);
             $title = Str::headline($fileName);
             $slug = Str::slug($title);
 
-            // 1. Check if this VERSION already exists for this file
+            // 1. Find or Create the abstract Entity (Book, Audio, Video, Manuscript)
+            $entity = $modelClass::where('slug', $slug)->first();
+
+            if (!$entity) {
+                $entity = $modelClass::create([
+                    'slug' => $slug,
+                    'title' => $title,
+                    'description' => 'Automatically synced from storage.',
+                    'file_path' => $filePath,
+                ]);
+            } elseif ($this->option('force')) {
+                $entity->update([
+                    'title' => $title,
+                    'description' => 'Automatically synced from storage.',
+                    'file_path' => $filePath,
+                ]);
+            }
+
+            // 2. Approach A: Extract Tags from parent folders
+            $relativePath = str_replace($dir . DIRECTORY_SEPARATOR, '', $filePath);
+            $parts = explode(DIRECTORY_SEPARATOR, $relativePath);
+            array_pop($parts); // remove filename
+
+            foreach ($parts as $part) {
+                $tagName = Str::headline($part);
+                $this->syncEntityTags($entity, $tagName);
+            }
+
+            // 2. Check if this VERSION already exists for this file
             $versionExists = \App\Models\Version::where('file_path', $filePath)->exists();
 
             if (!$versionExists || $this->option('force')) {
-                // 2. Find or Create the abstract Entity (Book, Audio, Video, Manuscript)
-                $entity = $modelClass::where('slug', $slug)->first();
-
-                if (!$entity) {
-                    $entity = $modelClass::create([
-                        'slug' => $slug,
-                        'title' => $title,
-                        'description' => 'Automatically synced from storage.',
-                        'file_path' => $filePath,
-                    ]);
-                } elseif ($this->option('force')) {
-                    $entity->update([
-                        'title' => $title,
-                        'description' => 'Automatically synced from storage.',
-                        'file_path' => $filePath,
-                    ]);
-                }
-
                 // 3. Create/Update the Version (Polymorphic)
                 \App\Models\Version::updateOrCreate(
                     ['file_path' => $filePath],
@@ -127,13 +162,47 @@ class StorageSync extends Command
                     ]
                 );
 
-                $count++;
-                $this->line("  [+] Synced: {$title}");
+                $this->line("  [+] Synced Version: {$title}");
+            }
 
-                // 4. If it's a Book and the file is a source format, sync its content hierarchy
-                if ($modelClass === Book::class && in_array($extension, ['md', 'txt', 'docx'])) {
-                    $this->syncBookContentFromHeaders($entity, $filePath, $extension);
-                }
+            $count++;
+
+            // 4. Create separate content nodes (Always run to ensure fresh content after truncate)
+            // Book Content
+            if ($modelClass === Book::class && in_array($extension, ['md', 'txt', 'docx'])) {
+                $this->syncBookContentFromHeaders($entity, $filePath, $extension);
+            }
+            // Audio Content
+            elseif ($modelClass === Audio::class) {
+                // Ensure we don't duplicate if run multiple times without truncate, but handle() truncates so it's safe.
+                $this->contentService->createNode($entity, [
+                    'type' => 'segment',
+                    'title' => 'Default Segment',
+                    'slug' => 'seg-1-' . substr($slug, 0, 4),
+                    'content' => [],
+                    'order' => 1
+                ]);
+            }
+            // Video Content
+            elseif ($modelClass === Video::class) {
+                $this->contentService->createNode($entity, [
+                    'type' => 'scene',
+                    'title' => 'Default Scene',
+                    'slug' => 'scn-1-' . substr($slug, 0, 4),
+                    'content' => [],
+                    'order' => 1
+                ]);
+            }
+            // Manuscript Content
+            elseif ($modelClass === Manuscript::class) {
+                $this->contentService->createNode($entity, [
+                    'type' => 'page',
+                    'title' => 'Default Page',
+                    'slug' => 'page-1-' . substr($slug, 0, 4),
+                    'content' => '<p>Default Manuscript Content (Image Placeholder)</p>',
+                    'image_url' => asset('storage/' . $dir . '/' . $fileName . '.' . $extension),
+                    'order' => 1
+                ]);
             }
         }
 
@@ -164,7 +233,23 @@ class StorageSync extends Command
         }
 
         if (empty($nodes)) {
-            $this->warn("      No headers found in the file structure.");
+            $this->warn("      No headers found. Creating a default node with extractable text.");
+
+            $finalText = '';
+            if ($extension === 'docx') {
+                $finalText = $this->getDocxPlainText($filePath);
+            } else {
+                $finalText = $content;
+            }
+
+            // Create a default node
+            $service->addChild($book, [
+                'parent_id' => null,
+                'type' => 'chapter',
+                'title' => 'Default Content',
+                'order' => 1,
+                'content' => "<p>" . nl2br(htmlspecialchars($finalText)) . "</p>",
+            ]);
             return;
         }
 
@@ -400,5 +485,89 @@ class StorageSync extends Command
         }
 
         $this->info("      Successfully built hierarchy with " . count($nodes) . " nodes.");
+    }
+
+    private function getDocxPlainText(string $filePath): string
+    {
+        $fullPath = Storage::disk('public')->path($filePath);
+        $zip = new \ZipArchive();
+        $text = '';
+
+        if ($zip->open($fullPath) === true) {
+            $xmlString = $zip->getFromName('word/document.xml');
+            $zip->close();
+            if ($xmlString) {
+                $xml = new \SimpleXMLElement($xmlString);
+                $xml->registerXPathNamespace('w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
+                $paragraphs = $xml->xpath('//w:p');
+                foreach ($paragraphs as $p) {
+                    foreach ($p->xpath('.//w:t') as $t) {
+                        $text .= (string) $t . " ";
+                    }
+                    $text .= "\n";
+                }
+            }
+        }
+        return trim($text);
+    }
+
+    protected function syncEntityTags($entity, string $tagName)
+    {
+        $tag = \App\Models\Tag::firstOrCreate(
+            ['name' => $tagName],
+            ['slug' => Str::slug($tagName), 'type' => 'category']
+        );
+
+        if (!$entity->tags->contains($tag->id)) {
+            $entity->tags()->attach($tag->id);
+            $this->line("    [#] Tagged with: {$tagName}");
+        }
+    }
+
+    protected function syncManuscriptBundles(string $dir, array $extensions)
+    {
+        $directories = Storage::disk('public')->directories($dir);
+
+        foreach ($directories as $subDir) {
+            $files = Storage::disk('public')->files($subDir);
+            $imageFiles = array_filter($files, function ($file) {
+                return in_array(strtolower(pathinfo($file, PATHINFO_EXTENSION)), ['jpg', 'png', 'jpeg', 'tiff']);
+            });
+
+            if (empty($imageFiles))
+                continue;
+
+            $this->info("Processing Manuscript Bundle: {$subDir}");
+
+            $folderName = basename($subDir);
+            $title = Str::headline($folderName);
+            $slug = Str::slug($title);
+
+            // 1. Create Manuscript Entity
+            $entity = Manuscript::where('slug', $slug)->first();
+            if (!$entity) {
+                $entity = Manuscript::create([
+                    'slug' => $slug,
+                    'title' => $title,
+                    'description' => 'Image bundle synced from ' . $subDir,
+                    'file_path' => $subDir,
+                ]);
+            }
+
+            // 2. Sync Images as Pages
+            $order = 1;
+            foreach ($imageFiles as $img) {
+                $imgName = pathinfo($img, PATHINFO_FILENAME);
+                $this->contentService->createNode($entity, [
+                    'type' => 'page',
+                    'title' => Str::headline($imgName),
+                    'slug' => Str::slug($imgName) . '-' . $entity->id,
+                    'content' => '<p>Manuscript Page from Bundle</p>',
+                    'image_url' => asset('storage/' . $img),
+                    'order' => $order++
+                ]);
+            }
+            $this->line("  [+] Bundle Synced: {$title} (" . count($imageFiles) . " pages)");
+        }
     }
 }

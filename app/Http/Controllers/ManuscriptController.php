@@ -27,6 +27,10 @@ class ManuscriptController extends Controller
     /**
      * عارض محرر المخطوطات (الموحد)
      */
+    public function editor(Manuscript $manuscript, $childSlug): Response
+    {
+        return $this->renderEditor($manuscript, $childSlug);
+    }
 
     public function index(Request $request): Response
     {

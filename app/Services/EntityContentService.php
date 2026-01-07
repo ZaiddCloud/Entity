@@ -197,7 +197,8 @@ class EntityContentService
             })->toArray();
 
             // Fallback: If no versions, add the main entity file as "Original"
-            if (empty($resourceData['versions']) && $entity->file_path) {
+            // For Manuscripts, we skip this if it's a folder (bundles) to avoid viewer errors
+            if (empty($resourceData['versions']) && $entity->file_path && class_basename($entity) !== 'Manuscript') {
                 $resourceData['versions'][] = [
                     'title' => 'الملف الأساسي',
                     'url' => asset('storage/' . $entity->file_path)

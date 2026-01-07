@@ -61,7 +61,7 @@ const rootItems = computed(() => {
     let items = props.hierarchy.filter(item => !item.parent_id);
     if (searchQuery.value.trim()) {
         const query = searchQuery.value.toLowerCase();
-        return props.hierarchy.filter(item => item.title.toLowerCase().includes(query));
+        return props.hierarchy.filter(item => item?.title?.toLowerCase().includes(query));
     }
     return items;
 });

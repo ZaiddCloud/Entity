@@ -221,8 +221,8 @@ const closeWindow = () => {
                                             {{ item.type === 'chapter' ? '📂' : '📑' }}
                                         </div>
                                         <div class="flex flex-col">
-                                            <span class="text-[11px] text-gray-700 leading-tight" :class="{'font-bold text-blue-700': store.currentContentNode?.id === item._id}">
-                                                {{ item.title }}
+                                            <span class="text-[11px] text-gray-700 leading-tight" :class="{'font-bold text-blue-700': store.currentContentNode?.id === item?._id}">
+                                                {{ item?.title }}
                                             </span>
                                             <span class="text-[8px] text-gray-400">الترتيب: {{ item.order }}</span>
                                         </div>

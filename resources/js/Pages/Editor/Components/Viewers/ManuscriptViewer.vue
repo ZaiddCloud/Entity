@@ -5,7 +5,7 @@ defineOptions({
   name: 'ManuscriptViewer'
 })
 
-const props = defineProps(['resource'])
+const props = defineProps(['resource', 'currentNode'])
 
 const activeVersionIndex = ref(0)
 const isCompareMode = ref(false)
@@ -19,18 +19,30 @@ let startX = 0
 let startWidths = []
 
 const versions = computed(() => {
+    const v = []
+    
+    // 1. Prioritize current node image if present (The actual page being edited)
+    if (props.currentNode?.image_url) {
+        v.push({ title: props.currentNode.title || 'الصفحة الحالية', url: props.currentNode.image_url })
+    }
+
+    // 2. Add other versions from resource
     if (props.resource?.versions && Array.isArray(props.resource.versions)) {
-        return props.resource.versions
+        props.resource.versions.forEach(version => v.push(version))
     }
-    if (props.resource?.url) {
-        return [{ title: 'النسخة الأصلية', url: props.resource.url }]
+    
+    // 3. Fallback if still empty
+    if (v.length === 0 && props.resource?.url) {
+        v.push({ title: 'الملف الأساسي', url: props.resource.url })
     }
-    return []
+
+    return v
 })
 
 const displayedVersions = computed(() => {
     if (!isCompareMode.value) {
-        return [versions.value[activeVersionIndex.value]]
+        const active = versions.value[activeVersionIndex.value]
+        return active ? [active] : []
     }
     return versions.value.filter((_, index) => selectedVersionIndexes.value.includes(index))
 })
@@ -115,7 +127,7 @@ onUnmounted(() => {
                 <!-- Manuscript Title -->
                 <div v-if="resource?.title" class="text-sm font-bold text-gray-700 whitespace-nowrap border-l pl-4 ml-2 my-2">
                     <i class="fas fa-book-open text-gray-400 ml-2"></i>
-                    {{ resource.title }}
+                    {{ resource?.title }}
                 </div>
 
                 <div class="flex overflow-x-auto no-scrollbar">
@@ -130,7 +142,7 @@ onUnmounted(() => {
                             : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                     ]"
                 >
-                    {{ version.title }}
+                    {{ version?.title }}
                 </button>
 
             </div>
@@ -153,6 +165,7 @@ onUnmounted(() => {
         >
             <template v-for="(version, idx) in displayedVersions" :key="idx">
                 <div 
+                    v-if="version"
                     class="bg-white flex flex-col h-full rounded-sm shadow-sm relative overflow-hidden group min-w-[150px]"
                     :style="{ width: panelWidths[idx] + '%' }"
                 >
@@ -160,7 +173,7 @@ onUnmounted(() => {
                     <div class="px-2 py-1 bg-gray-50 border-b border-gray-100 flex justify-between items-center shrink-0">
                         <div class="flex items-center gap-2 overflow-hidden">
                             <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tight truncate">
-                                {{ resource?.title }} - {{ version.title }}
+                                {{ resource?.title }} - {{ version?.title }}
                             </span>
                             <!-- Simplified Shot Number Input -->
                             <div class="flex items-center bg-white border border-gray-200 rounded px-1 h-5 hover:border-blue-200 transition-colors">
@@ -181,19 +194,19 @@ onUnmounted(() => {
                     <div class="flex-1 flex flex-col items-center justify-center p-4">
                         <div class="w-full h-full flex flex-col items-center justify-center">
                             <!-- Image Renderer -->
-                            <div v-if="version.url && (version.url.endsWith('.jpg') || version.url.endsWith('.jpeg') || version.url.endsWith('.png') || version.url.endsWith('.webp'))" 
+                            <div v-if="version?.url && (version.url.toLowerCase().endsWith('.jpg') || version.url.toLowerCase().endsWith('.jpeg') || version.url.toLowerCase().endsWith('.png') || version.url.toLowerCase().endsWith('.webp'))" 
                                  class="w-full h-full flex items-center justify-center bg-gray-900 rounded-sm overflow-hidden relative">
-                                <img :src="version.url" class="max-w-full max-h-full object-contain" alt="Manuscript Page" />
+                                <img :src="version?.url" class="max-w-full max-h-full object-contain" alt="Manuscript Page" />
                             </div>
                             
                             <!-- Placeholder / PDF Renderer -->
                             <div v-else class="w-full max-w-lg bg-gray-50/50 border border-gray-100 rounded-sm p-4 text-center">
                                 <div class="aspect-[3/4] bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg mb-4">
                                     <div class="text-gray-400">
-                                        <p class="text-[10px]">نسخة التحقيق: {{ version.title }}</p>
+                                        <p class="text-[10px]">نسخة التحقيق: {{ version?.title }}</p>
                                     </div>
                                 </div>
-                                <p class="text-[9px] text-gray-400 font-mono truncate px-2">{{ version.url }}</p>
+                                <p class="text-[9px] text-gray-400 font-mono truncate px-2">{{ version?.url }}</p>
                             </div>
                         </div>
                     </div>
