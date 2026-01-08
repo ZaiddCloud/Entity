@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, onUnmounted } from 'vue'
-import ResourceNavigator from '../Common/ResourceNavigator.vue'
+import ResourceNavigator from '@/Pages/Editor/Components/Common/ResourceNavigator.vue'
 
 defineOptions({
   name: 'ManuscriptViewer'
