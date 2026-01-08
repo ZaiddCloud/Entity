@@ -39,7 +39,7 @@ const editorRef = ref(null)
 
 // Static imports for stability in tests and simple view
 import ManuscriptViewer from './Components/Viewers/ManuscriptViewer.vue'
-import MediaPlayer from './Components/Viewers/MediaPlayer.vue'
+import MediaPlayer from '@/Technologies/Player/MediaPlayer.vue'
 import AudioSegmentEditor from './Components/Content/AudioSegmentEditor.vue'
 import VideoSceneEditor from './Components/Content/VideoSceneEditor.vue'
 
