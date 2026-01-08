@@ -1,9 +1,9 @@
 import { Node, mergeAttributes } from '@tiptap/core'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
-import PoetryNodeView from '../Views/PoetryNodeView.vue'
+import QuranicVerseView from './QuranicVerseView.vue'
 
-export const HeritagePoetry = Node.create({
-    name: 'heritagePoetry',
+export const QuranicVerse = Node.create({
+    name: 'quranicVerse',
 
     group: 'block',
 
@@ -11,16 +11,13 @@ export const HeritagePoetry = Node.create({
 
     addAttributes() {
         return {
-            sadr: {
+            text: {
                 default: '',
             },
-            ajuz: {
+            surah: {
                 default: '',
             },
-            poet: {
-                default: '',
-            },
-            source: {
+            ayah: {
                 default: '',
             },
         }
@@ -29,22 +26,22 @@ export const HeritagePoetry = Node.create({
     parseHTML() {
         return [
             {
-                tag: 'div[data-type="heritage-poetry"]',
+                tag: 'div[data-type="quranic-verse"]',
             },
         ]
     },
 
     renderHTML({ HTMLAttributes }) {
-        return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'heritage-poetry' }), 0]
+        return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'quranic-verse' }), 0]
     },
 
     addNodeView() {
-        return VueNodeViewRenderer(PoetryNodeView)
+        return VueNodeViewRenderer(QuranicVerseView)
     },
 
     addCommands() {
         return {
-            setPoetry: (attributes) => ({ commands }) => {
+            setQuranicVerse: (attributes) => ({ commands }) => {
                 return commands.insertContent({
                     type: this.name,
                     attrs: attributes,
@@ -54,4 +51,4 @@ export const HeritagePoetry = Node.create({
     },
 })
 
-export default HeritagePoetry
+export default QuranicVerse

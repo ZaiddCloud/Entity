@@ -1,13 +1,14 @@
 <script setup>
 import { ref, watch, onBeforeUnmount } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
+import { useEditorStore } from './EditorStore'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import TextAlign from '@tiptap/extension-text-align'
 import Placeholder from '@tiptap/extension-placeholder'
-import HeritagePoetry from '../../Extensions/Heritage/HeritagePoetry'
-import QuranicVerse from '../../Extensions/Heritage/QuranicVerse'
-import ScientificFootnote from '../../Extensions/Scientific/ScientificFootnote'
+import HeritagePoetry from '../Extensions/Poetry/PoetryExtension'
+import QuranicVerse from '../Extensions/Quran/QuranExtension'
+import ScientificFootnote from '../Extensions/Footnotes/FootnoteExtension'
 
 const props = defineProps({
     modelValue: {

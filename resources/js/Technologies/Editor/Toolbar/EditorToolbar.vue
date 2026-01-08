@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
-import { useEditorStore } from '../../Store/editorStore'
-import { TOOLBAR_COMMANDS } from '../../Constants/toolbarItems'
+import { useEditorStore } from '../Core/EditorStore'
+import { TOOLBAR_COMMANDS } from '../Core/Constants/toolbarItems'
 
 const emit = defineEmits(['command'])
 const store = useEditorStore()

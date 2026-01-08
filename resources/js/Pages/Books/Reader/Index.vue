@@ -197,7 +197,7 @@ import { Link, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import TreeItem from './TreeItem.vue';
 // Use the Unified Editor Engine
-import TiptapEditor from '../../Editor/Components/Content/TiptapEditor.vue';
+import TiptapEditor from '@/Technologies/Editor/Core/TiptapEditor.vue';
 
 const props = defineProps({
     book: Object,

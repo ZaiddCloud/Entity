@@ -1,10 +1,10 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue'
 import EditorLayout from './EditorLayout.vue'
-import EditorToolbar from './Components/Toolbar/EditorToolbar.vue'
-import TiptapEditor from './Components/Content/TiptapEditor.vue'
+import EditorToolbar from '@/Technologies/Editor/Toolbar/EditorToolbar.vue'
+import TiptapEditor from '@/Technologies/Editor/Core/TiptapEditor.vue'
 
-import { useEditorStore } from './Store/editorStore'
+import { useEditorStore } from '@/Technologies/Editor/Core/EditorStore'
 
 const props = defineProps({
     entity: {
@@ -40,8 +40,8 @@ const editorRef = ref(null)
 // Static imports for stability in tests and simple view
 import ManuscriptViewer from '@/Technologies/Manuscripter/ManuscriptViewer.vue'
 import MediaPlayer from '@/Technologies/Player/MediaPlayer.vue'
-import AudioSegmentEditor from './Components/Content/AudioSegmentEditor.vue'
-import VideoSceneEditor from './Components/Content/VideoSceneEditor.vue'
+import AudioSegmentEditor from '@/Technologies/Editor/Core/AudioSegmentEditor.vue'
+import VideoSceneEditor from '@/Technologies/Editor/Core/VideoSceneEditor.vue'
 
 onMounted(() => {
     // Initialize polymorphic state

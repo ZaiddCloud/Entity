@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { useEditorStore } from './Store/editorStore'
+import { useEditorStore } from '@/Technologies/Editor/Core/EditorStore'
 
 const props = defineProps({
     title: {
