@@ -73,6 +73,8 @@ const handleToolbarCommand = ({ command, value }) => {
         }
     } else if (['minimize', 'maximize'].includes(command)) {
         // Handle window controls if needed, or leave for future implementation
+    } else if (command === 'addMediaNode') {
+        store.addMediaNode()
     } else {
         store.executeCommand(command, value)
     }

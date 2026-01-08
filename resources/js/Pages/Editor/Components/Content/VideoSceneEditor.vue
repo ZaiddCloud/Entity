@@ -15,15 +15,6 @@ const scenes = computed({
     set: (val) => emit('update:modelValue', val)
 })
 
-const addScene = () => {
-    scenes.value = [...scenes.value, { 
-        id: Date.now(),
-        timestamp: '00:00', 
-        title: 'مشهد جديد',
-        description: '' 
-    }]
-}
-
 const removeScene = (index) => {
     const s = [...scenes.value]
     s.splice(index, 1)
@@ -34,10 +25,7 @@ const removeScene = (index) => {
 <template>
     <div class="p-8 font-arabic">
         <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-bold text-gray-800">فهرسة المشاهد المرئية</h2>
-            <button @click="addScene" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
-                + إضافة مشهد
-            </button>
+            <h2 class="text-xl font-bold text-gray-800 underline decoration-indigo-200 decoration-4">فهرسة المشاهد المرئية</h2>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

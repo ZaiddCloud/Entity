@@ -18,6 +18,47 @@ const containerRef = ref(null)
 let startX = 0
 let startWidths = []
 
+const zoomLevel = ref(1)
+const zoomIn = () => { if (zoomLevel.value < 5) zoomLevel.value += 0.2 }
+const zoomOut = () => { if (zoomLevel.value > 0.4) zoomLevel.value -= 0.2 }
+const resetZoom = () => { zoomLevel.value = 1 }
+
+// Panning State
+const isPanning = ref(false)
+const panStartX = ref(0)
+const panStartY = ref(0)
+const panScrollLeft = ref(0)
+const panScrollTop = ref(0)
+const viewerRefs = ref([]) // To track individual panel containers
+
+const handlePanStart = (e, idx) => {
+    const container = e.currentTarget
+    isPanning.value = true
+    panStartX.value = e.pageX - container.offsetLeft
+    panStartY.value = e.pageY - container.offsetTop
+    panScrollLeft.value = container.scrollLeft
+    panScrollTop.value = container.scrollTop
+    container.style.cursor = 'grabbing'
+}
+
+const handlePanMove = (e) => {
+    if (!isPanning.value) return
+    e.preventDefault()
+    const container = e.currentTarget
+    const x = e.pageX - container.offsetLeft
+    const y = e.pageY - container.offsetTop
+    const walkX = (x - panStartX.value) * 1.5 // Scroll speed
+    const walkY = (y - panStartY.value) * 1.5
+    container.scrollLeft = panScrollLeft.value - walkX
+    container.scrollTop = panScrollTop.value - walkY
+}
+
+const handlePanEnd = (e) => {
+    if (!isPanning.value) return
+    isPanning.value = false
+    e.currentTarget.style.cursor = 'grab'
+}
+
 const versions = computed(() => {
     const v = []
     
@@ -191,16 +232,22 @@ onUnmounted(() => {
                     </div>
 
                     <!-- Viewer Area -->
-                    <div class="flex-1 flex flex-col items-center justify-center p-4">
-                        <div class="w-full h-full flex flex-col items-center justify-center">
+                    <div 
+                        class="flex-1 overflow-auto bg-gray-900 custom-scrollbar p-10 cursor-grab active:cursor-grabbing select-none"
+                        @mousedown="handlePanStart($event, idx)"
+                        @mousemove="handlePanMove($event)"
+                        @mouseup="handlePanEnd($event)"
+                        @mouseleave="handlePanEnd($event)"
+                    >
+                        <div class="flex flex-col items-center justify-start min-h-full transition-all duration-300 mx-auto pointer-events-none" :style="{ width: (zoomLevel * 100) + '%', minWidth: '100%' }">
                             <!-- Image Renderer -->
                             <div v-if="version?.url && (version.url.toLowerCase().endsWith('.jpg') || version.url.toLowerCase().endsWith('.jpeg') || version.url.toLowerCase().endsWith('.png') || version.url.toLowerCase().endsWith('.webp'))" 
-                                 class="w-full h-full flex items-center justify-center bg-gray-900 rounded-sm overflow-hidden relative">
-                                <img :src="version?.url" class="max-w-full max-h-full object-contain" alt="Manuscript Page" />
+                                 class="relative inline-block w-full text-center">
+                                <img :src="version?.url" class="inline-block max-w-full shadow-2xl rounded-sm border-4 border-gray-800" alt="Manuscript Page" />
                             </div>
                             
                             <!-- Placeholder / PDF Renderer -->
-                            <div v-else class="w-full max-w-lg bg-gray-50/50 border border-gray-100 rounded-sm p-4 text-center">
+                            <div v-else class="w-full max-w-lg bg-gray-50/50 border border-gray-100 rounded-sm p-4 text-center mt-10">
                                 <div class="aspect-[3/4] bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg mb-4">
                                     <div class="text-gray-400">
                                         <p class="text-[10px]">نسخة التحقيق: {{ version?.title }}</p>
@@ -223,10 +270,13 @@ onUnmounted(() => {
         
         <!-- Global Controls Floating -->
         <div class="absolute bottom-6 left-6 flex flex-col gap-2 z-30">
-            <button class="w-10 h-10 rounded-full bg-white/80 backdrop-blur shadow-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:text-blue-500 transition-all hover:scale-110">
+            <button @click="resetZoom" class="w-10 h-10 rounded-full bg-white/80 backdrop-blur shadow-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:text-blue-500 transition-all hover:scale-110" title="ملاءمة الشاشة">
+                <i class="fas fa-expand"></i>
+            </button>
+            <button @click="zoomIn" class="w-10 h-10 rounded-full bg-white/80 backdrop-blur shadow-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:text-blue-500 transition-all hover:scale-110" title="تكبير">
                 <i class="fas fa-plus"></i>
             </button>
-            <button class="w-10 h-10 rounded-full bg-white/80 backdrop-blur shadow-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:text-blue-500 transition-all hover:scale-110">
+            <button @click="zoomOut" class="w-10 h-10 rounded-full bg-white/80 backdrop-blur shadow-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:text-blue-500 transition-all hover:scale-110" title="تصغير">
                 <i class="fas fa-minus"></i>
             </button>
         </div>
@@ -240,5 +290,32 @@ onUnmounted(() => {
 .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    display: block !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #1f2937; /* gray-800 */
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #4b5563; /* gray-600 */
+    border-radius: 4px;
+    border: 2px solid #1f2937;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #6b7280; /* gray-500 */
+}
+
+/* Ensure firefox supports it too */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #4b5563 #1f2937;
 }
 </style>

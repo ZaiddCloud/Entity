@@ -56,6 +56,36 @@ export const useEditorStore = defineStore('editor', () => {
         if (currentContentNode.value) currentContentNode.value.title = title
     }
 
+    const addMediaNode = () => {
+        if (!Array.isArray(content.value)) {
+            content.value = []
+        }
+
+        if (editorMode.value === 'audio') {
+            content.value = [...content.value, {
+                id: Date.now(),
+                startTime: '00:00',
+                endTime: '00:00',
+                label: 'مقطع جديد',
+                text: ''
+            }]
+        } else if (editorMode.value === 'video') {
+            content.value = [...content.value, {
+                id: Date.now(),
+                timestamp: '00:00',
+                title: 'مشهد جديد',
+                description: ''
+            }]
+        }
+    }
+
+    const removeMediaNode = (index) => {
+        if (!Array.isArray(content.value)) return
+        const newContent = [...content.value]
+        newContent.splice(index, 1)
+        content.value = newContent
+    }
+
     const executeCommand = (command, value = null) => {
         if (!editor.value) return
 
@@ -163,6 +193,7 @@ export const useEditorStore = defineStore('editor', () => {
         documentTitle, hasUnsavedChanges,
         setEditor, loadDocument, updateContent, togglePin,
         executeCommand, isActive, save, startAutoSave, stopAutoSave,
-        setEditorMode, setResourceData, getSavePayload, setTitle
+        setEditorMode, setResourceData, getSavePayload, setTitle,
+        addMediaNode, removeMediaNode
     }
 })

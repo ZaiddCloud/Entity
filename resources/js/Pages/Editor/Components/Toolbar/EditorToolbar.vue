@@ -264,6 +264,15 @@ const closeWindow = () => {
                 <template v-if="['audio', 'video'].includes(store.editorMode)">
                     <div class="v-divider"></div>
                     <div class="flex items-center gap-0.5">
+                        <button v-if="store.editorMode === 'audio'" class="icon-btn !w-auto !px-3 gap-2 bg-blue-50 text-blue-600 border border-blue-100 font-bold" @click="executeCommand('addMediaNode')" title="إضافة مقطع جديد">
+                            <span>➕</span>
+                            <span class="text-[10px]">إضافة مقطع</span>
+                        </button>
+                        <button v-if="store.editorMode === 'video'" class="icon-btn !w-auto !px-3 gap-2 bg-indigo-50 text-indigo-600 border border-indigo-100 font-bold" @click="executeCommand('addMediaNode')" title="إضافة مشهد جديد">
+                            <span>➕</span>
+                            <span class="text-[10px]">إضافة مشهد</span>
+                        </button>
+                        <div class="v-divider"></div>
                         <button class="icon-btn text-red-600" title="تشغيل/إيقاف">⏯️</button>
                         <button class="icon-btn text-red-600" title="ختم زمني">⏳</button>
                         <button class="icon-btn text-red-600" title="تمييز متحدث">🗣️</button>

@@ -15,16 +15,6 @@ const segments = computed({
     set: (val) => emit('update:modelValue', val)
 })
 
-const addSegment = () => {
-    segments.value = [...segments.value, { 
-        id: Date.now(),
-        startTime: '00:00', 
-        endTime: '00:00', 
-        label: 'مقطع جديد',
-        text: '' 
-    }]
-}
-
 const removeSegment = (index) => {
     const s = [...segments.value]
     s.splice(index, 1)
@@ -35,10 +25,7 @@ const removeSegment = (index) => {
 <template>
     <div class="p-8 font-arabic">
         <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-bold text-gray-800">تحرير المقاطع الصوتية</h2>
-            <button @click="addSegment" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-sm">
-                + إضافة مقطع
-            </button>
+            <h2 class="text-xl font-bold text-gray-800 underline decoration-blue-200 decoration-4">تفريغ المقاطع الصوتية</h2>
         </div>
 
         <div class="space-y-4">
