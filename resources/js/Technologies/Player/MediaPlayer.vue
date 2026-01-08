@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
-import ResourceNavigator from '@/Pages/Editor/Components/Common/ResourceNavigator.vue'
+import ResourceNavigator from '@/Technologies/Common/ResourceNavigator.vue'
 
 defineOptions({
   name: 'MediaPlayer'
