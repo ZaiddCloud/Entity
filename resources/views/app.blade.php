@@ -12,8 +12,8 @@
         <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 
         <!-- Scripts -->
-        @routes
         @vite(['resources/js/app.js'])
+        <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
         @inertiaHead
     </head>
     <body class="font-sans antialiased">

@@ -6,9 +6,22 @@ import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import TextAlign from '@tiptap/extension-text-align'
 import Placeholder from '@tiptap/extension-placeholder'
+import Link from '@tiptap/extension-link'
+import Image from '@tiptap/extension-image'
+// import Table from '@tiptap/extension-table'
+// import TableCell from '@tiptap/extension-table-cell'
+// import TableHeader from '@tiptap/extension-table-header'
+// import TableRow from '@tiptap/extension-table-row'
+import Subscript from '@tiptap/extension-subscript'
+import Superscript from '@tiptap/extension-superscript'
+import Highlight from '@tiptap/extension-highlight'
+
 import HeritagePoetry from '../Extensions/Poetry/PoetryExtension'
 import QuranicVerse from '../Extensions/Quran/QuranExtension'
 import ScientificFootnote from '../Extensions/Footnotes/FootnoteExtension'
+
+// UI Components will be added in the next step
+// import EditorBubbleMenu from '../UI/EditorBubbleMenu.vue'
 
 const props = defineProps({
     modelValue: {
@@ -36,6 +49,19 @@ const editor = useEditor({
         Placeholder.configure({
             placeholder: 'ابدأ الكتابة هنا...'
         }),
+        Link.configure({
+            openOnClick: false
+        }),
+        Image,
+        // Table.configure({
+        //     resizable: true,
+        // }),
+        // TableRow,
+        // TableHeader,
+        // TableCell,
+        Subscript,
+        Superscript,
+        Highlight,
         HeritagePoetry,
         QuranicVerse,
         ScientificFootnote
