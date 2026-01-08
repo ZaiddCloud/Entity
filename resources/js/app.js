@@ -12,7 +12,12 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
-    resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
+    resolve: (name) => {
+        if (name.startsWith('Technologies/')) {
+            return resolvePageComponent(`./${name}.vue`, import.meta.glob('./Technologies/**/*.vue'));
+        }
+        return resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue'));
+    },
     setup({ el, App, props, plugin }) {
         const pinia = createPinia();
 
