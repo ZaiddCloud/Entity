@@ -32,7 +32,7 @@ class ManuscriptController extends Controller
         return $this->renderEditor($manuscript, $childSlug);
     }
 
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
         Gate::authorize('viewAny', Manuscript::class);
         $filters = $request->only(['search', 'category', 'tag']);
@@ -57,6 +57,10 @@ class ManuscriptController extends Controller
             ->latest()
             ->paginate($request->get('per_page', 10))
             ->withQueryString();
+
+        if ($request->wantsJson()) {
+            return response()->json($manuscripts);
+        }
 
         return Inertia::render('Manuscripts/Index', [
             'manuscripts' => $manuscripts,

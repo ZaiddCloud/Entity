@@ -44,7 +44,7 @@ class AudioController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
         Gate::authorize('viewAny', Audio::class);
         $filters = $request->only(['search', 'category', 'tag']);
@@ -69,6 +69,10 @@ class AudioController extends Controller
             ->latest()
             ->paginate($request->get('per_page', 10))
             ->withQueryString();
+
+        if ($request->wantsJson()) {
+            return response()->json($audios);
+        }
 
         return Inertia::render('Audio/Index', [
             'audios' => $audios,

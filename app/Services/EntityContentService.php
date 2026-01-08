@@ -215,4 +215,16 @@ class EntityContentService
             'resource_data' => $resourceData
         ];
     }
+    /**
+     * Get first child node for an entity
+     */
+    public function getFirstChild(Entity $entity)
+    {
+        $model = $this->getContentModel($entity);
+        $idField = $this->getEntityIdField($entity);
+
+        return $model::where($idField, $entity->id)
+            ->orderBy('order')
+            ->first();
+    }
 }

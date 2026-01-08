@@ -44,12 +44,13 @@ class VideoController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
         Gate::authorize('viewAny', Video::class);
         $filters = $request->only(['search', 'category', 'tag']);
 
         $videos = Video::with(['tags', 'categories', 'authors', 'versions.publisher'])
+            // ... (keep existing query logic if matches, but for safety I will replace the block)
             ->when($request->search, function ($query, $search) {
                 $query->where('title', 'like', "%{$search}%")
                     ->orWhereHas('authors', function ($q) use ($search) {
@@ -70,7 +71,11 @@ class VideoController extends Controller
             ->paginate($request->get('per_page', 10))
             ->withQueryString();
 
-        return Inertia::render('Videos/Index', [
+        if ($request->wantsJson()) {
+            return response()->json($videos);
+        }
+
+        return Inertia::render('Video/Index', [
             'videos' => $videos,
             'filters' => $filters,
             'categories' => \App\Models\Category::all(['id', 'name']),

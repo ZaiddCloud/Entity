@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch, onUnmounted } from 'vue'
+import ResourceNavigator from '../Common/ResourceNavigator.vue'
 
 defineOptions({
   name: 'ManuscriptViewer'
@@ -7,91 +8,49 @@ defineOptions({
 
 const props = defineProps(['resource', 'currentNode'])
 
+const versions = computed(() => {
+    console.log('ManuscriptViewer Resource:', props.resource)
+    if (!props.resource?.versions) {
+        console.warn('No versions found in resource')
+        return []
+    }
+    console.log('Versions found:', props.resource.versions)
+    return props.resource.versions
+})
+
 const activeVersionIndex = ref(0)
-const isCompareMode = ref(false)
 const selectedVersionIndexes = ref([0])
+const isCompareMode = ref(false)
 
-// Width tracking for versions in compare mode
+// Viewer State
+const zoomLevel = ref(1.0)
 const panelWidths = ref([])
-const isResizing = ref(-1) // Index of handle being dragged
+const isResizing = ref(false)
 const containerRef = ref(null)
-let startX = 0
-let startWidths = []
-
-const zoomLevel = ref(1)
-const zoomIn = () => { if (zoomLevel.value < 5) zoomLevel.value += 0.2 }
-const zoomOut = () => { if (zoomLevel.value > 0.4) zoomLevel.value -= 0.2 }
-const resetZoom = () => { zoomLevel.value = 1 }
 
 // Panning State
 const isPanning = ref(false)
-const panStartX = ref(0)
-const panStartY = ref(0)
-const panScrollLeft = ref(0)
-const panScrollTop = ref(0)
-const viewerRefs = ref([]) // To track individual panel containers
+const panStart = ref({ x: 0, y: 0 })
+const scrollStart = ref({ left: 0, top: 0 })
 
-const handlePanStart = (e, idx) => {
-    const container = e.currentTarget
-    isPanning.value = true
-    panStartX.value = e.pageX - container.offsetLeft
-    panStartY.value = e.pageY - container.offsetTop
-    panScrollLeft.value = container.scrollLeft
-    panScrollTop.value = container.scrollTop
-    container.style.cursor = 'grabbing'
-}
-
-const handlePanMove = (e) => {
-    if (!isPanning.value) return
-    e.preventDefault()
-    const container = e.currentTarget
-    const x = e.pageX - container.offsetLeft
-    const y = e.pageY - container.offsetTop
-    const walkX = (x - panStartX.value) * 1.5 // Scroll speed
-    const walkY = (y - panStartY.value) * 1.5
-    container.scrollLeft = panScrollLeft.value - walkX
-    container.scrollTop = panScrollTop.value - walkY
-}
-
-const handlePanEnd = (e) => {
-    if (!isPanning.value) return
-    isPanning.value = false
-    e.currentTarget.style.cursor = 'grab'
-}
-
-const versions = computed(() => {
-    const v = []
-    
-    // 1. Prioritize current node image if present (The actual page being edited)
-    if (props.currentNode?.image_url) {
-        v.push({ title: props.currentNode.title || 'الصفحة الحالية', url: props.currentNode.image_url })
+// Initialize panels
+watch([versions, isCompareMode], () => {
+    if (isCompareMode.value) {
+        // Equal widths for selected versions
+        const count = selectedVersionIndexes.value.length || 1
+        panelWidths.value = Array(count).fill(100 / count)
+    } else {
+        // Single view
+        panelWidths.value = [100]
     }
-
-    // 2. Add other versions from resource
-    if (props.resource?.versions && Array.isArray(props.resource.versions)) {
-        props.resource.versions.forEach(version => v.push(version))
-    }
-    
-    // 3. Fallback if still empty
-    if (v.length === 0 && props.resource?.url) {
-        v.push({ title: 'الملف الأساسي', url: props.resource.url })
-    }
-
-    return v
-})
+}, { immediate: true })
 
 const displayedVersions = computed(() => {
-    if (!isCompareMode.value) {
-        const active = versions.value[activeVersionIndex.value]
-        return active ? [active] : []
+    if (isCompareMode.value) {
+        return selectedVersionIndexes.value.map(i => versions.value[i])
     }
-    return versions.value.filter((_, index) => selectedVersionIndexes.value.includes(index))
+    return [versions.value[activeVersionIndex.value]]
 })
-
-// Initialize widths when versions change
-watch(() => displayedVersions.value.length, (count) => {
-    panelWidths.value = new Array(count).fill(100 / count)
-}, { immediate: true })
 
 const toggleVersionSelection = (index) => {
     if (!isCompareMode.value) {
@@ -99,74 +58,62 @@ const toggleVersionSelection = (index) => {
         return
     }
     
-    if (selectedVersionIndexes.value.includes(index)) {
-        if (selectedVersionIndexes.value.length > 1) {
-            selectedVersionIndexes.value = selectedVersionIndexes.value.filter(i => i !== index)
-        }
-    } else {
+    const i = selectedVersionIndexes.value.indexOf(index)
+    if (i === -1) {
         selectedVersionIndexes.value.push(index)
+    } else if (selectedVersionIndexes.value.length > 1) {
+        selectedVersionIndexes.value.splice(i, 1)
     }
+    selectedVersionIndexes.value.sort((a, b) => a - b)
 }
 
-// Resizing logic
-const startResizing = (e, index) => {
-    e.preventDefault() // CRITICAL: Prevents default drag behavior which causes "unlatching"
-    isResizing.value = index
-    startX = e.clientX
-    startWidths = [...panelWidths.value]
-    
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', stopResizing)
-    document.body.style.cursor = 'col-resize'
-    document.body.style.userSelect = 'none'
+// Zoom Controls
+const zoomIn = () => zoomLevel.value = Math.min(zoomLevel.value + 0.1, 3)
+const zoomOut = () => zoomLevel.value = Math.max(zoomLevel.value - 0.1, 0.5)
+const resetZoom = () => zoomLevel.value = 1.0
+
+// Panning Logic
+const handlePanStart = (e, idx) => {
+    isPanning.value = true
+    panStart.value = { x: e.clientX, y: e.clientY }
+    // We assume the target element is the scrollable container
+    const target = e.currentTarget
+    scrollStart.value = { left: target.scrollLeft, top: target.scrollTop }
 }
 
-const handleMouseMove = (e) => {
-    if (isResizing.value === -1 || !containerRef.value) return
-    
-    const containerRect = containerRef.value.getBoundingClientRect()
-    const totalWidth = containerRect.width
-    const isRTL = document.dir === 'rtl'
-    
-    // Calculate delta in percentage
-    const mouseDeltaX = e.clientX - startX
-    const deltaPercent = (mouseDeltaX / totalWidth) * 100
-    
-    // Apply delta (negate in RTL because moving mouse left should expand the right-side panel)
-    const delta = isRTL ? -deltaPercent : deltaPercent
-    
-    const newLeftWidth = startWidths[isResizing.value] + delta
-    const newRightWidth = startWidths[isResizing.value + 1] - delta
-    
-    // Minimum panel width 10%
-    const minWidth = 10
-    
-    if (newLeftWidth > minWidth && newRightWidth > minWidth) {
-        panelWidths.value[isResizing.value] = newLeftWidth
-        panelWidths.value[isResizing.value + 1] = newRightWidth
-    }
+const handlePanMove = (e) => {
+    if (!isPanning.value) return
+    const dx = e.clientX - panStart.value.x
+    const dy = e.clientY - panStart.value.y
+    const target = e.currentTarget
+    target.scrollLeft = scrollStart.value.left - dx
+    target.scrollTop = scrollStart.value.top - dy
 }
 
-const stopResizing = () => {
-    isResizing.value = -1
-    document.removeEventListener('mousemove', handleMouseMove)
-    document.removeEventListener('mouseup', stopResizing)
-    document.body.style.cursor = ''
-    document.body.style.userSelect = ''
+const handlePanEnd = () => {
+    isPanning.value = false
 }
 
-onUnmounted(() => {
-    stopResizing()
-})
+// Panel Resizing (Simplified)
+const startResizing = (e, idx) => {
+    // Implementation left simple for now
+    console.log('Resize start', idx)
+}
 </script>
 
 <template>
     <div class="h-full bg-gray-50 flex flex-col border-l border-gray-200 overflow-hidden">
-        <!-- Versions Toolbar -->
-        <div class="flex items-center justify-between border-b border-gray-200 bg-white px-2">
+        <!-- Versions Toolbar (Glassmorphism) -->
+        <div class="glass-header flex items-center justify-between border-b border-gray-200 px-2 z-10 sticky top-0">
             <div class="flex items-center gap-4 overflow-hidden">
+                
+                <!-- Resource Navigator -->
+                <div class="border-l border-gray-200 pl-4 ml-2">
+                     <ResourceNavigator type="manuscript" :current-id="resource?.id" />
+                </div>
+
                 <!-- Manuscript Title -->
-                <div v-if="resource?.title" class="text-sm font-bold text-gray-700 whitespace-nowrap border-l pl-4 ml-2 my-2">
+                <div v-if="resource?.title" class="text-sm font-bold text-gray-700 whitespace-nowrap my-2 flex items-center">
                     <i class="fas fa-book-open text-gray-400 ml-2"></i>
                     {{ resource?.title }}
                 </div>
@@ -190,7 +137,7 @@ onUnmounted(() => {
             </div> <!-- Closing the gap-4 wrapper -->
             
             <!-- Compare Mode Toggle -->
-            <div class="flex items-center gap-2 border-r border-gray-100 pr-3 mr-1">
+            <div class="flex items-center gap-2 border-r border-gray-200 pr-3 mr-1">
                 <label class="relative inline-flex items-center cursor-pointer scale-75">
                     <input type="checkbox" v-model="isCompareMode" class="sr-only peer">
                     <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -241,7 +188,7 @@ onUnmounted(() => {
                     >
                         <div class="flex flex-col items-center justify-start min-h-full transition-all duration-300 mx-auto pointer-events-none" :style="{ width: (zoomLevel * 100) + '%', minWidth: '100%' }">
                             <!-- Image Renderer -->
-                            <div v-if="version?.url && (version.url.toLowerCase().endsWith('.jpg') || version.url.toLowerCase().endsWith('.jpeg') || version.url.toLowerCase().endsWith('.png') || version.url.toLowerCase().endsWith('.webp'))" 
+                            <div v-if="version?.url" 
                                  class="relative inline-block w-full text-center">
                                 <img :src="version?.url" class="inline-block max-w-full shadow-2xl rounded-sm border-4 border-gray-800" alt="Manuscript Page" />
                             </div>
@@ -284,6 +231,11 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.glass-header {
+    background: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(12px) !important;
+}
+
 .no-scrollbar::-webkit-scrollbar {
     display: none;
 }

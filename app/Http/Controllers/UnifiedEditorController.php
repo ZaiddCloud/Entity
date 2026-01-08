@@ -29,18 +29,31 @@ class UnifiedEditorController extends Controller
 
     /**
      * المسار الموحد للمحرر: /editor/{type}/{slug}
+     * Note: Type hint removed to allow RedirectResponse
      */
-    public function show(string $type, string $slug): Response
+    public function show(string $type, string $slug)
     {
-        $entity = $this->resolveEntity($type, $slug);
+        // 1. Try to resolve as a specific Content Node (Segment/Page)
+        try {
+            $entity = $this->resolveEntity($type, $slug);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // 2. If not found, try to resolve as a Parent Entity (Book/Audio/etc)
+            $parentEntity = $this->resolveParentEntity($type, $slug);
+
+            if ($parentEntity) {
+                // Find the first child node
+                $firstChild = $this->contentService->getFirstChild($parentEntity);
+                
+                if ($firstChild) {
+                    return redirect()->route('editor.show', ['type' => $type, 'slug' => $firstChild->slug]);
+                }
+            }
+            // If still not found, throw 404
+            abort(404, 'Resource not found');
+        }
 
         // التحقق من الصلاحية
         Gate::authorize('update', $entity);
-
-        // تحضير البيانات عبر الخدمة الموحدة
-        // ملاحظة: هنا نحتاج لإيجاد الـ childNode slug الصحيح.
-        // إذا كان slug هو slug الكيان الرئيسي، قد نحتاج لأول جزء فيه.
-        // ولكن في تصميمنا، الرابط يشير مباشرة لـ ContentNode slug.
 
         $data = $this->contentService->prepareEditorData($entity, $slug);
 
@@ -139,5 +152,22 @@ class UnifiedEditorController extends Controller
             'video' => VideoSegment::class,
             default => EntityContent::class,
         };
+    }
+    /**
+     * Resolve Parent Entity directly
+     */
+    protected function resolveParentEntity(string $type, string $slug)
+    {
+        $modelClass = match ($type) {
+            'book' => Book::class,
+            'audio' => Audio::class,
+            'video' => Video::class,
+            'manuscript' => Manuscript::class,
+            default => null
+        };
+
+        if (!$modelClass) return null;
+
+        return $modelClass::where('slug', $slug)->first();
     }
 }
