@@ -8,17 +8,30 @@ import TextAlign from '@tiptap/extension-text-align'
 import Placeholder from '@tiptap/extension-placeholder'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
-// import Table from '@tiptap/extension-table'
-// import TableCell from '@tiptap/extension-table-cell'
-// import TableHeader from '@tiptap/extension-table-header'
-// import TableRow from '@tiptap/extension-table-row'
+import { Table } from '@tiptap/extension-table'
+import { TableCell } from '@tiptap/extension-table-cell'
+import { TableHeader } from '@tiptap/extension-table-header'
+import { TableRow } from '@tiptap/extension-table-row'
 import Subscript from '@tiptap/extension-subscript'
 import Superscript from '@tiptap/extension-superscript'
 import Highlight from '@tiptap/extension-highlight'
+import { Color } from '@tiptap/extension-color'
+import { TextStyle } from '@tiptap/extension-text-style'
 
 import HeritagePoetry from '../Extensions/Poetry/PoetryExtension'
 import QuranicVerse from '../Extensions/Quran/QuranExtension'
 import ScientificFootnote from '../Extensions/Footnotes/FootnoteExtension'
+
+// Commands (Slash Menu)
+import { CommandExtension } from '../Extensions/Commands/CommandExtension'
+import suggestionUtils from '../Extensions/Commands/SuggestionUtils'
+
+// Drag & Drop
+import FileNode from '../Nodes/File/FileNode'
+import { DragAndDrop } from '../Extensions/DragAndDrop/DragAndDropExtension'
+
+// Drag Handle
+import { DragHandleExtension } from '../Extensions/DragHandle/DragHandleExtension'
 
 // UI Components will be added in the next step
 // import EditorBubbleMenu from '../UI/EditorBubbleMenu.vue'
@@ -53,18 +66,26 @@ const editor = useEditor({
             openOnClick: false
         }),
         Image,
-        // Table.configure({
-        //     resizable: true,
-        // }),
-        // TableRow,
-        // TableHeader,
-        // TableCell,
+        Table.configure({
+            resizable: true,
+        }),
+        TableRow,
+        TableHeader,
+        TableCell,
         Subscript,
         Superscript,
         Highlight,
+        TextStyle,
+        Color,
         HeritagePoetry,
         QuranicVerse,
-        ScientificFootnote
+        ScientificFootnote,
+        FileNode,  // Register new node
+        DragAndDrop, // Register extension
+        CommandExtension.configure({
+            suggestion: suggestionUtils
+        }),
+        DragHandleExtension,
     ],
     editorProps: {
         attributes: {
@@ -167,4 +188,50 @@ onBeforeUnmount(() => {
 .ProseMirror u {
     text-decoration: underline;
 }
+
+/* Drag Handle Styles */
+.ProseMirror p,
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6 {
+    position: relative;
+}
+
+.ProseMirror p:hover::before,
+.ProseMirror h1:hover::before,
+.ProseMirror h2:hover::before,
+.ProseMirror h3:hover::before,
+.ProseMirror h4:hover::before,
+.ProseMirror h5:hover::before,
+.ProseMirror h6:hover::before {
+    content: '⋮⋮';
+    position: absolute;
+    right: calc(100% + 0.5rem);
+    top: 0.25rem;
+    color: #9CA3AF;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: grab;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.ProseMirror p:hover::before:hover,
+.ProseMirror h1:hover::before:hover,
+.ProseMirror h2:hover::before:hover,
+.ProseMirror h3:hover::before:hover,
+.ProseMirror h4:hover::before:hover,
+.ProseMirror h5:hover::before:hover,
+.ProseMirror h6:hover::before:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #4B5563;
+}
+
+
+
 </style>
