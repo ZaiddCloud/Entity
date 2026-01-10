@@ -103,16 +103,17 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('notes', NoteController::class);
     Route::resource('deletions', DeletionController::class)->only(['index', 'show']);
 
-    // 🧪 SANDBOX ROUTES (Temporary for Development)
-    Route::get('/dev/editor', function () {
-        return \Inertia\Inertia::render('Technologies/Editor/Sandbox');
-    })->name('dev.editor');
-
-    Route::get('/dev/player', function () {
-        return \Inertia\Inertia::render('Technologies/Player/Sandbox');
-    })->name('dev.player');
-
-    Route::get('/dev/manuscript', function () {
-        return \Inertia\Inertia::render('Technologies/Manuscripter/Sandbox');
-    })->name('dev.manuscript');
 });
+
+// 🧪 SANDBOX ROUTES (Temporary for Development)
+Route::get('/dev/editor', function () {
+    return \Inertia\Inertia::render('Technologies/Editor/Sandbox');
+})->name('dev.editor');
+
+Route::get('/dev/player', function () {
+    return \Inertia\Inertia::render('Technologies/Player/Sandbox');
+})->name('dev.player');
+
+Route::get('/dev/manuscript', function () {
+    return \Inertia\Inertia::render('Technologies/Manuscripter/Sandbox');
+})->name('dev.manuscript');

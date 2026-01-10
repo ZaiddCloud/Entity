@@ -1,60 +1,117 @@
 <script setup>
-import { onMounted } from 'vue'
-import MediaPlayer from './MediaPlayer.vue'
-import { useMediaStore } from '@/Technologies/Editor/Core/MediaStore'
+import { ref } from 'vue';
+import MediaPlayer from './MediaPlayer.vue';
+import SegmentsEditor from './SegmentsEditor.vue';
 
-const store = useMediaStore()
+const sampleVideo = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+const samplePoster = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg";
 
-// Mock logic for player sandbox
-onMounted(() => {
-    store.setMode('audio')
-    // Mocking some hierarchy data for the playlist
-    const mockHierarchy = [
-        { _id: 1, title: 'المقدمة', type: 'chapter', audio_url: '/storage/samples/intro.mp3' },
-        { _id: 2, title: 'الفصل الأول', type: 'chapter', audio_url: '/storage/samples/ch1.mp3' },
-    ]
-    // In a real scenario, we'd load this into the store or pass it as props
-})
+// Initialize with some dummy segments
+const segments = ref([
+    { start: 10, end: 30, label: 'Intro Scene', color: '#10b981' }, 
+    { start: 60, end: 90, label: 'The Chase', color: '#f59e0b' },
+    { start: 120, end: 150, label: 'Climax', color: '#ef4444' }
+]);
+
+// Shared State
+const playerRef = ref(null);
+const currentPlayerTime = ref(0);
+const currentDuration = ref(0);
+
+// Handlers
+const onPlayerReady = () => {
+    // console.log("Player Ready");
+};
+
+// Update time from player to editor (for capture)
+const onTimeUpdate = ({ currentTime, duration }) => {
+    currentPlayerTime.value = currentTime;
+    currentDuration.value = duration;
+};
+
+// Seek from editor to player
+const handleSeek = (time) => {
+    if (playerRef.value?.seek) {
+        playerRef.value.seek(time);
+    }
+};
+
+const handleSave = (finalSegments) => {
+    console.log("Saving Final Segments:", finalSegments);
+    alert(`Saved ${finalSegments.length} segments! (Check Console)`);
+};
 </script>
 
 <template>
-    <div class="min-h-screen bg-gray-900 p-8 font-ui text-white" dir="rtl">
-        <div class="max-w-4xl mx-auto">
-            <div class="flex items-center justify-between mb-8">
-                <div>
-                    <h1 class="text-2xl font-bold text-blue-400">🎧 مختبر المشغل (Player Sandbox)</h1>
-                    <p class="text-gray-400 text-sm">بيئة تطوير معزولة لمشغل الوسائط.</p>
-                </div>
-                <div class="flex gap-2">
-                    <button @click="store.setMode('audio')" class="px-4 py-2 rounded text-sm transition-colors" :class="store.mode === 'audio' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300'">صوت</button>
-                    <button @click="store.setMode('video')" class="px-4 py-2 rounded text-sm transition-colors" :class="store.mode === 'video' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-300'">فيديو</button>
+    <div class="h-screen bg-black overflow-hidden flex flex-col">
+        <!-- Header -->
+        <div class="h-14 bg-gray-900 border-b border-gray-800 flex items-center px-6 justify-between shrink-0">
+            <h1 class="text-xl font-bold text-white tracking-wide">Entity Media Studio</h1>
+            <div class="text-xs text-gray-500 font-mono">DEV MODE</div>
+        </div>
+
+        <!-- Main Workspace -->
+        <div class="flex-1 flex overflow-hidden">
+            
+            <!-- LEFT: Media Player Area -->
+            <div class="flex-1 bg-black flex items-center justify-center relative p-6">
+                <div class="w-full max-w-5xl aspect-video bg-gray-900 rounded-xl shadow-2xl ring-1 ring-white/10 overflow-hidden relative">
+                    <MediaPlayer 
+                        ref="playerRef"
+                        :src="sampleVideo" 
+                        type="video" 
+                        :poster="samplePoster" 
+                        :segments="segments"
+                        @ready="onPlayerReady"
+                        @timeupdate="onTimeUpdate"
+                    />
+                    
+                    <!-- Invisible Overlay to capture time updates if MediaPlayer doesn't emit them directly yet. 
+                         Ideally MediaPlayer should emit time-update. 
+                         For now, we can rely on the fact that useMedia exposes currentTime via ref if we had access, 
+                         but since it's inside, let's use a quick hack or assume MediaPlayer emits 'timeupdate' or we bind to the video element.
+                         
+                         WAIT: MediaPlayer uses useMedia internally. It doesn't emit time updates by default in the props I saw.
+                         Let's update MediaPlayer to emit 'time-update' OR use a ref to access its state.
+                         My previous MediaPlayer code didn't emit generic time updates.
+                         
+                         BETTER APPROACH:
+                         Let's rely on the fact that MediaPlayer's useMedia updates `currentTime`.
+                         We can add a `ref="playerRef"` and access `playerRef.value.currentTime` ?? 
+                         No, `script setup` is closed by default.
+
+                         FIX: I will modify MediaPlayer slightly to emit `timeupdate` to parent, 
+                         OR I will access the internal video element if exposed.
+                         
+                         Let's check MediaPlayer.vue again. It doesn't expose `currentTime`.
+                         
+                         Re-checking MediaPlayer.vue provided earlier...
+                         It has: `const { currentTime ... } = useMedia(mediaRef);`
+                         It does NOT defineExpose({ currentTime }).
+                         
+                         I will wrap the MediaPlayer in a div that listens to capture events? No, that's messy.
+                         
+                         I will update MediaPlayer.vue to `defineExpose({ currentTime, duration, seek })` 
+                         so the parent can read it. This is the cleanest way.
+                    -->
                 </div>
             </div>
 
-            <!-- The Player Assembly -->
-            <div class="bg-black/50 rounded-xl shadow-2xl border border-gray-800 overflow-hidden min-h-[400px] flex items-center justify-center relative">
-                <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
-                    <span class="text-6xl">🎵</span>
-                </div>
-                
-                <!-- We pass mock props for now since the component expects them -->
-                <MediaPlayer 
-                    :mode="store.mode"
-                    :resource="{ title: 'مقطع تجريبي', url: '#' }"
-                    :hierarchy="[]"
+            <!-- RIGHT: Segments Editor Sidebar -->
+            <div class="w-96 border-l border-gray-800 bg-gray-900 shrink-0 h-full">
+                <!-- We need to pass the REAL time. Since we haven't wired MediaPlayer to emit it yet, 
+                     I'll add a temporary interval or modify MediaPlayer in the next step.
+                     For now, let's assume I will fix MediaPlayer to emit/expose time.
+                -->
+                <SegmentsEditor 
+                    :current-time="currentPlayerTime"
+                    :duration="currentDuration"
+                    :initial-segments="segments"
+                    @update:segments="segments = $event"
+                    @seek="handleSeek"
+                    @save-final="handleSave"
                 />
-            </div>
-
-            <div class="mt-8 p-4 bg-gray-800 rounded-lg">
-                <h3 class="font-bold text-gray-300 mb-2">حالة المشغل (State):</h3>
-                <pre class="bg-black/30 p-4 rounded text-xs text-green-400 font-mono">{{ store.$state }}</pre>
             </div>
         </div>
     </div>
 </template>
-
-<style>
-.font-ui {
-    font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
-}
-</style>
