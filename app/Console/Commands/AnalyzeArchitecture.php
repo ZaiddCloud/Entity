@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\File;
 
 class AnalyzeArchitecture extends Command
 {
-    protected $signature = 'analyze:architecture 
+    protected $signature = 'analyze:architecture
                             {directories?* : Directories to analyze}
                             {--no-recursive : Don\'t scan subdirectories}
                             {--output= : Output file path}';
@@ -30,7 +30,7 @@ class AnalyzeArchitecture extends Command
         $this->newLine();
 
         $directories = $this->argument('directories');
-        
+
         if (empty($directories)) {
             $directories = $this->selectDirectoriesInteractively();
         }
@@ -107,10 +107,10 @@ class AnalyzeArchitecture extends Command
 
         $availableDirs = [
             'app/Http/Controllers', 'app/Http/Middleware', 'app/Models', 'app/Services',
-            'app/Traits', 'app/Helpers', 'app/Providers', 'app/Events', 'app/Listeners',
+            'app/Traits', 'app/Helpers', 'app/Providers', 'app/Repositories', 'app/Events', 'app/Listeners',
             'app/Jobs', 'app/Mail', 'app/Notifications', 'app/Policies', 'app/Rules',
-            'resources/js/Pages', 'resources/js/Components', 'resources/js/Layouts',
-            'tests/Feature', 'tests/Unit',
+            'resources/js/Pages', 'resources/js/Technologies', 'resources/js/Components', 'resources/js/Layouts',
+            'tests/Feature', 'tests/Browser', 'tests/Unit',
         ];
 
         $existingDirs = [];
@@ -180,7 +180,7 @@ class AnalyzeArchitecture extends Command
         $this->newLine();
         $this->info("═══ $title ═══");
         $this->newLine();
-        
+
         $this->addToFile("");
         $this->addToFile("## " . $title);
         $this->addToFile("");
@@ -191,18 +191,18 @@ class AnalyzeArchitecture extends Command
         // Add table header
         $this->addToFile("| Directory | PHP Files |");
         $this->addToFile("|-----------|-----------|");
-        
+
         foreach ($directories as $directory) {
             $path = base_path($directory);
             if (!File::isDirectory($path)) continue;
 
             $files = $this->getPhpFiles($path, $recursive);
             $count = count($files);
-            
+
             $line = "📊 $directory: $count PHP files";
             $this->info($line);
             $this->addToFile("| `$directory` | $count |");
-            
+
             $this->stats['total_files'] += $count;
         }
 
@@ -234,33 +234,33 @@ class AnalyzeArchitecture extends Command
     {
         $content = File::get($filePath);
         $lines = substr_count($content, "\n") + 1;
-        
+
         preg_match_all('/public function\s+(\w+)/', $content, $publicMatches);
         preg_match_all('/protected function\s+(\w+)/', $content, $protectedMatches);
         preg_match_all('/private function\s+(\w+)/', $content, $privateMatches);
-        
+
         // Detect Pest test syntax
         preg_match_all('/^(test|it)\s*\(/', $content, $pestMatches, 2); // PREG_MULTILINE = 2
-        
+
         $publicCount = count($publicMatches[0] ?? []);
         $protectedCount = count($protectedMatches[0] ?? []);
         $privateCount = count($privateMatches[0] ?? []);
         $pestCount = count($pestMatches[0] ?? []);
-        
+
         $relativePath = str_replace(base_path() . '/', '', $filePath);
-        
+
         $this->addToFile("");
         $this->addToFile("### 📄 `$relativePath`");
         $this->addToFile("");
         $this->addToFile("- **Lines:** $lines");
-        
+
         if ($pestCount > 0) {
             $this->addToFile("- **Pest Tests:** $pestCount");
         }
-        
+
         $this->addToFile("- **Functions:** $publicCount public, $protectedCount protected, $privateCount private");
         $this->addToFile("");
-        
+
         if ($publicCount > 0) {
             $this->addToFile("**Public Functions:**");
             foreach ($publicMatches[0] as $func) {
@@ -268,7 +268,7 @@ class AnalyzeArchitecture extends Command
             }
             $this->addToFile("");
         }
-        
+
         if ($pestCount > 0) {
             $this->addToFile("**Pest Tests:**");
             foreach ($pestMatches[0] as $test) {
@@ -276,7 +276,7 @@ class AnalyzeArchitecture extends Command
             }
             $this->addToFile("");
         }
-        
+
         $this->stats['total_lines'] += $lines;
         $this->stats['total_functions'] += $publicCount + $protectedCount + $privateCount + $pestCount;
     }
@@ -289,7 +289,7 @@ class AnalyzeArchitecture extends Command
         $this->newLine();
 
         $crudMethods = ['index', 'show', 'store', 'update', 'destroy'];
-        
+
         foreach ($directories as $directory) {
             $path = base_path($directory);
             if (!File::isDirectory($path)) continue;
@@ -301,23 +301,23 @@ class AnalyzeArchitecture extends Command
             $this->addToFile("");
             $this->addToFile("| Method | Count |");
             $this->addToFile("|--------|-------|");
-            
+
             foreach ($crudMethods as $method) {
                 $count = 0;
                 $files = $this->getPhpFiles($path, true);
-                
+
                 foreach ($files as $file) {
                     $content = File::get($file->getRealPath());
                     if (preg_match("/public function $method\s*\(/", $content)) {
                         $count++;
                     }
                 }
-                
+
                 $methodLine = "    $method() → $count files";
                 $this->line($methodLine);
                 $this->addToFile("| `$method()` | $count |");
             }
-            
+
             $this->newLine();
         }
 
@@ -330,11 +330,11 @@ class AnalyzeArchitecture extends Command
     protected function displayLargestFiles($directories)
     {
         $allFiles = [];
-        
+
         foreach ($directories as $directory) {
             $path = base_path($directory);
             if (!File::isDirectory($path)) continue;
-            
+
             $files = $this->getPhpFiles($path, true);
             foreach ($files as $file) {
                 $filePath = $file->getRealPath();
@@ -342,13 +342,13 @@ class AnalyzeArchitecture extends Command
                 $allFiles[$filePath] = $lines;
             }
         }
-        
+
         arsort($allFiles);
         $top10 = array_slice($allFiles, 0, 10, true);
-        
+
         $this->addToFile("| Lines | File |");
         $this->addToFile("|-------|------|");
-        
+
         foreach ($top10 as $file => $lines) {
             $relativePath = str_replace(base_path() . '/', '', $file);
             $line = "   📏 $lines lines → $relativePath";
@@ -363,7 +363,7 @@ class AnalyzeArchitecture extends Command
         foreach ($directories as $directory) {
             $path = base_path($directory);
             if (!File::isDirectory($path)) continue;
-            
+
             $files = $this->getPhpFiles($path, true);
             foreach ($files as $file) {
                 $lines = substr_count(File::get($file->getRealPath()), "\n") + 1;
@@ -372,7 +372,7 @@ class AnalyzeArchitecture extends Command
                 }
             }
         }
-        
+
         if ($largeFiles > 0) {
             $warning = "⚠️  Found $largeFiles files with >300 lines";
             $suggestion = "   → Consider breaking them into smaller classes";
@@ -384,12 +384,12 @@ class AnalyzeArchitecture extends Command
             $this->addToFile("> Consider breaking them into smaller classes");
             $this->newLine();
         }
-        
+
         $this->info("📊 Summary:");
         $this->info("   Total Files: {$this->stats['total_files']}");
         $this->info("   Total Lines: {$this->stats['total_lines']}");
         $this->info("   Total Functions: {$this->stats['total_functions']}");
-        
+
         $this->addToFile("");
         $this->addToFile("### 📊 Summary");
         $this->addToFile("");
@@ -405,7 +405,7 @@ class AnalyzeArchitecture extends Command
         if ($recursive) {
             return File::allFiles($directory);
         }
-        
+
         return collect(File::files($directory))
             ->filter(fn($file) => $file->getExtension() === 'php')
             ->all();
