@@ -1,6 +1,7 @@
 <script setup>
 import { Link, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { route } from 'ziggy-js';
 
 defineProps({
     isOpen: {

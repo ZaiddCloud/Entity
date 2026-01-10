@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { FOOTNOTE_TYPES, FOOTNOTE_LABELS } from '../../Constants/footnoteTypes'
+import { FOOTNOTE_TYPES, FOOTNOTE_LABELS } from '../Core/Constants/footnoteTypes'
 
 const props = defineProps({
     isOpen: Boolean,

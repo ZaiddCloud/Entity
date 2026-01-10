@@ -10,6 +10,8 @@ import { createPinia } from 'pinia';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+window.Ziggy = Ziggy;
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => {
