@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use MongoDB\Laravel\Eloquent\HybridRelations;
+
 class Video extends Entity
 {
+    use HybridRelations;
     protected $table = 'videos';
 
     protected $fillable = [
@@ -18,5 +21,11 @@ class Video extends Entity
         'updated_at'
     ];
 
-
+    /**
+     * العلاقة مع مشاهد الفيديو في MongoDB
+     */
+    public function children()
+    {
+        return $this->hasMany(VideoSegment::class, 'video_id', 'id');
+    }
 }

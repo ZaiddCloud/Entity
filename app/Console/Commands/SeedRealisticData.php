@@ -75,7 +75,7 @@ class SeedRealisticData extends Command
         // 1. Core Users
         $admin = User::firstOrCreate(
             ['email' => 'admin@admin.com'],
-            ['name' => 'Admin User', 'password' => Hash::make('admin')]
+            ['name' => 'Admin User', 'password' => Hash::make('password')]
         );
         if (User::count() < 5)
             User::factory(5)->create();
@@ -90,7 +90,9 @@ class SeedRealisticData extends Command
             'الفلسفة والمنطق',
             'المخطوطات القديمة',
             'السيرة النبوية',
-            'الطب القديم'
+            'الطب العربي',
+            'الفلك بنظرة إسلامية',
+            'العمارة الإسلامية'
         ])->map(fn($name) => Category::firstOrCreate(['name' => $name]));
 
         $tags = collect([
@@ -100,8 +102,40 @@ class SeedRealisticData extends Command
             'العصر العباسي',
             'الأندلس',
             'ملون',
-            'مترجم'
+            'مترجم',
+            'شرح',
+            'متن',
+            'حاشية'
         ])->map(fn($name) => Tag::firstOrCreate(['name' => $name]));
+
+        // --- NEW: Topic Hierarchy ---
+        $this->info("Seeding Topic Hierarchy...");
+        $topicTree = [
+            'العلوم الشرعية' => [
+                'التفسير' => ['تفسير القرآن الكريم', 'أسباب النزول'],
+                'الحديث' => ['الصحاح', 'السنن', 'المصطلح'],
+                'الفقه' => ['فقه العبادات', 'فقه المعاملات'],
+            ],
+            'الفنون والآداب' => [
+                'الشعر العربي' => ['المعلقات', 'شعر الزهد'],
+                'النثر' => ['الأمثال', 'المقامات'],
+            ],
+            'العلوم التطبيقية' => [
+                'الطب القديم' => ['قانون ابن سينا'],
+                'الفلك' => ['الإصطرلاب'],
+            ]
+        ];
+
+        foreach ($topicTree as $parentName => $subTopics) {
+            $parent = \App\Models\Topic::firstOrCreate(['name' => $parentName]);
+            foreach ($subTopics as $subName => $children) {
+                $sub = \App\Models\Topic::firstOrCreate(['name' => $subName, 'parent_id' => $parent->id]);
+                foreach ($children as $childName) {
+                    \App\Models\Topic::firstOrCreate(['name' => $childName, 'parent_id' => $sub->id]);
+                }
+            }
+        }
+        $topics = \App\Models\Topic::all();
 
         // 3. New Ecosystem Data (Authors, Publishers, Bookers)
         $this->info("Seeding Authors, Publishers and Contributors...");
@@ -133,6 +167,11 @@ class SeedRealisticData extends Command
                     ['title' => 'كتاب الحيوان', 'author' => 'الجاحظ'],
                     ['title' => 'ديوان المتنبي', 'author' => 'المتنبي'],
                     ['title' => 'تهافت التهافت', 'author' => 'ابن رشد'],
+                    ['title' => 'الأغاني للأصفهاني', 'author' => 'الجاحظ'],
+                    ['title' => 'الرسالة للشافعي', 'author' => 'الشافعي'],
+                    ['title' => 'فتوح البلدان للحموي', 'author' => 'بشار عواد معروف'],
+                    ['title' => 'تاريخ دمشق لابن عساكر', 'author' => 'ابن خلدون'],
+                    ['title' => 'وفيات الأعيان لابن خلكان', 'author' => 'الجاحظ'],
                 ]
             ],
             'manuscript' => [
@@ -390,7 +429,10 @@ class SeedRealisticData extends Command
 
                 // Relationships (Every entity MUST have these)
                 $entity->categories()->attach($categories->random(1)->pluck('id'));
-                $entity->tags()->attach($tags->random(rand(1, 3))->pluck('id'));
+                $entity->tags()->attach($tags->random(rand(2, 4))->pluck('id'));
+                if ($type === 'book') {
+                    $entity->topics()->attach($topics->random(rand(1, 2))->pluck('id'));
+                }
 
                 // Interactions (Random but frequent)
                 if (rand(1, 10) > 2) {

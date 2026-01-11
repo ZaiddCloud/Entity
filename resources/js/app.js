@@ -4,13 +4,14 @@ import './bootstrap';
 import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
-import { ZiggyVue } from 'ziggy-js';
+import { ZiggyVue, route } from 'ziggy-js';
 import { Ziggy } from './ziggy';
 import { createPinia } from 'pinia';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 window.Ziggy = Ziggy;
+window.route = route;
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,

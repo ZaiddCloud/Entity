@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use MongoDB\Laravel\Eloquent\HybridRelations;
+
 class Audio extends Entity
 {
+    use HybridRelations;
     protected $table = 'audios';
 
     protected $fillable = [
@@ -53,5 +56,13 @@ class Audio extends Entity
     public function getSampleRateFormattedAttribute(): string
     {
         return $this->sample_rate . ' Hz';
+    }
+
+    /**
+     * العلاقة مع المقاطع الصوتية في MongoDB
+     */
+    public function children()
+    {
+        return $this->hasMany(AudioSegment::class, 'audio_id', 'id');
     }
 }

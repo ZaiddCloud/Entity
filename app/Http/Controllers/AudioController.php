@@ -27,6 +27,7 @@ class AudioController extends EntityController
     protected function getSearchRelations(): array { return ['authors' => 'name']; }
     protected function getPerPage(): int { return 16; }
     protected function getFileUploads(): array { return ['file' => 'audio', 'cover' => 'covers']; }
+    protected function shouldLoadFirstChild(): bool { return true; }
     
     protected function getCreateSuccessMessage(): string { return 'تم إنشاء الملف الصوتي بنجاح'; }
     protected function getUpdateSuccessMessage(): string { return 'تم تحديث الملف الصوتي بنجاح'; }

@@ -612,7 +612,7 @@ abstract class EntityController extends Controller
      */
     protected function getResourceName(): string
     {
-        return \Illuminate\Support\Str::plural(strtolower(class_basename($this->getModelClass())));
+        return $this->getRouteName();
     }
 
     /**
