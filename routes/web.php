@@ -47,6 +47,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/editor/{type}/{slug}', [App\Http\Controllers\UnifiedEditorController::class, 'show'])->name('editor.show');
     Route::post('/editor/{type}/{slug}/save', [App\Http\Controllers\UnifiedEditorController::class, 'save'])->name('editor.save');
 
+    // Missing API routes for Book Children (Compatibility Layer)
+    Route::post('api/book-children/{id}/save', [BookContentController::class, 'updateValidation'])->name('api.book-children.save');
+    Route::post('api/book-children/{id}/restore/{version?}', [BookContentController::class, 'restoreVersion'])->name('api.book-children.restore');
+
     // Editor Test Route
     Route::get('/editor-test', [App\Http\Controllers\EditorTestController::class, 'index'])->name('editor.test');
 
@@ -77,6 +81,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('tags', TagController::class);
 
     Route::post('authors/bulk-destroy', [AuthorController::class, 'bulkDestroy'])->name('authors.bulk-destroy');
+    Route::post('authors/{author}/restore', [AuthorController::class, 'restore'])->name('authors.restore');
+    Route::delete('authors/{author}/force-delete', [AuthorController::class, 'forceDelete'])->name('authors.force-delete');
     Route::resource('authors', AuthorController::class);
 
     Route::post('publishers/bulk-destroy', [PublisherController::class, 'bulkDestroy'])->name('publishers.bulk-destroy');
@@ -95,6 +101,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('shelves', ShelfController::class);
 
     Route::resource('collections', CollectionController::class);
+    Route::post('series/bulk-destroy', [SeriesController::class, 'bulkDestroy'])->name('series.bulk-destroy');
     Route::resource('series', SeriesController::class);
 
     // Metadata and Logs

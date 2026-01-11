@@ -11,6 +11,7 @@ class BookChild extends Model
 
     protected $fillable = [
         'book_id',
+        'parent_id',
         'slug',
         'type',
         'title',

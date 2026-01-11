@@ -67,6 +67,6 @@ class Manuscript extends Entity
      */
     public function children()
     {
-        return $this->hasMany(ManuscriptChild::class, 'manuscript_id', 'id');
+        return $this->hasMany(ManuscriptPage::class, 'manuscript_id', 'id');
     }
 }

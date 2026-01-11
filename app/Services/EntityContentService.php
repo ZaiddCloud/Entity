@@ -132,13 +132,18 @@ class EntityContentService
         $model = $this->getContentModel($entity);
         $idField = $this->getEntityIdField($entity);
 
+        $order = $currentNode->order;
+        if ($order === null) {
+            return ['prev' => null, 'next' => null];
+        }
+
         $prev = $model::where($idField, $entity->id)
-            ->where('order', '<', $currentNode->order)
+            ->where('order', '<', (int) $order)
             ->orderBy('order', 'desc')
             ->first(['slug', 'title']);
 
         $next = $model::where($idField, $entity->id)
-            ->where('order', '>', $currentNode->order)
+            ->where('order', '>', (int) $order)
             ->orderBy('order', 'asc')
             ->first(['slug', 'title']);
 

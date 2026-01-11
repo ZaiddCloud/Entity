@@ -37,7 +37,7 @@ class InertiaResponseTest extends TestCase
     public function it_renders_audio_index_page()
     {
         Audio::factory()->count(3)->create();
-        $this->get('/audios')->assertInertia(fn (Assert $page) => $page->component('Audio/Index'));
+        $this->get('/audios')->assertInertia(fn (Assert $page) => $page->component('Audios/Index'));
     }
 
     #[Test]

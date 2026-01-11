@@ -45,7 +45,7 @@ class StorageSyncTest extends TestCase
         Storage::disk('public')->put('manuscripts/Bundle_X/page2.png', 'img2');
 
         // 3. Create Standalone Audio in nested folder
-        Storage::disk('public')->put('audio/Podcasts/History/Episode1.mp3', 'mp3');
+        Storage::disk('public')->put('audios/Podcasts/History/Episode1.mp3', 'mp3');
 
         // 2. Run Command
         $exitCode = $this->withoutMockingConsoleOutput()

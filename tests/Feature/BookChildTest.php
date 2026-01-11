@@ -105,7 +105,7 @@ class BookChildTest extends TestCase
 
         $this->assertCount(2, $hierarchy);
         $this->assertEquals('chapter', $hierarchy->where('title', 'Chapter One')->first()->type);
-        $this->assertEquals($part->id, $hierarchy->where('title', 'Chapter One')->first()->parent_id);
+        $this->assertEquals((string) $part->id, (string) $hierarchy->where('title', 'Chapter One')->first()->parent_id);
     }
 
     /** @test */

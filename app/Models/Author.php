@@ -11,6 +11,21 @@ class Author extends Model
 {
     use HasFactory, HasUuids, SoftDeletes;
 
+    protected static function booted()
+    {
+        static::creating(function ($author) {
+            if (!$author->slug) {
+                $author->slug = \Illuminate\Support\Str::slug($author->name) . '-' . \Illuminate\Support\Str::random(6);
+            }
+        });
+
+        static::updating(function ($author) {
+            if ($author->isDirty('name') && !$author->slug) {
+                $author->slug = \Illuminate\Support\Str::slug($author->name) . '-' . \Illuminate\Support\Str::random(6);
+            }
+        });
+    }
+
     protected $fillable = [
         'name',
         'slug',

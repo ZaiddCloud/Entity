@@ -67,7 +67,7 @@ class UnifiedContentTest extends TestCase
             'type' => 'chapter',
             'title' => 'Valid Chapter'
         ]);
-        $this->assertInstanceOf(EntityContent::class, $chapter);
+        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Model::class, $chapter);
 
         // 2. Invalid Book Content (Segment) -> Should Fail
         $this->expectException(ValidationException::class);

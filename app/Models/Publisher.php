@@ -25,4 +25,21 @@ class Publisher extends Model
     {
         return $this->hasMany(Version::class);
     }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($publisher) {
+            if (empty($publisher->slug)) {
+                $publisher->slug = \Illuminate\Support\Str::slug($publisher->name);
+            }
+        });
+
+        static::updating(function ($publisher) {
+            if (empty($publisher->slug)) {
+                $publisher->slug = \Illuminate\Support\Str::slug($publisher->name);
+            }
+        });
+    }
 }

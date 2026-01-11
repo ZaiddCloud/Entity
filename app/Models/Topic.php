@@ -27,6 +27,23 @@ class Topic extends Model
         return $this->hasMany(Topic::class, 'parent_id');
     }
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($topic) {
+            if (empty($topic->slug)) {
+                $topic->slug = \Illuminate\Support\Str::slug($topic->name);
+            }
+        });
+
+        static::updating(function ($topic) {
+            if (empty($topic->slug)) {
+                $topic->slug = \Illuminate\Support\Str::slug($topic->name);
+            }
+        });
+    }
+
     public function books()
     {
         return $this->belongsToMany(Book::class, 'book_topic');

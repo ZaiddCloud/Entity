@@ -56,4 +56,44 @@ class BookContentController extends Controller
             'metadata' => $child->metadata ?? []
         ]);
     }
+
+    public function updateValidation(Request $request, $id)
+    {
+        $child = BookChild::find($id);
+        if (!$child) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+
+        $validated = $request->validate([
+            'content_blocks' => 'array',
+        ]);
+
+        // Create version of current state before updating
+        $child->createVersion('Manual update from editor');
+
+        $child->content_blocks = $validated['content_blocks'];
+        $child->is_manually_edited = true;
+        $child->save();
+
+        return response()->json(['message' => 'Saved']);
+    }
+
+    public function restoreVersion(Request $request, $id, $version = null)
+    {
+        $child = BookChild::find($id);
+        if (!$child) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+
+        $versionIndex = $version ?? $request->input('version', 0);
+        $versions = $child->versions ?? [];
+
+        if (isset($versions[$versionIndex])) {
+            $child->content_blocks = $versions[$versionIndex]['content_blocks'];
+            $child->save();
+            return response()->json(['message' => 'Restored']);
+        }
+
+        return response()->json(['message' => 'Version not found'], 422);
+    }
 }

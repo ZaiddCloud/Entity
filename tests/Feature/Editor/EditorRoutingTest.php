@@ -17,7 +17,7 @@ class EditorRoutingTest extends TestCase
         $user = User::factory()->create();
         $book = Book::factory()->create();
         // Assuming a child/chapter exists
-        $child = $book->children()->create(['title' => 'First Chapter']);
+        $child = $book->children()->create(['title' => 'First Chapter', 'slug' => 'first-chapter']);
 
         $response = $this->actingAs($user)
             ->get(route('books.editor', ['book' => $book->slug, 'child' => $child->slug]));
@@ -25,7 +25,7 @@ class EditorRoutingTest extends TestCase
         $response->assertStatus(200);
         $response->assertInertia(
             fn($page) => $page
-                ->component('Books/Editor/EditorPage')
+                ->component('Editor/EditorPage')
                 ->where('editor_mode', 'book')
         );
     }
@@ -35,7 +35,7 @@ class EditorRoutingTest extends TestCase
         $user = User::factory()->create();
         $manuscript = Manuscript::factory()->create(); // Requires Manuscript model factory
         // Assuming manuscript has children/pages
-        $child = $manuscript->children()->create(['title' => 'Page 1']);
+        $child = $manuscript->children()->create(['title' => 'Page 1', 'slug' => 'page-1']);
 
         // Assuming route for manuscript editor
         $response = $this->actingAs($user)
@@ -45,7 +45,7 @@ class EditorRoutingTest extends TestCase
         $response->assertStatus(200);
         $response->assertInertia(
             fn($page) => $page
-                ->component('Books/Editor/EditorPage')
+                ->component('Editor/EditorPage')
                 ->where('editor_mode', 'manuscript')
                 ->has('resource_data')
         );

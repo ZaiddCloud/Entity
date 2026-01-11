@@ -42,7 +42,7 @@ class StorageSync extends Command
             'model' => Book::class,
             'extensions' => ['pdf', 'epub', 'mobi', 'docx', 'md', 'txt', 'odt'],
         ],
-        'audio' => [
+        'audios' => [
             'model' => Audio::class,
             'extensions' => ['mp3', 'wav', 'm4a', 'aac'],
         ],
@@ -64,7 +64,10 @@ class StorageSync extends Command
         $this->info('Starting storage synchronization...');
 
         // Wipe existing content collections to ensure a fresh sync
-        \App\Models\BookChild::truncate();
+        // Note: We do NOT truncate BookChild here because it supports manual edit protection. 
+        // Logic inside syncBookContentFromHeaders handles cleaning up non-manual nodes.
+        // \App\Models\BookChild::truncate(); 
+        
         \App\Models\ManuscriptPage::truncate();
         \App\Models\AudioSegment::truncate();
         \App\Models\VideoSegment::truncate();

@@ -10,10 +10,18 @@ use Inertia\Inertia;
 trait HasEditor
 {
     /**
-     * عرض صفحة المحرر الموحدة
-     * يتم استدعاؤها من داخل دالة editor() في المتحكمات
+     * The editor route handler
      */
-    protected function renderEditor(Entity $entity, string $childSlug)
+    public function editor(\Illuminate\Http\Request $request, $entity, $child)
+    {
+        $model = $this->resolveModel($request);
+        return $this->renderEditor($model, $child);
+    }
+
+    /**
+     * عرض صفحة المحرر الموحدة
+     */
+    protected function renderEditor(\Illuminate\Database\Eloquent\Model $entity, string $childSlug)
     {
         // التحقق من الصلاحية
         Gate::authorize('update', $entity);
