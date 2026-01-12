@@ -4,6 +4,18 @@ namespace App\Models;
 
 use MongoDB\Laravel\Eloquent\Model;
 
+/**
+ * @property string $_id
+ * @property string $entity_id
+ * @property string $entity_type
+ * @property string $type
+ * @property string|null $title
+ * @property string|null $slug
+ * @property array|string|null $content
+ * @property int|null $order
+ * @property array|null $metadata
+ * @mixin \Illuminate\Database\Eloquent\Builder
+ */
 class EntityContent extends Model
 {
     protected $connection = 'mongodb';

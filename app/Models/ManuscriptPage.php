@@ -4,6 +4,24 @@ namespace App\Models;
 
 use MongoDB\Laravel\Eloquent\Model;
 
+/**
+ * @property string $_id
+ * @property string $manuscript_id
+ * @property string $slug
+ * @property string $type
+ * @property string $title
+ * @property int $order
+ * @property array|null $content_blocks
+ * @property array|null $metadata
+ * @property string|null $last_updated
+ * @property string|null $folio_number
+ * @property string|null $image_url
+ * @property string|null $transcription_status
+ * @property string|null $content
+ * @property array|null $versions
+ * @property-read \App\Models\Manuscript $manuscript
+ * @mixin \Illuminate\Database\Eloquent\Builder
+ */
 class ManuscriptPage extends Model
 {
     protected $connection = 'mongodb';

@@ -4,6 +4,25 @@ namespace App\Models;
 
 use MongoDB\Laravel\Eloquent\Model;
 
+/**
+ * @property string $_id
+ * @property string $book_id
+ * @property string|null $parent_id
+ * @property string $slug
+ * @property string $type
+ * @property string $title
+ * @property int $order
+ * @property string|null $language
+ * @property string|null $version
+ * @property array $content_blocks
+ * @property array|null $metadata
+ * @property string|null $last_updated
+ * @property bool|null $is_manually_edited
+ * @property array|null $versions
+ * @property string|null $content
+ * @property-read \App\Models\Book $book
+ * @mixin \Illuminate\Database\Eloquent\Builder
+ */
 class BookChild extends Model
 {
     protected $connection = 'mongodb';
