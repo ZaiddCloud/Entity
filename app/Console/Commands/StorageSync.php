@@ -122,10 +122,10 @@ class StorageSync extends Command
             $slug = Str::slug($title);
 
             // 1. Find or Create the abstract Entity (Book, Audio, Video, Manuscript)
-            $entity = $modelClass::where('slug', $slug)->first();
+            $entity = $modelClass::query()->where('slug', $slug)->first();
 
             if (!$entity) {
-                $entity = $modelClass::create([
+                $entity = $modelClass::query()->create([
                     'slug' => $slug,
                     'title' => $title,
                     'description' => 'Automatically synced from storage.',
@@ -150,11 +150,11 @@ class StorageSync extends Command
             }
 
             // 2. Check if this VERSION already exists for this file
-            $versionExists = \App\Models\Version::where('file_path', $filePath)->exists();
+            $versionExists = \App\Models\Version::query()->where('file_path', $filePath)->exists();
 
             if (!$versionExists || $this->option('force')) {
                 // 3. Create/Update the Version (Polymorphic)
-                \App\Models\Version::updateOrCreate(
+                \App\Models\Version::query()->updateOrCreate(
                     ['file_path' => $filePath],
                     [
                         'versionable_id' => $entity->id,
@@ -222,7 +222,7 @@ class StorageSync extends Command
         $service = new \App\Services\BookContentService();
 
         // Protect manually edited chapters
-        \App\Models\BookChild::where('book_id', $book->id)
+        \App\Models\BookChild::query()->where('book_id', $book->id)
             ->where('is_manually_edited', '!=', true)
             ->delete();
 
@@ -450,7 +450,7 @@ class StorageSync extends Command
             $type = $typeMap[$level] ?? 'chapter';
 
             // Check if a manually edited version already exists
-            $existingProtected = \App\Models\BookChild::where('book_id', $book->id)
+            $existingProtected = \App\Models\BookChild::query()->where('book_id', $book->id)
                 ->where('title', $nodeData['title'])
                 ->where('is_manually_edited', true)
                 ->first();
@@ -516,7 +516,7 @@ class StorageSync extends Command
 
     protected function syncEntityTags($entity, string $tagName)
     {
-        $tag = \App\Models\Tag::firstOrCreate(
+        $tag = \App\Models\Tag::query()->firstOrCreate(
             ['name' => $tagName],
             ['slug' => Str::slug($tagName), 'type' => 'category']
         );
@@ -547,9 +547,9 @@ class StorageSync extends Command
             $slug = Str::slug($title);
 
             // 1. Create Manuscript Entity
-            $entity = Manuscript::where('slug', $slug)->first();
+            $entity = Manuscript::query()->where('slug', $slug)->first();
             if (!$entity) {
-                $entity = Manuscript::create([
+                $entity = Manuscript::query()->create([
                     'slug' => $slug,
                     'title' => $title,
                     'description' => 'Image bundle synced from ' . $subDir,

@@ -21,6 +21,8 @@ use App\Traits\HasPolymorphicRelations;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read string $type
  * @property-read string $formatted_serial_number
+ * @mixin \Illuminate\Database\Eloquent\Builder
+ * @mixin \Illuminate\Database\Query\Builder
  */
 abstract class Entity extends Model
 {

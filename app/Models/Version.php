@@ -28,6 +28,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \Illuminate\Database\Eloquent\Model $versionable
  * @property-read \App\Models\Publisher|null $publisher
+ * @mixin \Illuminate\Database\Eloquent\Builder
  * @property-read \App\Models\Language|null $language
  * @property-read \App\Models\Shelf|null $shelf
  * @property-read string|null $file_url

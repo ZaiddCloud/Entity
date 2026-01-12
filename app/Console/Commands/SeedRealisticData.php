@@ -53,33 +53,33 @@ class SeedRealisticData extends Command
         // 0. Clear Existing Data
         $this->warn("Clearing existing data...");
         \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
-        Book::truncate();
-        Audio::truncate();
-        Video::truncate();
-        Manuscript::truncate();
-        Author::truncate();
-        Publisher::truncate();
-        Booker::truncate();
-        Category::truncate();
-        Tag::truncate();
-        Activity::truncate();
-        Comment::truncate();
-        Note::truncate();
-        Collection::truncate();
-        Series::truncate();
-        Shelf::truncate();
-        BookChild::truncate();
+        Book::query()->truncate();
+        Audio::query()->truncate();
+        Video::query()->truncate();
+        Manuscript::query()->truncate();
+        Author::query()->truncate();
+        Publisher::query()->truncate();
+        Booker::query()->truncate();
+        Category::query()->truncate();
+        Tag::query()->truncate();
+        Activity::query()->truncate();
+        Comment::query()->truncate();
+        Note::query()->truncate();
+        Collection::query()->truncate();
+        Series::query()->truncate();
+        Shelf::query()->truncate();
+        BookChild::query()->truncate();
         \App\Models\EntityContent::truncate();
         \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
 
         // 1. Core Users
-        $admin = User::firstOrCreate(
+        $admin = User::query()->firstOrCreate(
             ['email' => 'admin@admin.com'],
             ['name' => 'Admin User', 'password' => Hash::make('password')]
         );
-        if (User::count() < 5)
+        if (User::query()->count() < 5)
             User::factory(5)->create();
-        $users = User::all();
+        $users = User::query()->get();
 
         // 2. Core Taxonomies
         $categories = collect([
@@ -93,7 +93,7 @@ class SeedRealisticData extends Command
             'الطب العربي',
             'الفلك بنظرة إسلامية',
             'العمارة الإسلامية'
-        ])->map(fn($name) => Category::firstOrCreate(['name' => $name]));
+        ])->map(fn($name) => Category::query()->firstOrCreate(['name' => $name]));
 
         $tags = collect([
             'نادر',
@@ -106,7 +106,7 @@ class SeedRealisticData extends Command
             'شرح',
             'متن',
             'حاشية'
-        ])->map(fn($name) => Tag::firstOrCreate(['name' => $name]));
+        ])->map(fn($name) => Tag::query()->firstOrCreate(['name' => $name]));
 
         // --- NEW: Topic Hierarchy ---
         $this->info("Seeding Topic Hierarchy...");
@@ -127,33 +127,33 @@ class SeedRealisticData extends Command
         ];
 
         foreach ($topicTree as $parentName => $subTopics) {
-            $parent = \App\Models\Topic::firstOrCreate(['name' => $parentName]);
+            $parent = \App\Models\Topic::query()->firstOrCreate(['name' => $parentName]);
             foreach ($subTopics as $subName => $children) {
-                $sub = \App\Models\Topic::firstOrCreate(['name' => $subName, 'parent_id' => $parent->id]);
+                $sub = \App\Models\Topic::query()->firstOrCreate(['name' => $subName, 'parent_id' => $parent->id]);
                 foreach ($children as $childName) {
-                    \App\Models\Topic::firstOrCreate(['name' => $childName, 'parent_id' => $sub->id]);
+                    \App\Models\Topic::query()->firstOrCreate(['name' => $childName, 'parent_id' => $sub->id]);
                 }
             }
         }
-        $topics = \App\Models\Topic::all();
+        $topics = \App\Models\Topic::query()->get();
 
         // 3. New Ecosystem Data (Authors, Publishers, Bookers)
         $this->info("Seeding Authors, Publishers and Contributors...");
 
         $authorsList = ['ابن خلدون', 'البخاري', 'الجاحظ', 'المتنبي', 'ابن رشد', 'نجيب محفوظ', 'طه حسين', 'ابن المقفع', 'الشافعي', 'المنشاوي', 'د. السويدان'];
-        $authors = collect($authorsList)->map(fn($name) => Author::firstOrCreate(
+        $authors = collect($authorsList)->map(fn($name) => Author::query()->firstOrCreate(
             ['name' => $name],
             ['slug' => Str::slug($name, '-', null)]
         ));
 
         $publishersList = ['دار المعرفة', 'دار الشروق', 'مكتبة العبيكان', 'عالم المعرفة', 'مركز دراسات الوحدة العربية', 'مؤسسة التراث', 'إذاعة القرآن الكريم'];
-        $publishers = collect($publishersList)->map(fn($name) => Publisher::firstOrCreate(
+        $publishers = collect($publishersList)->map(fn($name) => Publisher::query()->firstOrCreate(
             ['name' => $name],
             ['slug' => Str::slug($name, '-', null)]
         ));
 
         $bookersList = ['أحمد شاكر', 'محمد فؤاد عبد الباقي', 'ناصر الدين الألباني', 'بشار عواد معروف'];
-        $bookers = collect($bookersList)->map(fn($name) => Booker::firstOrCreate(
+        $bookers = collect($bookersList)->map(fn($name) => Booker::query()->firstOrCreate(
             ['name' => $name],
             ['slug' => Str::slug($name, '-', null)]
         ));
@@ -268,7 +268,7 @@ class SeedRealisticData extends Command
                     if ($i >= count($set['items'])) {
                         $location_code .= "-" . ($i + 1);
                     }
-                    $entity = Shelf::create([
+                    $entity = Shelf::query()->create([
                         'location_code' => $location_code,
                         'capacity' => $itemData['capacity']
                     ]);
@@ -306,7 +306,7 @@ class SeedRealisticData extends Command
                     }
                 }
 
-                $entity = $modelClass::create($attributes);
+                $entity = $modelClass::query()->create($attributes);
                 $allEntities->push($entity);
 
                 // --- NEW: MongoDB Digital Content Seeding (Comprehensive) ---
@@ -386,7 +386,7 @@ class SeedRealisticData extends Command
 
                 // Attach Specific or Random Authors
                 $authorName = $itemData['author'];
-                $assignedAuthor = Author::where('name', $authorName)->first();
+                $assignedAuthor = Author::query()->where('name', $authorName)->first();
                 if ($assignedAuthor) {
                     $entity->authors()->attach($assignedAuthor->id);
                 } else {
@@ -408,7 +408,7 @@ class SeedRealisticData extends Command
                         'manuscript' => "النسخة " . match ($v) { 1 => 'أ', 2 => 'ب', 3 => 'ج', 4 => 'د', default => $v},
                     };
 
-                    Version::create([
+                    Version::query()->create([
                         'versionable_id' => $entity->id,
                         'versionable_type' => $type, // Matches morphMap
                         'publisher_id' => $publishers->random()->id,
@@ -423,7 +423,7 @@ class SeedRealisticData extends Command
                             'video' => 'mp4',
                         },
                         'file_path' => $entity->file_path ?? null,
-                        'shelf_id' => (rand(1, 10) > 3) ? Shelf::inRandomOrder()->first()?->id : null,
+                        'shelf_id' => (rand(1, 10) > 3) ? Shelf::query()->inRandomOrder()->first()?->id : null,
                     ]);
                 }
 
@@ -436,7 +436,7 @@ class SeedRealisticData extends Command
 
                 // Interactions (Random but frequent)
                 if (rand(1, 10) > 2) {
-                    Comment::create([
+                    Comment::query()->create([
                         'user_id' => $users->random()->id,
                         'entity_id' => $entity->id,
                         'entity_type' => $type,
@@ -445,7 +445,7 @@ class SeedRealisticData extends Command
                 }
 
                 if (rand(1, 10) > 4) {
-                    Note::create([
+                    Note::query()->create([
                         'user_id' => $users->random()->id,
                         'entity_id' => $entity->id,
                         'entity_type' => $type,
@@ -453,7 +453,7 @@ class SeedRealisticData extends Command
                     ]);
                 }
 
-                Activity::create([
+                Activity::query()->create([
                     'user_id' => $users->random()->id,
                     'entity_id' => $entity->id,
                     'entity_type' => $type,
@@ -472,7 +472,7 @@ class SeedRealisticData extends Command
 
         $collectionTitles = ['مجموعتي المفضلة', 'مراجعات أدبية', 'كنوز تراثية'];
         foreach ($collectionTitles as $name) {
-            $col = Collection::create([
+            $col = Collection::query()->create([
                 'name' => $name,
                 'user_id' => $users->random()->id,
                 'description' => "مجموعة تضم مختارات من $name",
@@ -485,7 +485,7 @@ class SeedRealisticData extends Command
 
         $seriesTitles = ['سلسلة تاريخ الأندلس', 'روائع الأدب العربي'];
         foreach ($seriesTitles as $i => $title) {
-            $series = Series::create([
+            $series = Series::query()->create([
                 'title' => $title,
                 'description' => "سلسلة مرتبة لـ $title",
                 'order_column' => $i + 1

@@ -18,6 +18,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string|null $profile_photo_path
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @mixin \Illuminate\Database\Eloquent\Builder
  */
 class User extends Authenticatable
 {
