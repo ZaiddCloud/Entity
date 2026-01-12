@@ -9,19 +9,34 @@ const props = defineProps({
 </script>
 
 <template>
-    <NodeViewWrapper class="poetry-node">
-        <div class="poetry-container">
-            <div class="poetry-verse">
-                <div class="poetry-sadr">{{ node.attrs.sadr }}</div>
-                <div class="poetry-separator">***</div>
-                <div class="poetry-ajuz">{{ node.attrs.ajuz }}</div>
-            </div>
-            <div v-if="node.attrs.poet || node.attrs.source" class="poetry-meta">
-                <span v-if="node.attrs.poet" class="poetry-poet">{{ node.attrs.poet }}</span>
-                <span v-if="node.attrs.source" class="poetry-source">{{ node.attrs.source }}</span>
-            </div>
+  <NodeViewWrapper class="poetry-node">
+    <div class="poetry-container">
+      <div class="poetry-verse">
+        <div class="poetry-sadr">
+          {{ node.attrs.sadr }}
         </div>
-    </NodeViewWrapper>
+        <div class="poetry-separator">
+          ***
+        </div>
+        <div class="poetry-ajuz">
+          {{ node.attrs.ajuz }}
+        </div>
+      </div>
+      <div
+        v-if="node.attrs.poet || node.attrs.source"
+        class="poetry-meta"
+      >
+        <span
+          v-if="node.attrs.poet"
+          class="poetry-poet"
+        >{{ node.attrs.poet }}</span>
+        <span
+          v-if="node.attrs.source"
+          class="poetry-source"
+        >{{ node.attrs.source }}</span>
+      </div>
+    </div>
+  </NodeViewWrapper>
 </template>
 
 <style scoped>

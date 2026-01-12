@@ -14,5 +14,8 @@ const props = defineProps({
 </script>
 
 <template>
-    <EditorPage :book="book" :child="child" />
+  <EditorPage
+    :book="book"
+    :child="child"
+  />
 </template>

@@ -22,11 +22,11 @@ const colorClasses = {
 </script>
 
 <template>
-    <component 
-        :is="href ? Link : 'button'" 
-        :href="href"
-        :class="['p-2 rounded-xl transition-all', colorClasses[color]]"
-    >
-        <slot />
-    </component>
+  <component 
+    :is="href ? Link : 'button'" 
+    :href="href"
+    :class="['p-2 rounded-xl transition-all', colorClasses[color]]"
+  >
+    <slot />
+  </component>
 </template>

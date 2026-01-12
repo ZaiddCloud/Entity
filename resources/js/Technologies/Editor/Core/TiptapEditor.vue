@@ -115,9 +115,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="tiptap-editor">
-        <EditorContent :editor="editor" />
-    </div>
+  <div class="tiptap-editor">
+    <EditorContent :editor="editor" />
+  </div>
 </template>
 
 <style>

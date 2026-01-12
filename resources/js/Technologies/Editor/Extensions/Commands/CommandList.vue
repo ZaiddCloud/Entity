@@ -58,16 +58,25 @@ watch(() => props.items, () => {
 </script>
 
 <template>
-  <div class="items" ref="containerRef">
+  <div
+    ref="containerRef"
+    class="items"
+  >
     <button
-      class="item"
-      :class="{ 'is-selected': index === selectedIndex }"
       v-for="(item, index) in items"
       :key="index"
+      class="item"
+      :class="{ 'is-selected': index === selectedIndex }"
       @click="selectItem(index)"
     >
-      <i v-if="item.icon" :class="item.icon" class="icon"></i>
-      <div class="label">{{ item.title }}</div>
+      <i
+        v-if="item.icon"
+        :class="item.icon"
+        class="icon"
+      />
+      <div class="label">
+        {{ item.title }}
+      </div>
     </button>
   </div>
 </template>

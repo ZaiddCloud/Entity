@@ -24,8 +24,10 @@
         "laravel/sail": "^1.41",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
+        "nunomaduro/phpinsights": "^2.13",
         "pestphp/pest": "^3.8",
         "pestphp/pest-plugin-laravel": "^3.2",
+        "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^11.5"
     },
     "autoload": {
@@ -87,7 +89,8 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
-            "php-http/discovery": true
+            "php-http/discovery": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true
         }
     },
     "minimum-stability": "stable",

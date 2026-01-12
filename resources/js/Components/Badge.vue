@@ -16,7 +16,7 @@ const colorClasses = {
 </script>
 
 <template>
-    <span :class="['px-2 py-0.5 rounded-lg text-xs font-bold', colorClasses[color] || colorClasses.gray]">
-        <slot />
-    </span>
+  <span :class="['px-2 py-0.5 rounded-lg text-xs font-bold', colorClasses[color] || colorClasses.gray]">
+    <slot />
+  </span>
 </template>

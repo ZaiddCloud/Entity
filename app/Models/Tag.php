@@ -7,6 +7,16 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Str;
 use App\Models\Entity;
+/**
+ * @property string $id
+ * @property string $name
+ * @property string $slug
+ * @property string $type
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Support\Collection $entities
+ * @property-read int $entities_count
+ */
 class Tag extends Model
 {
     use \App\Traits\HasPolymorphicRelations;

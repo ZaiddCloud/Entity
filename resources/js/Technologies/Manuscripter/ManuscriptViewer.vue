@@ -102,132 +102,173 @@ const startResizing = (e, idx) => {
 </script>
 
 <template>
-    <div class="h-full bg-gray-50 flex flex-col border-l border-gray-200 overflow-hidden">
-        <!-- Versions Toolbar (Glassmorphism) -->
-        <div class="glass-header flex items-center justify-between border-b border-gray-200 px-2 z-10 sticky top-0">
-            <div class="flex items-center gap-4 overflow-hidden">
-                
-                <!-- Resource Navigator -->
-                <div class="border-l border-gray-200 pl-4 ml-2">
-                     <ResourceNavigator type="manuscript" :current-id="resource?.id" />
-                </div>
-
-                <!-- Manuscript Title -->
-                <div v-if="resource?.title" class="text-sm font-bold text-gray-700 whitespace-nowrap my-2 flex items-center">
-                    <i class="fas fa-book-open text-gray-400 ml-2"></i>
-                    {{ resource?.title }}
-                </div>
-
-                <div class="flex overflow-x-auto no-scrollbar">
-                <button 
-                    v-for="(version, index) in versions" 
-                    :key="index"
-                    @click="toggleVersionSelection(index)"
-                    class="px-4 py-2 text-xs font-medium transition-colors border-b-2 whitespace-nowrap"
-                    :class="[
-                        (!isCompareMode && activeVersionIndex === index) || (isCompareMode && selectedVersionIndexes.includes(index))
-                            ? 'border-blue-500 text-blue-600 bg-blue-50/50' 
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                    ]"
-                >
-                    {{ version?.title }}
-                </button>
-
-            </div>
-            </div> <!-- Closing the gap-4 wrapper -->
-            
-            <!-- Compare Mode Toggle -->
-            <div class="flex items-center gap-2 border-r border-gray-200 pr-3 mr-1">
-                <label class="relative inline-flex items-center cursor-pointer scale-75">
-                    <input type="checkbox" v-model="isCompareMode" class="sr-only peer">
-                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    <span class="mr-2 text-[10px] font-bold text-gray-400 uppercase">مقارنة</span>
-                </label>
-            </div>
+  <div class="h-full bg-gray-50 flex flex-col border-l border-gray-200 overflow-hidden">
+    <!-- Versions Toolbar (Glassmorphism) -->
+    <div class="glass-header flex items-center justify-between border-b border-gray-200 px-2 z-10 sticky top-0">
+      <div class="flex items-center gap-4 overflow-hidden">
+        <!-- Resource Navigator -->
+        <div class="border-l border-gray-200 pl-4 ml-2">
+          <ResourceNavigator
+            type="manuscript"
+            :current-id="resource?.id"
+          />
         </div>
 
-        <!-- Viewer Content (Resizable Flex) -->
-        <div 
-            ref="containerRef"
-            class="flex-1 flex gap-0 p-1 bg-gray-200 overflow-auto relative h-full"
+        <!-- Manuscript Title -->
+        <div
+          v-if="resource?.title"
+          class="text-sm font-bold text-gray-700 whitespace-nowrap my-2 flex items-center"
         >
-            <template v-for="(version, idx) in displayedVersions" :key="idx">
-                <div 
-                    v-if="version"
-                    class="bg-white flex flex-col h-full rounded-sm shadow-sm relative overflow-hidden group min-w-[150px]"
-                    :style="{ width: panelWidths[idx] + '%' }"
-                >
-                    <!-- Version Header -->
-                    <div class="px-2 py-1 bg-gray-50 border-b border-gray-100 flex justify-between items-center shrink-0">
-                        <div class="flex items-center gap-2 overflow-hidden">
-                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tight truncate">
-                                {{ resource?.title }} - {{ version?.title }}
-                            </span>
-                            <!-- Simplified Shot Number Input -->
-                            <div class="flex items-center bg-white border border-gray-200 rounded px-1 h-5 hover:border-blue-200 transition-colors">
-                                <input 
-                                    type="text" 
-                                    placeholder="رقم اللقطة" 
-                                    class="w-12 bg-transparent text-[9px] text-blue-600 font-bold border-none p-0 focus:ring-0 text-center placeholder:text-gray-300 placeholder:font-normal"
-                                    @keyup.enter="$event.target.blur()"
-                                >
-                            </div>
-                        </div>
-                        <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                            <button class="text-gray-400 hover:text-blue-500"><i class="fas fa-expand-alt text-[10px]"></i></button>
-                        </div>
-                    </div>
-
-                    <!-- Viewer Area -->
-                    <div 
-                        class="flex-1 overflow-auto bg-gray-900 custom-scrollbar p-10 cursor-grab active:cursor-grabbing select-none"
-                        @mousedown="handlePanStart($event, idx)"
-                        @mousemove="handlePanMove($event)"
-                        @mouseup="handlePanEnd($event)"
-                        @mouseleave="handlePanEnd($event)"
-                    >
-                        <div class="flex flex-col items-center justify-start min-h-full transition-all duration-300 mx-auto pointer-events-none" :style="{ width: (zoomLevel * 100) + '%', minWidth: '100%' }">
-                            <!-- Image Renderer -->
-                            <div v-if="version?.url" 
-                                 class="relative inline-block w-full text-center">
-                                <img :src="version?.url" class="inline-block max-w-full shadow-2xl rounded-sm border-4 border-gray-800" alt="Manuscript Page" />
-                            </div>
-                            
-                            <!-- Placeholder / PDF Renderer -->
-                            <div v-else class="w-full max-w-lg bg-gray-50/50 border border-gray-100 rounded-sm p-4 text-center mt-10">
-                                <div class="aspect-[3/4] bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg mb-4">
-                                    <div class="text-gray-400">
-                                        <p class="text-[10px]">نسخة التحقيق: {{ version?.title }}</p>
-                                    </div>
-                                </div>
-                                <p class="text-[9px] text-gray-400 font-mono truncate px-2">{{ version?.url }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Resize Handle between panels -->
-                <div 
-                    v-if="idx < displayedVersions.length - 1"
-                    class="w-1.5 h-full bg-transparent hover:bg-blue-400/30 cursor-col-resize z-20 shrink-0 transition-colors"
-                    @mousedown="startResizing($event, idx)"
-                ></div>
-            </template>
+          <i class="fas fa-book-open text-gray-400 ml-2" />
+          {{ resource?.title }}
         </div>
-        
-        <!-- Global Controls Floating -->
-        <div class="absolute bottom-6 left-6 flex flex-col gap-2 z-30">
-            <button @click="resetZoom" class="w-10 h-10 rounded-full bg-white/80 backdrop-blur shadow-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:text-blue-500 transition-all hover:scale-110" title="ملاءمة الشاشة">
-                <i class="fas fa-expand"></i>
-            </button>
-            <button @click="zoomIn" class="w-10 h-10 rounded-full bg-white/80 backdrop-blur shadow-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:text-blue-500 transition-all hover:scale-110" title="تكبير">
-                <i class="fas fa-plus"></i>
-            </button>
-            <button @click="zoomOut" class="w-10 h-10 rounded-full bg-white/80 backdrop-blur shadow-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:text-blue-500 transition-all hover:scale-110" title="تصغير">
-                <i class="fas fa-minus"></i>
-            </button>
+
+        <div class="flex overflow-x-auto no-scrollbar">
+          <button 
+            v-for="(version, index) in versions" 
+            :key="index"
+            class="px-4 py-2 text-xs font-medium transition-colors border-b-2 whitespace-nowrap"
+            :class="[
+              (!isCompareMode && activeVersionIndex === index) || (isCompareMode && selectedVersionIndexes.includes(index))
+                ? 'border-blue-500 text-blue-600 bg-blue-50/50' 
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+            ]"
+            @click="toggleVersionSelection(index)"
+          >
+            {{ version?.title }}
+          </button>
         </div>
+      </div> <!-- Closing the gap-4 wrapper -->
+            
+      <!-- Compare Mode Toggle -->
+      <div class="flex items-center gap-2 border-r border-gray-200 pr-3 mr-1">
+        <label class="relative inline-flex items-center cursor-pointer scale-75">
+          <input
+            v-model="isCompareMode"
+            type="checkbox"
+            class="sr-only peer"
+          >
+          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
+          <span class="mr-2 text-[10px] font-bold text-gray-400 uppercase">مقارنة</span>
+        </label>
+      </div>
     </div>
+
+    <!-- Viewer Content (Resizable Flex) -->
+    <div 
+      ref="containerRef"
+      class="flex-1 flex gap-0 p-1 bg-gray-200 overflow-auto relative h-full"
+    >
+      <template
+        v-for="(version, idx) in displayedVersions"
+        :key="idx"
+      >
+        <div 
+          v-if="version"
+          class="bg-white flex flex-col h-full rounded-sm shadow-sm relative overflow-hidden group min-w-[150px]"
+          :style="{ width: panelWidths[idx] + '%' }"
+        >
+          <!-- Version Header -->
+          <div class="px-2 py-1 bg-gray-50 border-b border-gray-100 flex justify-between items-center shrink-0">
+            <div class="flex items-center gap-2 overflow-hidden">
+              <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tight truncate">
+                {{ resource?.title }} - {{ version?.title }}
+              </span>
+              <!-- Simplified Shot Number Input -->
+              <div class="flex items-center bg-white border border-gray-200 rounded px-1 h-5 hover:border-blue-200 transition-colors">
+                <input 
+                  type="text" 
+                  placeholder="رقم اللقطة" 
+                  class="w-12 bg-transparent text-[9px] text-blue-600 font-bold border-none p-0 focus:ring-0 text-center placeholder:text-gray-300 placeholder:font-normal"
+                  @keyup.enter="$event.target.blur()"
+                >
+              </div>
+            </div>
+            <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+              <button class="text-gray-400 hover:text-blue-500">
+                <i class="fas fa-expand-alt text-[10px]" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Viewer Area -->
+          <div 
+            class="flex-1 overflow-auto bg-gray-900 custom-scrollbar p-10 cursor-grab active:cursor-grabbing select-none"
+            @mousedown="handlePanStart($event, idx)"
+            @mousemove="handlePanMove($event)"
+            @mouseup="handlePanEnd($event)"
+            @mouseleave="handlePanEnd($event)"
+          >
+            <div
+              class="flex flex-col items-center justify-start min-h-full transition-all duration-300 mx-auto pointer-events-none"
+              :style="{ width: (zoomLevel * 100) + '%', minWidth: '100%' }"
+            >
+              <!-- Image Renderer -->
+              <div
+                v-if="version?.url" 
+                class="relative inline-block w-full text-center"
+              >
+                <img
+                  :src="version?.url"
+                  class="inline-block max-w-full shadow-2xl rounded-sm border-4 border-gray-800"
+                  alt="Manuscript Page"
+                >
+              </div>
+                            
+              <!-- Placeholder / PDF Renderer -->
+              <div
+                v-else
+                class="w-full max-w-lg bg-gray-50/50 border border-gray-100 rounded-sm p-4 text-center mt-10"
+              >
+                <div class="aspect-[3/4] bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg mb-4">
+                  <div class="text-gray-400">
+                    <p class="text-[10px]">
+                      نسخة التحقيق: {{ version?.title }}
+                    </p>
+                  </div>
+                </div>
+                <p class="text-[9px] text-gray-400 font-mono truncate px-2">
+                  {{ version?.url }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resize Handle between panels -->
+        <div 
+          v-if="idx < displayedVersions.length - 1"
+          class="w-1.5 h-full bg-transparent hover:bg-blue-400/30 cursor-col-resize z-20 shrink-0 transition-colors"
+          @mousedown="startResizing($event, idx)"
+        />
+      </template>
+    </div>
+        
+    <!-- Global Controls Floating -->
+    <div class="absolute bottom-6 left-6 flex flex-col gap-2 z-30">
+      <button
+        class="w-10 h-10 rounded-full bg-white/80 backdrop-blur shadow-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:text-blue-500 transition-all hover:scale-110"
+        title="ملاءمة الشاشة"
+        @click="resetZoom"
+      >
+        <i class="fas fa-expand" />
+      </button>
+      <button
+        class="w-10 h-10 rounded-full bg-white/80 backdrop-blur shadow-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:text-blue-500 transition-all hover:scale-110"
+        title="تكبير"
+        @click="zoomIn"
+      >
+        <i class="fas fa-plus" />
+      </button>
+      <button
+        class="w-10 h-10 rounded-full bg-white/80 backdrop-blur shadow-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:text-blue-500 transition-all hover:scale-110"
+        title="تصغير"
+        @click="zoomOut"
+      >
+        <i class="fas fa-minus" />
+      </button>
+    </div>
+  </div>
 </template>
 
 <style scoped>

@@ -28,25 +28,11 @@ class MediaManagerService
     public function createMedia(array $data): Entity
     {
         $this->validateMediaData($data);
+        $type = $data['type'];
 
-        return DB::transaction(function () use ($data) {
-            // 1. Create the base entity using the generic service
-            $entityData = [
-                'title' => $data['title'],
-                'type' => $data['type'], // book, video, audio, manuscript
-                'description' => $data['description'] ?? null,
-                'cover_path' => $data['cover_path'] ?? null,
-                'file_path' => $data['file_path'] ?? null,
-            ];
-
-            // Add type-specific attributes
-            if ($data['type'] === 'manuscript' && isset($data['century'])) {
-                $entityData['century'] = $data['century'];
-            } elseif (($data['type'] === 'audio' || $data['type'] === 'video') && isset($data['duration'])) {
-                $entityData['duration'] = $data['duration'];
-            }
-
-            /** @var Entity $entity */
+        return DB::transaction(function () use ($data, $type) {
+            // 1. Prepare and create base entity
+            $entityData = $this->prepareEntityData($data, $type);
             $entity = $this->entityManager->create($entityData);
 
             // 2. Attach Authors
@@ -55,59 +41,20 @@ class MediaManagerService
             }
 
             // 3. Create the Initial Version
-            $versionData = [
-                'versionable_id' => $entity->id,
-                'versionable_type' => $data['type'],
-                'file_path' => $data['file_path'] ?? null, // This file_path is for the version, not the entity
-                'publisher_id' => $data['publisher_id'] ?? null,
-                'isbn' => $data['isbn'] ?? null,
-                'pages' => $data['pages'] ?? null,
-                'published_year' => $data['published_year'] ?? null,
-                'edition_number' => $data['edition_number'] ?? 1,
-                'format' => $data['format'] ?? ($data['type'] === 'book' ? 'pdf' : 'mp4'),
-                'file_size' => $data['file_size'] ?? 0,
-            ];
+            $versionData = $this->prepareVersionData($data, $entity);
+            Version::query()->create($versionData);
 
-            Version::create($versionData);
-
-            // Refresh to load relations
             return $entity->fresh(['authors', 'versions']);
         });
     }
 
-    /**
-     * Update an existing media entity and its related entities.
-     *
-     * @param Entity $entity
-     * @param array $data
-     * @return Entity
-     * @throws ValidationException
-     */
     public function updateMedia(Entity $entity, array $data): Entity
     {
         $this->validateMediaData($data);
 
         return DB::transaction(function () use ($entity, $data) {
             // 1. Update basic entity details
-            $entityData = [
-                'title' => $data['title'],
-                'description' => $data['description'] ?? null,
-            ];
-
-            if (isset($data['cover_path'])) {
-                $entityData['cover_path'] = $data['cover_path'];
-            }
-
-            if (isset($data['file_path'])) {
-                $entityData['file_path'] = $data['file_path'];
-            }
-
-            if ($entity->type === 'manuscript' && isset($data['century'])) {
-                $entityData['century'] = $data['century'];
-            } elseif (($entity->type === 'audio' || $entity->type === 'video') && isset($data['duration'])) {
-                $entityData['duration'] = $data['duration'];
-            }
-
+            $entityData = $this->prepareEntityData($data, $entity->type);
             $this->entityManager->update($entity, $entityData);
 
             // 2. Sync Authors
@@ -116,34 +63,64 @@ class MediaManagerService
             }
 
             // 3. Update or Create the Primary Version
-            $versionData = [
-                'publisher_id' => $data['publisher_id'] ?? null,
-                'isbn' => $data['isbn'] ?? null,
-                'pages' => $data['pages'] ?? null,
-                'published_year' => $data['published_year'] ?? null,
-                'edition_number' => $data['edition_number'] ?? 1,
-            ];
-
-            if (isset($data['file_path'])) {
-                $versionData['file_path'] = $data['file_path'];
-                $versionData['format'] = $data['format'] ?? 'pdf';
-                $versionData['file_size'] = $data['file_size'] ?? 0;
-            }
-
+            $versionData = $this->prepareVersionData($data, $entity);
+            
+            /** @var Version|null $version */
             $version = $entity->versions()->first();
-
+            
             if ($version) {
                 $version->update($versionData);
-            } else {
-                if (isset($data['file_path'])) {
-                    $versionData['versionable_id'] = $entity->id;
-                    $versionData['versionable_type'] = $entity->type;
-                    Version::create($versionData);
-                }
+            } elseif (isset($data['file_path'])) {
+                Version::query()->create($versionData);
             }
 
             return $entity->fresh(['authors', 'versions']);
         });
+    }
+
+    protected function prepareEntityData(array $data, string $type): array
+    {
+        $entityData = [
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+        ];
+
+        if (isset($data['type'])) {
+            $entityData['type'] = $data['type'];
+        }
+
+        if (isset($data['cover_path'])) {
+            $entityData['cover_path'] = $data['cover_path'];
+        }
+
+        if (isset($data['file_path'])) {
+            $entityData['file_path'] = $data['file_path'];
+        }
+
+        // Type-specific attributes
+        if ($type === 'manuscript' && isset($data['century'])) {
+            $entityData['century'] = $data['century'];
+        } elseif (($type === 'audio' || $type === 'video') && isset($data['duration'])) {
+            $entityData['duration'] = $data['duration'];
+        }
+
+        return $entityData;
+    }
+
+    protected function prepareVersionData(array $data, Entity $entity): array
+    {
+        return [
+            'versionable_id' => $entity->id,
+            'versionable_type' => $entity->type,
+            'file_path' => $data['file_path'] ?? null,
+            'publisher_id' => $data['publisher_id'] ?? null,
+            'isbn' => $data['isbn'] ?? null,
+            'pages' => $data['pages'] ?? null,
+            'published_year' => $data['published_year'] ?? null,
+            'edition_number' => $data['edition_number'] ?? 1,
+            'format' => $data['format'] ?? ($entity->type === 'book' ? 'pdf' : 'mp4'),
+            'file_size' => $data['file_size'] ?? 0,
+        ];
     }
 
     protected function validateMediaData(array $data): void

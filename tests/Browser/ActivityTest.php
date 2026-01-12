@@ -29,7 +29,7 @@ class ActivityTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/activities')
-                ->waitForText('سجل النشاطات')
+                ->waitForText('سجل الرقابة')
                 ->assertSee('Test Activity Description');
         });
     }
@@ -61,7 +61,7 @@ class ActivityTest extends DuskTestCase
             $browser->loginAs($user)
                 ->visit('/activities')
                 ->pause(1000)
-                ->select('select', 'created') // Assuming the select is the first/only select or targeting by name if possible. The vue file has v-model="type" on a select.
+                ->select('#activity-type-filter', 'created')
                 ->pause(1000) // Wait for debounce/fetch
                 ->assertSee('Created Item')
                 ->assertDontSee('Deleted Item');

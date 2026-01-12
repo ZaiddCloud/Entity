@@ -1,0 +1,5 @@
+
+ [ERROR] First, publish the           
+         configuration using: php     
+         artisan vendor:publish       
+

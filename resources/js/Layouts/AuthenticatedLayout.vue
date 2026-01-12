@@ -40,46 +40,57 @@ provide('themeContext', { isDark, toggleDarkMode });
 </script>
 
 <template>
-    <div class="min-h-screen bg-gray-50 dark:bg-[#050505] text-gray-900 dark:text-[#ededec]" dir="rtl">
-        <Head :title="title" />
+  <div
+    class="min-h-screen bg-gray-50 dark:bg-[#050505] text-gray-900 dark:text-[#ededec]"
+    dir="rtl"
+  >
+    <Head :title="title" />
         
-        <!-- Sidebar -->
-        <Sidebar :is-open="isSidebarOpen" />
+    <!-- Sidebar -->
+    <Sidebar :is-open="isSidebarOpen" />
 
-        <!-- Main Content -->
-        <div :class="['transition-all duration-300', isSidebarOpen ? 'mr-64' : 'mr-20']">
-            
-            <!-- Navbar -->
-            <Navbar 
-                :title="title" 
-                :is-sidebar-open="isSidebarOpen"
-                @toggle-sidebar="toggleSidebar"
-            />
+    <!-- Main Content -->
+    <div :class="['transition-all duration-300', isSidebarOpen ? 'mr-64' : 'mr-20']">
+      <!-- Navbar -->
+      <Navbar 
+        :title="title" 
+        :is-sidebar-open="isSidebarOpen"
+        @toggle-sidebar="toggleSidebar"
+      />
 
-            <!-- Header Slot Implementation -->
-            <header v-if="$slots.header" class="px-8 mt-8">
-                <div class="bg-white dark:bg-[#0a0a0a] border border-gray-100 dark:border-white/5 rounded-[2rem] p-6 shadow-sm">
-                    <slot name="header" />
-                </div>
-            </header>
-
-            <!-- Page Implementation Section -->
-            <main class="p-8 animate-fade-in custom-main">
-                <slot />
-            </main>
-            
-            <!-- Footer -->
-            <footer class="py-12 border-t border-gray-100 dark:border-white/5 mt-12 px-8">
-                <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-gray-400 text-xs font-medium">
-                    <p>&copy; {{ new Date().getFullYear() }} Entity App. جميع الحقوق محفوظة.</p>
-                    <div class="flex gap-6">
-                        <a href="#" class="hover:text-indigo-500 transition-colors">الدعم الفني</a>
-                        <a href="#" class="hover:text-indigo-500 transition-colors">سياسة الخصوصية</a>
-                    </div>
-                </div>
-            </footer>
+      <!-- Header Slot Implementation -->
+      <header
+        v-if="$slots.header"
+        class="px-8 mt-8"
+      >
+        <div class="bg-white dark:bg-[#0a0a0a] border border-gray-100 dark:border-white/5 rounded-[2rem] p-6 shadow-sm">
+          <slot name="header" />
         </div>
+      </header>
+
+      <!-- Page Implementation Section -->
+      <main class="p-8 animate-fade-in custom-main">
+        <slot />
+      </main>
+            
+      <!-- Footer -->
+      <footer class="py-12 border-t border-gray-100 dark:border-white/5 mt-12 px-8">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-gray-400 text-xs font-medium">
+          <p>&copy; {{ new Date().getFullYear() }} Entity App. جميع الحقوق محفوظة.</p>
+          <div class="flex gap-6">
+            <a
+              href="#"
+              class="hover:text-indigo-500 transition-colors"
+            >الدعم الفني</a>
+            <a
+              href="#"
+              class="hover:text-indigo-500 transition-colors"
+            >سياسة الخصوصية</a>
+          </div>
+        </div>
+      </footer>
     </div>
+  </div>
 </template>
 
 <style>

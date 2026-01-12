@@ -70,59 +70,69 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="h-screen flex flex-col bg-[#f3f4f6] overflow-hidden relative font-ui" dir="rtl">
-        <!-- Title Bar (Optional/Subtle) -->
-        <div v-if="title" class="hidden">{{ title }}</div>
+  <div
+    class="h-screen flex flex-col bg-[#f3f4f6] overflow-hidden relative font-ui"
+    dir="rtl"
+  >
+    <!-- Title Bar (Optional/Subtle) -->
+    <div
+      v-if="title"
+      class="hidden"
+    >
+      {{ title }}
+    </div>
 
-        <!-- Workspace -->
-        <div class="flex-1 flex overflow-hidden relative">
-            <!-- Editor Content (Right Side in RTL) -->
-            <main class="flex-1 overflow-y-auto scroll-smooth bg-white relative">
-                <!-- Integrated Toolbar (Sticky inside Editor Area) -->
-                <div class="sticky top-0 z-50 bg-white border-b border-gray-100">
-                    <slot name="toolbar" />
-                </div>
-
-                <div class="w-full h-full transition-all duration-300">
-                    <!-- Edge-to-Edge Workspace -->
-                    <div class="min-h-full transition-all duration-300">
-                        <slot />
-                    </div>
-                </div>
-            </main>
-
-            <!-- Resize Handle -->
-            <div 
-                v-if="$slots.viewer || store.editorMode === 'manuscript'"
-                class="w-1 bg-gray-200 hover:bg-blue-400 cursor-col-resize transition-colors z-20 flex items-center justify-center relative group"
-                @mousedown="startResize"
-            >
-                <div class="absolute inset-y-0 -left-1 -right-1 cursor-col-resize"></div>
-                <!-- Small handle dots -->
-                <div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span class="w-1 h-3 bg-blue-500/30 rounded-full"></span>
-                </div>
-            </div>
-
-            <!-- Viewer Slot (Left Side in RTL) -->
-            <aside 
-                v-if="$slots.viewer || store.editorMode === 'manuscript'"
-                class="border-r border-gray-200 bg-gray-50 overflow-y-auto relative z-10 shadow-inner h-full"
-                :style="{ width: viewerWidth + '%' }"
-            >
-                <slot name="viewer" />
-            </aside>
+    <!-- Workspace -->
+    <div class="flex-1 flex overflow-hidden relative">
+      <!-- Editor Content (Right Side in RTL) -->
+      <main class="flex-1 overflow-y-auto scroll-smooth bg-white relative">
+        <!-- Integrated Toolbar (Sticky inside Editor Area) -->
+        <div class="sticky top-0 z-50 bg-white border-b border-gray-100">
+          <slot name="toolbar" />
         </div>
 
-        <!-- Status Bar -->
-        <footer class="h-6 bg-white border-t border-gray-200 flex items-center px-4 justify-between text-[10px] text-gray-400 fixed bottom-0 left-0 right-0 z-40">
-            <div class="flex items-center gap-4">
-                <span>جاهز للعمل</span>
-                <span class="w-2 h-2 rounded-full bg-green-400"></span>
-            </div>
-            <div dir="ltr">Entity Editor v2.0 | Dual Interface | {{ Math.round(100 - viewerWidth) }}% Editor</div>
-        </footer>
+        <div class="w-full h-full transition-all duration-300">
+          <!-- Edge-to-Edge Workspace -->
+          <div class="min-h-full transition-all duration-300">
+            <slot />
+          </div>
+        </div>
+      </main>
+
+      <!-- Resize Handle -->
+      <div 
+        v-if="$slots.viewer || store.editorMode === 'manuscript'"
+        class="w-1 bg-gray-200 hover:bg-blue-400 cursor-col-resize transition-colors z-20 flex items-center justify-center relative group"
+        @mousedown="startResize"
+      >
+        <div class="absolute inset-y-0 -left-1 -right-1 cursor-col-resize" />
+        <!-- Small handle dots -->
+        <div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <span class="w-1 h-3 bg-blue-500/30 rounded-full" />
+        </div>
+      </div>
+
+      <!-- Viewer Slot (Left Side in RTL) -->
+      <aside 
+        v-if="$slots.viewer || store.editorMode === 'manuscript'"
+        class="border-r border-gray-200 bg-gray-50 overflow-y-auto relative z-10 shadow-inner h-full"
+        :style="{ width: viewerWidth + '%' }"
+      >
+        <slot name="viewer" />
+      </aside>
     </div>
+
+    <!-- Status Bar -->
+    <footer class="h-6 bg-white border-t border-gray-200 flex items-center px-4 justify-between text-[10px] text-gray-400 fixed bottom-0 left-0 right-0 z-40">
+      <div class="flex items-center gap-4">
+        <span>جاهز للعمل</span>
+        <span class="w-2 h-2 rounded-full bg-green-400" />
+      </div>
+      <div dir="ltr">
+        Entity Editor v2.0 | Dual Interface | {{ Math.round(100 - viewerWidth) }}% Editor
+      </div>
+    </footer>
+  </div>
 </template>
 
 <style scoped>

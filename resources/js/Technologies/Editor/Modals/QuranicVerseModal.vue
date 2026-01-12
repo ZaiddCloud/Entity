@@ -31,59 +31,78 @@ const handleInsert = () => {
 </script>
 
 <template>
-    <div v-if="isOpen" class="modal-overlay" @click.self="emit('close')">
-        <div class="modal-content" dir="rtl">
-            <div class="modal-header">
-                <h3 class="modal-title">📿 إدراج آية قرآنية</h3>
-                <button class="modal-close" @click="emit('close')">✖️</button>
-            </div>
+  <div
+    v-if="isOpen"
+    class="modal-overlay"
+    @click.self="emit('close')"
+  >
+    <div
+      class="modal-content"
+      dir="rtl"
+    >
+      <div class="modal-header">
+        <h3 class="modal-title">
+          📿 إدراج آية قرآنية
+        </h3>
+        <button
+          class="modal-close"
+          @click="emit('close')"
+        >
+          ✖️
+        </button>
+      </div>
 
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">نص الآية *</label>
-                    <textarea 
-                        v-model="verseText" 
-                        class="form-textarea"
-                        rows="4"
-                        placeholder="أدخل نص الآية الكريمة..."
-                    ></textarea>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">السورة</label>
-                        <input 
-                            v-model="surah" 
-                            type="text" 
-                            class="form-input"
-                            placeholder="اسم السورة"
-                        >
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">رقم الآية</label>
-                        <input 
-                            v-model="ayahNumber" 
-                            type="text" 
-                            class="form-input"
-                            placeholder="رقم"
-                        >
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-secondary" @click="emit('close')">إلغاء</button>
-                <button 
-                    class="btn btn-primary" 
-                    :disabled="!verseText"
-                    @click="handleInsert"
-                >
-                    إدراج
-                </button>
-            </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">نص الآية *</label>
+          <textarea 
+            v-model="verseText" 
+            class="form-textarea"
+            rows="4"
+            placeholder="أدخل نص الآية الكريمة..."
+          />
         </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">السورة</label>
+            <input 
+              v-model="surah" 
+              type="text" 
+              class="form-input"
+              placeholder="اسم السورة"
+            >
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">رقم الآية</label>
+            <input 
+              v-model="ayahNumber" 
+              type="text" 
+              class="form-input"
+              placeholder="رقم"
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          class="btn btn-secondary"
+          @click="emit('close')"
+        >
+          إلغاء
+        </button>
+        <button 
+          class="btn btn-primary" 
+          :disabled="!verseText"
+          @click="handleInsert"
+        >
+          إدراج
+        </button>
+      </div>
     </div>
+  </div>
 </template>
 
 <style scoped>

@@ -9,6 +9,7 @@ use App\Models\ManuscriptPage;
 use App\Models\AudioSegment;
 use App\Models\VideoSegment;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
 class EntityContentService
@@ -67,7 +68,6 @@ class EntityContentService
         // التحقق من أن نوع المحتوى مسموح لهذا الكيان
         $allowed = $this->allowedTypes[$entityType] ?? [];
 
-        // إذا كان الكيان غير معرف في القائمة، نمنع الإضافة مبدئياً لضمان الأمان
         if (empty($allowed)) {
             throw ValidationException::withMessages([
                 'entity_type' => "Entity type '{$entityType}' is not configured for content creation."
@@ -81,11 +81,11 @@ class EntityContentService
         }
 
         // إنشاء المحتوى
+        /** @var class-string<Model> $model */
         $model = $this->getContentModel($entity);
         $idField = $this->getEntityIdField($entity);
 
-        // إزالة entity_type إذا كان موجوداً (للتوافق مع الكود القديم)
-        return $model::create(array_merge($data, [
+        return $model::query()->create(array_merge($data, [
             $idField => $entity->id,
             'entity_type' => $entityType,
             'last_updated' => now(),
@@ -95,25 +95,32 @@ class EntityContentService
     /**
      * جلب صفحة محددة
      */
-    public function getNode(Entity $entity, string $slug)
+    public function getNode(Entity $entity, string $slug): Model
     {
+        /** @var class-string<Model> $model */
         $model = $this->getContentModel($entity);
         $idField = $this->getEntityIdField($entity);
 
-        return $model::where($idField, $entity->id)
+        /** @var Model $node */
+        $node = $model::query()
+            ->where($idField, $entity->id)
             ->where('slug', $slug)
             ->firstOrFail();
+            
+        return $node;
     }
 
     /**
      * جلب الهيكلية (Hierarchy)
      */
-    public function getHierarchy(Entity $entity, ?int $limit = null)
+    public function getHierarchy(Entity $entity, ?int $limit = null): Collection
     {
+        /** @var class-string<Model> $model */
         $model = $this->getContentModel($entity);
         $idField = $this->getEntityIdField($entity);
 
-        $query = $model::where($idField, $entity->id)
+        $query = $model::query()
+            ->where($idField, $entity->id)
             ->orderBy('order')
             ->select(['_id', 'title', 'slug', 'type', 'order', 'parent_id']);
 
@@ -127,22 +134,25 @@ class EntityContentService
     /**
      * جلب التنقل (prev/next)
      */
-    public function getNavigation(Entity $entity, $currentNode): array
+    public function getNavigation(Entity $entity, Model $currentNode): array
     {
+        /** @var class-string<Model> $model */
         $model = $this->getContentModel($entity);
         $idField = $this->getEntityIdField($entity);
 
-        $order = $currentNode->order;
+        $order = $currentNode->getAttribute('order');
         if ($order === null) {
             return ['prev' => null, 'next' => null];
         }
 
-        $prev = $model::where($idField, $entity->id)
+        $prev = $model::query()
+            ->where($idField, $entity->id)
             ->where('order', '<', (int) $order)
             ->orderBy('order', 'desc')
             ->first(['slug', 'title']);
 
-        $next = $model::where($idField, $entity->id)
+        $next = $model::query()
+            ->where($idField, $entity->id)
             ->where('order', '>', (int) $order)
             ->orderBy('order', 'asc')
             ->first(['slug', 'title']);
@@ -156,18 +166,9 @@ class EntityContentService
     public function prepareEditorData(Entity $entity, string $slug): array
     {
         $node = $this->getNode($entity, $slug);
-        $hierarchy = $this->getHierarchy($entity, limit: 100); // Limit hierarchy for performance? Or keeping full? Plan said limit: null but code had limit 100 in previous step? No, Plan said limit 100 in prepareEditorData.
-        // Actually, let's stick to the previous logic of fetching all if needed, but the original code had get() which means all. 
-        // Wait, the original code had ->get(['...']).
-        // The Plan snippet had `limit: 100` in prepareEditorData call. I will follow the plan. 
-        // But let's check hierarchy usage. The frontend needs structure. 100 might be too small for a book.
-        // I will use limit: 500 to be safe or just no limit if books are large.
-        // The original code `->get()` implies no limit.
-        // I'll leave limit as optional logic in `getHierarchy` but call it without limit or with a high limit here. Use 1000.
-
+        $hierarchy = $this->getHierarchy($entity, 500);
         $navigation = $this->getNavigation($entity, $node);
 
-        // 4. تحضير بيانات المصدر (Resource Data)
         $resourceData = [
             'id' => $entity->id,
             'title' => $entity->title,
@@ -176,17 +177,16 @@ class EntityContentService
         ];
 
         // بيانات خاصة حسب النوع
-        if (class_basename($entity) === 'Audio' || class_basename($entity) === 'Video') {
+        $type = class_basename($entity);
+        if ($type === 'Audio' || $type === 'Video') {
             $resourceData['duration'] = $entity->duration ?? 0;
-        } elseif (in_array(class_basename($entity), ['Manuscript', 'Audio', 'Video'])) {
-            // Load versions for Manuscript, Audio, and Video Viewers
+        }
+
+        if (in_array($type, ['Manuscript', 'Audio', 'Video'])) {
             $versions = $entity->versions()->with('publisher')->get();
 
             $resourceData['versions'] = $versions->map(function ($v) {
-                // Title construction logic
-                $title = "الإصدار " . ($v->edition_number ?? '1'); // Generic fallback
-
-                // Specific logic per type if needed
+                $title = "الإصدار " . ($v->edition_number ?? '1');
                 if ($v->title && (str_contains($v->title, 'النسخة') || str_contains($v->title, 'تسجيل'))) {
                     $title = $v->title;
                 }
@@ -201,9 +201,7 @@ class EntityContentService
                 ];
             })->toArray();
 
-            // Fallback: If no versions, add the main entity file as "Original"
-            // For Manuscripts, we skip this if it's a folder (bundles) to avoid viewer errors
-            if (empty($resourceData['versions']) && $entity->file_path && class_basename($entity) !== 'Manuscript') {
+            if (empty($resourceData['versions']) && $entity->file_path && $type !== 'Manuscript') {
                 $resourceData['versions'][] = [
                     'title' => 'الملف الأساسي',
                     'url' => asset('storage/' . $entity->file_path)
@@ -216,20 +214,26 @@ class EntityContentService
             'contentNode' => $node,
             'hierarchy' => $hierarchy,
             'navigation' => $navigation,
-            'editor_mode' => strtolower(class_basename($entity)),
+            'editor_mode' => strtolower($type),
             'resource_data' => $resourceData
         ];
     }
+
     /**
      * Get first child node for an entity
      */
-    public function getFirstChild(Entity $entity)
+    public function getFirstChild(Entity $entity): ?Model
     {
+        /** @var class-string<Model> $model */
         $model = $this->getContentModel($entity);
         $idField = $this->getEntityIdField($entity);
 
-        return $model::where($idField, $entity->id)
+        /** @var Model|null $firstChild */
+        $firstChild = $model::query()
+            ->where($idField, $entity->id)
             ->orderBy('order')
             ->first();
+
+        return $firstChild;
     }
 }

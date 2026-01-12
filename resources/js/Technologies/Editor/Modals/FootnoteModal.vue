@@ -29,50 +29,81 @@ const handleSave = () => {
 </script>
 
 <template>
-    <div v-if="isOpen" class="modal-overlay" @click.self="emit('close')">
-        <div class="modal-content" dir="rtl">
-            <div class="modal-header">
-                <h3 class="modal-title">📌 تحرير حاشية</h3>
-                <button class="modal-close" @click="emit('close')">✖️</button>
-            </div>
+  <div
+    v-if="isOpen"
+    class="modal-overlay"
+    @click.self="emit('close')"
+  >
+    <div
+      class="modal-content"
+      dir="rtl"
+    >
+      <div class="modal-header">
+        <h3 class="modal-title">
+          📌 تحرير حاشية
+        </h3>
+        <button
+          class="modal-close"
+          @click="emit('close')"
+        >
+          ✖️
+        </button>
+      </div>
 
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">نوع الحاشية</label>
-                    <select v-model="footnoteType" class="form-select">
-                        <option v-for="type in types" :key="type.value" :value="type.value">
-                            {{ type.label }}
-                        </option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">المحتوى</label>
-                    <textarea 
-                        v-model="content" 
-                        class="form-textarea"
-                        rows="6"
-                        placeholder="أدخل محتوى الحاشية..."
-                    ></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">المرجع</label>
-                    <input 
-                        v-model="reference" 
-                        type="text" 
-                        class="form-input"
-                        placeholder="المرجع (اختياري)"
-                    >
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-secondary" @click="emit('close')">إلغاء</button>
-                <button class="btn btn-primary" @click="handleSave">حفظ</button>
-            </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">نوع الحاشية</label>
+          <select
+            v-model="footnoteType"
+            class="form-select"
+          >
+            <option
+              v-for="type in types"
+              :key="type.value"
+              :value="type.value"
+            >
+              {{ type.label }}
+            </option>
+          </select>
         </div>
+
+        <div class="form-group">
+          <label class="form-label">المحتوى</label>
+          <textarea 
+            v-model="content" 
+            class="form-textarea"
+            rows="6"
+            placeholder="أدخل محتوى الحاشية..."
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">المرجع</label>
+          <input 
+            v-model="reference" 
+            type="text" 
+            class="form-input"
+            placeholder="المرجع (اختياري)"
+          >
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          class="btn btn-secondary"
+          @click="emit('close')"
+        >
+          إلغاء
+        </button>
+        <button
+          class="btn btn-primary"
+          @click="handleSave"
+        >
+          حفظ
+        </button>
+      </div>
     </div>
+  </div>
 </template>
 
 <style scoped>

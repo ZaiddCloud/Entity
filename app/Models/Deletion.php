@@ -6,6 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
+/**
+ * @property string $id
+ * @property string $entity_id
+ * @property string $entity_type
+ * @property string $user_id
+ * @property string|null $reason
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property-read \App\Models\User $user
+ */
 class Deletion extends Model
 {
     use \Illuminate\Database\Eloquent\Factories\HasFactory;

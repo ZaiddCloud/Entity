@@ -55,42 +55,44 @@ const closeWindow = () => {
 </script>
 
 <template>
-    <header id="main-toolbar" class="glass-editor-header flex flex-col border-b border-gray-200">
-        <!-- New Modular Toolbar Row (Sandbox Mode) -->
-        <div class="flex items-center h-12 px-4 gap-2 border-b border-gray-100 bg-white overflow-visible z-50">
-            <HistoryGroup />
-            <ToolbarDivider />
-            <StructureGroup />
-            <ToolbarDivider />
-            <FormattingGroup />
-            <ToolbarDivider />
-            <ListGroup />
-            <ToolbarDivider />
-            <BlockGroup />
-            <ToolbarDivider />
-            <InsertGroup />
-            <ToolbarDivider />
-            <TextAlignGroup />
+  <header
+    id="main-toolbar"
+    class="glass-editor-header flex flex-col border-b border-gray-200"
+  >
+    <!-- New Modular Toolbar Row (Sandbox Mode) -->
+    <div class="flex items-center h-12 px-4 gap-2 border-b border-gray-100 bg-white overflow-visible z-50">
+      <HistoryGroup />
+      <ToolbarDivider />
+      <StructureGroup />
+      <ToolbarDivider />
+      <FormattingGroup />
+      <ToolbarDivider />
+      <ListGroup />
+      <ToolbarDivider />
+      <BlockGroup />
+      <ToolbarDivider />
+      <InsertGroup />
+      <ToolbarDivider />
+      <TextAlignGroup />
             
-            <div class="w-px h-6 bg-gray-200 mx-2"></div>
+      <div class="w-px h-6 bg-gray-200 mx-2" />
             
-            <HeritageGroup />
+      <HeritageGroup />
             
-            <!-- Spacer -->
-            <div class="flex-1"></div>
+      <!-- Spacer -->
+      <div class="flex-1" />
             
-            <!-- Placeholder for other groups -->
-            <span class="text-xs text-gray-400">أدوات التراث والوسائط قادمة...</span>
-        </div>
+      <!-- Placeholder for other groups -->
+      <span class="text-xs text-gray-400">أدوات التراث والوسائط قادمة...</span>
+    </div>
         
-        <!-- Legacy Toolbar (disabled to prevent crashes during refactoring) -->
-        <!-- 
+    <!-- Legacy Toolbar (disabled to prevent crashes during refactoring) -->
+    <!-- 
         <div class="menu-bar flex items-center h-8 border-b border-gray-100 bg-gray-50/50">
              ... legacy content ...
         </div> 
         -->
-
-    </header>
+  </header>
 </template>
 
 <style scoped>

@@ -8,9 +8,13 @@ defineProps({
 </script>
 
 <template>
-    <div class="drag-handle" draggable="true" data-drag-handle>
-        <i class="ri-draggable text-gray-400 hover:text-gray-600"></i>
-    </div>
+  <div
+    class="drag-handle"
+    draggable="true"
+    data-drag-handle
+  >
+    <i class="ri-draggable text-gray-400 hover:text-gray-600" />
+  </div>
 </template>
 
 <style scoped>

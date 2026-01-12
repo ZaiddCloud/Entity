@@ -38,67 +38,86 @@ const handleInsert = () => {
 </script>
 
 <template>
-    <div v-if="isOpen" class="modal-overlay" @click.self="emit('close')">
-        <div class="modal-content" dir="rtl">
-            <div class="modal-header">
-                <h3 class="modal-title">📖 إدراج بيت شعر</h3>
-                <button class="modal-close" @click="emit('close')">✖️</button>
-            </div>
+  <div
+    v-if="isOpen"
+    class="modal-overlay"
+    @click.self="emit('close')"
+  >
+    <div
+      class="modal-content"
+      dir="rtl"
+    >
+      <div class="modal-header">
+        <h3 class="modal-title">
+          📖 إدراج بيت شعر
+        </h3>
+        <button
+          class="modal-close"
+          @click="emit('close')"
+        >
+          ✖️
+        </button>
+      </div>
 
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">الصدر *</label>
-                    <input 
-                        v-model="sadr" 
-                        type="text" 
-                        class="form-input"
-                        placeholder="أدخل صدر البيت..."
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">العجز *</label>
-                    <input 
-                        v-model="ajuz" 
-                        type="text" 
-                        class="form-input"
-                        placeholder="أدخل عجز البيت..."
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">الشاعر</label>
-                    <input 
-                        v-model="poet" 
-                        type="text" 
-                        class="form-input"
-                        placeholder="اسم الشاعر (اختياري)"
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">المصدر</label>
-                    <input 
-                        v-model="source" 
-                        type="text" 
-                        class="form-input"
-                        placeholder="مصدر البيت (اختياري)"
-                    >
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-secondary" @click="emit('close')">إلغاء</button>
-                <button 
-                    class="btn btn-primary" 
-                    :disabled="!sadr || !ajuz"
-                    @click="handleInsert"
-                >
-                    إدراج
-                </button>
-            </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">الصدر *</label>
+          <input 
+            v-model="sadr" 
+            type="text" 
+            class="form-input"
+            placeholder="أدخل صدر البيت..."
+          >
         </div>
+
+        <div class="form-group">
+          <label class="form-label">العجز *</label>
+          <input 
+            v-model="ajuz" 
+            type="text" 
+            class="form-input"
+            placeholder="أدخل عجز البيت..."
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">الشاعر</label>
+          <input 
+            v-model="poet" 
+            type="text" 
+            class="form-input"
+            placeholder="اسم الشاعر (اختياري)"
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">المصدر</label>
+          <input 
+            v-model="source" 
+            type="text" 
+            class="form-input"
+            placeholder="مصدر البيت (اختياري)"
+          >
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          class="btn btn-secondary"
+          @click="emit('close')"
+        >
+          إلغاء
+        </button>
+        <button 
+          class="btn btn-primary" 
+          :disabled="!sadr || !ajuz"
+          @click="handleInsert"
+        >
+          إدراج
+        </button>
+      </div>
     </div>
+  </div>
 </template>
 
 <style scoped>

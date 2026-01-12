@@ -82,45 +82,48 @@ const handleToolbarCommand = ({ command, value }) => {
 </script>
 
 <template>
-    <EditorLayout :title="store.documentTitle">
-        <template #toolbar>
-            <EditorToolbar @command="handleToolbarCommand" />
-        </template>
+  <EditorLayout :title="store.documentTitle">
+    <template #toolbar>
+      <EditorToolbar @command="handleToolbarCommand" />
+    </template>
 
-        <!-- Dynamic Viewer Slot -->
-        <template #viewer v-if="['manuscript', 'audio', 'video'].includes(store.editorMode)">
-            <ManuscriptViewer 
-                v-if="store.editorMode === 'manuscript'" 
-                :resource="store.resourceData"
-                :current-node="store.currentContentNode"
-            />
-            <MediaPlayer 
-                v-else-if="['audio', 'video'].includes(store.editorMode)"
-                :mode="store.editorMode"
-                :resource="store.resourceData"
-                :hierarchy="store.hierarchy"
-            />
-        </template>
+    <!-- Dynamic Viewer Slot -->
+    <template
+      v-if="['manuscript', 'audio', 'video'].includes(store.editorMode)"
+      #viewer
+    >
+      <ManuscriptViewer 
+        v-if="store.editorMode === 'manuscript'" 
+        :resource="store.resourceData"
+        :current-node="store.currentContentNode"
+      />
+      <MediaPlayer 
+        v-else-if="['audio', 'video'].includes(store.editorMode)"
+        :mode="store.editorMode"
+        :resource="store.resourceData"
+        :hierarchy="store.hierarchy"
+      />
+    </template>
 
 
-        <!-- Main Paper Sheet -->
-        <div class="bg-white shadow-xl min-h-[1100px] border border-gray-200 rounded-sm overflow-hidden mb-20 relative">
-            <TiptapEditor 
-                v-if="store.editorMode === 'book' || store.editorMode === 'manuscript'"
-                ref="editorRef"
-                v-model="store.content"
-                @set-editor="store.setEditor"
-            />
-            <AudioSegmentEditor
-                v-else-if="store.editorMode === 'audio'"
-                v-model="store.content"
-            />
-            <VideoSceneEditor
-                v-else-if="store.editorMode === 'video'"
-                v-model="store.content"
-            />
-        </div>
-    </EditorLayout>
+    <!-- Main Paper Sheet -->
+    <div class="bg-white shadow-xl min-h-[1100px] border border-gray-200 rounded-sm overflow-hidden mb-20 relative">
+      <TiptapEditor 
+        v-if="store.editorMode === 'book' || store.editorMode === 'manuscript'"
+        ref="editorRef"
+        v-model="store.content"
+        @set-editor="store.setEditor"
+      />
+      <AudioSegmentEditor
+        v-else-if="store.editorMode === 'audio'"
+        v-model="store.content"
+      />
+      <VideoSceneEditor
+        v-else-if="store.editorMode === 'video'"
+        v-model="store.content"
+      />
+    </div>
+  </EditorLayout>
 </template>
 
 <style scoped>

@@ -7,6 +7,17 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
+/**
+ * @property string $id
+ * @property string $entity_id
+ * @property string $entity_type
+ * @property string $user_id
+ * @property string $action
+ * @property array|null $description
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property-read \App\Models\User $user
+ * @property-read \Illuminate\Database\Eloquent\Model $entity
+ */
 class Activity extends Model
 {
     use HasFactory, HasUuids;

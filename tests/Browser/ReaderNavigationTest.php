@@ -28,9 +28,14 @@ class ReaderNavigationTest extends DuskTestCase
             $chapter = BookChild::create([
                 'book_id' => $book->id,
                 'title' => 'Test Chapter 1',
-                'type' => 'chapter',
                 'content_blocks' => [
-                    ['type' => 'paragraph', 'body' => 'Content for Chapter 1'] // Changed from 'text' to 'paragraph' to match likely Renderer expectation
+                    'type' => 'doc',
+                    'content' => [
+                        [
+                            'type' => 'paragraph',
+                            'content' => [['type' => 'text', 'text' => 'Content for Chapter 1']]
+                        ]
+                    ]
                 ]
             ]);
 

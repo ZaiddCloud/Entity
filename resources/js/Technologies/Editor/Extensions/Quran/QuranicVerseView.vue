@@ -9,18 +9,25 @@ const props = defineProps({
 </script>
 
 <template>
-    <NodeViewWrapper class="quranic-verse-node">
-        <div class="quranic-container">
-            <div class="quranic-icon">📿</div>
-            <div class="quranic-content">
-                <div class="quranic-text">{{ node.attrs.text }}</div>
-                <div v-if="node.attrs.surah || node.attrs.ayah" class="quranic-reference">
-                    <span v-if="node.attrs.surah">{{ node.attrs.surah }}</span>
-                    <span v-if="node.attrs.ayah"> - آية {{ node.attrs.ayah }}</span>
-                </div>
-            </div>
+  <NodeViewWrapper class="quranic-verse-node">
+    <div class="quranic-container">
+      <div class="quranic-icon">
+        📿
+      </div>
+      <div class="quranic-content">
+        <div class="quranic-text">
+          {{ node.attrs.text }}
         </div>
-    </NodeViewWrapper>
+        <div
+          v-if="node.attrs.surah || node.attrs.ayah"
+          class="quranic-reference"
+        >
+          <span v-if="node.attrs.surah">{{ node.attrs.surah }}</span>
+          <span v-if="node.attrs.ayah"> - آية {{ node.attrs.ayah }}</span>
+        </div>
+      </div>
+    </div>
+  </NodeViewWrapper>
 </template>
 
 <style scoped>

@@ -43,30 +43,33 @@ const handleSave = (finalSegments) => {
 </script>
 
 <template>
-    <div class="h-screen bg-black overflow-hidden flex flex-col">
-        <!-- Header -->
-        <div class="h-14 bg-gray-900 border-b border-gray-800 flex items-center px-6 justify-between shrink-0">
-            <h1 class="text-xl font-bold text-white tracking-wide">Entity Media Studio</h1>
-            <div class="text-xs text-gray-500 font-mono">DEV MODE</div>
-        </div>
+  <div class="h-screen bg-black overflow-hidden flex flex-col">
+    <!-- Header -->
+    <div class="h-14 bg-gray-900 border-b border-gray-800 flex items-center px-6 justify-between shrink-0">
+      <h1 class="text-xl font-bold text-white tracking-wide">
+        Entity Media Studio
+      </h1>
+      <div class="text-xs text-gray-500 font-mono">
+        DEV MODE
+      </div>
+    </div>
 
-        <!-- Main Workspace -->
-        <div class="flex-1 flex overflow-hidden">
-            
-            <!-- LEFT: Media Player Area -->
-            <div class="flex-1 bg-black flex items-center justify-center relative p-6">
-                <div class="w-full max-w-5xl aspect-video bg-gray-900 rounded-xl shadow-2xl ring-1 ring-white/10 overflow-hidden relative">
-                    <MediaPlayer 
-                        ref="playerRef"
-                        :src="sampleVideo" 
-                        type="video" 
-                        :poster="samplePoster" 
-                        :segments="segments"
-                        @ready="onPlayerReady"
-                        @timeupdate="onTimeUpdate"
-                    />
+    <!-- Main Workspace -->
+    <div class="flex-1 flex overflow-hidden">
+      <!-- LEFT: Media Player Area -->
+      <div class="flex-1 bg-black flex items-center justify-center relative p-6">
+        <div class="w-full max-w-5xl aspect-video bg-gray-900 rounded-xl shadow-2xl ring-1 ring-white/10 overflow-hidden relative">
+          <MediaPlayer 
+            ref="playerRef"
+            :src="sampleVideo" 
+            type="video" 
+            :poster="samplePoster" 
+            :segments="segments"
+            @ready="onPlayerReady"
+            @timeupdate="onTimeUpdate"
+          />
                     
-                    <!-- Invisible Overlay to capture time updates if MediaPlayer doesn't emit them directly yet. 
+          <!-- Invisible Overlay to capture time updates if MediaPlayer doesn't emit them directly yet. 
                          Ideally MediaPlayer should emit time-update. 
                          For now, we can rely on the fact that useMedia exposes currentTime via ref if we had access, 
                          but since it's inside, let's use a quick hack or assume MediaPlayer emits 'timeupdate' or we bind to the video element.
@@ -94,24 +97,24 @@ const handleSave = (finalSegments) => {
                          I will update MediaPlayer.vue to `defineExpose({ currentTime, duration, seek })` 
                          so the parent can read it. This is the cleanest way.
                     -->
-                </div>
-            </div>
+        </div>
+      </div>
 
-            <!-- RIGHT: Segments Editor Sidebar -->
-            <div class="w-96 border-l border-gray-800 bg-gray-900 shrink-0 h-full">
-                <!-- We need to pass the REAL time. Since we haven't wired MediaPlayer to emit it yet, 
+      <!-- RIGHT: Segments Editor Sidebar -->
+      <div class="w-96 border-l border-gray-800 bg-gray-900 shrink-0 h-full">
+        <!-- We need to pass the REAL time. Since we haven't wired MediaPlayer to emit it yet, 
                      I'll add a temporary interval or modify MediaPlayer in the next step.
                      For now, let's assume I will fix MediaPlayer to emit/expose time.
                 -->
-                <SegmentsEditor 
-                    :current-time="currentPlayerTime"
-                    :duration="currentDuration"
-                    :initial-segments="segments"
-                    @update:segments="segments = $event"
-                    @seek="handleSeek"
-                    @save-final="handleSave"
-                />
-            </div>
-        </div>
+        <SegmentsEditor 
+          :current-time="currentPlayerTime"
+          :duration="currentDuration"
+          :initial-segments="segments"
+          @update:segments="segments = $event"
+          @seek="handleSeek"
+          @save-final="handleSave"
+        />
+      </div>
     </div>
+  </div>
 </template>

@@ -10,6 +10,18 @@ use Illuminate\Support\Str;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property string $id
+ * @property string $name
+ * @property string $slug
+ * @property string|null $description
+ * @property string|null $parent_id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read \App\Models\Category|null $parent
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Category[] $children
+ */
 class Category extends Model
 {
     /** @use HasFactory<\Database\Factories\CategoryFactory> */

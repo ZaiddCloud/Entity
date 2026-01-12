@@ -68,51 +68,80 @@ const checkActive = (routeName) => {
 </script>
 
 <template>
-    <aside 
-        :class="[
-            'fixed top-0 right-0 z-50 h-screen transition-all duration-300 border-l border-gray-200 dark:border-white/5 bg-white dark:bg-[#0a0a0a]',
-            isOpen ? 'w-64' : 'w-20'
-        ]"
-    >
-        <!-- Sidebar Header -->
-        <div class="h-16 flex items-center px-6 border-b border-gray-100 dark:border-white/5">
-            <Link href="/" class="flex items-center gap-3 overflow-hidden">
-                <div class="w-8 h-8 rounded-xl bg-linear-to-br from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/20 shrink-0">
-                    <span class="text-white font-black text-sm">E</span>
-                </div>
-                <span v-show="isOpen" class="font-black text-xl tracking-tight dark:text-white whitespace-nowrap">Entity</span>
-            </Link>
+  <aside 
+    :class="[
+      'fixed top-0 right-0 z-50 h-screen transition-all duration-300 border-l border-gray-200 dark:border-white/5 bg-white dark:bg-[#0a0a0a]',
+      isOpen ? 'w-64' : 'w-20'
+    ]"
+  >
+    <!-- Sidebar Header -->
+    <div class="h-16 flex items-center px-6 border-b border-gray-100 dark:border-white/5">
+      <Link
+        href="/"
+        class="flex items-center gap-3 overflow-hidden"
+      >
+        <div class="w-8 h-8 rounded-xl bg-linear-to-br from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/20 shrink-0">
+          <span class="text-white font-black text-sm">E</span>
         </div>
+        <span
+          v-show="isOpen"
+          class="font-black text-xl tracking-tight dark:text-white whitespace-nowrap"
+        >Entity</span>
+      </Link>
+    </div>
 
-        <!-- Sidebar Content -->
-        <div class="overflow-y-auto h-[calc(100vh-4rem)] custom-scrollbar py-4 px-3">
-            <div v-for="group in navigation" :key="group.name" class="mb-6">
-                <h5 v-if="isOpen" class="px-3 mb-2 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">
-                    {{ group.name }}
-                </h5>
-                <div class="space-y-1">
-                    <Link 
-                        v-for="item in group.items" 
-                        :key="item.name"
-                        :href="route(item.route)"
-                        :class="[
-                            'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative',
-                            checkActive(item.route) 
-                                ? 'bg-indigo-50 dark:bg-indigo-900/10 text-indigo-600 dark:text-indigo-400' 
-                                : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-white'
-                        ]"
-                        v-tooltip="!isOpen ? item.name : ''"
-                    >
-                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
-                        </svg>
-                        <span v-show="isOpen" class="font-bold text-sm">{{ item.name }}</span>
+    <!-- Sidebar Content -->
+    <div class="overflow-y-auto h-[calc(100vh-4rem)] custom-scrollbar py-4 px-3">
+      <div
+        v-for="group in navigation"
+        :key="group.name"
+        class="mb-6"
+      >
+        <h5
+          v-if="isOpen"
+          class="px-3 mb-2 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500"
+        >
+          {{ group.name }}
+        </h5>
+        <div class="space-y-1">
+          <Link 
+            v-for="item in group.items" 
+            :key="item.name"
+            v-tooltip="!isOpen ? item.name : ''"
+            :href="route(item.route)"
+            :class="[
+              'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative',
+              checkActive(item.route) 
+                ? 'bg-indigo-50 dark:bg-indigo-900/10 text-indigo-600 dark:text-indigo-400' 
+                : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-white'
+            ]"
+          >
+            <svg
+              class="w-5 h-5 shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                :d="item.icon"
+              />
+            </svg>
+            <span
+              v-show="isOpen"
+              class="font-bold text-sm"
+            >{{ item.name }}</span>
                         
-                        <!-- Active Indicator -->
-                        <div v-if="checkActive(item.route)" class="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 dark:bg-indigo-400 rounded-l-full"></div>
-                    </Link>
-                </div>
-            </div>
+            <!-- Active Indicator -->
+            <div
+              v-if="checkActive(item.route)"
+              class="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 dark:bg-indigo-400 rounded-l-full"
+            />
+          </Link>
         </div>
-    </aside>
+      </div>
+    </div>
+  </aside>
 </template>
