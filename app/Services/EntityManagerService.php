@@ -61,7 +61,7 @@ class EntityManagerService
         \App\Models\Deletion::query()->create([
             'entity_id' => $entity->id,
             'entity_type' => get_class($entity),
-            'user_id' => auth()->id() ?? \App\Models\User::first()?->id,
+            'user_id' => \Illuminate\Support\Facades\Auth::id() ?? \App\Models\User::first()?->id,
             'reason' => 'حذف من لوحة التحكم',
             'data' => $entity->toArray()
         ]);
@@ -87,7 +87,7 @@ class EntityManagerService
     protected function logActivity(Entity $entity, string $type, string $description, array $changes = []): void
     {
         \App\Models\Activity::query()->create([
-            'user_id' => auth()->id() ?? \App\Models\User::first()?->id,
+            'user_id' => \Illuminate\Support\Facades\Auth::id() ?? \App\Models\User::first()?->id,
             'entity_id' => $entity->id,
             'entity_type' => get_class($entity),
             'activity_type' => $type,

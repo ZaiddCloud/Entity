@@ -5,13 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\Booker;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
+use Illuminate\Http\RedirectResponse;
 
 class BookerController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request): Response
     {
         $query = Booker::query();
 
@@ -33,7 +38,7 @@ class BookerController extends Controller
     /**
      * Bulk destroy resource.
      */
-    public function bulkDestroy(Request $request)
+    public function bulkDestroy(Request $request): RedirectResponse
     {
         $request->validate([
             'ids' => 'required|array',

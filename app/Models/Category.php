@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \App\Models\Category|null $parent
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Category[] $children
+ * @mixin \Illuminate\Database\Eloquent\Builder
  */
 class Category extends Model
 {

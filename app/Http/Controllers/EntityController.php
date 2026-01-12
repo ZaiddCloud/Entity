@@ -146,11 +146,19 @@ abstract class EntityController extends Controller
         return 'تم الحذف بنجاح';
     }
 
+    /**
+     * Get the success message for restore operation
+     * @return string
+     */
     protected function getRestoreSuccessMessage(): string
     {
         return 'تمت استعادة العنصر بنجاح';
     }
 
+    /**
+     * Get the success message for force delete operation
+     * @return string
+     */
     protected function getForceDeleteSuccessMessage(): string
     {
         return 'تم الحذف نهائياً بنجاح';
@@ -590,6 +598,9 @@ abstract class EntityController extends Controller
         }
     }
 
+    /**
+     * Handle many-to-many relationship syncing
+     */
     /**
      * Handle many-to-many relationship syncing
      */

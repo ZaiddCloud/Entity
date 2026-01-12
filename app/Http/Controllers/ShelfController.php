@@ -5,13 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Shelf;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
+use Illuminate\Http\RedirectResponse;
 
 class ShelfController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $filters = $request->only(['search']);
 
@@ -32,7 +34,7 @@ class ShelfController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): Response
     {
         return Inertia::render('Shelves/Create');
     }
@@ -40,7 +42,7 @@ class ShelfController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $request->validate([
             'location_code' => 'required|string|max:255|unique:shelves,location_code',
@@ -56,7 +58,7 @@ class ShelfController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Shelf $shelf)
+    public function show(Shelf $shelf): Response
     {
         return Inertia::render('Shelves/Show', [
             'shelf' => $shelf->load(['versions.versionable']),
@@ -66,7 +68,7 @@ class ShelfController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Shelf $shelf)
+    public function edit(Shelf $shelf): Response
     {
         return Inertia::render('Shelves/Edit', [
             'shelf' => $shelf,
@@ -76,7 +78,7 @@ class ShelfController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Shelf $shelf)
+    public function update(Request $request, Shelf $shelf): RedirectResponse
     {
         $request->validate([
             'location_code' => 'sometimes|string|max:255|unique:shelves,location_code,' . $shelf->id,
@@ -92,7 +94,7 @@ class ShelfController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Shelf $shelf)
+    public function destroy(Shelf $shelf): RedirectResponse
     {
         $shelf->delete();
 
@@ -103,7 +105,7 @@ class ShelfController extends Controller
     /**
      * Bulk destroy resource.
      */
-    public function bulkDestroy(Request $request)
+    public function bulkDestroy(Request $request): RedirectResponse
     {
         $request->validate([
             'ids' => 'required|array',

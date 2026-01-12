@@ -7,6 +7,8 @@ use App\Models\BookChild;
 use App\Services\BookContentService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
+use Illuminate\Http\JsonResponse;
 
 class BookContentController extends Controller
 {
@@ -20,7 +22,10 @@ class BookContentController extends Controller
     /**
      * عارض الكتاب الرئيسي
      */
-    public function show(Book $book, $childId = null)
+    /**
+     * عارض الكتاب الرئيسي
+     */
+    public function show(Book $book, $childId = null): Response
     {
         $initialContent = null;
         if ($childId) {
@@ -47,7 +52,7 @@ class BookContentController extends Controller
     /**
      * جلب محتويات وحدة معينة (فصل، مسألة، إلخ)
      */
-    public function getChildContent(BookChild $child)
+    public function getChildContent(BookChild $child): JsonResponse
     {
         return response()->json([
             'content_blocks' => $child->content_blocks ?? [],
@@ -57,7 +62,7 @@ class BookContentController extends Controller
         ]);
     }
 
-    public function updateValidation(Request $request, $id)
+    public function updateValidation(Request $request, $id): JsonResponse
     {
         $child = BookChild::find($id);
         if (!$child) {
@@ -78,7 +83,7 @@ class BookContentController extends Controller
         return response()->json(['message' => 'Saved']);
     }
 
-    public function restoreVersion(Request $request, $id, $version = null)
+    public function restoreVersion(Request $request, $id, $version = null): JsonResponse
     {
         $child = BookChild::find($id);
         if (!$child) {

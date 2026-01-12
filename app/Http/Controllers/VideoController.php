@@ -47,6 +47,7 @@ class VideoController extends EntityController
      */
     protected function persistModel(Model $model, array $data, Request $request): void
     {
+        /** @var \App\Models\Entity $model */
         $data['type'] = 'video';
         $manager = app(MediaManagerService::class);
         

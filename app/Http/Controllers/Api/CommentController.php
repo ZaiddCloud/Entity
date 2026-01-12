@@ -32,10 +32,10 @@ class CommentController extends Controller
         ]);
 
         $comment = Comment::create([
-            'content' => $request->content,
+            'content' => $request->input('content'),
             'user_id' => auth()->id() ?? \App\Models\User::first()->id,
-            'commentable_id' => $request->commentable_id,
-            'commentable_type' => $request->commentable_type,
+            'commentable_id' => $request->input('commentable_id'),
+            'commentable_type' => $request->input('commentable_type'),
         ]);
 
         return response()->json([

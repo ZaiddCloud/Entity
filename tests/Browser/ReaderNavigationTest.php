@@ -42,7 +42,8 @@ class ReaderNavigationTest extends DuskTestCase
             // 2. Login and Visit Reader
             $browser->loginAs($user)
                 ->visit("/books/{$book->slug}/reader")
-                ->waitForText('Test Navigation Book')
+                ->waitFor('aside', 10) // Wait for sidebar to load
+                ->waitForText('Test Navigation Book', 10)
                 ->assertSee('Test Chapter 1') // Sidebar item
 
                 // 3. Click the Sidebar Item

@@ -5,13 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Language;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
+use Illuminate\Http\RedirectResponse;
 
 class LanguageController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $filters = $request->only(['search']);
 
@@ -33,7 +35,7 @@ class LanguageController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): Response
     {
         return Inertia::render('Languages/Create');
     }
@@ -41,7 +43,7 @@ class LanguageController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:languages,name',
@@ -57,7 +59,7 @@ class LanguageController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Language $language)
+    public function show(Language $language): Response
     {
         return Inertia::render('Languages/Show', [
             'language' => $language->loadCount(['books', 'videos', 'audios', 'manuscripts']),
@@ -67,7 +69,7 @@ class LanguageController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Language $language)
+    public function edit(Language $language): Response
     {
         return Inertia::render('Languages/Edit', [
             'language' => $language,
@@ -77,7 +79,7 @@ class LanguageController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Language $language)
+    public function update(Request $request, Language $language): RedirectResponse
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:languages,name,' . $language->id,
@@ -93,7 +95,7 @@ class LanguageController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Language $language)
+    public function destroy(Language $language): RedirectResponse
     {
         $language->delete();
 
@@ -104,7 +106,7 @@ class LanguageController extends Controller
     /**
      * Bulk destroy resource.
      */
-    public function bulkDestroy(Request $request)
+    public function bulkDestroy(Request $request): RedirectResponse
     {
         $request->validate([
             'ids' => 'required|array',

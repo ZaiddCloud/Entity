@@ -16,7 +16,7 @@ class CategoryController extends Controller
      */
     public function index(): JsonResponse
     {
-        $categories = Category::withCount(['books', 'videos', 'audio', 'manuscripts'])
+        $categories = Category::query()->withCount(['books', 'videos', 'audio', 'manuscripts'])
             ->with(['parent', 'children'])
             ->get();
 
@@ -35,10 +35,10 @@ class CategoryController extends Controller
         ]);
 
         $category = Category::create([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name, '-', null),
-            'parent_id' => $request->parent_id,
-            'description' => $request->description,
+            'name' => $request->input('name'),
+            'slug' => Str::slug($request->input('name'), '-', null),
+            'parent_id' => $request->input('parent_id'),
+            'description' => $request->input('description'),
         ]);
 
         return response()->json([

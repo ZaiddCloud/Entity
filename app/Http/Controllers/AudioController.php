@@ -47,6 +47,7 @@ class AudioController extends EntityController
      */
     protected function persistModel(Model $model, array $data, Request $request): void
     {
+        /** @var \App\Models\Entity $model */
         $data['type'] = 'audio';
         $manager = app(MediaManagerService::class);
         

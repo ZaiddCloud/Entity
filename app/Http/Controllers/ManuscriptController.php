@@ -47,6 +47,7 @@ class ManuscriptController extends EntityController
      */
     protected function persistModel(Model $model, array $data, Request $request): void
     {
+        /** @var \App\Models\Entity $model */
         $data['type'] = 'manuscript';
         $manager = app(MediaManagerService::class);
         

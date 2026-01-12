@@ -19,6 +19,8 @@ use App\Traits\HasPolymorphicRelations;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property string|null $file_path
+ * @property int|null $duration
  * @property-read string $type
  * @property-read string $formatted_serial_number
  * @mixin \Illuminate\Database\Eloquent\Builder

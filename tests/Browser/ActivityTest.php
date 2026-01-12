@@ -64,7 +64,7 @@ class ActivityTest extends DuskTestCase
                 ->select('#activity-type-filter', 'created')
                 ->pause(1000) // Wait for debounce/fetch
                 ->assertSee('Created Item')
-                ->assertDontSee('Deleted Item');
+                ->waitUntilMissingText('Deleted Item');
         });
     }
 

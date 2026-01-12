@@ -54,6 +54,7 @@ class BookController extends EntityController
      */
     protected function persistModel(Model $model, array $data, Request $request): void
     {
+        /** @var \App\Models\Entity $model */
         $data['type'] = 'book';
         $manager = app(MediaManagerService::class);
         

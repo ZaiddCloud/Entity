@@ -64,7 +64,7 @@
     <div class="flex flex-1 overflow-hidden relative">
       <!-- Sidebar: Hierarchy -->
       <aside
-        class="w-80 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 overflow-y-auto transition-all duration-300 z-10"
+        class="reader-sidebar w-80 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 overflow-y-auto transition-all duration-300 z-10"
         :class="{ '-mr-80': sidebarCollapsed }"
       >
         <div class="p-4 sticky top-0 bg-white dark:bg-slate-800 z-10 border-b border-slate-100 dark:border-slate-700 mb-2">
