@@ -16,7 +16,7 @@ class LanguageController extends Controller
         $filters = $request->only(['search']);
 
         $languages = Language::withCount(['books', 'videos', 'audios', 'manuscripts'])
-            ->when($request->search, function ($query, $search) {
+            ->when($request->input('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")
                     ->orWhere('code', 'like', "%{$search}%");
             })

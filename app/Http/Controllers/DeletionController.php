@@ -18,7 +18,7 @@ class DeletionController extends Controller
         $filters = $request->only(['search']);
 
         $deletions = Deletion::with('user')
-            ->when($request->search, function ($query, $search) {
+            ->when($request->input('search'), function ($query, $search) {
                 $query->where('reason', 'like', "%{$search}%")
                       ->orWhereHas('user', function ($q) use ($search) {
                           $q->where('name', 'like', "%{$search}%");

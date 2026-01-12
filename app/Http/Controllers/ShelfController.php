@@ -16,7 +16,7 @@ class ShelfController extends Controller
         $filters = $request->only(['search']);
 
         $shelves = Shelf::withCount(['versions'])
-            ->when($request->search, function ($query, $search) {
+            ->when($request->input('search'), function ($query, $search) {
                 $query->where('location_code', 'like', "%{$search}%");
             })
             ->latest()

@@ -17,8 +17,8 @@ class ActivityController extends Controller
     {
         $filters = $request->only(['search', 'type']);
 
-        $activities = Activity::with('user')
-            ->when($request->search, function ($query, $search) {
+        $activities = Activity::query()->with('user')
+            ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('description', 'like', "%{$search}%")
                       ->orWhereHas('user', function ($q) use ($search) {
@@ -26,7 +26,7 @@ class ActivityController extends Controller
                       });
                 });
             })
-            ->when($request->type, function ($query, $type) {
+            ->when($request->input('type'), function ($query, $type) {
                 $query->where('activity_type', $type);
             })
             ->latest()

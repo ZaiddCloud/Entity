@@ -27,7 +27,7 @@ class VideoController extends Controller
     public function index(Request $request): JsonResponse
     {
         $perPage = $request->get('per_page', 15);
-        $videos = Video::paginate($perPage);
+        $videos = Video::query()->paginate($perPage);
 
         return response()->json($videos);
     }

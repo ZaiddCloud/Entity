@@ -20,7 +20,7 @@ class CollectionController extends Controller
         
         $collections = Collection::withCount(['books', 'videos', 'audio', 'manuscripts'])
             ->with('user')
-            ->when($request->search, function ($query, $search) {
+            ->when($request->input('search'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")
                       ->orWhere('description', 'like', "%{$search}%");
             })

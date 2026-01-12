@@ -27,7 +27,7 @@ class BookController extends Controller
     public function index(Request $request): JsonResponse
     {
         $perPage = $request->get('per_page', 15);
-        $books = Book::paginate($perPage);
+        $books = Book::query()->paginate($perPage);
 
         return response()->json($books);
     }

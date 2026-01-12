@@ -16,7 +16,7 @@ class BookerController extends Controller
         $query = Booker::query();
 
         if ($request->has('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%' . $request->input('search') . '%');
         }
 
         $bookers = $query->withCount(['books', 'videos', 'audios', 'manuscripts'])

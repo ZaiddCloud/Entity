@@ -17,7 +17,7 @@ class CommentController extends Controller
     public function index(Request $request): Response
     {
         $comments = Comment::with(['user', 'entity'])
-            ->when($request->search, function ($query, $search) {
+            ->when($request->input('search'), function ($query, $search) {
                 $query->where('content', 'like', "%{$search}%");
             })
             ->latest()
