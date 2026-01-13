@@ -101,4 +101,13 @@ class Manuscript extends Entity
     {
         return $this->hasMany(ManuscriptPage::class, 'manuscript_id', 'id');
     }
+
+    /**
+     * العلاقة مع نسخ المخطوطة (Versions)
+     */
+    public function versions()
+    {
+        return $this->hasMany(Version::class, 'versionable_id', 'id')
+            ->where('versionable_type', self::class);
+    }
 }
