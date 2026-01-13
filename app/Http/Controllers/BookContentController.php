@@ -43,7 +43,13 @@ class BookContentController extends Controller
 
         return Inertia::render('Books/Reader/Index', [
             'book' => $book->only(['id', 'title', 'slug', 'author']),
-            'initialHierarchy' => $this->contentService->getHierarchy($book),
+            'initialHierarchy' => $this->contentService->getHierarchy($book)->map(fn($item) => [
+                'id' => (string) $item->_id,
+                'parent_id' => $item->parent_id ? (string) $item->parent_id : null,
+                'type' => $item->type,
+                'title' => $item->title,
+                'order' => $item->order
+            ]),
             'initialContent' => $initialContent,
             'childId' => $childId
         ]);

@@ -38,8 +38,12 @@ import { DragHandleExtension } from '../Extensions/DragHandle/DragHandleExtensio
 
 const props = defineProps({
     modelValue: {
-        type: String,
+        type: [String, Array, Object],
         default: ''
+    },
+    editable: {
+        type: Boolean,
+        default: true
     }
 })
 
@@ -47,6 +51,7 @@ const emit = defineEmits(['update:modelValue', 'setEditor'])
 
 const editor = useEditor({
     content: props.modelValue,
+    editable: props.editable,
     extensions: [
         StarterKit.configure({
             heading: {
@@ -104,6 +109,12 @@ const editor = useEditor({
 watch(() => props.modelValue, (value) => {
     if (editor.value && value !== editor.value.getHTML()) {
         editor.value.commands.setContent(value, false)
+    }
+})
+
+watch(() => props.editable, (value) => {
+    if (editor.value) {
+        editor.value.setEditable(value)
     }
 })
 

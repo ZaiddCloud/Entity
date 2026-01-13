@@ -61,7 +61,7 @@ class ActivityTest extends DuskTestCase
             $browser->loginAs($user)
                 ->visit('/activities')
                 ->pause(1000)
-                ->select('#activity-type-filter', 'created')
+                ->select('#activity-type-filter select', 'created')
                 ->pause(1000) // Wait for debounce/fetch
                 ->assertSee('Created Item')
                 ->waitUntilMissingText('Deleted Item');

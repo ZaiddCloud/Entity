@@ -47,17 +47,17 @@
         class="ml-2 opacity-50 text-[10px] font-bold uppercase tracking-widest hidden group-hover:inline-block bg-slate-200 dark:bg-slate-700 px-1 rounded dark:text-slate-300"
         :title="item.type"
       >
-        {{ item.type_label || item.type[0] }}
+        {{ item.type_label || (item.type ? item.type[0] : '?') }}
       </span>
 
       <!-- Real Link -->
       <Link 
-        :href="route('books.reader', [$page.props.book.slug, item.id])"
+        :href="route('books.reader', [$page.props.book.slug, item.id || item._id])"
         :only="['initialContent', 'childId']"
         class="flex-1 truncate transition-colors duration-200" 
         :class="[
           headingClasses,
-          { 'text-amber-700': selectedId === item.id }
+          { 'text-amber-700': (selectedId === item.id || selectedId === item._id) }
         ]"
         preserve-scroll
         preserve-state
@@ -68,7 +68,7 @@
 
       <!-- Status Dots -->
       <div
-        v-if="selectedId === item.id"
+        v-if="selectedId === item.id || selectedId === item._id"
         class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"
       />
     </div>

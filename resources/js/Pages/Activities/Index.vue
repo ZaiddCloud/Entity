@@ -63,6 +63,8 @@
                 { value: 'updated', label: 'تعديل بيانات' },
                 { value: 'deleted', label: 'حذف عنصر' }
               ]"
+              value-key="value"
+              label-key="label"
               class="w-full"
             />
           </div>

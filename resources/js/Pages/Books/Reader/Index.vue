@@ -142,7 +142,7 @@
           <!-- Read-only Hierarchy Tree -->
           <div
             v-for="item in rootItems"
-            :key="item.id"
+            :key="item.id || item._id"
           >
             <TreeItem
               :item="item"
