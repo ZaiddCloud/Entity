@@ -15,6 +15,7 @@ const props = defineProps({
 
 const form = useForm({
     title: '',
+    code: '',
     duration: '',
     author_ids: [],
     publisher_id: '',
@@ -54,25 +55,39 @@ const submit = () => {
               </p>
             </div>
 
-            <!-- Title -->
-            <div>
-              <InputLabel for="title">
-                عنوان المرئية
-              </InputLabel>
-              <TextInput
-                id="title"
-                v-model="form.title"
-                type="text"
-                class="mt-1 block w-full"
-                required
-                autofocus
-                placeholder="أدخل عنوان الفيديو..."
-              />
-              <div
-                v-if="form.errors.title"
-                class="mt-2 text-sm text-red-600"
-              >
-                {{ form.errors.title }}
+            <!-- Title & Code -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="md:col-span-2">
+                <InputLabel for="title">
+                  عنوان المرئية
+                </InputLabel>
+                <TextInput
+                  id="title"
+                  v-model="form.title"
+                  type="text"
+                  class="mt-1 block w-full"
+                  required
+                  autofocus
+                  placeholder="أدخل عنوان الفيديو..."
+                />
+                <div v-if="form.errors.title" class="mt-2 text-sm text-red-600">
+                  {{ form.errors.title }}
+                </div>
+              </div>
+              <div>
+                <InputLabel for="code" :optional="true">
+                  كود العمل (للتكرار)
+                </InputLabel>
+                <TextInput
+                  id="code"
+                  v-model="form.code"
+                  type="text"
+                  class="mt-1 block w-full font-mono uppercase"
+                  placeholder="مثلاً: VID_E01"
+                />
+                <div v-if="form.errors.code" class="mt-2 text-sm text-red-600">
+                  {{ form.errors.code }}
+                </div>
               </div>
             </div>
 

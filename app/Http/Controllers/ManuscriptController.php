@@ -22,7 +22,7 @@ class ManuscriptController extends EntityController
     protected function getUpdateRequestClass(): ?string { return \App\Http\Requests\UpdateManuscriptRequest::class; }
 
     //Customization
-    protected function getRelations(): array { return ['tags', 'categories', 'authors', 'versions.publisher', 'comments.user']; }
+    protected function getRelations(): array { return ['tags', 'categories', 'authors', 'versions.publisher', 'comments.user', 'children']; }
     protected function getSearchFields(): array { return ['title']; }
     protected function getSearchRelations(): array { return ['authors' => 'name']; }
     protected function getPerPage(): int { return 16; }
@@ -56,5 +56,25 @@ class ManuscriptController extends EntityController
         } else {
             $manager->createMedia($data);
         }
+    }
+    /**
+     * View manuscript in the immersive sandbox
+     */
+    public function sandbox(Manuscript $manuscript): \Inertia\Response
+    {
+        $manuscript->load(['children' => fn($q) => $q->orderBy('order')]);
+        
+        $siblings = [];
+        if ($manuscript->code) {
+             $siblings = Manuscript::where('code', $manuscript->code)
+                ->where('id', '!=', $manuscript->id)
+                ->with(['children' => fn($q) => $q->orderBy('order')])
+                ->get();
+        }
+
+        return \Inertia\Inertia::render('Technologies/Manuscripter/Sandbox', [
+            'manuscript' => $manuscript,
+            'siblings' => $siblings,
+        ]);
     }
 }

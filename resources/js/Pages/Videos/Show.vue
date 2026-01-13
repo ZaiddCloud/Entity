@@ -9,6 +9,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 const props = defineProps({
     video: Object,
     first_content_slug: String,
+    siblings: Array,
 });
 
 const activeTab = ref('overview');
@@ -102,7 +103,7 @@ const formatDate = (dateString) => {
               {{ video.title }}
             </h1>
 
-            <div class="flex flex-wrap gap-6 text-sm text-emerald-100/80 mb-8 border-l-4 border-lime-500 pl-6">
+            <div class="flex flex-wrap gap-6 text-sm text-emerald-100/80 mb-6 border-l-4 border-lime-500 pl-6">
               <div>
                 <span class="block text-[10px] uppercase tracking-wider text-emerald-400 mb-1">المركز الإعلامي / القناة</span>
                 <div class="font-bold text-white text-lg flex items-center gap-2">
@@ -124,12 +125,40 @@ const formatDate = (dateString) => {
               <div v-if="video.authors?.length">
                 <span class="block text-[10px] uppercase tracking-wider text-emerald-400 mb-1">المعد / المقدم</span>
                 <div class="font-bold text-white text-lg">
-                  {{ video.authors.map(a => a.name).join('، ') }}
+                  {{ (video.authors || []).map(a => a.name).join('، ') }}
                 </div>
               </div>
             </div>
 
+            <!-- Version Switcher -->
+            <div v-if="siblings?.length" class="mb-8 flex flex-wrap items-center gap-3">
+              <span class="text-[10px] font-black uppercase tracking-widest text-emerald-500">متاح أيضاً بإنتاج:</span>
+              <div class="flex flex-wrap gap-2">
+                <Link 
+                  v-for="sibling in siblings" 
+                  :key="sibling.id"
+                  :href="route('videos.show', sibling.slug)"
+                  class="px-4 py-1.5 bg-emerald-900/40 hover:bg-lime-500 hover:text-emerald-950 border border-emerald-500/30 rounded-full text-[10px] font-bold text-emerald-100 transition-all flex items-center gap-2"
+                >
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  {{ sibling.versions?.[0]?.publisher?.name || sibling.title }}
+                </Link>
+              </div>
+            </div>
+
             <div class="flex flex-wrap gap-3">
+              <Link :href="route('dev.player', { type: 'video', slug: video.slug })">
+                <PrimaryButton class="!bg-lime-500 hover:!bg-lime-400 !text-emerald-950 !border-0 shadow-[0_0_20px_rgba(132,204,22,0.4)] flex items-center gap-2 px-8 py-3">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  مشغل الفيديو الغامر
+                </PrimaryButton>
+              </Link>
+
               <Link :href="route('videos.edit', video.slug)">
                 <button class="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-sm transition-all backdrop-blur-sm border border-white/10 flex items-center gap-2">
                   <svg

@@ -15,6 +15,7 @@ class UpdateAudioRequest extends FormRequest
     {
         return [
             'title' => 'sometimes|string|max:255',
+            'code' => 'nullable|string|max:100',
             'author_ids' => 'nullable|array',
             'author_ids.*' => 'exists:authors,id',
             'publisher_id' => 'nullable|exists:publishers,id',

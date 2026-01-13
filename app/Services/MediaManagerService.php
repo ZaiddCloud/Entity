@@ -97,9 +97,23 @@ class MediaManagerService
             $entityData['file_path'] = $data['file_path'];
         }
 
+        if (isset($data['code'])) {
+            $entityData['code'] = $data['code'];
+        }
+
         // Type-specific attributes
-        if ($type === 'manuscript' && isset($data['century'])) {
-            $entityData['century'] = $data['century'];
+        if ($type === 'manuscript') {
+            $manuscriptFields = [
+                'century', 'century_label', 'original_title', 'catalog_number', 'madhab', 'scribe', 
+                'copy_date', 'parts', 'script_type', 'dimensions', 'lines_per_page', 
+                'inscriptions', 'notes'
+            ];
+            
+            foreach ($manuscriptFields as $field) {
+                if (isset($data[$field])) {
+                    $entityData[$field] = $data[$field];
+                }
+            }
         } elseif (($type === 'audio' || $type === 'video') && isset($data['duration'])) {
             $entityData['duration'] = $data['duration'];
         }
@@ -127,6 +141,7 @@ class MediaManagerService
     {
         $validator = Validator::make($data, [
             'title' => 'required|string|max:255',
+            'code' => 'nullable|string|max:100',
             'type' => 'sometimes|required|string|in:book,video,audio,manuscript',
             'file_path' => 'nullable|string',
             'author_ids' => 'nullable|array',
@@ -137,6 +152,11 @@ class MediaManagerService
             'century' => 'nullable|string|max:100',
             'pages' => 'nullable|integer',
             'published_year' => 'nullable|integer',
+            // Manuscript specifics
+            'catalog_number' => 'nullable|string|max:100',
+            'madhab' => 'nullable|string|max:100',
+            'scribe' => 'nullable|string|max:255',
+            'original_title' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {

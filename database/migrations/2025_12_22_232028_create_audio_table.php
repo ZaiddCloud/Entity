@@ -13,6 +13,7 @@ return new class extends Migration {
         Schema::create('audios', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('title');
+            $table->string('code')->nullable()->index(); // كود العمل لربط النسخ
             $table->string('slug')->unique();
             $table->integer('duration')->default(0); // بالثانية
             $table->string('format')->default('mp3');

@@ -1,20 +1,39 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 
+const props = defineProps({
+    manuscript: Object,
+    siblings: {
+        type: Array,
+        default: () => []
+    }
+});
+
 // State
 const shotNumber = ref(1);
 const viewMode = ref('list'); // 'list' (vertical reading), 'grid', 'default' (slider)
 const isCompareMode = ref(false);
-const windowWidth = ref(1024); // Default to desktop logic initially
+const windowWidth = ref(1024);
 
-// Versions Data (Mocking Real Data found in Storage)
-const versions = [
-    { id: 'original', name: 'النسخة الأصلية', folder: '3014', offset: 90 },
-    { id: 'copy_a', name: 'نسخة برلين', folder: 'New Folder', offset: 0 },
-    { id: 'copy_b', name: 'نسخة باريس', folder: 'New Folder 1', offset: 4 }
-];
+// Versions Data (Derived from DB)
+const versions = computed(() => {
+    return [
+        { 
+            id: props.manuscript.id, 
+            name: 'النسخة الحالية', 
+            manuscript: props.manuscript,
+            pages: props.manuscript.children || []
+        },
+        ...props.siblings.map(s => ({
+            id: s.id,
+            name: s.catalog_number || s.title,
+            manuscript: s,
+            pages: s.children || []
+        }))
+    ];
+});
 
-const selectedVersionIds = ref(['original']); // Default to Original
+const selectedVersionIds = ref([props.manuscript.id]); // Default to Original manuscript ID
 
 // Resizing State
 const panelWidths = ref([])
@@ -80,8 +99,7 @@ const updateWidth = () => {
 };
 
 const filmstripCount = computed(() => {
-    // Total files in folder 3014 is ~219. 
-    return 219; 
+    return totalPages.value; 
 });
 
 onMounted(() => {
@@ -125,9 +143,7 @@ const toggleVersionSelection = (versionId) => {
 
 // Computed: Versions to display
 const displayedVersions = computed(() => {
-    // Return versions sorted by their original order in the 'versions' definition
-    // to keep the UI stable.
-    return versions.filter(v => selectedVersionIds.value.includes(v.id));
+    return versions.value.filter(v => selectedVersionIds.value.includes(v.id));
 });
 
 // Logic: Reset widths when displayedVersions changes
@@ -139,22 +155,20 @@ watch(displayedVersions, (newVersions) => {
     }
 }, { immediate: true })
 
-// Watch displayedVersions to reset widths
-watch(displayedVersions, (newVersions) => {
-    if (newVersions.length > 0) {
-        const width = 100 / newVersions.length
-        panelWidths.value = newVersions.map(() => width)
-    }
-}, { immediate: true })
-
 // Image URL Generation
-const getPageUrl = (shotIndex, version = versions[0]) => {
-    const number = shotIndex + version.offset;
-    const padded = number.toString().padStart(5, '0');
-    // Encode the folder name to handle spaces (e.g. "New Folder")
-    const folder = encodeURIComponent(version.folder);
-    return `/storage/manuscripts/${version.folder}/DSC${padded}.JPG`;
+const getPageUrl = (shotIndex, version) => {
+    if (!version || !version.pages || version.pages.length === 0) return '';
+    
+    // shotIndex is 1-based, array is 0-based
+    const page = version.pages[shotIndex - 1];
+    return page ? page.image_url : '';
 };
+
+// Computed: Max total pages across all selected versions
+const totalPages = computed(() => {
+    if (displayedVersions.value.length === 0) return 0;
+    return Math.max(...displayedVersions.value.map(v => v.pages.length));
+});
 </script>
 
 <template>
@@ -183,7 +197,7 @@ const getPageUrl = (shotIndex, version = versions[0]) => {
       >
         <div class="max-w-5xl mx-auto flex flex-col gap-2 py-8 pt-20 pb-20 px-4">
           <div
-            v-for="i in 50"
+            v-for="i in totalPages"
             :key="i" 
             class="w-full h-20 flex items-center gap-4 bg-white/5 border border-white/5 rounded-lg p-2 hover:bg-white/10 hover:border-white/10 transition-colors group cursor-pointer"
             @click="shotNumber = i"
@@ -244,7 +258,7 @@ const getPageUrl = (shotIndex, version = versions[0]) => {
       >
         <div class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2 pt-20 pb-20">
           <div
-            v-for="i in 100"
+            v-for="i in totalPages"
             :key="i" 
             class="aspect-[2/3] relative group cursor-pointer border border-white/5 rounded overflow-hidden bg-white/5 hover:border-blue-500/50 transition-colors"
             @click="shotNumber = i"
@@ -339,7 +353,7 @@ const getPageUrl = (shotIndex, version = versions[0]) => {
       >
         <div class="flex flex-col items-center gap-6 py-8 px-4 md:px-0 pt-20 pb-20">
           <div
-            v-for="i in 15"
+            v-for="i in totalPages"
             :id="`shot-${i}`"
             :key="i"
             class="w-full max-w-3xl relative group shadow-2xl bg-black"
@@ -421,11 +435,13 @@ const getPageUrl = (shotIndex, version = versions[0]) => {
             <input 
               v-model="shotNumber" 
               type="number"
+              :max="totalPages"
+              min="1"
               class="w-12 text-[14px] font-bold text-stone-200 bg-transparent outline-none p-0 border-b border-white/20 focus:border-blue-400 transition-colors placeholder-stone-600 text-center"
               placeholder="#"
             >
           </div>
-          <span class="text-[12px] text-stone-500">/ 450</span>
+          <span class="text-[12px] text-stone-500">/ {{ totalPages }}</span>
         </div>
       </div>
 

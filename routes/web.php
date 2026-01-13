@@ -117,10 +117,19 @@ Route::get('/dev/editor', function () {
     return \Inertia\Inertia::render('Technologies/Editor/Sandbox');
 })->name('dev.editor');
 
-Route::get('/dev/player', function () {
-    return \Inertia\Inertia::render('Technologies/Player/Sandbox');
+Route::get('/dev/player/{type}/{slug}', function ($type, $slug) {
+    $modelClass = match ($type) {
+        'audio' => \App\Models\Audio::class,
+        'video' => \App\Models\Video::class,
+        default => abort(404, 'Media type not found'),
+    };
+
+    $media = $modelClass::where('slug', $slug)->with(['authors', 'versions.publisher'])->firstOrFail();
+
+    return \Inertia\Inertia::render('Technologies/Player/Sandbox', [
+        'media' => $media,
+        'type' => $type
+    ]);
 })->name('dev.player');
 
-Route::get('/dev/manuscript', function () {
-    return \Inertia\Inertia::render('Technologies/Manuscripter/Sandbox');
-})->name('dev.manuscript');
+Route::get('/dev/manuscripter/{manuscript:slug}', [\App\Http\Controllers\ManuscriptController::class, 'sandbox'])->name('dev.manuscripter');

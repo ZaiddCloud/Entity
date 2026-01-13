@@ -14,9 +14,25 @@ return new class extends Migration {
             $table->uuid('id')->primary();
             // serial_number column definition removed from here
             $table->string('title');
+            $table->string('original_title')->nullable(); // العنوان المثبت
+            $table->string('code')->nullable()->index(); // كود العمل لربط النسخ
             $table->string('slug')->unique();
+            
+            // Metadata for Physical Copy
+            $table->string('catalog_number')->nullable(); // رقم المخطوط
+            $table->string('madhab')->nullable(); // المذهب
+            $table->string('scribe')->nullable(); // الناسخ
+            $table->string('copy_date')->nullable(); // تاريخ النسخ
+            $table->string('parts')->nullable(); // عدد الأجزاء
+            $table->string('script_type')->nullable(); // نوع الخط
+            $table->string('dimensions')->nullable(); // المقاس
+            $table->integer('lines_per_page')->nullable(); // مسطرة الصفحة
+            $table->longText('inscriptions')->nullable(); // القيود (تملك، بلاغات...)
+            $table->longText('notes')->nullable(); // ملاحظات
+            
             $table->string('author')->nullable();
             $table->string('century')->nullable(); // Changed from integer to string as per instruction snippet
+            $table->string('century_label')->nullable(); // "9 هـ" or descriptive text
             $table->string('language')->default('عربية'); // Kept as it was not explicitly removed in the instruction's snippet
             $table->integer('pages')->default(0); // Kept as it was not explicitly removed in the instruction's snippet
             $table->string('publisher')->nullable(); // Kept as it was not explicitly removed in the instruction's snippet

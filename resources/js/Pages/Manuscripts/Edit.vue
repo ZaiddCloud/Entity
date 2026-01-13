@@ -11,12 +11,25 @@ const props = defineProps({
 
 const form = useForm({
     title: props.manuscript.title,
+    code: props.manuscript.code || '',
     century: props.manuscript.century || '',
+    century_label: props.manuscript.century_label || '',
     author_ids: props.manuscript.authors?.map(a => a.id) || [],
     publisher_id: props.manuscript.versions?.[0]?.publisher_id || '',
-    pages: props.manuscript.versions?.[0]?.pages || '',
+    pages: props.manuscript.pages || props.manuscript.versions?.[0]?.pages || '',
     published_year: props.manuscript.versions?.[0]?.published_year || '',
     description: props.manuscript.description || '',
+    original_title: props.manuscript.original_title || '',
+    catalog_number: props.manuscript.catalog_number || '',
+    scribe: props.manuscript.scribe || '',
+    madhab: props.manuscript.madhab || '',
+    copy_date: props.manuscript.copy_date || '',
+    parts: props.manuscript.parts || '',
+    script_type: props.manuscript.script_type || '',
+    dimensions: props.manuscript.dimensions || '',
+    lines_per_page: props.manuscript.lines_per_page || '',
+    inscriptions: props.manuscript.inscriptions || '',
+    notes: props.manuscript.notes || '',
     cover: null,
     file: null,
     _method: 'PUT',
@@ -52,24 +65,39 @@ const submit = () => {
               </p>
             </div>
 
-            <!-- Title -->
-            <div>
-              <InputLabel for="title">
-                شهرة المخطوطة (العنوان)
-              </InputLabel>
-              <TextInput
-                id="title"
-                v-model="form.title"
-                type="text"
-                class="mt-1 block w-full"
-                required
-                autofocus
-              />
-              <div
-                v-if="form.errors.title"
-                class="mt-2 text-sm text-red-600"
-              >
-                {{ form.errors.title }}
+            <!-- Title & Code -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="md:col-span-2">
+                <InputLabel for="title">
+                  شهرة المخطوطة (العنوان)
+                </InputLabel>
+                <TextInput
+                  id="title"
+                  v-model="form.title"
+                  type="text"
+                  class="mt-1 block w-full"
+                  required
+                  autofocus
+                />
+                <div v-if="form.errors.title" class="mt-2 text-sm text-red-600">
+                  {{ form.errors.title }}
+                </div>
+              </div>
+              <div>
+                <InputLabel for="code" :optional="true">
+                  كود العمل / المجموعة
+                </InputLabel>
+                <TextInput
+                  id="code"
+                  v-model="form.code"
+                  type="text"
+                  class="mt-1 block w-full font-mono uppercase"
+                  placeholder="مثلاً: FB_GROUP_1"
+                />
+                <p class="mt-1 text-[10px] text-gray-400">استخدم نفس الكود لربط النسخ المختلفة لهذا العمل</p>
+                <div v-if="form.errors.code" class="mt-2 text-sm text-red-600">
+                  {{ form.errors.code }}
+                </div>
               </div>
             </div>
 
@@ -140,51 +168,120 @@ const submit = () => {
             </div>
 
             <!-- Details Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div>
-                <InputLabel
-                  for="century"
-                  :optional="true"
-                >
-                  القرن الهجري
+                <InputLabel for="century_label" :optional="true">
+                  القرن (نصي)
+                </InputLabel>
+                <TextInput
+                  id="century_label"
+                  v-model="form.century_label"
+                  type="text"
+                  class="mt-1 block w-full"
+                  placeholder="مثلاً: 9 هـ"
+                />
+              </div>
+              <div>
+                <InputLabel for="century" :optional="true">
+                  القرن (رقمي)
                 </InputLabel>
                 <TextInput
                   id="century"
                   v-model="form.century"
                   type="text"
                   class="mt-1 block w-full"
-                  placeholder="مثلاً: القرن الثامن"
+                  placeholder="مثلاً: 9"
                 />
               </div>
               <div>
-                <InputLabel
-                  for="pages"
-                  :optional="true"
-                >
-                  عدد الأوراق
+                <InputLabel for="copy_date" :optional="true">
+                  تاريخ النسخ
                 </InputLabel>
                 <TextInput
-                  id="pages"
-                  v-model="form.pages"
-                  type="number"
+                  id="copy_date"
+                  v-model="form.copy_date"
+                  type="text"
                   class="mt-1 block w-full"
-                  placeholder="0"
+                  placeholder="مثلاً: 850 هـ"
                 />
               </div>
               <div>
-                <InputLabel
-                  for="published_year"
-                  :optional="true"
-                >
-                  سنة النسخ (رقمياً)
+                <InputLabel for="catalog_number" :optional="true">
+                  رقم المخطوط
                 </InputLabel>
                 <TextInput
-                  id="published_year"
-                  v-model="form.published_year"
-                  type="number"
-                  class="mt-1 block w-full"
-                  placeholder="مثلاً: 1445"
+                  id="catalog_number"
+                  v-model="form.catalog_number"
+                  type="text"
+                  class="mt-1 block w-full font-mono"
+                  placeholder="مثلاً: MS-1234"
                 />
+              </div>
+            </div>
+
+            <!-- Physical Metadata Section -->
+            <div class="pt-6 border-t border-gray-100 dark:border-white/5">
+              <h3 class="text-sm font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                <span class="w-1 h-4 bg-emerald-500 rounded-full"></span>
+                الوصف الفيزيائي والميتا-بيانات
+              </h3>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-2">
+                  <InputLabel for="original_title" :optional="true">العنوان كما ورد في النسخة</InputLabel>
+                  <TextInput id="original_title" v-model="form.original_title" type="text" class="mt-1 block w-full" />
+                </div>
+                <div>
+                  <InputLabel for="scribe" :optional="true">الناسخ</InputLabel>
+                  <TextInput id="scribe" v-model="form.scribe" type="text" class="mt-1 block w-full" />
+                </div>
+
+                <div>
+                  <InputLabel for="madhab" :optional="true">المذهب</InputLabel>
+                  <SelectInput 
+                    id="madhab" 
+                    v-model="form.madhab" 
+                    :options="[{id: 'شافعي', name: 'شافعي'}, {id: 'حنفي', name: 'حنفي'}, {id: 'مالكي', name: 'مالكي'}, {id: 'حنبلي', name: 'حنبلي'}, {id: 'ظاهري', name: 'ظاهري'}]" 
+                    class="mt-1 block w-full" 
+                  />
+                </div>
+                <div>
+                  <InputLabel for="script_type" :optional="true">نوع الخط</InputLabel>
+                  <SelectInput 
+                    id="script_type" 
+                    v-model="form.script_type" 
+                    :options="[{id: 'نسخ', name: 'نسخ'}, {id: 'كوفي', name: 'كوفي'}, {id: 'ديواني', name: 'ديواني'}, {id: 'ثلث', name: 'ثلث'}, {id: 'رقعة', name: 'رقعة'}]" 
+                    class="mt-1 block w-full" 
+                  />
+                </div>
+                <div>
+                  <InputLabel for="parts" :optional="true">عدد الأجزاء</InputLabel>
+                  <TextInput id="parts" v-model="form.parts" type="text" class="mt-1 block w-full" />
+                </div>
+
+                <div>
+                  <InputLabel for="dimensions" :optional="true">المقاسات</InputLabel>
+                  <TextInput id="dimensions" v-model="form.dimensions" type="text" class="mt-1 block w-full" placeholder="25x18 سم" />
+                </div>
+                <div>
+                  <InputLabel for="lines_per_page" :optional="true">عدد الأسطر</InputLabel>
+                  <TextInput id="lines_per_page" v-model="form.lines_per_page" type="number" class="mt-1 block w-full" />
+                </div>
+                <div>
+                  <InputLabel for="pages" :optional="true">عدد الأوراق</InputLabel>
+                  <TextInput id="pages" v-model="form.pages" type="number" class="mt-1 block w-full" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div>
+                  <InputLabel for="inscriptions" :optional="true">القيود والبلاغات</InputLabel>
+                  <textarea id="inscriptions" v-model="form.inscriptions" rows="3" class="mt-1 block w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-black/20 dark:text-gray-300 focus:border-emerald-500 focus:ring-emerald-500/20 shadow-sm text-sm" />
+                </div>
+                <div>
+                  <InputLabel for="notes" :optional="true">ملاحظات إضافية</InputLabel>
+                  <textarea id="notes" v-model="form.notes" rows="3" class="mt-1 block w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-black/20 dark:text-gray-300 focus:border-emerald-500 focus:ring-emerald-500/20 shadow-sm text-sm" />
+                </div>
               </div>
             </div>
 

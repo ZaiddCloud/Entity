@@ -125,12 +125,30 @@ class StorageSync extends Command
             $entity = $modelClass::query()->where('slug', $slug)->first();
 
             if (!$entity) {
-                $entity = $modelClass::query()->create([
+                $baseAttributes = [
                     'slug' => $slug,
                     'title' => $title,
                     'description' => 'Automatically synced from storage.',
                     'file_path' => $filePath,
-                ]);
+                ];
+
+                // Add code for versioning (based on parent folder if available)
+                $parentFolder = basename(dirname($filePath));
+                if ($parentFolder !== $dir) {
+                    $baseAttributes['code'] = strtoupper(Str::slug($parentFolder, '_'));
+                }
+
+                // Add manuscript-specific metadata with defaults
+                if ($modelClass === Manuscript::class) {
+                    $baseAttributes['century'] = '10'; // Default
+                    $baseAttributes['century_label'] = '10 هـ';
+                    $baseAttributes['scribe'] = 'مجهول';
+                    $baseAttributes['madhab'] = null;
+                    $baseAttributes['script_type'] = 'نسخ';
+                    $baseAttributes['catalog_number'] = 'AUTO-' . strtoupper(substr(md5($slug), 0, 8));
+                }
+
+                $entity = $modelClass::query()->create($baseAttributes);
             } elseif ($this->option('force')) {
                 $entity->update([
                     'title' => $title,
@@ -554,6 +572,12 @@ class StorageSync extends Command
                     'title' => $title,
                     'description' => 'Image bundle synced from ' . $subDir,
                     'file_path' => $subDir,
+                    'code' => 'BUNDLE_' . strtoupper(Str::slug($title, '_')),
+                    'century' => '10',
+                    'century_label' => '10 هـ',
+                    'scribe' => 'مجهول',
+                    'script_type' => 'نسخ',
+                    'catalog_number' => 'BUNDLE-' . strtoupper(substr(md5($slug), 0, 8)),
                 ]);
             }
 

@@ -288,8 +288,36 @@ class SeedRealisticData extends Command
                     'description' => "وصف تجريبي لـ {$title}. هذا العمل يعتبر ركيزة أساسية في مكتبتنا الرقمية ويوفر مادة علمية غنية للباحثين والقراء المهتمين بالتراث العربي والإسلامي.",
                 ];
 
+                // Add versioning code (group every 3 items together)
+                if ($type !== 'shelf') {
+                    $groupIndex = intdiv($i, 3);
+                    $attributes['code'] = strtoupper($type) . '_GROUP_' . $groupIndex;
+                }
+
                 if ($type === 'manuscript') {
-                    $attributes['century'] = rand(1, 14);
+                    $centuryNum = rand(2, 14);
+                    $attributes['century'] = (string) $centuryNum;
+                    $attributes['century_label'] = $centuryNum . ' هـ';
+                    
+                    // Rich Manuscript Metadata
+                    $scribes = ['محمد بن أحمد الكاتب', 'علي بن عبدالله النساخ', 'أحمد الأنصاري', 'ابن البواب', 'مجهول'];
+                    $madhabs = ['شافعي', 'حنفي', 'مالكي', 'حنبلي', 'ظاهري'];
+                    $scriptTypes = ['نسخ', 'كوفي', 'ديواني', 'رقعة', 'ثلث'];
+                    $locations = ['دمشق', 'القاهرة', 'اسطنبول', 'بغداد', 'المدينة المنورة'];
+                    
+                    $attributes['original_title'] = $title; // Could vary in real scenarios
+                    $attributes['catalog_number'] = 'MS-' . rand(1000, 9999) . '-' . strtoupper(substr(md5($title), 0, 2));
+                    $attributes['scribe'] = $scribes[array_rand($scribes)];
+                    $attributes['madhab'] = $madhabs[array_rand($madhabs)];
+                    $attributes['copy_date'] = rand(200, 1400) . ' هـ';
+                    $attributes['parts'] = (string) rand(1, 10);
+                    $attributes['script_type'] = $scriptTypes[array_rand($scriptTypes)];
+                    $attributes['dimensions'] = rand(15, 30) . 'x' . rand(10, 25) . ' سم';
+                    $attributes['lines_per_page'] = rand(15, 35);
+                    $attributes['inscriptions'] = 'تملك: ' . $locations[array_rand($locations)] . ' - قراءة وسماع';
+                    $attributes['notes'] = 'نسخة نفيسة بخط جميل ومقروء، مع حواشٍ قيّمة.';
+                    $attributes['location'] = $locations[array_rand($locations)];
+                    
                     // Handle Real Manuscript Images
                     if (isset($itemData['file_source'])) {
                         $this->ensureFileExists($itemData['file_source'], $itemData['filename']);

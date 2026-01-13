@@ -15,11 +15,27 @@ class UpdateManuscriptRequest extends FormRequest
     {
         return [
             'title' => 'sometimes|string|max:255',
+            'original_title' => 'nullable|string|max:255',
+            'code' => 'nullable|string|max:100',
+            
+            // Physical Metadata
+            'catalog_number' => 'nullable|string|max:100',
+            'madhab' => 'nullable|string|max:100',
+            'scribe' => 'nullable|string|max:255',
+            'copy_date' => 'nullable|string|max:100',
+            'parts' => 'nullable|string|max:100',
+            'script_type' => 'nullable|string|max:100',
+            'dimensions' => 'nullable|string|max:100',
+            'lines_per_page' => 'nullable|integer',
+            'inscriptions' => 'nullable|string',
+            'notes' => 'nullable|string',
+
             'author_ids' => 'nullable|array',
             'author_ids.*' => 'exists:authors,id',
             'publisher_id' => 'nullable|exists:publishers,id',
             'published_year' => 'nullable|integer|min:1000|max:' . (date('Y') + 1),
             'century' => 'nullable|string|max:255',
+            'century_label' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'cover' => 'sometimes|nullable|image|max:2048',
             'file' => 'sometimes|nullable|mimes:pdf|max:51200',

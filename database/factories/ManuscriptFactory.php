@@ -19,9 +19,25 @@ class ManuscriptFactory extends Factory
         $title = $this->faker->unique()->realText(20);
         return [
             'title' => $title,
+            'original_title' => $this->faker->optional(0.7)->realText(25),
+            'code' => $this->faker->optional(0.5)->uuid(),
             'author' => $this->faker->name(),
-            'century' => $this->faker->numberBetween(10, 19),
-            'language' => $this->faker->languageCode(),
+            
+            // Physical Metadata
+            'catalog_number' => $this->faker->bothify('MS-####-??'),
+            'madhab' => $this->faker->randomElement(['شافعي', 'حنفي', 'مالكي', 'حنبلي']),
+            'scribe' => $this->faker->name(),
+            'copy_date' => $this->faker->year() . ' هـ',
+            'parts' => $this->faker->numberBetween(1, 10),
+            'script_type' => $this->faker->randomElement(['نسخ', 'كوفي', 'ديواني', 'رقعة']),
+            'dimensions' => $this->faker->numberBetween(15, 30) . 'x' . $this->faker->numberBetween(10, 20) . ' سم',
+            'lines_per_page' => $this->faker->numberBetween(15, 30),
+            'inscriptions' => $this->faker->realText(100),
+            'notes' => $this->faker->realText(50),
+            
+            'century' => (string) $this->faker->numberBetween(2, 14),
+            'century_label' => $this->faker->numberBetween(2, 14) . ' هـ',
+            'language' => 'عربية',
             'pages' => $this->faker->numberBetween(50, 1000),
             'location' => $this->faker->city(),
             'publisher' => $this->faker->company(),

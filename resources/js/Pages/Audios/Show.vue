@@ -9,6 +9,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 const props = defineProps({
     audio: Object,
     first_content_slug: String,
+    siblings: Array,
 });
 
 const activeTab = ref('overview');
@@ -100,10 +101,39 @@ const formatDate = (dateString) => {
               >
                 {{ audio.description }}
               </p>
+
+              <!-- Version Switcher -->
+              <div v-if="siblings?.length" class="flex items-center justify-center lg:justify-start gap-4 py-2 border-y border-white/5">
+                <div class="flex items-center gap-2">
+                  <div class="w-2 h-2 rounded-full bg-lime-500 animate-pulse" />
+                  <span class="text-[10px] font-black uppercase tracking-widest text-emerald-400">تسجيلات أخرى متاحة في هذا العمل:</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <Link 
+                    v-for="sibling in siblings" 
+                    :key="sibling.id"
+                    :href="route('audios.show', sibling.slug)"
+                    class="px-4 py-1.5 bg-white/5 hover:bg-emerald-500 hover:text-emerald-950 border border-white/10 rounded-full text-[10px] font-bold text-emerald-100 transition-all"
+                  >
+                    {{ sibling.title.substring(0, 30) }}{{ sibling.title.length > 30 ? '...' : '' }}
+                  </Link>
+                </div>
+              </div>
             </div>
 
             <!-- Actions -->
             <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4">
+              <Link 
+                :href="route('dev.player', { type: 'audio', slug: audio.slug })"
+              >
+                <PrimaryButton class="!px-8 !py-4 !text-base !bg-lime-500 hover:!bg-lime-400 !text-emerald-950 shadow-[0_0_20px_rgba(132,204,22,0.3)] hover:shadow-[0_0_30px_rgba(132,204,22,0.5)] border-none flex items-center gap-2">
+                  <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>مشغل الصوت الغامر</span>
+                </PrimaryButton>
+              </Link>
               <Link 
                 v-if="first_content_slug"
                 :href="route('editor.show', { type: 'audio', slug: first_content_slug })"
@@ -190,7 +220,7 @@ const formatDate = (dateString) => {
                         class="flex flex-wrap gap-2"
                       >
                         <Link 
-                          v-for="author in audio.authors" 
+                          v-for="author in (audio.authors || [])" 
                           :key="author.id" 
                           :href="route('authors.show', author.slug)"
                           class="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-white/5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors group"

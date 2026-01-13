@@ -9,6 +9,10 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 const props = defineProps({
     manuscript: Object,
     first_content_slug: String,
+    siblings: {
+        type: Array,
+        default: () => []
+    },
 });
 
 const activeTab = ref('overview');
@@ -21,14 +25,18 @@ const tabs = [
 </script>
 
 <template>
-  <Head :title="manuscript.title" />
+  <Head v-if="manuscript" :title="manuscript.title" />
+  <Head v-else title="مخطوطة غير موجودة" />
 
-  <AuthenticatedLayout :title="manuscript.title">
+  <AuthenticatedLayout v-if="manuscript" :title="manuscript.title">
     <!-- Hide Default Header -->
     <template #header>
       <div class="hidden" />
     </template>
 
+
+
+    
     <div class="-mt-8 -mx-8 mb-8">
       <!-- Hero Section -->
       <div class="relative w-full overflow-hidden bg-emerald-950 min-h-[400px] flex items-end pb-12">
@@ -93,11 +101,21 @@ const tabs = [
               </p>
 
               <div class="flex flex-wrap items-center justify-center md:justify-start gap-4">
+                <Link :href="route('dev.manuscripter', { manuscript: manuscript.slug })">
+                  <PrimaryButton class="!bg-lime-400 !text-black hover:!bg-lime-300 !border-0 !text-sm !px-6 !py-3 !rounded-xl !shadow-[0_0_20px_rgba(163,230,53,0.3)] flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    استعراض المخطوطة (غرفة المعاينة)
+                  </PrimaryButton>
+                </Link>
+
                 <Link
                   v-if="first_content_slug"
                   :href="route('editor.show', { type: 'manuscript', slug: first_content_slug })"
                 >
-                  <PrimaryButton class="!bg-lime-400 !text-black hover:!bg-lime-300 !border-0 !text-sm !px-6 !py-3 !rounded-xl !shadow-[0_0_20px_rgba(163,230,53,0.3)] flex items-center gap-2">
+                  <button class="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-sm border border-white/10 backdrop-blur-sm transition-all flex items-center gap-2">
                     <svg
                       class="w-5 h-5"
                       fill="none"
@@ -109,10 +127,10 @@ const tabs = [
                       stroke-width="2"
                       d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                     /></svg>
-                    فتح المحرر
-                  </PrimaryButton>
+                    تحرير النصوص
+                  </button>
                 </Link>
-                                
+                
                 <Link :href="route('manuscripts.edit', manuscript.slug)">
                   <button class="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-sm border border-white/10 backdrop-blur-sm transition-all flex items-center gap-2">
                     <svg
@@ -126,7 +144,7 @@ const tabs = [
                       stroke-width="2"
                       d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
                     /></svg>
-                    تعديل
+                    بيانات المخطوطة
                   </button>
                 </Link>
               </div>
@@ -178,7 +196,7 @@ const tabs = [
               >
                 <span class="block text-xs text-gray-400 font-bold mb-1">المؤلف / الناسخ</span>
                 <div class="font-bold text-gray-800 dark:text-gray-200">
-                  {{ manuscript.authors.map(a => a.name).join('، ') }}
+                  {{ manuscript.authors?.map(a => a?.name || 'غير معروف').join('، ') }}
                 </div>
               </div>
                             
@@ -196,21 +214,21 @@ const tabs = [
               </h4>
               <div class="flex flex-wrap gap-2">
                 <Badge
-                  v-for="cat in manuscript.categories"
+                  v-for="cat in manuscript.categories || []"
                   :key="cat.id"
                   color="emerald"
                 >
                   {{ cat.name }}
                 </Badge>
                 <Badge
-                  v-for="tag in manuscript.tags"
+                  v-for="tag in manuscript.tags || []"
                   :key="tag.id"
                   color="gray"
                 >
                   {{ tag.name }}
                 </Badge>
                 <span
-                  v-if="!manuscript.categories.length && !manuscript.tags.length"
+                  v-if="!manuscript.categories?.length && !manuscript.tags?.length"
                   class="text-sm text-gray-400 italic"
                 >لا يوجد</span>
               </div>
@@ -240,16 +258,45 @@ const tabs = [
             <div class="space-y-4">
               <div class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
                 <span class="font-bold text-sm text-gray-300">القرن</span>
-                <span class="font-black text-amber-400">{{ manuscript.century || 'غير محدد' }}</span>
+                <span class="font-black text-amber-400">{{ manuscript.century_label || manuscript.century || 'غير محدد' }}</span>
+              </div>
+              <div v-if="manuscript.copy_date" class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
+                <span class="font-bold text-sm text-gray-300">تاريخ النسخ</span>
+                <span class="font-black text-emerald-400">{{ manuscript.copy_date }}</span>
               </div>
               <div class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
-                <span class="font-bold text-sm text-gray-300">سنة النسخ</span>
+                <span class="font-bold text-sm text-gray-300">سنة النشر</span>
                 <span class="font-black text-emerald-400">{{ manuscript.versions?.[0]?.published_year || '-' }}</span>
               </div>
               <div class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
                 <span class="font-bold text-sm text-gray-300">عدد الأوراق</span>
-                <span class="font-black text-white">{{ manuscript.versions?.[0]?.pages || '0' }}</span>
+                <span class="font-black text-white">{{ manuscript.versions?.[0]?.pages || manuscript.pages || '0' }}</span>
               </div>
+            </div>
+          </Card>
+
+          <!-- Other Copies / Siblings -->
+          <Card v-if="siblings && siblings.length > 0" class="!p-6 !border-emerald-500/20">
+            <h3 class="font-black text-sm mb-4 text-emerald-600 dark:text-emerald-400 uppercase tracking-widest flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              نسخ أخرى ({{ siblings.length }})
+            </h3>
+            <div class="space-y-2">
+              <Link 
+                v-for="sibling in siblings" 
+                :key="sibling.id"
+                :href="route('manuscripts.show', sibling.slug)"
+                class="block p-3 bg-gray-50 dark:bg-white/5 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl transition-all border border-transparent hover:border-emerald-500/30 group"
+              >
+                <div class="font-bold text-sm text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                  {{ sibling.title }}
+                </div>
+                <div v-if="sibling.catalog_number" class="text-xs text-gray-500 mt-1">
+                  {{ sibling.catalog_number }}
+                </div>
+              </Link>
             </div>
           </Card>
 
@@ -395,15 +442,68 @@ const tabs = [
               <span class="text-gray-500 font-medium">العنوان</span>
               <span class="font-bold text-gray-900 dark:text-white">{{ manuscript.title }}</span>
             </div>
+            <div v-if="manuscript.original_title" class="flex justify-between py-3 border-b border-gray-100 dark:border-white/5">
+              <span class="text-gray-500 font-medium">العنوان المثبت</span>
+              <span class="font-bold text-gray-900 dark:text-white">{{ manuscript.original_title }}</span>
+            </div>
+            <div v-if="manuscript.catalog_number" class="flex justify-between py-3 border-b border-gray-100 dark:border-white/5">
+              <span class="text-gray-500 font-medium">رقم المخطوط</span>
+              <span class="font-bold text-gray-900 dark:text-white font-mono">{{ manuscript.catalog_number }}</span>
+            </div>
             <div class="flex justify-between py-3 border-b border-gray-100 dark:border-white/5">
               <span class="text-gray-500 font-medium">القرن</span>
-              <span class="font-bold text-gray-900 dark:text-white">{{ manuscript.century || '-' }}</span>
+              <span class="font-bold text-gray-900 dark:text-white">{{ manuscript.century_label || manuscript.century || '-' }}</span>
             </div>
-            <div class="flex justify-between py-3 border-b border-gray-100 dark:border-white/5">
-              <span class="text-gray-500 font-medium">سنة النسخ</span>
-              <span class="font-bold text-gray-900 dark:text-white">{{ manuscript.versions?.[0]?.published_year || '-' }}</span>
+            <div v-if="manuscript.copy_date" class="flex justify-between py-3 border-b border-gray-100 dark:border-white/5">
+              <span class="text-gray-500 font-medium">تاريخ النسخ</span>
+              <span class="font-bold text-gray-900 dark:text-white">{{ manuscript.copy_date }}</span>
             </div>
-            <!-- Comments section placeholder -->
+          </div>
+        </Card>
+
+        <!-- Physical Description -->
+        <Card class="!p-8">
+          <h3 class="font-black text-xl mb-6 dark:text-white flex items-center gap-2">
+            <span class="w-1 h-6 bg-amber-500 rounded-full" />
+            الوصف الفيزيائي
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
+            <div v-if="manuscript.scribe" class="flex justify-between py-3 border-b border-gray-100 dark:border-white/5">
+              <span class="text-gray-500 font-medium">الناسخ</span>
+              <span class="font-bold text-gray-900 dark:text-white">{{ manuscript.scribe }}</span>
+            </div>
+            <div v-if="manuscript.madhab" class="flex justify-between py-3 border-b border-gray-100 dark:border-white/5">
+              <span class="text-gray-500 font-medium">المذهب</span>
+              <span class="font-bold text-gray-900 dark:text-white">{{ manuscript.madhab }}</span>
+            </div>
+            <div v-if="manuscript.script_type" class="flex justify-between py-3 border-b border-gray-100 dark:border-white/5">
+              <span class="text-gray-500 font-medium">نوع الخط</span>
+              <span class="font-bold text-gray-900 dark:text-white">{{ manuscript.script_type }}</span>
+            </div>
+            <div v-if="manuscript.lines_per_page" class="flex justify-between py-3 border-b border-gray-100 dark:border-white/5">
+              <span class="text-gray-500 font-medium">مسطرة الصفحة</span>
+              <span class="font-bold text-gray-900 dark:text-white">{{ manuscript.lines_per_page }} سطر</span>
+            </div>
+            <div v-if="manuscript.dimensions" class="flex justify-between py-3 border-b border-gray-100 dark:border-white/5">
+              <span class="text-gray-500 font-medium">المقاس</span>
+              <span class="font-bold text-gray-900 dark:text-white">{{ manuscript.dimensions }}</span>
+            </div>
+            <div v-if="manuscript.parts" class="flex justify-between py-3 border-b border-gray-100 dark:border-white/5">
+              <span class="text-gray-500 font-medium">عدد الأجزاء</span>
+              <span class="font-bold text-gray-900 dark:text-white">{{ manuscript.parts }}</span>
+            </div>
+          </div>
+
+          <!-- Inscriptions and Notes -->
+          <div v-if="manuscript.inscriptions || manuscript.notes" class="mt-8 space-y-6">
+            <div v-if="manuscript.inscriptions" class="p-6 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/5">
+              <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-3">القيود والبلاغات</h4>
+              <p class="text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-wrap">{{ manuscript.inscriptions }}</p>
+            </div>
+            <div v-if="manuscript.notes" class="p-6 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/5">
+              <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-3">ملاحظات</h4>
+              <p class="text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-wrap">{{ manuscript.notes }}</p>
+            </div>
           </div>
         </Card>
       </div>

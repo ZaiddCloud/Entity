@@ -370,6 +370,22 @@ abstract class EntityController extends Controller
             $props['first_content_slug'] = $this->getFirstChildSlug($model);
         }
 
+        // Load siblings (Versions) if code exists
+        if (!empty($model->code)) {
+            $query = $model->where('code', $model->code)->where('id', '!=', $model->id);
+            
+            $siblingFields = ['id', 'title', 'slug', 'code'];
+            if ($model instanceof \App\Models\Manuscript) {
+                $siblingFields[] = 'catalog_number';
+            } else {
+                $query->with('versions.publisher');
+            }
+            
+            $props['siblings'] = $query->get($siblingFields); // Optimized select
+        } else {
+            $props['siblings'] = [];
+        }
+
         return Inertia::render("{$viewPath}/Show", $props);
     }
 

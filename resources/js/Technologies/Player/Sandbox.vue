@@ -3,8 +3,19 @@ import { ref } from 'vue';
 import MediaPlayer from './MediaPlayer.vue';
 import SegmentsEditor from './SegmentsEditor.vue';
 
-const sampleVideo = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
-const samplePoster = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg";
+const props = defineProps({
+    media: Object,
+    type: String
+});
+
+// Fallback to sample if no media provided (for backward compatibility if needed, mostly for testing)
+const sampleVideo = props.media?.versions?.[0]?.file_path 
+    ? `/storage/${props.media.versions[0].file_path}` 
+    : (props.media?.file_path ? `/storage/${props.media.file_path}` : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4");
+
+const samplePoster = props.media?.cover_path 
+    ? `/storage/${props.media.cover_path}` 
+    : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg";
 
 // Initialize with some dummy segments
 const segments = ref([
