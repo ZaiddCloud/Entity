@@ -158,7 +158,7 @@ const tabs = [
 
                 <Link
                   v-if="first_content_slug"
-                  :href="route('editor.show', { type: 'book', slug: first_content_slug })"
+                  :href="route('studio.show', { type: 'book', slug: first_content_slug })"
                   class="inline-flex items-center justify-center px-8 py-4 bg-emerald-900/50 backdrop-blur-md text-emerald-50 border border-emerald-500/30 rounded-xl font-bold text-sm hover:bg-emerald-800/50 transition hover:scale-105 active:scale-95"
                 >
                   محرر المحتوى

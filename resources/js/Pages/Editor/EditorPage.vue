@@ -65,11 +65,11 @@ const handleToolbarCommand = ({ command, value }) => {
         store.togglePin()
     } else if (command === 'goto') {
         // Go to specific node
-        router.visit(route('editor.show', { type: store.editorMode, slug: value.slug }))
+        router.visit(route('studio.show', { type: store.editorMode, slug: value.slug }))
     } else if (command === 'prev' || command === 'next') {
         const target = store.navigation[command]
         if (target) {
-            router.visit(route('editor.show', { type: store.editorMode, slug: target.slug }))
+            router.visit(route('studio.show', { type: store.editorMode, slug: target.slug }))
         }
     } else if (['minimize', 'maximize'].includes(command)) {
         // Handle window controls if needed, or leave for future implementation

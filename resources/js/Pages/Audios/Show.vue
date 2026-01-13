@@ -456,7 +456,7 @@ const formatDate = (dateString) => {
               </p>
               <Link 
                 v-if="first_content_slug"
-                :href="route('editor.show', { type: 'audio', slug: first_content_slug })"
+                :href="route('studio.show', { type: 'audio', slug: first_content_slug })"
               >
                 <PrimaryButton>
                   فتح المحرر المتقدم

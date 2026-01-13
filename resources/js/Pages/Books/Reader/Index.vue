@@ -39,7 +39,7 @@
         <!-- Edit Button: Redirects to the Unified Editor -->
         <Link
           v-if="currentChapter"
-          :href="route('editor.show', { type: 'book', slug: currentChapter.id })" 
+          :href="route('studio.show', { type: 'book', slug: currentChapter.id })" 
           class="btn-secondary px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 text-indigo-600 hover:bg-indigo-50 transition-colors"
         >
           <svg

@@ -493,7 +493,7 @@ const formatDate = (dateString) => {
               </h3>
               <Link 
                 v-if="first_content_slug"
-                :href="route('editor.show', { type: 'video', slug: first_content_slug })"
+                :href="route('studio.show', { type: 'video', slug: first_content_slug })"
               >
                 <PrimaryButton class="!bg-blue-600 hover:!bg-blue-500">
                   فتح في المحرر

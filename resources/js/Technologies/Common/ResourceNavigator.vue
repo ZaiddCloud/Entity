@@ -76,8 +76,8 @@ const toggleDropdown = () => {
 const selectItem = (item) => {
     isOpen.value = false
     // Navigate to the editor for this item
-    // Route: editor.show { type, slug }
-    router.visit(route('editor.show', { type: props.type, slug: item.slug || item.id }))
+    // Route: studio.show { type, slug }
+    router.visit(route('studio.show', { type: props.type, slug: item.slug || item.id }))
 }
 
 // Close on click outside
