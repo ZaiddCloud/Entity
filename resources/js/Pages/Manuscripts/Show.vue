@@ -112,22 +112,15 @@ const tabs = [
                 </Link>
 
                 <Link
-                  v-if="first_content_slug"
-                  :href="route('editor.show', { type: 'manuscript', slug: first_content_slug })"
+                  :href="route('studio.show', { type: 'manuscript', slug: manuscript.slug })"
                 >
-                  <button class="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-sm border border-white/10 backdrop-blur-sm transition-all flex items-center gap-2">
-                    <svg
-                      class="w-5 h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    ><path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    /></svg>
-                    تحرير النصوص
+                  <button class="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-sm border border-white/10 backdrop-blur-sm transition-all flex items-center gap-2 group">
+                    <span class="w-8 h-8 rounded-lg bg-lime-500/20 text-lime-400 flex items-center justify-center group-hover:bg-lime-500 group-hover:text-black transition-colors">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                    </span>
+                    <span>تحرير في الأستوديو</span>
                   </button>
                 </Link>
                 

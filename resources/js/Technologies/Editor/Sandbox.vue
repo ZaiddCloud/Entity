@@ -1,19 +1,9 @@
 <script setup>
-import { onMounted } from 'vue'
-import TiptapEditor from './Core/TiptapEditor.vue'
-import EditorToolbar from './Toolbar/EditorToolbar.vue'
-import { useTiptapStore } from './Core/TiptapStore'
+import EditorClient from './EditorClient.vue'
 
-const store = useTiptapStore()
+const sampleContent = '<p>مرحباً بك في بيئة المحرر المعزولة (Sandbox)! 🧪</p><p>يمكنك تجربة كل خصائص المحرر هنا بحرية.</p>'
 
-// Mock logic for sandbox
-onMounted(() => {
-    store.updateContent('<p>مرحباً بك في بيئة المحرر المعزولة (Sandbox)! 🧪</p><p>يمكنك تجربة كل خصائص المحرر هنا بحرية.</p>')
-})
-
-const handleCommand = ({ command, value }) => {
-    store.executeCommand(command, value)
-}
+// Mock for sandbox reset or save could go here, accessing the store if needed globally or via refs.
 </script>
 
 <template>
@@ -45,19 +35,8 @@ const handleCommand = ({ command, value }) => {
     </div>
 
     <!-- The Editor Assembly (Full Screen) -->
-    <div class="flex-1 flex flex-col bg-white overflow-hidden relative">
-      <!-- Toolbar -->
-      <EditorToolbar @command="handleCommand" />
-            
-      <!-- Editor Core -->
-      <div class="flex-1 overflow-y-auto bg-white">
-        <div class="w-full min-h-full p-8 md:p-12">
-          <TiptapEditor
-            v-model="store.content"
-            @set-editor="store.setEditor"
-          />
-        </div>
-      </div>
+    <div class="flex-1 overflow-hidden">
+      <EditorClient :initial-content="sampleContent" />
     </div>
   </div>
 </template>

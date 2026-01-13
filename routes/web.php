@@ -43,9 +43,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/search', [GlobalSearchController::class, 'index'])->name('search');
 
     // Unified Smart Editor Routes
-    Route::get('/editor/resume', [App\Http\Controllers\UnifiedEditorController::class, 'resume'])->name('editor.resume');
-    Route::get('/editor/{type}/{slug}', [App\Http\Controllers\UnifiedEditorController::class, 'show'])->name('editor.show');
-    Route::post('/editor/{type}/{slug}/save', [App\Http\Controllers\UnifiedEditorController::class, 'save'])->name('editor.save');
+    // Unified Smart Editor Routes (Entity Studio)
+    Route::get('/studio/resume', [App\Http\Controllers\UnifiedEditorController::class, 'resume'])->name('studio.resume');
+    Route::get('/studio/{type}/{slug}', [App\Http\Controllers\UnifiedEditorController::class, 'show'])->name('studio.show');
+    Route::post('/studio/{type}/{slug}/save', [App\Http\Controllers\UnifiedEditorController::class, 'save'])->name('studio.save');
 
     // Missing API routes for Book Children (Compatibility Layer)
     Route::post('api/book-children/{id}/save', [BookContentController::class, 'updateValidation'])->name('api.book-children.save');

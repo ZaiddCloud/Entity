@@ -45,7 +45,7 @@ class UnifiedEditorController extends Controller
                 $firstChild = $this->contentService->getFirstChild($parentEntity);
                 
                 if ($firstChild) {
-                    return redirect()->route('editor.show', ['type' => $type, 'slug' => $firstChild->slug]);
+                    return redirect()->route('studio.show', ['type' => $type, 'slug' => $firstChild->slug]);
                 }
             }
             // If still not found, throw 404
@@ -55,9 +55,27 @@ class UnifiedEditorController extends Controller
         // التحقق من الصلاحية
         Gate::authorize('update', $entity);
 
-        $data = $this->contentService->prepareEditorData($entity, $slug);
+        // Load siblings for Manuscript if 'code' exists
+        if ($type === 'manuscript' && $entity->code) {
+             $siblings = Manuscript::where('code', $entity->code)
+                ->where('id', '!=', $entity->id)
+                ->get();
+             $entity->setRelation('siblings', $siblings);
+        }
 
-        return Inertia::render('Editor/EditorPage', $data);
+        $data = $this->contentService->prepareEditorData($entity, $slug);
+        
+        // Map to Studio Props
+        $studioProps = [
+            'type' => $type,
+            'entity' => $entity, // Entity now includes siblings if loaded
+            'editorContent' => $data['contentNode']->content ?? '',
+            'title' => $entity->title . ' | Entity Studio',
+            // Pass legacy data if needed by EditorClient internally via provide/inject or initial config
+            '_legacy' => $data 
+        ];
+
+        return Inertia::render('Technologies/Studio/StudioLayout', $studioProps);
     } // Added missing brace
 
     /**
@@ -109,7 +127,7 @@ class UnifiedEditorController extends Controller
         if (!$node)
             return redirect()->route('dashboard');
 
-        return redirect()->route('editor.show', ['type' => 'book', 'slug' => $node->slug]);
+        return redirect()->route('studio.show', ['type' => 'book', 'slug' => $node->slug]);
     }
 
     /**

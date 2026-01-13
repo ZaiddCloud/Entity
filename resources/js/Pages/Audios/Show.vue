@@ -135,8 +135,7 @@ const formatDate = (dateString) => {
                 </PrimaryButton>
               </Link>
               <Link 
-                v-if="first_content_slug"
-                :href="route('editor.show', { type: 'audio', slug: first_content_slug })"
+                :href="route('studio.show', { type: 'audio', slug: audio.slug })"
               >
                 <PrimaryButton class="!px-8 !py-4 !text-base !bg-lime-500 hover:!bg-lime-400 !text-emerald-950 shadow-[0_0_20px_rgba(132,204,22,0.3)] hover:shadow-[0_0_30px_rgba(132,204,22,0.5)] border-none">
                   <div class="flex items-center gap-3">
@@ -151,7 +150,7 @@ const formatDate = (dateString) => {
                       stroke-width="2"
                       d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
                     /></svg>
-                    <span>فتح المحرر</span>
+                    <span>تحرير في الأستوديو</span>
                   </div>
                 </PrimaryButton>
               </Link>
