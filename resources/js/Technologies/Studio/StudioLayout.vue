@@ -4,7 +4,7 @@ import SplitPane from './Layouts/SplitPane.vue'
 import ReferencePane from './Panes/ReferencePane.vue'
 import EditorPane from './Panes/EditorPane.vue'
 import { useEditorStore } from '../Editor/Core/EditorStore'
-import { onMounted, onUnmounted, computed } from 'vue'
+import { onMounted, onUnmounted, computed, watch } from 'vue'
 
 const props = defineProps({
     type: { type: String, required: true }, // 'manuscript' | 'audio' | 'video'
@@ -28,6 +28,14 @@ onMounted(() => {
     }
     
     store.startAutoSave()
+})
+
+// Watch for content node changes (when navigating between segments/pages)
+// Watch the slug specifically for better reactivity
+watch(() => props._legacy?.contentNode?.slug, (newSlug, oldSlug) => {
+    if (newSlug && newSlug !== oldSlug && props._legacy?.contentNode) {
+        store.loadDocument(props.entity, props._legacy.contentNode, [], {})
+    }
 })
 
 onUnmounted(() => {
