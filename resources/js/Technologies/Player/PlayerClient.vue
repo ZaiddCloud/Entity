@@ -93,6 +93,46 @@ const handleSegmentClick = (segment) => {
 const handleSeek = (time) => {
     playerRef.value?.seek(time);
 };
+
+// --- Add Segment Modal State ---
+const showAddModal = ref(false);
+const newSegmentForm = ref({
+    title: '',
+    start_time: 0,
+    end_time: 0,
+    file_path: ''
+});
+
+const openAddModal = () => {
+    newSegmentForm.value = {
+        title: props.type === 'audio' ? 'مقطع جديد' : 'مشهد جديد',
+        start_time: 0,
+        end_time: 0,
+        file_path: ''
+    };
+    showAddModal.value = true;
+};
+
+const closeAddModal = () => {
+    showAddModal.value = false;
+};
+
+const saveNewSegment = async () => {
+    try {
+        const response = await axios.post(route('api.segments.store'), {
+            entity_id: props.media.id,
+            entity_type: props.type,
+            ...newSegmentForm.value
+        });
+        
+        // Reload page to show new segment
+        router.reload({ only: ['media'] });
+        closeAddModal();
+    } catch (error) {
+        console.error('Failed to create segment:', error);
+        alert('فشل إنشاء المقطع');
+    }
+};
 </script>
 
 <template>
@@ -121,9 +161,20 @@ const handleSeek = (time) => {
         
         <!-- Header -->
         <div class="p-4 border-b border-gray-800 bg-gray-900/50 backdrop-blur sticky top-0 z-10">
-            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                {{ segments.length > 0 ? 'Tracks / Scenes' : 'Segments' }}
-            </h3>
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                    {{ segments.length > 0 ? 'Tracks / Scenes' : 'Segments' }}
+                </h3>
+                <button
+                    @click="openAddModal"
+                    class="p-1.5 rounded-lg bg-primary-600 hover:bg-primary-500 text-white transition-colors"
+                    title="إضافة مقطع جديد"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                </button>
+            </div>
             <p class="text-sm text-white font-medium truncate">
                 {{ props.media?.title }}
             </p>
@@ -172,9 +223,91 @@ const handleSeek = (time) => {
         <div v-else class="flex-1 flex flex-col items-center justify-center text-gray-500 py-10">
             <span class="text-4xl mb-2 opacity-20">💿</span>
             <span class="text-sm">No tracks found</span>
+            <button
+                @click="openAddModal"
+                class="mt-4 px-4 py-2 bg-primary-600 hover:bg-primary-500 text-white text-sm rounded-lg transition-colors"
+            >
+                إضافة مقطع
+            </button>
         </div>
 
       </div>
+    </div>
+
+    <!-- Add Segment Modal -->
+    <div 
+        v-if="showAddModal" 
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        @click.self="closeAddModal"
+    >
+        <div class="bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-6 border border-gray-800">
+            <h2 class="text-xl font-bold text-white mb-4">
+                {{ props.type === 'audio' ? 'إضافة مقطع جديد' : 'إضافة مشهد جديد' }}
+            </h2>
+
+            <div class="space-y-4">
+                <!-- Title -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">العنوان</label>
+                    <input
+                        v-model="newSegmentForm.title"
+                        type="text"
+                        class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        placeholder="اسم المقطع"
+                    >
+                </div>
+
+                <!-- Start Time -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">وقت البداية (ثانية)</label>
+                    <input
+                        v-model.number="newSegmentForm.start_time"
+                        type="number"
+                        min="0"
+                        class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    >
+                </div>
+
+                <!-- End Time -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">وقت النهاية (ثانية)</label>
+                    <input
+                        v-model.number="newSegmentForm.end_time"
+                        type="number"
+                        min="0"
+                        class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    >
+                </div>
+
+                <!-- File Path (Optional) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">مسار الملف (اختياري)</label>
+                    <input
+                        v-model="newSegmentForm.file_path"
+                        type="text"
+                        class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        placeholder="audios/track.mp3"
+                    >
+                    <p class="text-xs text-gray-500 mt-1">اتركه فارغاً للمقاطع ضمن ملف واحد</p>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-3 mt-6">
+                <button
+                    @click="saveNewSegment"
+                    class="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-500 text-white font-medium rounded-lg transition-colors"
+                >
+                    حفظ
+                </button>
+                <button
+                    @click="closeAddModal"
+                    class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-lg transition-colors"
+                >
+                    إلغاء
+                </button>
+            </div>
+        </div>
     </div>
   </div>
 </template>

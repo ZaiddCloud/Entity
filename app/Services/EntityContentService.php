@@ -236,4 +236,20 @@ class EntityContentService
 
         return $firstChild;
     }
+
+    /**
+     * Get maximum order value for entity's content nodes
+     */
+    public function getMaxOrder(Entity $entity): int
+    {
+        /** @var class-string<Model> $model */
+        $model = $this->getContentModel($entity);
+        $idField = $this->getEntityIdField($entity);
+
+        $maxOrder = $model::query()
+            ->where($idField, $entity->id)
+            ->max('order');
+
+        return $maxOrder ?? 0;
+    }
 }

@@ -52,6 +52,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('api/book-children/{id}/save', [BookContentController::class, 'updateValidation'])->name('api.book-children.save');
     Route::post('api/book-children/{id}/restore/{version?}', [BookContentController::class, 'restoreVersion'])->name('api.book-children.restore');
 
+    // API routes for Segments (Audio/Video)
+    Route::post('api/segments', [App\Http\Controllers\Api\SegmentController::class, 'store'])->name('api.segments.store');
+
     // Editor Test Route
     Route::get('/editor-test', [App\Http\Controllers\EditorTestController::class, 'index'])->name('editor.test');
 
