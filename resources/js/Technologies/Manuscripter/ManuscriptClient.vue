@@ -6,8 +6,14 @@ const props = defineProps({
     siblings: {
         type: Array,
         default: () => []
+    },
+    activeSlug: {
+        type: String,
+        default: null
     }
 });
+
+const emit = defineEmits(['navigate']);
 
 // State
 const shotNumber = ref(1);
@@ -34,6 +40,43 @@ const versions = computed(() => {
 });
 
 const selectedVersionIds = ref([props.manuscript.id]); // Default to Original manuscript ID
+
+// Initialize Shot Number based on Active Slug
+onMounted(() => {
+    if (props.activeSlug && versions.value[0]?.pages) {
+        const pageIndex = versions.value[0].pages.findIndex(p => p.slug === props.activeSlug);
+        if (pageIndex !== -1) {
+            shotNumber.value = pageIndex + 1;
+        }
+    }
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+});
+
+// Watch Shot Number to Emit Navigation
+watch(shotNumber, (newShot) => {
+    // Only emit if valid range and we have pages
+    const mainVersion = versions.value[0];
+    if (!mainVersion || !mainVersion.pages) return;
+    
+    const page = mainVersion.pages[newShot - 1];
+    
+    // Check if we need to navigate (avoid loop if already on slug)
+    if (page && page.slug !== props.activeSlug) {
+        // Debounce slightly or just emit. Inertia handles visits well.
+        emit('navigate', page.slug);
+    }
+});
+
+// Watch Active Slug to Update Shot Number (if changed externally, e.g. browser back button)
+watch(() => props.activeSlug, (newSlug) => {
+    if (!newSlug || !versions.value[0]?.pages) return;
+    
+    const pageIndex = versions.value[0].pages.findIndex(p => p.slug === newSlug);
+    if (pageIndex !== -1 && (pageIndex + 1) !== shotNumber.value) {
+        shotNumber.value = pageIndex + 1;
+    }
+});
 
 // Resizing State
 const panelWidths = ref([])

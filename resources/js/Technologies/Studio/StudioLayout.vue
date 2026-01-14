@@ -3,12 +3,45 @@ import { Head } from '@inertiajs/vue3'
 import SplitPane from './Layouts/SplitPane.vue'
 import ReferencePane from './Panes/ReferencePane.vue'
 import EditorPane from './Panes/EditorPane.vue'
+import { useEditorStore } from '../Editor/Core/EditorStore'
+import { onMounted, onUnmounted, computed } from 'vue'
 
 const props = defineProps({
     type: { type: String, required: true }, // 'manuscript' | 'audio' | 'video'
     entity: { type: Object, required: true },
     editorContent: { type: String, default: '' },
-    title: { type: String, default: 'Entity Studio' }
+    title: { type: String, default: 'Entity Studio' },
+    _legacy: { type: Object, default: () => ({}) }
+})
+
+const store = useEditorStore()
+
+onMounted(() => {
+    store.setEditorMode(props.type)
+    if (props._legacy?.entity) {
+        store.setResourceData(props._legacy.entity)
+    }
+    
+    // Load document state
+    if (props._legacy?.contentNode) {
+        store.loadDocument(props.entity, props._legacy.contentNode, [], {})
+    }
+    
+    store.startAutoSave()
+})
+
+onUnmounted(() => {
+    store.stopAutoSave()
+})
+
+const saveStatusColor = computed(() => {
+    if (store.isSaving) return 'text-yellow-500'
+    return 'text-green-500'
+})
+
+const saveStatusText = computed(() => {
+    if (store.isSaving) return 'جاري الحفظ...'
+    return 'محفوظ'
 })
 </script>
 
@@ -46,14 +79,17 @@ const props = defineProps({
 
       <!-- Actions -->
       <div class="flex items-center gap-3">
-        <!-- Placeholder for Save Status -->
-        <span class="text-xs text-green-500 flex items-center gap-1">
-            <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-            محفوظ
+        <!-- Save Status -->
+        <span class="text-xs flex items-center gap-1" :class="saveStatusColor">
+            <div class="w-1.5 h-1.5 rounded-full bg-current" :class="store.isSaving ? 'animate-pulse' : ''"></div>
+            {{ saveStatusText }}
         </span>
         
-        <button class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded transition-colors">
-            نشر
+        <button 
+            class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded transition-colors"
+            @click="store.save"
+        >
+            حفظ
         </button>
       </div>
     </header>
@@ -88,6 +124,8 @@ const props = defineProps({
           <ReferencePane
             :type="props.type"
             :entity="props.entity" 
+            :active-slug="props._legacy?.contentNode?.slug"
+            @navigate="(slug) => $inertia.visit(route('studio.show', { type: props.type, slug: slug }))"
           />
         </template>
       </SplitPane>

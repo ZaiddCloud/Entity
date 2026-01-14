@@ -5,7 +5,8 @@ import PlayerClient from '../../Player/PlayerClient.vue'
 
 const props = defineProps({
     type: { type: String, required: true }, // 'manuscript' | 'audio' | 'video'
-    entity: { type: Object, required: true }
+    entity: { type: Object, required: true },
+    activeSlug: { type: String, default: null }
 })
 
 // Normalize type for internal switching logic
@@ -26,6 +27,8 @@ const normalizedType = computed(() => {
       v-if="normalizedType === 'manuscript'"
       :manuscript="props.entity"
       :siblings="props.entity.siblings || []" 
+      :active-slug="props.activeSlug"
+      @navigate="(slug) => $emit('navigate', slug)"
     />
 
     <!-- 
@@ -36,6 +39,7 @@ const normalizedType = computed(() => {
       v-else-if="normalizedType === 'media'"
       :media="props.entity"
       :type="props.type" 
+      :active-slug="props.activeSlug"
     />
 
     <!-- Fallback -->

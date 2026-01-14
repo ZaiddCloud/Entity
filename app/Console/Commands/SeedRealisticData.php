@@ -305,7 +305,7 @@ class SeedRealisticData extends Command
                     $scriptTypes = ['نسخ', 'كوفي', 'ديواني', 'رقعة', 'ثلث'];
                     $locations = ['دمشق', 'القاهرة', 'اسطنبول', 'بغداد', 'المدينة المنورة'];
                     
-                    $attributes['original_title'] = $title; // Could vary in real scenarios
+                    $attributes['original_title'] = $title;
                     $attributes['catalog_number'] = 'MS-' . rand(1000, 9999) . '-' . strtoupper(substr(md5($title), 0, 2));
                     $attributes['scribe'] = $scribes[array_rand($scribes)];
                     $attributes['madhab'] = $madhabs[array_rand($madhabs)];
@@ -318,19 +318,36 @@ class SeedRealisticData extends Command
                     $attributes['notes'] = 'نسخة نفيسة بخط جميل ومقروء، مع حواشٍ قيّمة.';
                     $attributes['location'] = $locations[array_rand($locations)];
                     
-                    // Handle Real Manuscript Images
-                    if (isset($itemData['file_source'])) {
-                        $this->ensureFileExists($itemData['file_source'], $itemData['filename']);
-                        $attributes['cover_path'] = $itemData['filename'];
-                        $attributes['file_path'] = $itemData['filename'];
-                    }
                 } elseif ($type === 'audio' || $type === 'video') {
                     $attributes['duration'] = rand(300, 3600);
+                }
 
-                    // Handle Real Audio/Video Files
-                    if (isset($itemData['file_source'])) {
-                        $this->ensureFileExists($itemData['file_source'], $itemData['filename']);
-                        $attributes['file_path'] = $itemData['filename'];
+                // --- Generic File Handling (Search Local or Download) ---
+                // This now applies to ALL types (Book, Manuscript, Audio, Video)
+                if ($type !== 'shelf') {
+                    $typeDir = $type . 's'; // books, manuscripts, etc.
+                    $fallbackName = "sample-" . ($i % 3 + 1) . "." . ($type === 'book' ? 'pdf' : ($type === 'audio' ? 'mp3' : 'mp4'));
+                    // Manuscript fallback uses existing logic if present, or generic
+                    if (isset($itemData['filename'])) {
+                        $targetFilename = $itemData['filename'];
+                    } else {
+                         $targetFilename = "{$typeDir}/{$fallbackName}";
+                    }
+
+                    // Search function
+                    $foundPath = $this->searchLocalFile($typeDir, $title, $targetFilename);
+
+                    if ($foundPath !== $targetFilename) {
+                        $attributes['file_path'] = $foundPath;
+                        if ($type === 'manuscript') $attributes['cover_path'] = $foundPath;
+                        $this->line("    [+] Linked local file: $foundPath");
+                    } else {
+                        // Download Logic (Fallback)
+                        if (isset($itemData['file_source']) && isset($itemData['filename'])) {
+                             $this->ensureFileExists($itemData['file_source'], $itemData['filename']);
+                             $attributes['file_path'] = $itemData['filename'];
+                             if ($type === 'manuscript') $attributes['cover_path'] = $itemData['filename'];
+                        }
                     }
                 }
 
@@ -558,5 +575,40 @@ class SeedRealisticData extends Command
                 $this->warn("Failed to download: $url");
             }
         }
+    }
+
+    /**
+     * Search for a local file matching the title in the given directory.
+     */
+    protected function searchLocalFile(string $dir, string $title, string $fallback): string
+    {
+        $storage = \Illuminate\Support\Facades\Storage::disk('public');
+        
+        if (!$storage->exists($dir)) {
+            return $fallback;
+        }
+
+        $files = $storage->files($dir);
+        
+        // Sanitize title for search (remove special chars, simple normalization)
+        $searchTerms = explode(' ', Str::limit($title, 20, '')); // Search by first few words
+        
+        foreach ($files as $file) {
+            $filename = pathinfo($file, PATHINFO_BASENAME);
+            
+            // 1. Direct match (e.g. "Title.pdf")
+            if (Str::contains(strtolower($filename), strtolower($title))) {
+                return $file;
+            }
+            
+            // 2. Fuzzy match (e.g. contains significant part of title)
+            foreach ($searchTerms as $term) {
+                 if (mb_strlen($term) > 3 && Str::contains(strtolower($filename), strtolower($term))) {
+                     return $file;
+                 }
+            }
+        }
+
+        return $fallback;
     }
 }

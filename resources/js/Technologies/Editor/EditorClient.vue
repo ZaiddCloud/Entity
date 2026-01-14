@@ -2,23 +2,16 @@
 import { onMounted, watch } from 'vue'
 import TiptapEditor from './Core/TiptapEditor.vue'
 import EditorToolbar from './Toolbar/EditorToolbar.vue'
-import { useTiptapStore } from './Core/TiptapStore'
+import { useEditorStore } from './Core/EditorStore'
 
 const props = defineProps({
     initialContent: {
-        type: String,
+        type: [String, Object, Array],
         default: ''
     }
 })
 
-const store = useTiptapStore()
-
-// Initialize content
-onMounted(() => {
-    if (props.initialContent) {
-        store.updateContent(props.initialContent)
-    }
-})
+const store = useEditorStore()
 
 // Update store if prop changes (e.g. loading new entity)
 watch(() => props.initialContent, (newVal) => {

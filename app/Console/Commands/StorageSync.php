@@ -93,9 +93,13 @@ class StorageSync extends Command
             return;
         }
 
-        // 1. Special handling for Manuscripts (Folder Bundles)
+        // 1. Special handling for Bundles
         if ($modelClass === Manuscript::class) {
             $this->syncManuscriptBundles($dir, $extensions);
+        } elseif ($modelClass === Audio::class) {
+            $this->syncAudioBundles($dir, $extensions);
+        } elseif ($modelClass === Video::class) {
+            $this->syncVideoBundles($dir, $extensions);
         }
 
         // 2. Discover files recursively
@@ -110,10 +114,15 @@ class StorageSync extends Command
                 continue;
             }
 
-            // For manuscripts, if it's inside a subdirectory, skip it here if it's an image (already handled as bundle)
-            if ($modelClass === Manuscript::class && dirname($filePath) !== $dir) {
-                if (in_array($extension, ['jpg', 'png', 'jpeg', 'tiff']))
-                    continue;
+            // Skip files inside subdirectories for bundled types, unless they are the main file
+            if (dirname($filePath) !== $dir) {
+                 if (
+                    ($modelClass === Manuscript::class && in_array($extension, ['jpg', 'png', 'jpeg', 'tiff'])) ||
+                    ($modelClass === Audio::class && in_array($extension, ['mp3', 'wav', 'm4a', 'aac'])) ||
+                    ($modelClass === Video::class && in_array($extension, ['mp4', 'mkv', 'avi', 'mov']))
+                 ) {
+                     continue;
+                 }
             }
             $this->info("Processing file: $filePath");
 
@@ -595,6 +604,96 @@ class StorageSync extends Command
                 ]);
             }
             $this->line("  [+] Bundle Synced: {$title} (" . count($imageFiles) . " pages)");
+        }
+    }
+
+    protected function syncAudioBundles(string $dir, array $extensions)
+    {
+        $directories = Storage::disk('public')->directories($dir);
+
+        foreach ($directories as $subDir) {
+            $files = Storage::disk('public')->files($subDir);
+            $audioFiles = array_filter($files, function ($file) use ($extensions) {
+                return in_array(strtolower(pathinfo($file, PATHINFO_EXTENSION)), $extensions);
+            });
+
+            if (empty($audioFiles)) continue;
+
+            $this->info("Processing Audio Bundle: {$subDir}");
+            $title = Str::headline(basename($subDir));
+            $slug = Str::slug($title);
+
+            // 1. Create Audio Entity
+            $entity = Audio::query()->firstOrCreate(
+                ['slug' => $slug],
+                [
+                    'title' => $title,
+                    'description' => 'Audio album synced from ' . $subDir,
+                    'file_path' => $subDir, // Placeholder
+                    'code' => 'ALBUM_' . strtoupper(Str::slug($title, '_')),
+                    'type' => 'audio'
+                ]
+            );
+
+            // 2. Sync Tracks as Segments
+            $order = 1;
+            foreach ($audioFiles as $file) {
+                $name = pathinfo($file, PATHINFO_FILENAME);
+                $this->contentService->createNode($entity, [
+                    'type' => 'segment',
+                    'title' => Str::headline($name),
+                    'slug' => Str::slug($name) . '-' . $entity->id,
+                    'file_path' => $file,
+                    'order' => $order++,
+                    'content' => []
+                ]);
+            }
+            $this->line("  [+] Album Synced: {$title} (" . count($audioFiles) . " tracks)");
+        }
+    }
+
+    protected function syncVideoBundles(string $dir, array $extensions)
+    {
+        $directories = Storage::disk('public')->directories($dir);
+
+        foreach ($directories as $subDir) {
+            $files = Storage::disk('public')->files($subDir);
+            $videoFiles = array_filter($files, function ($file) use ($extensions) {
+                return in_array(strtolower(pathinfo($file, PATHINFO_EXTENSION)), $extensions);
+            });
+
+            if (empty($videoFiles)) continue;
+
+            $this->info("Processing Video Bundle: {$subDir}");
+            $title = Str::headline(basename($subDir));
+            $slug = Str::slug($title);
+
+            // 1. Create Video Entity
+            $entity = Video::query()->firstOrCreate(
+                ['slug' => $slug],
+                [
+                    'title' => $title,
+                    'description' => 'Video series synced from ' . $subDir,
+                    'file_path' => $subDir,
+                    'code' => 'SERIES_' . strtoupper(Str::slug($title, '_')),
+                    'type' => 'video'
+                ]
+            );
+
+            // 2. Sync Scenes as Segments
+            $order = 1;
+            foreach ($videoFiles as $file) {
+                $name = pathinfo($file, PATHINFO_FILENAME);
+                $this->contentService->createNode($entity, [
+                    'type' => 'scene',
+                    'title' => Str::headline($name),
+                    'slug' => Str::slug($name) . '-' . $entity->id,
+                    'file_path' => $file,
+                    'order' => $order++,
+                    'content' => []
+                ]);
+            }
+            $this->line("  [+] Series Synced: {$title} (" . count($videoFiles) . " scenes)");
         }
     }
 }

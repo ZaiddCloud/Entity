@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onUnmounted } from 'vue'
+import { ref, computed, watch, onUnmounted, onMounted } from 'vue'
 import ResourceNavigator from '@/Technologies/Common/ResourceNavigator.vue'
 
 defineOptions({
@@ -9,12 +9,19 @@ defineOptions({
 const props = defineProps(['resource', 'currentNode'])
 
 const versions = computed(() => {
-    console.log('ManuscriptViewer Resource:', props.resource)
-    if (!props.resource?.versions) {
-        console.warn('No versions found in resource')
+    // 1. Priority: Current Page Image (for Bundles/Nodes)
+    if (props.currentNode?.image_url) {
+        return [{
+            id: 'node-view',
+            title: props.currentNode.title || 'المعاينة الحالية',
+            url: props.currentNode.image_url
+        }]
+    }
+
+    // 2. Fallback: Saved Versions
+    if (!props.resource?.versions || props.resource.versions.length === 0) {
         return []
     }
-    console.log('Versions found:', props.resource.versions)
     return props.resource.versions
 })
 

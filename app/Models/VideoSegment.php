@@ -33,7 +33,10 @@ class VideoSegment extends Model
         'content_blocks',
         'metadata',
         'start_time',
+        'start_time',
         'end_time',
+        'duration',
+        'file_path',
         'content',
     ];
 

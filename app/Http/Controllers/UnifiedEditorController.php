@@ -63,6 +63,14 @@ class UnifiedEditorController extends Controller
              $entity->setRelation('siblings', $siblings);
         }
 
+        // Record last active session
+        if (auth()->check()) {
+            auth()->user()->update([
+                'last_studio_type' => $type,
+                'last_studio_slug' => $slug
+            ]);
+        }
+
         $data = $this->contentService->prepareEditorData($entity, $slug);
         
         // Map to Studio Props
@@ -115,19 +123,24 @@ class UnifiedEditorController extends Controller
      */
     public function resume(Request $request)
     {
-        // هنا يمكن جلب آخر "ContentNode" عمل عليه المستخدم من الجلسة أو قاعدة البيانات
-        // للمحاكاة: سنأخذ أول كتاب وأول فصل فيه
-        $book = Book::first();
-        if (!$book)
-            return redirect()->route('dashboard');
+        $user = $request->user();
 
-        // Resume now searches BookChild
-        $node = BookChild::where('book_id', $book->id)->first();
+        if ($user && $user->last_studio_type && $user->last_studio_slug) {
+            return redirect()->route('studio.show', [
+                'type' => $user->last_studio_type, 
+                'slug' => $user->last_studio_slug
+            ]);
+        }
 
-        if (!$node)
-            return redirect()->route('dashboard');
+        // Fallback: Check if we have any recently updated content
+        // For simplicity, we fallback to first book child
+        $node = BookChild::first();
 
-        return redirect()->route('studio.show', ['type' => 'book', 'slug' => $node->slug]);
+        if ($node) {
+            return redirect()->route('studio.show', ['type' => 'book', 'slug' => $node->slug]);
+        }
+
+        return redirect()->route('dashboard');
     }
 
     /**
@@ -155,7 +168,7 @@ class UnifiedEditorController extends Controller
             default => 'entity_id'
         };
 
-        return $entityModel::findOrFail($node->$foreignKey);
+        return $entityModel::with('children')->findOrFail($node->$foreignKey);
     }
 
     /**

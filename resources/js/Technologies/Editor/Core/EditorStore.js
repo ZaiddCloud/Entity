@@ -154,7 +154,7 @@ export const useEditorStore = defineStore('editor', () => {
             const type = editorMode.value
             const slug = currentContentNode.value.slug
 
-            const response = await axios.post(`/editor/${type}/${slug}/save`, {
+            const response = await axios.post(`/studio/${type}/${slug}/save`, {
                 content: content.value
             })
 
