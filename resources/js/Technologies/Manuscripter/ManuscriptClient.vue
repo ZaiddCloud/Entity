@@ -358,7 +358,7 @@ const totalPages = computed(() => {
                         
             <!-- Minimal Filename Overlay -->
             <div class="absolute bottom-4 right-4 bg-black/40 backdrop-blur px-2 py-1 rounded text-white/50 text-[10px] font-mono pointer-events-none">
-              {{ getPageUrl(shotNumber, version).split('/').pop().split('.')[0] }}
+              {{ getPageUrl(shotNumber, version)?.split('/').pop()?.split('.')[0] || 'N/A' }}
             </div>
           </div>
 

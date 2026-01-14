@@ -337,7 +337,8 @@ class SeedRealisticData extends Command
                     // Search function
                     $foundPath = $this->searchLocalFile($typeDir, $title, $targetFilename);
 
-                    if ($foundPath !== $targetFilename) {
+                    if ($foundPath !== null) {
+                        // Found a local file!
                         $attributes['file_path'] = $foundPath;
                         if ($type === 'manuscript') $attributes['cover_path'] = $foundPath;
                         $this->line("    [+] Linked local file: $foundPath");
@@ -579,24 +580,26 @@ class SeedRealisticData extends Command
 
     /**
      * Search for a local file matching the title in the given directory.
+     * Returns the file path if found, null otherwise.
      */
-    protected function searchLocalFile(string $dir, string $title, string $fallback): string
+    protected function searchLocalFile(string $dir, string $title, string $fallback): ?string
     {
         $storage = \Illuminate\Support\Facades\Storage::disk('public');
         
         if (!$storage->exists($dir)) {
-            return $fallback;
+            return null;
         }
 
-        $files = $storage->files($dir);
+        // Get ALL files recursively (including bundles/subdirectories)
+        $files = $storage->allFiles($dir);
         
         // Sanitize title for search (remove special chars, simple normalization)
-        $searchTerms = explode(' ', Str::limit($title, 20, '')); // Search by first few words
+        $searchTerms = explode(' ', Str::limit($title, 30, '')); // Search by first few words
         
         foreach ($files as $file) {
             $filename = pathinfo($file, PATHINFO_BASENAME);
             
-            // 1. Direct match (e.g. "Title.pdf")
+            // 1. Direct match (e.g. "Title.pdf" or "مقدمة_ابن_خلدون.pdf")
             if (Str::contains(strtolower($filename), strtolower($title))) {
                 return $file;
             }
@@ -609,6 +612,6 @@ class SeedRealisticData extends Command
             }
         }
 
-        return $fallback;
+        return null; // Not found
     }
 }
