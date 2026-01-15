@@ -12,6 +12,10 @@ const importForm = ref({
     path: '/home/z/PhpstormProjects/Entity/storage/app/transcripts'
 });
 
+const syncForm = ref({
+    path: '' 
+});
+
 const runCommand = async (command, args = {}) => {
     isRunning.value = true;
     output.value = 'Running command...\n';
@@ -36,6 +40,10 @@ const runCommand = async (command, args = {}) => {
 
 const handleImport = () => {
     runCommand('media:import-transcripts', { path: importForm.value.path });
+};
+
+const handleSync = () => {
+    runCommand('project:sync-storage', { path: syncForm.value.path });
 };
 
 </script>
@@ -155,10 +163,24 @@ const handleImport = () => {
                          <div v-if="activeTab === 'sync'">
                              <h2 class="text-xl font-bold text-white mb-4">مزامنة ملفات التخزين</h2>
                              <p class="text-gray-400 text-sm mb-6 leading-relaxed">
-                                 فحص مجلد التخزين (storage/app/public) وتسجيل الملفات الجديدة في قاعدة البيانات تلقائياً. مفيد عند رفع ملفات يدوياً.
+                                 فحص مجلد التخزين (storage/app/public) أو مجلد خارجي، وتسجيل الملفات الجديدة في قاعدة البيانات تلقائياً.
+                                 <br><span class="text-yellow-500/80">ملاحظة: للمجلدات الخارجية، سيتم إنشاء رابط (Symlink) تلقائياً لتتمكن من تشغيل الملفات.</span>
                              </p>
+                             
+                             <div class="mb-6">
+                                <label class="block text-sm font-medium text-gray-300 mb-2">مسار خارجي (اختياري)</label>
+                                <div class="flex gap-2">
+                                    <input 
+                                        v-model="syncForm.path" 
+                                        type="text" 
+                                        class="flex-1 bg-gray-950 border border-gray-700 rounded-lg px-4 py-2 text-white font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dir-ltr"
+                                        placeholder="/path/to/external/drive (leave empty for internal storage)"
+                                    >
+                                </div>
+                            </div>
+
                              <button 
-                                 @click="runCommand('project:sync-storage')" 
+                                 @click="handleSync" 
                                  :disabled="isRunning"
                                  class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
                              >
