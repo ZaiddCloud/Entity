@@ -72,16 +72,11 @@ class SyncStorage extends Command
 
         foreach ($allFiles as $file) {
             $ext = strtolower($file->getExtension());
-            // Calculate relative path for DB/Web (e.g. imports/drive/file.mp3)
-            // If baseRelativePath is set, we need to be careful. 
-            // File::allFiles returns absolute paths or SplFileInfo.
-            // We want the path relative to storage/app/public.
-
+            // Calculate relative path for DB/Web
             if ($baseRelativePath) {
                 // For external symlinks: baseRelativePath + relative path inside the target
                 $relativePathInside = $file->getRelativePathname();
                 $relativePath = $baseRelativePath . '/' . $relativePathInside;
-                // Clean double slashes
                 $relativePath = str_replace('//', '/', $relativePath);
             } else {
                 // For internal storage
@@ -89,48 +84,119 @@ class SyncStorage extends Command
             }
 
             $filename = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+            $fullPath = $file->getPathname();
+            $media = null;
 
             // 1. Audio
             if (in_array($ext, $audioExts)) {
-                if (Audio::where('file_path', $relativePath)->exists())
-                    continue;
-
-                Audio::create([
-                    'id' => (string) Str::uuid(),
-                    'title' => $this->cleanTitle($filename),
-                    'slug' => Str::slug($filename) . '-' . Str::random(6),
-                    'file_path' => $relativePath,
-                    'type' => 'audio',
-                    'author_id' => 1
-                ]);
-                $this->line("   + Registered Audio: $relativePath");
-                $count++;
+                $media = Audio::firstOrCreate(
+                    ['file_path' => $relativePath],
+                    [
+                        'id' => (string) Str::uuid(),
+                        'title' => $this->cleanTitle($filename),
+                        'slug' => Str::slug($filename) . '-' . Str::random(6),
+                        'type' => 'audio',
+                        'author_id' => 1,
+                        'duration' => 0
+                    ]
+                );
             }
             // 2. Video
             elseif (in_array($ext, $videoExts)) {
-                if (Video::where('file_path', $relativePath)->exists())
-                    continue;
+                $media = Video::firstOrCreate(
+                    ['file_path' => $relativePath],
+                    [
+                        'id' => (string) Str::uuid(),
+                        'title' => $this->cleanTitle($filename),
+                        'slug' => Str::slug($filename) . '-' . Str::random(6),
+                        'type' => 'video',
+                        'author_id' => 1,
+                        'duration' => 0
+                    ]
+                );
+            }
 
-                Video::create([
-                    'id' => (string) Str::uuid(),
-                    'title' => $this->cleanTitle($filename),
-                    'slug' => Str::slug($filename) . '-' . Str::random(6),
-                    'file_path' => $relativePath,
-                    'type' => 'video',
-                    'author_id' => 1
-                ]);
-                $this->line("   + Registered Video: $relativePath");
-                $count++;
+            // Update Metadata (Duration, Bitrate, Size, etc.)
+            if ($media) {
+                if ($media->wasRecentlyCreated) {
+                    $this->line("   + Registered: $relativePath");
+                    $count++;
+                }
+
+                $updates = [];
+
+                // 1. File Size
+                if (!$media->file_size) {
+                    $sizeBytes = File::size($fullPath);
+                    $updates['file_size'] = round($sizeBytes / 1024); // KB
+                }
+
+                // 2. FFmpeg Metadata (Duration, Bitrate, Format)
+                if ($media->duration === 0 || !$media->bitrate) {
+                    $meta = $this->getMetadata($fullPath);
+
+                    if ($meta['duration'] > 0)
+                        $updates['duration'] = $meta['duration'];
+                    if ($meta['bitrate'] > 0)
+                        $updates['bitrate'] = $meta['bitrate'];
+                    if ($meta['format'])
+                        $updates['format'] = $meta['format'];
+                }
+
+                if (!empty($updates)) {
+                    $media->update($updates);
+                    $this->line("      > Updated Metadata: " . json_encode($updates));
+                }
             }
         }
 
-        $this->info("Registered $count new files in this batch.");
+        $this->info("processed $count new files (Metadata refresh included).");
     }
 
     protected function cleanTitle($filename)
     {
-        // Remove common patterns like date prefixes if desired, or keep raw
-        // Keeping it simple for now, maybe replacing underscores
         return str_replace(['_', '-'], ' ', $filename);
+    }
+
+    protected function getMetadata($filePath)
+    {
+        $meta = [
+            'duration' => 0,
+            'bitrate' => 0,
+            'format' => ''
+        ];
+
+        try {
+            $escapedPath = escapeshellarg($filePath);
+
+            // Get Metadata using ffprobe
+            // We ask for specific entries: duration, bit_rate, format_name
+            // -v error: hide logs
+            // -of default=noprint_wrappers=1:nokey=0: output as key=value pairs
+            $cmd = "ffprobe -v error -show_entries format=duration,bit_rate,format_name -of default=noprint_wrappers=1:nokey=0 $escapedPath";
+            $output = shell_exec($cmd);
+
+            if ($output) {
+                // Parse key=value lines
+                $lines = explode("\n", trim($output));
+                foreach ($lines as $line) {
+                    if (str_contains($line, '=')) {
+                        [$key, $val] = explode('=', trim($line), 2);
+
+                        if ($key === 'duration') {
+                            $meta['duration'] = (int) floatval($val);
+                        } elseif ($key === 'bit_rate') {
+                            $meta['bitrate'] = (int) (floatval($val) / 1000); // Convert to kbps
+                        } elseif ($key === 'format_name') {
+                            // ffprobe returns 'mp3,mp2' sometimes, take first
+                            $meta['format'] = explode(',', $val)[0];
+                        }
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // fail silently
+        }
+        return $meta;
     }
 }
