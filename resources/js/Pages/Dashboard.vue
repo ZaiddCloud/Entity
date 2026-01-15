@@ -400,7 +400,8 @@ const contentMix = computed(() => [
 const quickActions = [
     { name: 'كتاب جديد', desc: 'إضافة عمل مكتبي جديد', route: 'books.create', icon: 'M12 4v16m8-8H4', bgClass: 'bg-blue-50/50 dark:bg-blue-500/5 hover:bg-blue-100 dark:hover:bg-blue-500/10', iconBg: 'bg-blue-600' },
     { name: 'تصنيف جديد', desc: 'إدارة الفئات المركزية', route: 'categories.create', icon: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7', bgClass: 'bg-emerald-50/50 dark:bg-emerald-500/5 hover:bg-emerald-100 dark:hover:bg-emerald-500/10', iconBg: 'bg-emerald-600' },
-    { name: 'إدارة المهملات', desc: 'استعادة الأصول المحذوفة', route: 'deletions.index', icon: 'M19 7l-.867 12.142A2 2 0 0116.138 21', bgClass: 'bg-rose-50/50 dark:bg-rose-500/5 hover:bg-rose-100 dark:hover:bg-rose-500/10', iconBg: 'bg-rose-600' }
+    { name: 'إدارة المهملات', desc: 'استعادة الأصول المحذوفة', route: 'deletions.index', icon: 'M19 7l-.867 12.142A2 2 0 0116.138 21', bgClass: 'bg-rose-50/50 dark:bg-rose-500/5 hover:bg-rose-100 dark:hover:bg-rose-500/10', iconBg: 'bg-rose-600' },
+    { name: 'أدوات النظام', desc: 'استيراد وتشغيل الأوامر', route: 'system.commands', icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', bgClass: 'bg-indigo-50/50 dark:bg-indigo-500/5 hover:bg-indigo-100 dark:hover:bg-indigo-500/10', iconBg: 'bg-indigo-600' }
 ];
 
 const formatDate = (dateString) => {

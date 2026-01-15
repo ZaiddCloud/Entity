@@ -55,6 +55,14 @@ Route::middleware(['auth'])->group(function () {
     // API routes for Segments (Audio/Video)
     Route::post('api/segments', [App\Http\Controllers\Api\SegmentController::class, 'store'])->name('api.segments.store');
 
+    // System Commands API
+    Route::post('api/system/run-command', [App\Http\Controllers\SystemController::class, 'runCommand'])->name('api.system.run-command');
+
+    // Command Dashboard Page
+    Route::get('/system/commands', function () {
+        return Inertia\Inertia::render('System/Commands');
+    })->name('system.commands');
+
     // Editor Test Route
     Route::get('/editor-test', [App\Http\Controllers\EditorTestController::class, 'index'])->name('editor.test');
 
