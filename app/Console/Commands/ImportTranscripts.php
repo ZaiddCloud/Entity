@@ -170,53 +170,65 @@ class ImportTranscripts extends Command
         $parsed = [];
         $currentSegment = null;
 
-        // Regex for time: (04:23) or (1:04:23)
-        // Matches pattern: Text(04:23) or just (04:23)
-        $timePattern = '/(.*?)\(?(\d{1,2}:\d{2}(?::\d{2})?)\)?/';
-
         foreach ($lines as $i => $line) {
             $line = trim($line);
             if (empty($line))
                 continue;
 
-            // Check if line contains timestamp at the end or alone
-            // Looking for the specific format user mentioned: "Name(04:23)"
-            if (preg_match($timePattern, $line, $matches)) {
-                $titleCandidate = trim($matches[1]);
-                $timeString = $matches[2];
+            // 1. Normalize Time Format
+            // Replace dots or commas used as separators in time-like patterns "12.30" or "04,20" => "12:30", "04:20"
+            // Look for patterns like digit{1,2}[.,]digit{2}
+            $normalizedLine = preg_replace('/(\d{1,2})[.,](\d{2})/', '$1:$2', $line);
+            // Run again to handle chained separators like 1,20,30 => 1:20:30
+            $normalizedLine = preg_replace('/(\d{1,2})[.,](\d{2})/', '$1:$2', $normalizedLine);
+
+            // 2. Detect Timestamp
+            // Supports: (04:23), (1:04:23), 04:23, 1:04:23
+            // With or without parens, at start/end or alone
+            if (preg_match('/\(?(\d{1,2}:\d{2}(?::\d{2})?)\)?/', $normalizedLine, $matches)) {
+                $timeString = $matches[1];
                 $seconds = $this->timeToSeconds($timeString);
 
-                // If title is empty, maybe check previous line?
-                // User said: "Title in a line, followed by line with Title(Time)" or just "Title(Time)"
+                // Determine Title
+                // Candidate 1: The text in the same line (excluding the time)
+                $titleCandidate = trim(str_replace($matches[0], '', $normalizedLine));
+
+                // Cleanup title
+                $titleCandidate = trim(str_replace([':', '(', ')'], '', $titleCandidate));
+
                 $title = $titleCandidate;
 
-                // If the regex captured a title empty or very short, and previous line exists
-                if (mb_strlen($title) < 2 && isset($lines[$i - 1])) {
+                // Candidate 2: Previous line (if current line title is empty or very short)
+                if (mb_strlen($title) < 3 && isset($lines[$i - 1])) {
                     $prevLine = trim($lines[$i - 1]);
-                    // Check if previous line looks like a title (ends with :)
-                    if (Str::endsWith($prevLine, ':') || mb_strlen($prevLine) < 50) {
-                        $title = $prevLine;
+                    // Heuristic: If prev line is short (< 80 chars) it's likely a speaker name
+                    if (mb_strlen($prevLine) < 80) {
+                        $title = trim(str_replace(':', '', $prevLine));
                     }
                 }
 
-                // Cleanup title (remove :)
-                $title = trim(str_replace(':', '', $title));
-                if (empty($title))
+                // Fallback Title
+                if (empty($title)) {
                     $title = "مقطع $timeString";
+                }
 
-                // Save previous segment content
+                // SAVE PREVIOUS SEGMENT
                 if ($currentSegment) {
                     $parsed[] = $currentSegment;
                 }
 
-                // Start new segment
+                // START NEW SEGMENT
                 $currentSegment = [
                     'title' => $title,
                     'start' => $seconds,
                     'content' => ''
                 ];
+
+                // If there was text in the same line after removing time, add it to content?
+                // Usually not, usually it's just "Speaker: (Time)"
+
             } else {
-                // Determine if this is content or just a title line waiting for next time line
+                // CONTENT LINE
                 if ($currentSegment) {
                     $currentSegment['content'] .= $line . "\n";
                 }
