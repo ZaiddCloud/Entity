@@ -97,14 +97,14 @@ const handleSeek = (time) => {
 // --- Time Helpers ---
 const secondsToTime = (seconds) => {
     if (!seconds) return '00:00';
-    const date = new Date(seconds * 1000);
-    const hh = date.getUTCHours();
-    const mm = date.getUTCMinutes();
-    const ss = String(date.getUTCSeconds()).padStart(2, '0');
-    if (hh) {
-        return `${hh}:${String(mm).padStart(2, '0')}:${ss}`;
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    
+    if (h > 0) {
+        return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
-    return `${mm}:${ss}`;
+    return `${m}:${String(s).padStart(2, '0')}`;
 };
 
 const timeToSeconds = (str) => {
