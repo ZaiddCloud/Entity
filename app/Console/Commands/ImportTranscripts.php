@@ -77,19 +77,17 @@ class ImportTranscripts extends Command
             return;
         }
 
-        // 1. Find Media Entity (Audio/Video) matching the filename
+        // 1. Find Media Entities (Audio/Video) matching the filename
         $filename = pathinfo($file->getFilename(), PATHINFO_FILENAME);
-        // Clean filename (remove date prefixes like 240922_1543 if needed, or exact match)
-        // Trying exact match first, then fuzzy
 
-        $media = $this->findMediaEntity($filename);
+        $mediaCollection = $this->findMediaEntities($filename);
 
-        if (!$media) {
+        if ($mediaCollection->isEmpty()) {
             $this->warn("   - No matching media found for '$filename'");
             return;
         }
 
-        $this->info("   - Found Media: {$media->title} ({$media->id})");
+        $this->info("   - Found " . $mediaCollection->count() . " matching entities.");
 
         // 2. Parse Segments
         $segments = $this->parseSegments($text);
@@ -99,24 +97,49 @@ class ImportTranscripts extends Command
             return;
         }
 
-        $this->info("   - Found " . count($segments) . " segments.");
+        $this->info("   - Parsed " . count($segments) . " segments.");
 
-        // 3. Store Segments
-        $this->storeSegments($media, $segments);
+        // 3. Store Segments for ALL matches
+        foreach ($mediaCollection as $media) {
+            /** @var \Illuminate\Database\Eloquent\Model $media */
+            $this->info("   > Attaching to: {$media->title} ({$media->getTable()}: {$media->id})");
+            $this->storeSegments($media, $segments);
+        }
     }
 
-    protected function findMediaEntity($filename)
+    protected function findMediaEntities($filename)
     {
-        // Try exact match on title or filename
-        $audio = Audio::where('title', 'LIKE', "%$filename%")->orWhere('file_path', 'LIKE', "%$filename%")->first();
-        if ($audio)
-            return $audio;
+        $matches = collect();
 
-        $video = Video::where('title', 'LIKE', "%$filename%")->orWhere('file_path', 'LIKE', "%$filename%")->first();
-        if ($video)
-            return $video;
+        // Strategy 1: Extract Date Pattern (YYMMDD)
+        if (preg_match('/^(\d{6})/', $filename, $m)) {
+            $datePrefix = $m[1];
 
-        return null;
+            $audios = Audio::where('file_path', 'LIKE', "%$datePrefix%")
+                ->orWhere('title', 'LIKE', "%$datePrefix%")
+                ->get();
+
+            $videos = Video::where('file_path', 'LIKE', "%$datePrefix%")
+                ->orWhere('title', 'LIKE', "%$datePrefix%")
+                ->get();
+
+            $matches = $matches->merge($audios)->merge($videos);
+
+            if ($matches->isNotEmpty()) {
+                return $matches->unique('id'); // Avoid duplicates if any
+            }
+        }
+
+        // Strategy 2: Exact Containment (Fallback)
+        $audios = Audio::where('title', 'LIKE', "%$filename%")
+            ->orWhere('file_path', 'LIKE', "%$filename%")
+            ->get();
+
+        $videos = Video::where('title', 'LIKE', "%$filename%")
+            ->orWhere('file_path', 'LIKE', "%$filename%")
+            ->get();
+
+        return $matches->merge($audios)->merge($videos)->unique('id');
     }
 
     protected function readDocx($filePath)
