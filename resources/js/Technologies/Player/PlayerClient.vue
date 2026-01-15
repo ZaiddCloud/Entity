@@ -60,13 +60,23 @@ const playerRef = ref(null);
 const currentPlayerTime = ref(0);
 const currentDuration = ref(0);
 
+// Watch for active slug changes (Navigation within Studio)
+watch(() => props.activeSlug, (newSlug) => {
+    if (newSlug && segments.value.length) {
+        const activeSeg = segments.value.find(s => s.slug === newSlug);
+        // If single file but segmented (start > 0), seek to it
+        if (activeSeg && !activeSeg.file_path && activeSeg.start > 0) {
+            playerRef.value?.seek(activeSeg.start);
+        }
+    }
+}, { immediate: true });
+
 // --- Handlers ---
 
 const onPlayerReady = () => {
-    // Auto-seek if segment has start time (for single file mode)
+    // Rely on watcher for initial seek if needed, but keeping this for safety on first load
     if (props.activeSlug && segments.value.length) {
         const activeSeg = segments.value.find(s => s.slug === props.activeSlug);
-        // If single file but segmented (start_time > 0), seek to it
         if (activeSeg && !activeSeg.file_path && activeSeg.start > 0) {
             playerRef.value?.seek(activeSeg.start);
         }
