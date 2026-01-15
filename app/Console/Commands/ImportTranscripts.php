@@ -221,7 +221,7 @@ class ImportTranscripts extends Command
                 $currentSegment = [
                     'title' => $title,
                     'start' => $seconds,
-                    'content' => ''
+                    'content' => "<strong>$title</strong>\n" // Keep title at start, bolded
                 ];
 
                 // If there was text in the same line after removing time, add it to content?
