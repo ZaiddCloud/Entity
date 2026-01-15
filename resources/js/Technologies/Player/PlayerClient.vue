@@ -94,20 +94,44 @@ const handleSeek = (time) => {
     playerRef.value?.seek(time);
 };
 
+// --- Time Helpers ---
+const secondsToTime = (seconds) => {
+    if (!seconds) return '00:00';
+    const date = new Date(seconds * 1000);
+    const hh = date.getUTCHours();
+    const mm = date.getUTCMinutes();
+    const ss = String(date.getUTCSeconds()).padStart(2, '0');
+    if (hh) {
+        return `${hh}:${String(mm).padStart(2, '0')}:${ss}`;
+    }
+    return `${mm}:${ss}`;
+};
+
+const timeToSeconds = (str) => {
+    if (!str) return 0;
+    const p = str.split(':').map(Number);
+    let s = 0, m = 1;
+    while (p.length > 0) {
+        s += m * p.pop();
+        m *= 60;
+    }
+    return s;
+};
+
 // --- Add Segment Modal State ---
 const showAddModal = ref(false);
 const newSegmentForm = ref({
     title: '',
-    start_time: 0,
-    end_time: 0,
+    start_time: '00:00',
+    end_time: '00:00',
     file_path: ''
 });
 
 const openAddModal = () => {
     newSegmentForm.value = {
         title: props.type === 'audio' ? 'مقطع جديد' : 'مشهد جديد',
-        start_time: 0,
-        end_time: 0,
+        start_time: '00:00',
+        end_time: '00:00', 
         file_path: ''
     };
     showAddModal.value = true;
@@ -122,7 +146,10 @@ const saveNewSegment = async () => {
         const response = await axios.post(route('api.segments.store'), {
             entity_id: props.media.id,
             entity_type: props.type,
-            ...newSegmentForm.value
+            title: newSegmentForm.value.title,
+            file_path: newSegmentForm.value.file_path,
+            start_time: timeToSeconds(newSegmentForm.value.start_time),
+            end_time: timeToSeconds(newSegmentForm.value.end_time)
         });
         
         // Reload page to show new segment
@@ -210,7 +237,7 @@ const saveNewSegment = async () => {
                     <!-- Duration or Time Range -->
                     <div class="text-[10px] text-gray-500 font-mono mt-0.5">
                         <span v-if="seg.file_path">Double-click to play</span>
-                        <span v-else>{{ seg.start }}s - {{ seg.end }}s</span>
+                        <span v-else>{{ secondsToTime(seg.start) }} - {{ secondsToTime(seg.end) }}</span>
                     </div>
                 </div>
 
@@ -259,23 +286,23 @@ const saveNewSegment = async () => {
 
                 <!-- Start Time -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">وقت البداية (ثانية)</label>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">وقت البداية (00:00)</label>
                     <input
-                        v-model.number="newSegmentForm.start_time"
-                        type="number"
-                        min="0"
-                        class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        v-model="newSegmentForm.start_time"
+                        type="text"
+                        placeholder="00:00"
+                        class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono"
                     >
                 </div>
 
                 <!-- End Time -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">وقت النهاية (ثانية)</label>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">وقت النهاية (00:00)</label>
                     <input
-                        v-model.number="newSegmentForm.end_time"
-                        type="number"
-                        min="0"
-                        class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        v-model="newSegmentForm.end_time"
+                        type="text"
+                        placeholder="00:00"
+                        class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono"
                     >
                 </div>
 
