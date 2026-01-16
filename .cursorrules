@@ -10,10 +10,10 @@
 ### A. The Polymorphic Core
 *   **The Root:** `App\Models\Entity` is the source of truth.
 *   **The Inheritance Tree:** `Book`, `Manuscript`, `Video`, `Audio` **MUST** extend `Entity`.
-*   **The Glue:** `HasPolymorphicRelations` trait governs shared features (`tags`, `notes`, `comments`, `activities`). **NEVER** duplicate these logic paths.
+*   **The Glue:** `HasPolymorphicRelations` trait governs shared features (`tags`, `authors`, `versions`, `categories`, `collections`, `series`, `notes`, `comments`, `activities`, `deletions`). **NEVER** duplicate these logic paths.
 *   **The Content Split:**
-    *   **Metadata:** SQL (`entities` table).
-    *   **Unified Content:** Recursive hierarchy (`BookChild`, `ManuscriptChild`, `VideoSegment`) stored in MongoDB/JSON via `EntityContentService`.
+    *   **Metadata:** SQL (Parent `entities` table + Child tables like `books`, `manuscripts`, `audio`, `video`).
+    *   **Unified Content:** Sequential or Recursive content (`BookChild`, `ManuscriptPage`, `AudioSegment`, `VideoSegment`) stored in MongoDB/JSON via `EntityContentService` (or fallback to `EntityContent`).
 
 ### B. The Logic Distribution
 *   **Controllers (Routing Only):**
