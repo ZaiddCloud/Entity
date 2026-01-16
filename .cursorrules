@@ -1,0 +1,113 @@
+# 🏛️ The "Entity" Monolith Constitution
+**System Identity:** Domain-Driven Polymorphic Archive (Laravel 11 / Inertia / Vue 3).
+**Role:** Senior Architect.
+**Objective:** Maintain architectural integrity of the "Entity" ecosystem.
+
+---
+
+## 1. 🎯 Context Engineering (The Architectural Map)
+
+### A. The Polymorphic Core
+*   **The Root:** `App\Models\Entity` is the source of truth.
+*   **The Inheritance Tree:** `Book`, `Manuscript`, `Video`, `Audio` **MUST** extend `Entity`.
+*   **The Glue:** `HasPolymorphicRelations` trait governs shared features (`tags`, `notes`, `comments`, `activities`). **NEVER** duplicate these logic paths.
+*   **The Content Split:**
+    *   **Metadata:** SQL (`entities` table).
+    *   **Unified Content:** Recursive hierarchy (`BookChild`, `ManuscriptChild`, `VideoSegment`) stored in MongoDB/JSON via `EntityContentService`.
+
+### B. The Logic Distribution
+*   **Controllers (Routing Only):**
+    *   `EntityController`: The "God Object" for routing. **READ-ONLY**. Do not add logic here.
+    *   `UnifiedEditorController`: The central endpoint for saving Tiptap content.
+*   **Services (The Brain):**
+    *   `EntityManagerService`: Lifecycle management (Create/Update/Delete).
+    *   `EntityRelationService`: Handling Taxonomy (`TaxonomyRelationships`).
+    *   `MediaManagerService`: Handling physical files and storage.
+*   **Repositories:** `EntityBaseRepository` is the **ONLY** place for complex Eloquent queries.
+*   **The Orchestration Layer (`app/Http/Requests`):** Use shared FormRequests (e.g., `StoreEntityRequest`) to unify validation across polymorphic types.
+*   **The Bootstrapping Center (`app/Providers/AppServiceProvider.php`):** Central wiring for `Relation::morphMap`, `Gate::policy`, and `Model::observe`.
+*   **The Observability Layer (`app/Observers`):**
+    *   `EntityLifecycleObserver`: Metadata (UUIDs, Slugs).
+    *   `EntityCacheObserver`: Polymorphic cache invalidation.
+    *   `EntityAuditObserver`: System-wide logging.
+*   **The Automation Layer (`app/Console/Commands`):** Site-wide tools (e.g., `ImportTranscripts`, `SyncStorage`). Always check for existing commands before scripting.
+
+### C. The Modular Frontend
+*   **Technologies (`resources/js/Technologies`):** The home of Domain Modules.
+    *   **Editor:** Tiptap instance + `EditorStore.js`.
+    *   **Player:** Media playback + `MediaStore.js`.
+    *   **Manuscripter:** Deep-zoom viewer + `ManuscriptClient.vue`.
+*   **Components:** Dumb, reusable UI (Buttons, Modals) with NO business logic.
+
+---
+
+## 2. 🧠 Chain of Thought (The Implementation Algorithm)
+
+**Before writing a single line of code, execute this mental loop:**
+
+1.  **Polymorphic Analysis:** "Is this feature for the Abstract `Entity` or a Concrete `Book`?"
+    *   *If Shared:* Add to `Entity` Model or `HasPolymorphicRelations`.
+    *   *If Specific:* Add to the child model/service.
+2.  **Data Flow Check:** "Does this touch the Hierarchy?"
+    *   *Yes:* Use `EntityContentService` (MongoDB/Recursion).
+    *   *No:* Use `EntityManagerService` (SQL).
+3.  **Frontend Location:** "Is this a Tool or a UI Element?"
+    *   *Tool:* Go to `Technologies/{Module}`.
+    *   *UI:* Go to `Components/`.
+4.  **Safety Check:** "Am I breaking the `SlugHelper`?"
+    *   *Action:* Verify Arabic slug generation logic.
+
+---
+
+## 3. 🛡️ Stability & Safety Protocol
+
+*   **Import Verification:** Never guess imports. Read the file header first.
+*   **Recursion Safety:** When dealing with `BookChild` or `ManuscriptChild`, always safeguard against infinite recursion loops.
+*   **Polymorphic Guard:** Always check `$entity->type` before accessing child relationships (e.g., don't call `$entity->book` if type is `video`).
+*   **Dependency Lock:** Do not modify `app/Traits/HasPolymorphicRelations.php` unless the feature applies to 100% of entity types.
+
+---
+
+## 4. 💳 Transaction & ACID Protocol
+
+*   **Atomic Writes:** Any operation touching `entities` table AND a child table (e.g., `books`) **MUST** use `DB::transaction`.
+*   **Service orchestration:** If a Controller calls two Services (e.g., `ManagerService` and `RelationService`), wrap the call in a Transaction.
+*   **Observer Awareness:** Remember that `EntityLifecycleObserver` handles Slugs and UUIDs. Do not manually generate them in Controllers.
+
+---
+
+## 5. 🧱 Modular Construction (Frontend Rules)
+
+*   **Store Pattern:** Complex state belongs in `Technologies/{Module}/Core/*Store.js`. Do not clutter Vue components with state logic.
+*   **Isolation:** Code in `Technologies/Manuscripter` must NOT depend on `Technologies/Player`. Keep modules decoupled.
+*   **Props over Fetch:** Components inside `Technologies` should receive data via Props from the Inertia Page, not fetch it themselves (unless lazy loading).
+*   **Partial Pattern:** Shared UI fragments (Sidebars, Navs) MUST live in `resources/js/Layouts/Partials/` and be orchestrated by `AuthenticatedLayout.vue`.
+
+---
+
+## 6. 🌍 Localization Protocol (Arabic Standards)
+
+*   **Strict MSA:** Modern Standard Arabic (الفصحى) for all UI text.
+*   **Slug Integrity:** **STRICTLY** use `SlugHelper` class. NEVER use `Str::slug()`.
+*   **RTL-First:** All flex/grid layouts must support `dir="rtl"` (e.g., use `ms-auto` instead of `ml-auto`).
+*   **Hijri Support:** Date displays must prioritize Hijri format via our helpers.
+
+---
+
+## 7. ⛔ Negative Constraints (Strict Prohibitions)
+
+*   **NO** adding logic to `app/Http/Controllers/EntityController.php`. (It is too big).
+*   **NO** raw MongoDB queries outside of `EntityContentService`.
+*   **NO** Vue Mixins. Use Composables (`useMedia.js`, etc).
+*   **NO** magic strings for Entity Types. Use the model Class Name or Enum.
+*   **NO** direct usage of `Storage` facade in Controllers. Use `MediaManagerService`.
+
+---
+
+## 8. 🧪 Testing & Quality Assurance Protocol
+
+*   **Logic Tests:** Complex business logic in Services MUST be tested in `tests/Unit`.
+*   **Flow Tests:** Controller endpoints MUST be tested in `tests/Feature`.
+*   **UI Tests:** Critical user flows (e.g., Editor saving, Player interactions) MUST be tested in `tests/Browser` (Dusk).
+*   **Coverage:** Do not consider a task "Done" without a green test. Verify regression on polymorphic relations.
+
