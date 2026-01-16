@@ -41,7 +41,7 @@ provide('themeContext', { isDark, toggleDarkMode });
 
 <template>
   <div
-    class="min-h-screen bg-gray-50 dark:bg-[#050505] text-gray-900 dark:text-[#ededec]"
+    class="h-screen overflow-hidden bg-gray-50 dark:bg-[#050505] text-gray-900 dark:text-[#ededec]"
     dir="rtl"
   >
     <Head :title="title" />
@@ -49,8 +49,8 @@ provide('themeContext', { isDark, toggleDarkMode });
     <!-- Sidebar -->
     <Sidebar :is-open="isSidebarOpen" />
 
-    <!-- Main Content -->
-    <div :class="['transition-all duration-300', isSidebarOpen ? 'mr-64' : 'mr-20']">
+    <!-- Main Content Area -->
+    <div :class="['transition-all duration-300 h-screen overflow-y-auto custom-scrollbar flex flex-col', isSidebarOpen ? 'mr-64' : 'mr-20']">
       <!-- Navbar -->
       <Navbar 
         :title="title" 
@@ -103,14 +103,18 @@ provide('themeContext', { isDark, toggleDarkMode });
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
+    width: 6px;
+    height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(156, 163, 175, 0.2);
+    background: rgba(156, 163, 175, 0.3);
     border-radius: 10px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(156, 163, 175, 0.4);
+    background: rgba(156, 163, 175, 0.5);
 }
 
 .custom-main {
