@@ -2,6 +2,7 @@
 import { onMounted, watch } from 'vue'
 import TiptapEditor from './Core/TiptapEditor.vue'
 import EditorToolbar from './Toolbar/EditorToolbar.vue'
+import FootnoteEditor from './Extensions/Footnotes/FootnoteEditor.vue'
 import { useEditorStore } from './Core/EditorStore'
 
 const props = defineProps({
@@ -39,5 +40,8 @@ const handleCommand = ({ command, value }) => {
         />
       </div>
     </div>
+    
+    <!-- Extensions UI -->
+    <FootnoteEditor />
   </div>
 </template>

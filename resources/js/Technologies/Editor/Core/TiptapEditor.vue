@@ -96,6 +96,29 @@ const editor = useEditor({
         attributes: {
             class: 'prose prose-lg max-w-none focus:outline-none min-h-[800px] p-10 lg:p-14',
             dir: 'rtl'
+        },
+        handleClick: (view, pos, event) => {
+            if (event.target.closest('.scientific-footnote')) {
+                const node = view.state.doc.nodeAt(pos)
+                const mark = node?.marks.find(m => m.type.name === 'scientificFootnote') || 
+                            view.state.selection.$from.marks().find(m => m.type.name === 'scientificFootnote')
+                
+                if (mark) {
+                    const store = useEditorStore() // We might need FootnoteStore here, but let's dynamic import or use prop
+                    // Actually, importing useFootnoteStore is cleaner
+                    import('../Extensions/Footnotes/FootnoteStore').then(({ useFootnoteStore }) => {
+                        const footnoteStore = useFootnoteStore()
+                        footnoteStore.openEditor(
+                            editor.value,
+                            mark.attrs.id,
+                            mark.attrs.type,
+                            mark.attrs.content_json
+                        )
+                    })
+                    return true
+                }
+            }
+            return false
         }
     },
     onUpdate: ({ editor }) => {

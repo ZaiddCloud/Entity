@@ -12,11 +12,15 @@ import TextAlignGroup from './Groups/TextAlignGroup.vue'
 import BlockGroup from './Groups/BlockGroup.vue'
 import InsertGroup from './Groups/InsertGroup.vue'
 import HeritageGroup from './Groups/HeritageGroup.vue'
+import ScientificGroup from './Groups/ScientificGroup.vue'
 
 import ToolbarDivider from './Components/ToolbarDivider.vue'
 
 const emit = defineEmits(['command'])
 const store = useTiptapStore()
+// ... (rest of logic) ...
+// In template:
+// Cleaned up script block
 
 const executeCommand = (command, value = null) => {
     store.executeCommand(command, value)
@@ -74,6 +78,9 @@ const closeWindow = () => {
       <InsertGroup />
       <ToolbarDivider />
       <TextAlignGroup />
+      <ToolbarDivider />
+      
+      <ScientificGroup />
             
       <div class="w-px h-6 bg-gray-200 mx-2" />
             

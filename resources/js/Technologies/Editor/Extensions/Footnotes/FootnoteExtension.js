@@ -1,4 +1,5 @@
 import { Mark, mergeAttributes } from '@tiptap/core'
+import { v4 as uuidv4 } from 'uuid'
 
 export const ScientificFootnote = Mark.create({
     name: 'scientificFootnote',
@@ -7,15 +8,41 @@ export const ScientificFootnote = Mark.create({
         return {
             id: {
                 default: null,
+                parseHTML: element => element.getAttribute('data-id'),
+                renderHTML: attributes => {
+                    if (!attributes.id) {
+                        return {}
+                    }
+                    return {
+                        'data-id': attributes.id,
+                    }
+                },
             },
             type: {
                 default: 'comment', // tahqiq, takhrij, sharh, comment
+                parseHTML: element => element.getAttribute('data-type'),
+                renderHTML: attributes => {
+                    return {
+                        'data-type': attributes.type,
+                    }
+                },
             },
-            content: {
+            // Metadata for quick preview without parsing full JSON
+            preview: {
                 default: '',
             },
-            reference: {
-                default: '',
+            // The rich text content of the footnote (stored as JSON string or object)
+            content_json: {
+                default: null,
+                renderHTML: (attributes) => {
+                    return {
+                        'data-content-json': JSON.stringify(attributes.content_json)
+                    }
+                },
+                parseHTML: (element) => {
+                    const content = element.getAttribute('data-content-json')
+                    return content ? JSON.parse(content) : null
+                }
             },
         }
     },
@@ -25,27 +52,37 @@ export const ScientificFootnote = Mark.create({
             {
                 tag: 'span[data-footnote]',
             },
+            {
+                tag: 'sup.scientific-footnote',
+            }
         ]
     },
 
     renderHTML({ HTMLAttributes }) {
+        // Semantic HTML: Use <sup> for footnotes
         return [
-            'span',
+            'sup',
             mergeAttributes(HTMLAttributes, {
                 'data-footnote': '',
-                class: 'scientific-footnote',
+                class: 'scientific-footnote cursor-pointer text-blue-600 font-bold hover:underline select-none',
             }),
-            0,
+            0, // Render the text content inside the sup (e.g., "[1]")
         ]
     },
 
     addCommands() {
         return {
-            setFootnote: (attributes) => ({ commands }) => {
-                return commands.setMark(this.name, attributes)
+            setFootnote: (attributes = {}) => ({ commands }) => {
+                return commands.setMark(this.name, {
+                    ...attributes,
+                    id: attributes.id || uuidv4()
+                })
             },
-            toggleFootnote: (attributes) => ({ commands }) => {
-                return commands.toggleMark(this.name, attributes)
+            toggleFootnote: (attributes = {}) => ({ commands }) => {
+                return commands.toggleMark(this.name, {
+                    ...attributes,
+                    id: attributes.id || uuidv4()
+                })
             },
             unsetFootnote: () => ({ commands }) => {
                 return commands.unsetMark(this.name)
