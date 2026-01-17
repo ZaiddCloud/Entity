@@ -34,7 +34,7 @@ const controlsTimeout = ref(null);
 const { 
     isPlaying, isMuted, isWaiting, currentTime, duration, volume, playbackRate, buffered, loopRange,
     togglePlay, seek, skip, setVolume, setPlaybackRate, toggleLoopPoint
-} = useMedia(mediaRef);
+} = useMedia(mediaRef, emit);
 
 // --- Computed UI Helpers ---
 

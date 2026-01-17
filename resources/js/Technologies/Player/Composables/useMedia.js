@@ -1,6 +1,6 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 
-export function useMedia(mediaRef) {
+export function useMedia(mediaRef, emit = null) {
     // State
     const isPlaying = ref(false);
     const isMuted = ref(false);
@@ -71,7 +71,7 @@ export function useMedia(mediaRef) {
     const onTimeUpdate = () => {
         if (!mediaRef.value) return;
         currentTime.value = mediaRef.value.currentTime;
-        emit('timeupdate', { currentTime: currentTime.value, duration: duration.value });
+        if (emit) emit('timeupdate', { currentTime: currentTime.value, duration: duration.value });
 
         // Loop Enforcement
         if (loopRange.value.active && loopRange.value.end !== null) {
