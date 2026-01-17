@@ -254,12 +254,18 @@ class ImportTranscripts extends Command
             $nextSeg = $segments[$index + 1] ?? null;
             $endTime = $nextSeg ? $nextSeg['start'] : 0; // 0 means until end/unknown
 
+            $htmlContent = nl2br(trim($seg['content']));
+            $plainText = trim(strip_tags($seg['content']));
+            $jsonContent = $this->generateJsonContent($seg['title'], $seg['content']);
+
             // Create Node
             $this->contentService->createNode($media, [
                 'type' => $nodeType,
                 'title' => $seg['title'],
                 'slug' => Str::slug($seg['title']) . '-' . Str::random(6),
-                'content' => nl2br(trim($seg['content'])),
+                'content' => $htmlContent,
+                'json_content' => $jsonContent,
+                'plain_text' => $plainText,
                 'start_time' => $seg['start'],
                 'end_time' => $endTime, // Calculate duration based on next segment
                 'order' => $startOrder + $index
@@ -267,6 +273,50 @@ class ImportTranscripts extends Command
 
             $this->line("      + Created: [{$this->secondsToTime($seg['start'])}] {$seg['title']}");
         }
+    }
+
+    /**
+     * Generate a basic Tiptap JSON structure
+     */
+    protected function generateJsonContent($title, $rawContent)
+    {
+        $contentNodes = [];
+
+        // 1. Add Title as bold paragraph if not already handled
+        $contentNodes[] = [
+            'type' => 'paragraph',
+            'attrs' => ['textAlign' => 'right'],
+            'content' => [
+                [
+                    'type' => 'text',
+                    'marks' => [['type' => 'bold']],
+                    'text' => $title
+                ]
+            ]
+        ];
+
+        // 2. Add Content paragraphs
+        $lines = explode("\n", trim(str_replace("<strong>$title</strong>", "", $rawContent)));
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+
+            $contentNodes[] = [
+                'type' => 'paragraph',
+                'attrs' => ['textAlign' => 'right'],
+                'content' => [
+                    [
+                        'type' => 'text',
+                        'text' => $line
+                    ]
+                ]
+            ];
+        }
+
+        return [
+            'type' => 'doc',
+            'content' => $contentNodes
+        ];
     }
 
     protected function timeToSeconds($str)
