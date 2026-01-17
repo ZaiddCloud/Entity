@@ -2,6 +2,7 @@
 import { ref, watch, onBeforeUnmount } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import { useEditorStore } from './EditorStore'
+import { useTiptapStore } from './TiptapStore'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import TextAlign from '@tiptap/extension-text-align'
@@ -48,6 +49,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue', 'setEditor'])
+const tiptapStore = useTiptapStore()
 
 const editor = useEditor({
     content: props.modelValue,
@@ -126,6 +128,7 @@ const editor = useEditor({
     },
     onCreate: ({ editor }) => {
         emit('setEditor', editor)
+        tiptapStore.setEditor(editor)
     }
 })
 

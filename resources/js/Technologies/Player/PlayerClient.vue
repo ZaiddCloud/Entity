@@ -186,7 +186,7 @@ const saveNewSegment = async () => {
             :type="props.type || 'video'" 
             :poster="currentPoster" 
             :segments="segments" 
-            :autoplay="!!props.activeSlug"
+            :autoplay="false"
             @ready="onPlayerReady"
             @timeupdate="onTimeUpdate"
           />

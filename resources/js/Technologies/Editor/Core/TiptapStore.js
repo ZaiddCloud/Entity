@@ -62,6 +62,7 @@ export const useTiptapStore = defineStore('tiptap', () => {
             insertHeritagePoetry: () => chain.setHeritagePoetry().run(),
             insertQuranicVerse: () => chain.setQuranicVerse().run(),
             insertFootnote: () => chain.insertFootnote().run(),
+            setFootnote: () => chain.setFootnote(value).run(),
         }
 
         if (commands[command]) {
