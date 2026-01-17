@@ -21,6 +21,8 @@ class ManuscriptChild extends Model
         'last_updated',
         'is_manually_edited',
         'versions',
+        'json_content',
+        'plain_text',
     ];
 
     /**
