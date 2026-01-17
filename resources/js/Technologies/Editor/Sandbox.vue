@@ -1,9 +1,28 @@
 <script setup>
 import EditorClient from './EditorClient.vue'
+import { useEditorStore } from './Core/EditorStore'
+import { onMounted } from 'vue'
+
+const store = useEditorStore()
 
 const sampleContent = '<p>مرحباً بك في بيئة المحرر المعزولة (Sandbox)! 🧪</p><p>يمكنك تجربة كل خصائص المحرر هنا بحرية.</p>'
 
-// Mock for sandbox reset or save could go here, accessing the store if needed globally or via refs.
+// Mock Data for Store to enable Toolbar interactions
+onMounted(() => {
+    store.setEditorMode('book')
+    store.loadDocument(
+        { id: 999, title: 'Sandbox Entity' },
+        { id: 1, slug: 'sandbox-slug', title: 'Sandbox Page', content: sampleContent }
+    )
+})
+
+const handleMockSave = () => {
+    if (store.editor) {
+        console.log('--- Editor JSON Output ---')
+        console.log(JSON.stringify(store.editor.getJSON(), null, 2))
+        alert('تم طباعة الـ JSON في الكونسول للفحص')
+    }
+}
 </script>
 
 <template>
@@ -28,8 +47,11 @@ const sampleContent = '<p>مرحباً بك في بيئة المحرر المع�
         <button class="px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 text-xs">
           تصفير
         </button>
-        <button class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs shadow-sm">
-          حفظ وهمي
+        <button 
+            class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs shadow-sm"
+            @click="handleMockSave"
+        >
+          حفظ وهمي (Log JSON)
         </button>
       </div>
     </div>
