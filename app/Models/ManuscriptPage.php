@@ -40,6 +40,8 @@ class ManuscriptPage extends Model
         'image_url',
         'transcription_status',
         'content',
+        'json_content',
+        'plain_text',
     ];
 
     public function manuscript()

@@ -38,6 +38,8 @@ class VideoSegment extends Model
         'duration',
         'file_path',
         'content',
+        'json_content',
+        'plain_text',
     ];
 
     public function video()

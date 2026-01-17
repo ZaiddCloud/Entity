@@ -43,6 +43,8 @@ class BookChild extends Model
         'is_manually_edited',
         'versions',
         'content',
+        'json_content',
+        'plain_text',
     ];
 
     /**
