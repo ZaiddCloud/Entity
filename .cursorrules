@@ -1,3 +1,4 @@
+
 # 🏛️ The "Entity" Monolith Constitution
 **System Identity:** Domain-Driven Polymorphic Archive (Laravel 11 / Inertia / Vue 3).
 **Role:** Senior Architect.
@@ -111,3 +112,10 @@
 *   **UI Tests:** Critical user flows (e.g., Editor saving, Player interactions) MUST be tested in `tests/Browser` (Dusk).
 *   **Coverage:** Do not consider a task "Done" without a green test. Verify regression on polymorphic relations.
 
+---
+
+## 9. 🕸️ The Git Safety Protocol
+
+*   **Clean State Rule:** Before starting ANY experimental work or sandbox tinkering, ensure your working directory is clean (`git status`).
+*   **Safety Net:** If you break something in the Sandbox or the main project during experiments, immediately use `git reset` or discard changes.
+*   **Direct Modification:** Since Sandbox and Studio share the same source files, embrace direct editing but always rely on Git to revert if needed.
