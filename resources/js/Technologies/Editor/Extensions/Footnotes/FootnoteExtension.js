@@ -72,6 +72,33 @@ export const ScientificFootnote = Mark.create({
 
     addCommands() {
         return {
+            insertFootnote: (attributes = {}) => ({ commands, state }) => {
+                const ids = new Set()
+                state.doc.descendants(node => {
+                    node.marks.forEach(mark => {
+                        if (mark.type.name === this.name && mark.attrs.id) {
+                            ids.add(mark.attrs.id)
+                        }
+                    })
+                })
+
+                const nextNumber = `[${ids.size + 1}]`
+                const footnoteId = attributes.id || uuidv4()
+
+                return commands.insertContent({
+                    type: 'text',
+                    text: nextNumber,
+                    marks: [
+                        {
+                            type: this.name,
+                            attrs: {
+                                ...attributes,
+                                id: footnoteId,
+                            },
+                        },
+                    ],
+                })
+            },
             setFootnote: (attributes = {}) => ({ commands }) => {
                 return commands.setMark(this.name, {
                     ...attributes,

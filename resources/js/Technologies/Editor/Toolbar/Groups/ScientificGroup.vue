@@ -5,7 +5,7 @@ import ToolbarButton from '../Components/ToolbarButton.vue'
 const store = useTiptapStore()
 
 const insertFootnote = () => {
-    store.executeCommand('setFootnote', { type: 'comment' })
+    store.executeCommand('insertFootnote', { type: 'comment' })
 }
 </script>
 
