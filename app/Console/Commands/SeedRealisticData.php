@@ -365,6 +365,8 @@ class SeedRealisticData extends Command
                             'type' => 'sub-book',
                             'title' => "كتاب " . ($sb === 1 ? 'المقدمات' : 'الأحكام'),
                             'content' => '<p>مقدمة للكتاب الفرعي...</p>',
+                            'json_content' => $this->generateJsonContent('<p>مقدمة للكتاب الفرعي...</p>'),
+                            'plain_text' => 'مقدمة للكتاب الفرعي...',
                             'slug' => 'sub-book-' . $sb . '-' . substr($entity->slug, 0, 4),
                             'order' => $sb,
                         ]);
@@ -377,6 +379,8 @@ class SeedRealisticData extends Command
                                 'type' => 'part',
                                 'title' => "الجزء {$p}",
                                 'content' => '<p>مقدمة الجزء...</p>',
+                                'json_content' => $this->generateJsonContent('<p>مقدمة الجزء...</p>'),
+                                'plain_text' => 'مقدمة الجزء...',
                                 'slug' => 'part-' . $p . '-sb-' . $sb . '-' . substr($entity->slug, 0, 4),
                                 'order' => $p
                             ]);
@@ -389,6 +393,8 @@ class SeedRealisticData extends Command
                                     'type' => 'chapter',
                                     'title' => "فصل {$c}: في المسائل المهمة",
                                     'content' => "<p>هذا هو محتوى الفصل رقم {$c}. يحتوي على نصوص وتفريعات.</p>",
+                                    'json_content' => $this->generateJsonContent("<p>هذا هو محتوى الفصل رقم {$c}. يحتوي على نصوص وتفريعات.</p>"),
+                                    'plain_text' => "هذا هو محتوى الفصل رقم {$c}. يحتوي على نصوص وتفريعات.",
                                     'slug' => 'chapter-' . $c . '-p-' . $p . '-' . substr($entity->slug, 0, 4),
                                     'order' => $c
                                 ]);
@@ -404,6 +410,8 @@ class SeedRealisticData extends Command
                             'title' => 'الصفحة ' . ($pageTitles[$p] ?? $p),
                             'slug' => "page-{$p}-" . substr($entity->slug, 0, 4),
                             'content' => "<p>محتوى الصفحة {$p} من المخطوطة " . $entity->title . "...</p>",
+                            'json_content' => $this->generateJsonContent("<p>محتوى الصفحة {$p} من المخطوطة " . $entity->title . "...</p>"),
+                            'plain_text' => "محتوى الصفحة {$p} من المخطوطة " . $entity->title . "...",
                             'order' => $p,
                         ]);
                     }
@@ -414,6 +422,8 @@ class SeedRealisticData extends Command
                         'title' => 'المقطع الأول',
                         'slug' => 'segment-1-' . substr($entity->slug, 0, 4),
                         'content' => '<p>تفريغ نصي للمقطع الأول...</p>',
+                        'json_content' => $this->generateJsonContent('<p>تفريغ نصي للمقطع الأول...</p>'),
+                        'plain_text' => 'تفريغ نصي للمقطع الأول...',
                         'order' => 1,
                     ]);
                 } elseif ($type === 'video') {
@@ -423,6 +433,8 @@ class SeedRealisticData extends Command
                         'title' => 'المشهد الأول',
                         'slug' => 'scene-1-' . substr($entity->slug, 0, 4),
                         'content' => '<p>وصف ومحتوى المشهد الأول...</p>',
+                        'json_content' => $this->generateJsonContent('<p>وصف ومحتوى المشهد الأول...</p>'),
+                        'plain_text' => 'وصف ومحتوى المشهد الأول...',
                         'order' => 1,
                     ]);
                 }
@@ -543,6 +555,31 @@ class SeedRealisticData extends Command
 
         $this->info("Seeding completed successfully with all relationships!");
     }
+
+    /**
+     * Generate a basic Tiptap JSON structure for seeding
+     */
+    protected function generateJsonContent($html)
+    {
+        // Simple conversion for dummy data: wrap inner text of <p> in Tiptap JSON
+        $text = strip_tags($html);
+        return [
+            'type' => 'doc',
+            'content' => [
+                [
+                    'type' => 'paragraph',
+                    'attrs' => ['textAlign' => 'right'],
+                    'content' => [
+                        [
+                            'type' => 'text',
+                            'text' => $text
+                        ]
+                    ]
+                ]
+            ]
+        ];
+    }
+
     /**
      * Helper to download sample files if they don't exist
      */
