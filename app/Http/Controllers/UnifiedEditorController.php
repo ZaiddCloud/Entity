@@ -95,22 +95,39 @@ class UnifiedEditorController extends Controller
     public function save(Request $request, string $type, string $slug)
     {
         $request->validate([
-            'content' => 'required', // JSON or Array
+            'content' => 'required', // Can be string (legacy) or payload array
+            'html_content' => 'nullable|string',
+            'json_content' => 'nullable|array',
+            'plain_text' => 'nullable|string',
         ]);
 
         $entity = $this->resolveEntity($type, $slug);
         Gate::authorize('update', $entity);
 
-        // Update the specific content node using the specific model
         $modelClass = $this->getContentModelClass($type);
-
         $node = $modelClass::where('slug', $slug)->firstOrFail();
 
-        $node->update([
-            'content' => $request->content,
+        // Prepare Payload
+        $updateData = [
             'last_updated' => now(),
             'last_editor_id' => $request->user()->id
-        ]);
+        ];
+
+        // Handle content formats
+        if (is_array($request->input('content'))) {
+             // New Format direct payload
+             $payload = $request->input('content');
+             $updateData['content'] = $payload['html'] ?? '';
+             $updateData['json_content'] = $payload['json'] ?? [];
+             $updateData['plain_text'] = $payload['text'] ?? '';
+        } else {
+             // Legacy fallback or explicit fields
+             $updateData['content'] = $request->input('html_content') ?? $request->input('content');
+             if ($request->has('json_content')) $updateData['json_content'] = $request->input('json_content');
+             if ($request->has('plain_text')) $updateData['plain_text'] = $request->input('plain_text');
+        }
+
+        $node->update($updateData);
 
         return response()->json([
             'message' => 'تم الحفظ بنجاح',

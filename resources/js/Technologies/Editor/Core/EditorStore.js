@@ -146,22 +146,41 @@ export const useEditorStore = defineStore('editor', () => {
 
         isSaving.value = true
         try {
-            console.log('Saving to server...', content.value)
+            console.log('Saving to server...')
 
-            // Construct route manually or use Ziggy if available globally
-            // route('editor.save', {type: editorMode.value, slug: currentContentNode.value.slug})
-            // Since we are inside store, let's assume valid data
             const type = editorMode.value
             const slug = currentContentNode.value.slug
 
+            // Prepare Payload via Editor Instance
+            let payload = {
+                html: content.value, // Default fallback
+                json: null,
+                text: null
+            }
+
+            if (editor.value) {
+                payload = {
+                    html: editor.value.getHTML(),
+                    json: editor.value.getJSON(),
+                    text: editor.value.getText(),
+                }
+
+                // Sync local content ref to HTML to prevent "unsaved changes" flag
+                content.value = payload.html
+            }
+
             const response = await axios.post(`/studio/${type}/${slug}/save`, {
-                content: content.value
+                content: payload
             })
 
             if (response.data.last_saved) {
                 lastSaved.value = new Date(response.data.last_saved)
+                // Update local node state to match saved state
                 if (currentContentNode.value) {
-                    currentContentNode.value.content = content.value
+                    currentContentNode.value.content = payload.html // Use HTML for "dirty" check comparison
+                    if (editor.value) {
+                        // Optional: we can update other refs if needed
+                    }
                 }
                 return true
             }
