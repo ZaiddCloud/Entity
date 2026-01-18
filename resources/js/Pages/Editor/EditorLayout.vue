@@ -132,6 +132,9 @@ onUnmounted(() => {
         Entity Editor v2.0 | Dual Interface | {{ Math.round(100 - viewerWidth) }}% Editor
       </div>
     </footer>
+    
+    <!-- Overlays Slot (Modals, Floating Players) -->
+    <slot name="overlays" />
   </div>
 </template>
 

@@ -4,7 +4,7 @@ import SplitPane from './Layouts/SplitPane.vue'
 import ReferencePane from './Panes/ReferencePane.vue'
 import EditorPane from './Panes/EditorPane.vue'
 import { useEditorStore } from '../Editor/Core/EditorStore'
-import { onMounted, onUnmounted, computed, watch } from 'vue'
+import { onMounted, onUnmounted, computed, watch, ref, provide } from 'vue'
 
 const props = defineProps({
     type: { type: String, required: true }, // 'manuscript' | 'audio' | 'video'
@@ -15,6 +15,19 @@ const props = defineProps({
 })
 
 const store = useEditorStore()
+
+const isPlayerDocked = ref(true) // Default integrated (side-by-side) to avoid covering text
+
+const toggleDock = () => {
+    isPlayerDocked.value = !isPlayerDocked.value
+}
+
+provide('toggleDock', toggleDock)
+provide('isPlayerDocked', isPlayerDocked)
+
+const showSplitLayout = computed(() => {
+   return props.type === 'manuscript' || isPlayerDocked.value
+})
 
 onMounted(() => {
     store.setEditorMode(props.type)
@@ -172,20 +185,18 @@ const fetchFullTranscript = () => {
         SplitPane slots: 'pane-1', 'pane-2'.
         Pane 1 is Start. Pane 2 is End.
     -->
+    <!-- 
+        Main Workspace 
+        - Manuscript: Split Pane (Editor + Reference)
+        - Media (Audio/Video): Full Width Editor + Floating Player (Hidden in DOM)
+    -->
     <div class="flex-1 overflow-hidden relative">
-      <SplitPane :initial-split="40" :min-size="20">
-        <!-- 
-            PANE 1: Right Pane (Editor) 
-            This is the constant component.
-        -->
+      
+      <!-- Scenario A: Manuscript (Split View) -->
+      <SplitPane v-if="props.type === 'manuscript'" :initial-split="40" :min-size="20">
         <template #pane-1>
           <EditorPane :initial-content="props.editorContent" />
         </template>
-
-        <!-- 
-            PANE 2: Left Pane (Reference)
-            This is the variable component (Chameleon).
-        -->
         <template #pane-2>
           <ReferencePane
             :type="props.type"
@@ -195,6 +206,16 @@ const fetchFullTranscript = () => {
           />
         </template>
       </SplitPane>
+
+      <!-- Scenario B: Media (Integrated Player inside Editor) -->
+      <div v-else class="w-full h-full relative">
+          <EditorPane 
+            :initial-content="props.editorContent" 
+            :media-entity="props.entity"
+            :type="props.type"
+          />
+      </div>
+
     </div>
   </div>
 </template>

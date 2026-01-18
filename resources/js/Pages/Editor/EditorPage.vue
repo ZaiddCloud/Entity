@@ -40,6 +40,7 @@ const editorRef = ref(null)
 // Static imports for stability in tests and simple view
 import ManuscriptViewer from '@/Technologies/Manuscripter/ManuscriptViewer.vue'
 import MediaPlayer from '@/Technologies/Player/MediaPlayer.vue'
+import DraggableMediaPlayer from '@/Technologies/Player/DraggableMediaPlayer.vue'
 import AudioSegmentEditor from '@/Technologies/Editor/Core/AudioSegmentEditor.vue'
 import VideoSceneEditor from '@/Technologies/Editor/Core/VideoSceneEditor.vue'
 
@@ -89,7 +90,7 @@ const handleToolbarCommand = ({ command, value }) => {
 
     <!-- Dynamic Viewer Slot -->
     <template
-      v-if="['manuscript', 'audio', 'video'].includes(store.editorMode)"
+      v-if="['manuscript', 'video'].includes(store.editorMode)"
       #viewer
     >
       <ManuscriptViewer 
@@ -97,12 +98,24 @@ const handleToolbarCommand = ({ command, value }) => {
         :resource="store.resourceData"
         :current-node="store.currentContentNode"
       />
+      <!-- Keeping original MediaPlayer for video for now, unless Draggable is desired for Video too -->
       <MediaPlayer 
-        v-else-if="['audio', 'video'].includes(store.editorMode)"
+        v-else-if="store.editorMode === 'video'"
         :mode="store.editorMode"
         :resource="store.resourceData"
         :hierarchy="store.hierarchy"
       />
+    </template>
+
+    <!-- Draggable Player (Floating outside layout) -->
+    <template #overlays>
+         <DraggableMediaPlayer
+            v-if="store.editorMode === 'audio' && store.resourceData"
+            :src="store.resourceData.file_url"
+            :title="store.resourceData.title"
+            :segments="store.hierarchy" 
+            poster="/images/audio-placeholder.jpg"
+         />
     </template>
 
 

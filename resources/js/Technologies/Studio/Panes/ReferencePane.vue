@@ -1,13 +1,16 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, inject } from 'vue' // Added inject
 import ManuscriptClient from '../../Manuscripter/ManuscriptClient.vue'
 import PlayerClient from '../../Player/PlayerClient.vue'
 
 const props = defineProps({
     type: { type: String, required: true }, // 'manuscript' | 'audio' | 'video'
     entity: { type: Object, required: true },
-    activeSlug: { type: String, default: null }
+    activeSlug: { type: String, default: null },
+    isIntegrated: { type: Boolean, default: false } // NEW
 })
+
+const isPlayerDocked = inject('isPlayerDocked', { value: false }) // Inject with default
 
 // Normalize type for internal switching logic
 const normalizedType = computed(() => {
@@ -18,7 +21,7 @@ const normalizedType = computed(() => {
 </script>
 
 <template>
-  <div class="w-full h-full bg-black relative">
+  <div class="relative" :class="(normalizedType === 'media' && !isPlayerDocked.value) ? '' : 'w-full h-full bg-black'">
     <!-- 
         1. Manuscript Viewer
         Expects: manuscript, siblings
@@ -40,6 +43,8 @@ const normalizedType = computed(() => {
       :media="props.entity"
       :type="props.type" 
       :active-slug="props.activeSlug"
+      :is-integrated="props.isIntegrated"
+      @toggle-dock="$emit('toggle-dock')"
     />
 
     <!-- Fallback -->
