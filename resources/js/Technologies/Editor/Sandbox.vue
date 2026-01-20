@@ -1,6 +1,6 @@
 <script setup>
 import EditorClient from './EditorClient.vue'
-import { useEditorStore } from './Core/EditorStore'
+import { useEditorStore } from '@/Technologies/Store/EditorStore'
 import { onMounted } from 'vue'
 
 const store = useEditorStore()

@@ -145,3 +145,4 @@ Route::get('/dev/player/{type}/{slug}', function ($type, $slug) {
 })->name('dev.player');
 
 Route::get('/dev/manuscripter/{manuscript:slug}', [\App\Http\Controllers\ManuscriptController::class, 'sandbox'])->name('dev.manuscripter');
+

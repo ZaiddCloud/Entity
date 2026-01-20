@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch, onBeforeUnmount } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
-import { useEditorStore } from './EditorStore'
+import { useEditorStore } from '@/Technologies/Store/EditorStore'
 import { useTiptapStore } from './TiptapStore'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
@@ -60,7 +60,7 @@ const editor = useEditor({
                 levels: [1, 2, 3, 4, 5, 6]
             }
         }),
-        Underline,
+        // Underline, // Potentially duplicated
         TextAlign.configure({
             types: ['heading', 'paragraph'],
             alignments: ['left', 'center', 'right', 'justify'],
@@ -69,9 +69,9 @@ const editor = useEditor({
         Placeholder.configure({
             placeholder: 'ابدأ الكتابة هنا...'
         }),
-        Link.configure({
-            openOnClick: false
-        }),
+        // Link.configure({
+        //     openOnClick: false
+        // }),
         Image,
         Table.configure({
             resizable: true,

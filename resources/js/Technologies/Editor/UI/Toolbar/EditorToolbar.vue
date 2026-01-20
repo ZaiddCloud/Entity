@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useTiptapStore } from '@/Technologies/Editor/Core/TiptapStore'
-import { TOOLBAR_COMMANDS } from '../Core/Constants/toolbarItems'
+import { TOOLBAR_COMMANDS } from '../../Core/Constants/toolbarItems'
 
 // Modular Groups
 import FormattingGroup from './Groups/FormattingGroup.vue'

@@ -3,7 +3,7 @@ import { Head } from '@inertiajs/vue3'
 import SplitPane from './Layouts/SplitPane.vue'
 import ReferencePane from './Panes/ReferencePane.vue'
 import EditorPane from './Panes/EditorPane.vue'
-import { useEditorStore } from '../Editor/Core/EditorStore'
+import { useEditorStore } from '../Store/EditorStore'
 import { onMounted, onUnmounted, computed, watch, ref, provide } from 'vue'
 
 const props = defineProps({
@@ -39,8 +39,6 @@ onMounted(() => {
     if (props._legacy?.contentNode) {
         store.loadDocument(props.entity, props._legacy.contentNode, [], {})
     }
-    
-    store.startAutoSave()
 })
 
 // Watch for content node changes (when navigating between segments/pages)
@@ -51,10 +49,7 @@ watch(() => props._legacy?.contentNode?.slug, (newSlug, oldSlug) => {
     }
 })
 
-onUnmounted(() => {
-    store.stopAutoSave()
-})
-
+// Auto-save is now handled by the Page/Composable, not the layout
 const saveStatusColor = computed(() => {
     if (store.isSaving) return 'text-yellow-500'
     return 'text-green-500'

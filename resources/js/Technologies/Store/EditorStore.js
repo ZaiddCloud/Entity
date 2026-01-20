@@ -121,98 +121,14 @@ export const useEditorStore = defineStore('editor', () => {
         return editor.value.isActive(name, attributes)
     }
 
-    const getSavePayload = () => {
-        if (!editor.value) return null
-
-        let resourceId = null
-        if (editorMode.value === 'book' || editorMode.value === 'manuscript' || editorMode.value === 'audio' || editorMode.value === 'video') {
-            // For all main entities supported by this store
-            resourceId = currentEntity.value?.id
-        } else {
-            // Fallback if resourceData is used separately (e.g. maybe polymorphic handling logic differs)
-            resourceId = resourceData.value?.id || currentEntity.value?.id
-        }
-
-        return {
-            mode: editorMode.value,
-            resource_id: resourceId,
-            content: editor.value.getJSON(),
-            title: documentTitle.value
-        }
-    }
-
-    const save = async () => {
-        if (!currentEntity.value || isSaving.value) return
-
-        isSaving.value = true
-        try {
-            console.log('Saving to server...')
-
-            const type = editorMode.value
-            const slug = currentContentNode.value.slug
-
-            // Prepare Payload via Editor Instance
-            let payload = {
-                html: content.value, // Default fallback
-                json: null,
-                text: null
-            }
-
-            if (editor.value) {
-                payload = {
-                    html: editor.value.getHTML(),
-                    json: editor.value.getJSON(),
-                    text: editor.value.getText(),
-                }
-
-                // Sync local content ref to HTML to prevent "unsaved changes" flag
-                content.value = payload.html
-            }
-
-            const response = await axios.post(`/studio/${type}/${slug}/save`, {
-                content: payload
-            })
-
-            if (response.data.last_saved) {
-                lastSaved.value = new Date(response.data.last_saved)
-                // Update local node state to match saved state
-                if (currentContentNode.value) {
-                    currentContentNode.value.content = payload.html // Use HTML for "dirty" check comparison
-                    if (editor.value) {
-                        // Optional: we can update other refs if needed
-                    }
-                }
-                return true
-            }
-            return false
-        } catch (error) {
-            console.error('Save failed', error)
-            alert('فشل الحفظ: ' + (error.response?.data?.message || error.message))
-            return false
-        } finally {
-            isSaving.value = false
-        }
-    }
-
-    let autoSaveInterval = null
-    const startAutoSave = () => {
-        autoSaveInterval = setInterval(() => {
-            if (hasUnsavedChanges.value) save()
-        }, 30000)
-    }
-
-    const stopAutoSave = () => {
-        if (autoSaveInterval) clearInterval(autoSaveInterval)
-    }
-
     return {
         currentEntity, currentContentNode, content, isToolbarPinned,
         editorMode, resourceData, isSaving, lastSaved, editor,
         hierarchy, navigation,
         documentTitle, hasUnsavedChanges,
         setEditor, loadDocument, updateContent, togglePin,
-        executeCommand, isActive, save, startAutoSave, stopAutoSave,
-        setEditorMode, setResourceData, getSavePayload, setTitle,
+        executeCommand, isActive,
+        setEditorMode, setResourceData, setTitle,
         addMediaNode, removeMediaNode
     }
 })

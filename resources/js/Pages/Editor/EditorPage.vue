@@ -1,10 +1,13 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue'
 import EditorLayout from './EditorLayout.vue'
-import EditorToolbar from '@/Technologies/Editor/Toolbar/EditorToolbar.vue'
+import EditorToolbar from '@/Technologies/Editor/UI/Toolbar/EditorToolbar.vue'
 import TiptapEditor from '@/Technologies/Editor/Core/TiptapEditor.vue'
 
-import { useEditorStore } from '@/Technologies/Editor/Core/EditorStore'
+import { useEditorStore } from '@/Technologies/Store/EditorStore'
+import { useEditorSave } from '@/Technologies/Editor/Composables/useEditorSave'
+import { useEditorNavigation } from '@/Technologies/Editor/Composables/useEditorNavigation'
+import { router } from '@inertiajs/vue3'
 
 const props = defineProps({
     entity: {
@@ -35,10 +38,12 @@ const props = defineProps({
 })
 
 const store = useEditorStore()
+const { save, startAutoSave, stopAutoSave } = useEditorSave()
+const { goToPrev, goToNext } = useEditorNavigation() // Not strictly used in template but ready
 const editorRef = ref(null)
 
 // Static imports for stability in tests and simple view
-import ManuscriptViewer from '@/Technologies/Manuscripter/ManuscriptViewer.vue'
+import DetailViewer from '@/Technologies/Manuscripter/UI/DetailViewer.vue'
 import MediaPlayer from '@/Technologies/Player/MediaPlayer.vue'
 import DraggableMediaPlayer from '@/Technologies/Player/DraggableMediaPlayer.vue'
 import AudioSegmentEditor from '@/Technologies/Editor/Core/AudioSegmentEditor.vue'
@@ -52,28 +57,30 @@ onMounted(() => {
     }
 
     store.loadDocument(props.entity, props.contentNode, props.hierarchy, props.navigation)
-    store.startAutoSave()
+    startAutoSave()
 })
 
 onUnmounted(() => {
-    store.stopAutoSave()
+    stopAutoSave()
 })
 
 const handleToolbarCommand = ({ command, value }) => {
     if (command === 'save') {
-        store.save()
+        save()
     } else if (command === 'togglePin') {
         store.togglePin()
     } else if (command === 'goto') {
         // Go to specific node
         router.visit(route('studio.show', { type: store.editorMode, slug: value.slug }))
-    } else if (command === 'prev' || command === 'next') {
-        const target = store.navigation[command]
-        if (target) {
-            router.visit(route('studio.show', { type: store.editorMode, slug: target.slug }))
-        }
+    } else if (command === 'prev') {
+        // use composable or direct router visit if logic matches
+        const target = store.navigation.prev
+        if (target) router.visit(route('studio.show', { type: store.editorMode, slug: target.slug }))
+    } else if (command === 'next') {
+        const target = store.navigation.next
+        if (target) router.visit(route('studio.show', { type: store.editorMode, slug: target.slug }))
     } else if (['minimize', 'maximize'].includes(command)) {
-        // Handle window controls if needed, or leave for future implementation
+        // Handle window controls if needed
     } else if (command === 'addMediaNode') {
         store.addMediaNode()
     } else {
@@ -93,7 +100,7 @@ const handleToolbarCommand = ({ command, value }) => {
       v-if="['manuscript', 'video'].includes(store.editorMode)"
       #viewer
     >
-      <ManuscriptViewer 
+      <DetailViewer 
         v-if="store.editorMode === 'manuscript'" 
         :resource="store.resourceData"
         :current-node="store.currentContentNode"

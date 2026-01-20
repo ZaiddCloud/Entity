@@ -1,10 +1,10 @@
 <script setup>
 import { onMounted, watch, ref } from 'vue'
 import TiptapEditor from './Core/TiptapEditor.vue'
-import EditorToolbar from './Toolbar/EditorToolbar.vue'
+import EditorToolbar from './UI/Toolbar/EditorToolbar.vue'
 import FootnoteEditor from './Extensions/Footnotes/FootnoteEditor.vue'
 import ReferencePane from '../Studio/Panes/ReferencePane.vue' // Added ReferencePane
-import { useEditorStore } from './Core/EditorStore'
+import { useEditorStore } from '@/Technologies/Store/EditorStore'
 
 const props = defineProps({
     initialContent: { type: [String, Object, Array], default: '' },
@@ -12,7 +12,10 @@ const props = defineProps({
     type: { type: String, default: 'manuscript' } // NEW
 })
 
+import { useEditorSave } from './Composables/useEditorSave'
+
 const store = useEditorStore()
+const { save } = useEditorSave()
 
 const isFloating = ref(false)
 
@@ -28,7 +31,11 @@ watch(() => props.initialContent, (newVal) => {
 })
 
 const handleCommand = ({ command, value }) => {
-    store.executeCommand(command, value)
+    if (command === 'save') {
+        save()
+    } else {
+        store.executeCommand(command, value)
+    }
 }
 </script>
 
