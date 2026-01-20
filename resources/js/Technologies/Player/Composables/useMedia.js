@@ -1,4 +1,13 @@
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, watch, onUnmounted } from 'vue';
+
+const formatTime = (seconds) => {
+    if (!seconds || isNaN(seconds)) return "00:00";
+    const date = new Date(seconds * 1000);
+    const hh = date.getUTCHours();
+    const mm = date.getUTCMinutes();
+    const ss = date.getUTCSeconds().toString().padStart(2, '0');
+    return hh ? `${hh}:${mm.toString().padStart(2, '0')}:${ss}` : `${mm}:${ss}`;
+};
 
 export function useMedia(mediaRef, emit = null) {
     // State
@@ -86,6 +95,11 @@ export function useMedia(mediaRef, emit = null) {
         duration.value = mediaRef.value.duration;
         volume.value = mediaRef.value.volume;
         isMuted.value = mediaRef.value.muted;
+        if (emit) emit('ready');
+    };
+
+    const onEnded = () => {
+        if (emit) emit('ended');
     };
 
     const onProgress = () => {
@@ -103,23 +117,31 @@ export function useMedia(mediaRef, emit = null) {
         ['playing', onPlaying],
         ['timeupdate', onTimeUpdate],
         ['loadedmetadata', onLoadedMetadata],
+        ['ended', onEnded],
         ['progress', onProgress]
     ];
 
-    onMounted(() => {
-        const el = mediaRef.value;
-        if (!el) return;
-        events.forEach(([evt, handler]) => el.addEventListener(evt, handler));
-    });
+    // Setup & Cleanup (Reactive to el changes)
+    watch(() => (mediaRef.value?.value || mediaRef.value), (newEl, oldEl) => {
+        if (oldEl) {
+            events.forEach(([evt, handler]) => oldEl.removeEventListener(evt, handler));
+        }
+        if (newEl) {
+            events.forEach(([evt, handler]) => newEl.addEventListener(evt, handler));
+            // Trigger initial metadata load if already ready
+            if (newEl.readyState >= 1) onLoadedMetadata();
+        }
+    }, { immediate: true });
 
     onUnmounted(() => {
-        const el = mediaRef.value;
-        if (!el) return;
-        events.forEach(([evt, handler]) => el.removeEventListener(evt, handler));
+        const el = (mediaRef.value?.value || mediaRef.value);
+        if (el) {
+            events.forEach(([evt, handler]) => el.removeEventListener(evt, handler));
+        }
     });
 
     return {
         isPlaying, isMuted, isWaiting, currentTime, duration, volume, playbackRate, buffered, loopRange,
-        togglePlay, seek, skip, setVolume, setPlaybackRate, toggleLoopPoint
+        togglePlay, seek, skip, setVolume, setPlaybackRate, toggleLoopPoint, formatTime
     };
 }

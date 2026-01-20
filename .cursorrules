@@ -79,9 +79,14 @@
 
 ## 5. 🧱 Modular Construction (Frontend Rules)
 
-*   **Store Pattern:** Complex state belongs in `Technologies/{Module}/Core/*Store.js`. Do not clutter Vue components with state logic.
-*   **Isolation:** Code in `Technologies/Manuscripter` must NOT depend on `Technologies/Player`. Keep modules decoupled.
-*   **Props over Fetch:** Components inside `Technologies` should receive data via Props from the Inertia Page, not fetch it themselves (unless lazy loading).
+*   **Standard Directory Structure:**
+    *   `Technologies/Store/`: (Shared) **GLOBAL** State used by multiple modules (e.g., `MediaStore.js`, `EntityStore.js`).
+    *   `Technologies/{Module}/Core/`: (Private) State/Logic specific ONLY to that module (e.g., `TiptapStore.js`).
+    *   `Technologies/{Module}/UI/`: (Private) Dumb Vue components specific to that module.
+    *   *(Optional)* `Technologies/{Module}/Extensions/`: For module-specific plugins (e.g., Tiptap extensions).
+    *   `Technologies/Common/`: (Shared) Domain-aware tools used across modules (e.g., `HierarchySidebar`).
+*   **Isolation:** Modules (e.g., `Manuscripter`) MUST NOT import from each other's directories. They communicate via Shared Stores (`Technologies/Store`) or Props.
+*   **Props over Fetch:** Components inside `Technologies` should receive data via Props from the Inertia Page. Data fetching inside components is strictly prohibited unless implementing "Lazy Loading".
 *   **Partial Pattern:** Shared UI fragments (Sidebars, Navs) MUST live in `resources/js/Layouts/Partials/` and be orchestrated by `AuthenticatedLayout.vue`.
 
 ---

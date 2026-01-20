@@ -143,6 +143,25 @@ const filmstripCount = computed(() => {
     return totalPages.value; 
 });
 
+// Safe filename extraction to prevent split() crash
+const currentFilename = computed(() => {
+    // getPageUrl uses shotNumber.value and version.value internally if we call it here
+    const url = getPageUrl(shotNumber.value, version.value);
+    if (!url || typeof url !== 'string') return 'N/A';
+    
+    try {
+        const parts = url.split('/');
+        const file = parts.pop();
+        if (!file) return 'N/A';
+        
+        const fileNameParts = file.split('.');
+        return fileNameParts[0] || 'N/A';
+    } catch (e) {
+        console.error('Error parsing manuscript filename:', e);
+        return 'N/A';
+    }
+});
+
 onMounted(() => {
     updateWidth();
     window.addEventListener('resize', updateWidth);
@@ -358,7 +377,7 @@ const totalPages = computed(() => {
                         
             <!-- Minimal Filename Overlay -->
             <div class="absolute bottom-4 right-4 bg-black/40 backdrop-blur px-2 py-1 rounded text-white/50 text-[10px] font-mono pointer-events-none">
-              {{ getPageUrl(shotNumber, version)?.split('/').pop()?.split('.')[0] || 'N/A' }}
+              {{ currentFilename }}
             </div>
           </div>
 

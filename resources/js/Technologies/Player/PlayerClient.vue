@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, inject } from 'vue';
-import DraggableMediaPlayer from './DraggableMediaPlayer.vue';
+import DraggableMediaPlayer from './MediaPlayer.vue';
 import { router } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -38,36 +38,47 @@ const currentSource = computed(() => {
     if (props.activeSlug && segments.value.length) {
         const activeSeg = segments.value.find(s => s.slug === props.activeSlug);
         if (activeSeg?.file_path) {
-            return `/storage/${activeSeg.file_path}`;
+            const path = `/storage/${activeSeg.file_path}`;
+            console.log('[PlayerClient] Using segment source:', path);
+            return path;
         }
     }
 
     // B. Fallback: Main Version File (Single File Mode)
     const mainFile = props.media?.versions?.[0]?.file_path || props.media?.file_path;
-    if (mainFile) return `/storage/${mainFile}`;
+    if (mainFile) {
+        const path = `/storage/${mainFile}`;
+        console.log('[PlayerClient] Using main file source:', path);
+        return path;
+    }
 
     // C. Fallback: Sample
-    return props.type === 'audio' 
+    const fallback = props.type === 'audio' 
         ? "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4" 
         : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+    console.log('[PlayerClient] Using fallback source:', fallback);
+    return fallback;
 });
 
 const currentPoster = computed(() => {
-    return props.media?.cover_path 
+    const poster = props.media?.cover_path 
         ? `/storage/${props.media.cover_path}` 
         : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg";
+    console.log('[PlayerClient] Poster:', poster);
+    return poster;
 });
 
 // --- Navigation ---
 const handleSegmentChange = (segment) => {
-    // Navigate via Inertia if needed, or just play
-    // Since DraggableMediaPlayer emits 'segment-change' but handles seeking internally for 'start/end',
-    // we might just want to support slug navigation if it's a separate file.
-    
-    // For now, simpler integration: 
-    // If the player asks to change segment (e.g. via playlist click), we can update the route if we want deep linking.
-    // DraggableMediaPlayer's playlist mostly invokes 'seek'.
+    // When a segment is clicked in the playlist, navigate to its content
+    if (segment.slug) {
+        router.visit(route('studio.show', { 
+            type: props.type, 
+            slug: segment.slug 
+        }));
+    }
 };
+
 
 // Handle closing the player (optional, maybe hide or navigate away)
 const closePlayer = () => {
@@ -92,5 +103,6 @@ const closePlayer = () => {
         :is-integrated="isIntegrated"
         @close="closePlayer"
         @toggle-dock="() => { toggleDock(); $emit('toggle-dock'); }"
+        @segment-change="handleSegmentChange"
     />
 </template>
