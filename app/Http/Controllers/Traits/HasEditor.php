@@ -30,7 +30,12 @@ trait HasEditor
         $service = app(EntityContentService::class);
         $data = $service->prepareEditorData($entity, $childSlug);
 
-        // توجيه الاستجابة إلى صفحة المحرر العامة
-        return Inertia::render('Editor/EditorPage', $data);
+        // توجيه الاستجابة إلى صفحة الأستوديو الموحدة
+        return Inertia::render('Technologies/Studio/StudioLayout', [
+            'type' => $data['editor_mode'],
+            'entity' => $data['entity'],
+            'editorContent' => $data['contentNode']?->content ?? '',
+            '_legacy' => $data // Pass full data bundle for store initialization
+        ]);
     }
 }

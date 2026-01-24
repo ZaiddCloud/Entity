@@ -31,7 +31,9 @@ const showSplitLayout = computed(() => {
 
 onMounted(() => {
     store.setEditorMode(props.type)
-    if (props._legacy?.entity) {
+    if (props._legacy?.resource_data) {
+        store.setResourceData(props._legacy.resource_data)
+    } else if (props._legacy?.entity) {
         store.setResourceData(props._legacy.entity)
     }
     
