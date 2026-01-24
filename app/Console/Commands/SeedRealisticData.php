@@ -367,7 +367,7 @@ class SeedRealisticData extends Command
                             'content' => '<p>مقدمة للكتاب الفرعي...</p>',
                             'json_content' => $this->generateJsonContent('<p>مقدمة للكتاب الفرعي...</p>'),
                             'plain_text' => 'مقدمة للكتاب الفرعي...',
-                            'slug' => 'sub-book-' . $sb . '-' . substr($entity->slug, 0, 4),
+                            'slug' => 'sub-book-' . $sb . '-' . mb_substr($entity->slug, 0, 4),
                             'order' => $sb,
                         ]);
 
@@ -381,7 +381,7 @@ class SeedRealisticData extends Command
                                 'content' => '<p>مقدمة الجزء...</p>',
                                 'json_content' => $this->generateJsonContent('<p>مقدمة الجزء...</p>'),
                                 'plain_text' => 'مقدمة الجزء...',
-                                'slug' => 'part-' . $p . '-sb-' . $sb . '-' . substr($entity->slug, 0, 4),
+                                'slug' => 'part-' . $p . '-sb-' . $sb . '-' . mb_substr($entity->slug, 0, 4),
                                 'order' => $p
                             ]);
 
@@ -395,7 +395,7 @@ class SeedRealisticData extends Command
                                     'content' => "<p>هذا هو محتوى الفصل رقم {$c}. يحتوي على نصوص وتفريعات.</p>",
                                     'json_content' => $this->generateJsonContent("<p>هذا هو محتوى الفصل رقم {$c}. يحتوي على نصوص وتفريعات.</p>"),
                                     'plain_text' => "هذا هو محتوى الفصل رقم {$c}. يحتوي على نصوص وتفريعات.",
-                                    'slug' => 'chapter-' . $c . '-p-' . $p . '-' . substr($entity->slug, 0, 4),
+                                    'slug' => 'chapter-' . $c . '-p-' . $p . '-' . mb_substr($entity->slug, 0, 4),
                                     'order' => $c
                                 ]);
                             }
@@ -408,7 +408,7 @@ class SeedRealisticData extends Command
                         $contentService->createNode($entity, [
                             'type' => 'page',
                             'title' => 'الصفحة ' . ($pageTitles[$p] ?? $p),
-                            'slug' => "page-{$p}-" . substr($entity->slug, 0, 4),
+                            'slug' => "page-{$p}-" . mb_substr($entity->slug, 0, 4),
                             'content' => "<p>محتوى الصفحة {$p} من المخطوطة " . $entity->title . "...</p>",
                             'json_content' => $this->generateJsonContent("<p>محتوى الصفحة {$p} من المخطوطة " . $entity->title . "...</p>"),
                             'plain_text' => "محتوى الصفحة {$p} من المخطوطة " . $entity->title . "...",
@@ -420,7 +420,7 @@ class SeedRealisticData extends Command
                     $contentService->createNode($entity, [
                         'type' => 'segment',
                         'title' => 'المقطع الأول',
-                        'slug' => 'segment-1-' . substr($entity->slug, 0, 4),
+                        'slug' => 'segment-1-' . mb_substr($entity->slug, 0, 4),
                         'content' => '<p>تفريغ نصي للمقطع الأول...</p>',
                         'json_content' => $this->generateJsonContent('<p>تفريغ نصي للمقطع الأول...</p>'),
                         'plain_text' => 'تفريغ نصي للمقطع الأول...',
@@ -431,7 +431,7 @@ class SeedRealisticData extends Command
                     $contentService->createNode($entity, [
                         'type' => 'scene',
                         'title' => 'المشهد الأول',
-                        'slug' => 'scene-1-' . substr($entity->slug, 0, 4),
+                        'slug' => 'scene-1-' . mb_substr($entity->slug, 0, 4),
                         'content' => '<p>وصف ومحتوى المشهد الأول...</p>',
                         'json_content' => $this->generateJsonContent('<p>وصف ومحتوى المشهد الأول...</p>'),
                         'plain_text' => 'وصف ومحتوى المشهد الأول...',

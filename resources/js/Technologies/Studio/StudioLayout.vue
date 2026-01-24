@@ -61,19 +61,16 @@ const saveStatusText = computed(() => {
 })
 
 const fetchFullTranscript = () => {
+    console.log('StudioLayout entity:', props.entity)
     const children = props.entity.children || []
-    if (children.length === 0) {
-        alert('لا توجد مقاطع تفريغ أو صفحات متاحة لهذا العمل.')
-        return
-    }
 
     const typeLabel = props.type === 'manuscript' ? 'كامل صفحات المخطوط' : 'كامل التفريغ النصي للملف';
-    if (!confirm(`سيتم استبدال المحتوى الحالي بـ ${typeLabel}. هل أنت متأكد؟`)) {
-        return
-    }
+    // if (!confirm(`سيتم استبدال المحتوى الحالي بـ ${typeLabel}. هل أنت متأكد؟`)) {
+    //    return
+    // }
 
     // Sort nodes by order
-    const sortedNodes = [...children].sort((a, b) => (a.order || 0) - (b.order || 0))
+    const sortedNodes = Array.from(children).sort((a, b) => (a.order || 0) - (b.order || 0))
 
     let fullTranscript = ''
     let lastHeader = null
@@ -110,6 +107,7 @@ const fetchFullTranscript = () => {
         fullTranscript += content
     })
 
+    console.log('Final Full Transcript Length:', fullTranscript.length)
     store.updateContent(fullTranscript)
 }
 </script>

@@ -185,7 +185,48 @@ class UnifiedEditorController extends Controller
             default => 'entity_id'
         };
 
-        return $entityModel::with('children')->findOrFail($node->$foreignKey);
+        $entity = $entityModel::findOrFail($node->$foreignKey);
+
+        // Manually load children for Mongo-Hybrid relations if needed
+        // Since we removed HybridRelations from Entity, standard eager loading fails for Mongo children
+        if (in_array($type, ['manuscript', 'audio', 'video'])) {
+            $childrenModel = match ($type) {
+                'manuscript' => ManuscriptPage::class,
+                'audio' => AudioSegment::class,
+                'video' => VideoSegment::class,
+                default => null
+            };
+
+            if ($childrenModel) {
+                // Fetch children directly from Mongo
+                $children = $childrenModel::where($foreignKey, $entity->id)
+                    ->orderBy('order', 'asc')
+                    ->get();
+                
+             $entity->setRelation('children', $children);
+             \Illuminate\Support\Facades\Log::info("UnifiedEditorController: Manually loaded {$children->count()} children");
+             \Illuminate\Support\Facades\Log::info("Serialized Entity Keys: " . implode(',', array_keys($entity->toArray())));
+             if(isset($entity->toArray()['children'])) {
+                 \Illuminate\Support\Facades\Log::info("Children in serialized: " . count($entity->toArray()['children']));
+             } else {
+                 \Illuminate\Support\Facades\Log::info("Children MISSING in serialized array");
+             }
+            }
+        } 
+        // For Book (if BookChild is Mongo), we should also load manually or check if it works via standard relation
+        // Assuming BookChild is also Mongo based on previous checks
+        elseif ($type === 'book') {
+             $children = BookChild::where('book_id', $entity->id)
+                ->orderBy('order', 'asc')
+                ->get();
+             $entity->setRelation('children', $children);
+        }
+        else {
+             // Fallback for standard SQL-SQL
+             $entity->load('children');
+        }
+
+        return $entity;
     }
 
     /**

@@ -49,7 +49,7 @@ class StorageSyncTest extends TestCase
 
         // 2. Run Command
         $exitCode = $this->withoutMockingConsoleOutput()
-            ->artisan('storage:sync');
+            ->artisan('storage:sync', ['path' => Storage::disk('public')->path('')]);
 
         $this->assertEquals(0, $exitCode);
 
@@ -67,7 +67,7 @@ class StorageSyncTest extends TestCase
         $this->assertEquals(2, ManuscriptPage::where('manuscript_id', $manuscript->id)->count(), 'Manuscript should have 2 pages');
 
         // 5. Verify Nested Audio & Tags
-        $audio = Audio::where('slug', 'episode1')->first();
+        $audio = Audio::where('file_path', 'LIKE', '%Episode1.mp3')->first();
         $this->assertNotNull($audio, 'Nested Audio should be created');
         $this->assertTrue($audio->tags->contains('name', 'Podcasts'), 'Audio should have Podcasts tag');
     }

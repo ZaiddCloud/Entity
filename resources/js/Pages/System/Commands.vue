@@ -43,7 +43,7 @@ const handleImport = () => {
 };
 
 const handleSync = () => {
-    runCommand('project:sync-storage', { path: syncForm.value.path });
+    runCommand('storage:sync', { path: syncForm.value.path });
 };
 
 </script>
@@ -94,7 +94,7 @@ const handleSync = () => {
                         <span class="text-2xl">🔄</span>
                         <div>
                             <div class="font-bold">مزامنة الملفات</div>
-                            <div class="text-xs opacity-60">project:sync-storage</div>
+                            <div class="text-xs opacity-60">storage:sync</div>
                         </div>
                     </button>
                     

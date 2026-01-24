@@ -24,7 +24,7 @@ class SystemController extends Controller
         // Whitelist allowed commands for security
         $allowedCommands = [
             'media:import-transcripts',
-            'project:sync-storage',
+            'storage:sync',
             'project:seed-realistic',
             'optimize:clear'
         ];

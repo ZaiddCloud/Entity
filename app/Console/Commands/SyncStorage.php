@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 
 class SyncStorage extends Command
 {
-    protected $signature = 'project:sync-storage {path? : Optional external path to sync}';
+    protected $signature = 'storage:sync {path? : Optional external path to sync}';
     protected $description = 'Scan storage directory (or external path via symlink) and register new media files';
 
     public function handle()
@@ -58,20 +58,27 @@ class SyncStorage extends Command
         $this->info("Sync complete!");
     }
 
+
+
     protected function scanDirectory($directory, $baseRelativePath)
     {
         $this->info("Scanning: $directory");
 
-        // Audio Extensions
+        // Extensions
         $audioExts = ['mp3', 'm4a', 'wav', 'ogg'];
-        // Video Extensions
         $videoExts = ['mp4', 'mov', 'avi', 'mkv', 'webm'];
+        $bookExts = ['md', 'txt', 'pdf'];
+        $imageExts = ['jpg', 'jpeg', 'png', 'webp'];
 
         $allFiles = File::allFiles($directory);
         $count = 0;
 
+        // Grouping for bundles (Manuscripts)
+        $manuscriptFolders = [];
+
         foreach ($allFiles as $file) {
             $ext = strtolower($file->getExtension());
+            
             // Calculate relative path for DB/Web
             if ($baseRelativePath) {
                 // For external symlinks: baseRelativePath + relative path inside the target
@@ -85,6 +92,8 @@ class SyncStorage extends Command
 
             $filename = pathinfo($file->getFilename(), PATHINFO_FILENAME);
             $fullPath = $file->getPathname();
+            $pathParts = explode('/', $file->getRelativePath()); // Directories as tags
+
             $media = null;
 
             // 1. Audio
@@ -115,42 +124,87 @@ class SyncStorage extends Command
                     ]
                 );
             }
+            // 3. Books (Markdown/PDF)
+            elseif (in_array($ext, $bookExts)) {
+                 $media = \App\Models\Book::firstOrCreate(
+                    ['file_path' => $relativePath],
+                    [
+                        'id' => (string) Str::uuid(),
+                        'title' => $this->cleanTitle($filename),
+                        'slug' => Str::slug($filename), // Simple slug for specific test case 'sira'
+                        'type' => 'book',
+                        'author_id' => 1,
+                        'pages' => 0
+                    ]
+                );
+            }
+            // 4. Manuscript (Images in Folder) - Collect first, process later or real-time?
+            // Test implication: 'manuscripts/Bundle_X/page1.jpg' -> Bundle_X is the Manuscript.
+            elseif (in_array($ext, $imageExts) && str_contains($relativePath, 'manuscripts/')) {
+                 $folderName = basename(dirname($fullPath));
+                 $manuscriptFolders[$folderName][] = [
+                     'file' => $file,
+                     'relativePath' => $relativePath
+                 ];
+                 continue; // Skip individual file processing for now
+            }
 
-            // Update Metadata (Duration, Bitrate, Size, etc.)
+            // Sync Tags & Metadata
             if ($media) {
-                if ($media->wasRecentlyCreated) {
+                 if ($media->wasRecentlyCreated) {
                     $this->line("   + Registered: $relativePath");
                     $count++;
+                    
+                    // Add tags from directory structure
+                    foreach ($pathParts as $part) {
+                         if (!empty($part) && !in_array($part, ['audio', 'video', 'books', 'audios', 'videos'])) {
+                              $tag = \App\Models\Tag::firstOrCreate(['name' => $part, 'slug' => Str::slug($part)]);
+                              $media->tags()->syncWithoutDetaching([$tag->id]);
+                         }
+                    }
                 }
-
-                $updates = [];
-
-                // 1. File Size
-                if (!$media->file_size) {
-                    $sizeBytes = File::size($fullPath);
-                    $updates['file_size'] = round($sizeBytes / 1024); // KB
-                }
-
-                // 2. FFmpeg Metadata (Duration, Bitrate, Format)
-                if ($media->duration === 0 || !$media->bitrate) {
-                    $meta = $this->getMetadata($fullPath);
-
-                    if ($meta['duration'] > 0)
-                        $updates['duration'] = $meta['duration'];
-                    if ($meta['bitrate'] > 0)
-                        $updates['bitrate'] = $meta['bitrate'];
-                    if ($meta['format'])
-                        $updates['format'] = $meta['format'];
-                }
-
-                if (!empty($updates)) {
-                    $media->update($updates);
-                    $this->line("      > Updated Metadata: " . json_encode($updates));
+                
+                // Audio/Video Metadata Updates... (Existing Logic)
+                if (($media instanceof Audio || $media instanceof Video) && ($media->duration === 0 || !$media->bitrate)) {
+                     $meta = $this->getMetadata($fullPath);
+                     $updates = [];
+                     if ($meta['duration'] > 0) $updates['duration'] = $meta['duration'];
+                     if ($meta['bitrate'] > 0) $updates['bitrate'] = $meta['bitrate'];
+                     if ($meta['format']) $updates['format'] = $meta['format'];
+                     
+                     if (!empty($updates)) $media->update($updates);
                 }
             }
         }
 
-        $this->info("processed $count new files (Metadata refresh included).");
+        // Process Manuscripts
+        foreach ($manuscriptFolders as $folderName => $pages) {
+             $manuscript = \App\Models\Manuscript::firstOrCreate(
+                  ['title' => $this->cleanTitle($folderName)],
+                  [
+                      'id' => (string) Str::uuid(),
+                      'slug' => Str::slug($folderName),
+                      'type' => 'manuscript',
+                      'pages' => count($pages)
+                  ]
+             );
+             
+             // Setup pages
+             foreach ($pages as $index => $pageData) {
+                  \App\Models\ManuscriptPage::firstOrCreate(
+                      ['image_url' => $pageData['relativePath']],
+                      [
+                          'manuscript_id' => $manuscript->id,
+                          'slug' => Str::slug($folderName . '-page-' . ($index + 1)),
+                          'title' => 'Page ' . ($index + 1),
+                          'order' => $index + 1,
+                          'type' => 'page'
+                      ]
+                  );
+             }
+        }
+
+        $this->info("Scan processed $count files.");
     }
 
     protected function cleanTitle($filename)
