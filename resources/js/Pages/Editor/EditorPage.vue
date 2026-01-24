@@ -130,6 +130,7 @@ const handleToolbarCommand = ({ command, value }) => {
     <div class="bg-white shadow-xl min-h-[1100px] border border-gray-200 rounded-sm overflow-hidden mb-20 relative">
       <TiptapEditor 
         v-if="store.editorMode === 'book' || store.editorMode === 'manuscript'"
+        :key="store.contentVersion"
         ref="editorRef"
         v-model="store.content"
         @set-editor="store.setEditor"

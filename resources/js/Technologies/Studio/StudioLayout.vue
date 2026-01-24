@@ -63,36 +63,48 @@ const saveStatusText = computed(() => {
 const fetchFullTranscript = () => {
     const children = props.entity.children || []
     if (children.length === 0) {
-        alert('لا توجد مقاطع تفريغ متاحة لهذا العمل.')
+        alert('لا توجد مقاطع تفريغ أو صفحات متاحة لهذا العمل.')
         return
     }
 
-    if (!confirm('سيتم استبدال المحتوى الحالي بكامل التفريغ النصي للملف الصوتي. هل أنت متأكد؟')) {
+    const typeLabel = props.type === 'manuscript' ? 'كامل صفحات المخطوط' : 'كامل التفريغ النصي للملف';
+    if (!confirm(`سيتم استبدال المحتوى الحالي بـ ${typeLabel}. هل أنت متأكد؟`)) {
         return
     }
 
-    // Sort segments by order
-    const sortedSegments = [...children].sort((a, b) => (a.order || 0) - (b.order || 0))
+    // Sort nodes by order
+    const sortedNodes = [...children].sort((a, b) => (a.order || 0) - (b.order || 0))
 
     let fullTranscript = ''
-    let lastSpeaker = null
+    let lastHeader = null
 
-    sortedSegments.forEach((child) => {
-        const currentSpeaker = child.metadata?.speaker || child.title || 'متحدث'
-        let content = child.content || ''
-        
-        // Clean up: If the content already starts with the speaker's name/title (as in our import logic),
-        // we strip it to avoid the "Speaker: Speaker: text" redundancy.
-        const speakerHeaderPattern = new RegExp(`^<p><strong>${currentSpeaker}</strong></p>|^<strong>${currentSpeaker}</strong>\n?`, 'i');
-        content = content.replace(speakerHeaderPattern, '').trim();
+    sortedNodes.forEach((child) => {
+        let currentHeader = null;
+        let content = child.content || '';
 
-        // Only add speaker header if it changed from the previous entry
-        if (currentSpeaker !== lastSpeaker) {
-            // Add a vertical space before a new speaker (except the very first one)
-            if (lastSpeaker !== null) fullTranscript += '<p><br/></p>'
+        if (props.type === 'audio' || props.type === 'video') {
+            currentHeader = child.metadata?.speaker || child.title || (props.type === 'audio' ? 'متحدث' : 'مشهد');
             
-            fullTranscript += `<p><strong>${currentSpeaker}:</strong></p>`
-            lastSpeaker = currentSpeaker
+            // Clean up: avoid "Speaker: Speaker: text" redundancy
+            const headerPattern = new RegExp(`^<p><strong>${currentHeader}</strong></p>|^<strong>${currentHeader}</strong>\n?`, 'i');
+            content = content.replace(headerPattern, '').trim();
+        } else if (props.type === 'manuscript') {
+            // Use folio number as header for manuscripts
+            currentHeader = child.title || `الصفحة ${child.order || '?'}`;
+        }
+
+        // Add header if it changed or if it's a manuscript (always header per page)
+        if (currentHeader !== lastHeader || props.type === 'manuscript') {
+            // Add vertical space before new header (except first one)
+            if (lastHeader !== null) fullTranscript += '<p><br/></p>'
+            
+            fullTranscript += `<p><strong>${currentHeader}:</strong></p>`
+            lastHeader = currentHeader
+        }
+
+        // Add description for video if content is empty
+        if (props.type === 'video' && !content && child.description) {
+            content = `<p>${child.description}</p>`;
         }
 
         fullTranscript += content
@@ -136,9 +148,9 @@ const fetchFullTranscript = () => {
 
       <!-- Actions -->
       <div class="flex items-center gap-3">
-        <!-- Full Transcript Button (Only for Audio/Video) -->
+        <!-- Full Transcript Button (Supported for all types now) -->
         <button 
-            v-if="['audio', 'video'].includes(props.type)"
+            v-if="['audio', 'video', 'manuscript'].includes(props.type)"
             class="hidden md:flex items-center gap-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-[11px] px-2.5 py-1.5 rounded border border-gray-700 transition-all"
             title="جلب كافة مقاطع التفريغ إلى المحرر"
             @click="fetchFullTranscript"

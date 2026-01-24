@@ -64,6 +64,7 @@ const handleCommand = ({ command, value }) => {
         </div>
 
         <TiptapEditor
+          :key="store.contentVersion"
           v-model="store.content"
           @set-editor="store.setEditor"
         />

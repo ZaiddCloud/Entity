@@ -51,7 +51,7 @@ class EntityLifecycleObserver
      */
     private function generateUniqueSlug(string $title, $entity): string
     {
-        $slug = Str::slug($title, '-', null);
+        $slug = \App\Helpers\SlugHelper::arabicSlug($title);
         $originalSlug = $slug;
         $count = 1;
 

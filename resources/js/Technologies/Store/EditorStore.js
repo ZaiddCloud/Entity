@@ -14,6 +14,7 @@ export const useEditorStore = defineStore('editor', () => {
     const resourceData = ref(null)
     const hierarchy = ref([])
     const navigation = ref({ prev: null, next: null })
+    const contentVersion = ref(0)
 
     // Getters
     const documentTitle = computed(() => currentContentNode.value?.title || 'مستند جديد')
@@ -33,10 +34,12 @@ export const useEditorStore = defineStore('editor', () => {
         content.value = contentNode.content || ''
         hierarchy.value = hierarchyData
         navigation.value = navigationData
+        contentVersion.value = 0
     }
 
     const updateContent = (newContent) => {
         content.value = newContent
+        contentVersion.value++
     }
 
     const togglePin = () => {
@@ -129,6 +132,7 @@ export const useEditorStore = defineStore('editor', () => {
         setEditor, loadDocument, updateContent, togglePin,
         executeCommand, isActive,
         setEditorMode, setResourceData, setTitle,
-        addMediaNode, removeMediaNode
+        addMediaNode, removeMediaNode,
+        contentVersion
     }
 })
