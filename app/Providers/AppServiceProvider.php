@@ -17,7 +17,7 @@ use App\Models\Series;
 use App\Observers\EntityAuditObserver;
 use App\Observers\EntityCacheObserver;
 use App\Observers\EntityLifecycleObserver;
-use App\Observers\BookObserver;
+use App\Observers\EntityContentObserver;
 use App\Models\BookChild;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Event;
@@ -50,6 +50,12 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Video::class, EntityPolicy::class);
         Gate::policy(Audio::class, EntityPolicy::class);
         Gate::policy(Manuscript::class, EntityPolicy::class);
+        Gate::policy(\App\Models\Author::class, EntityPolicy::class);
+        Gate::policy(\App\Models\Category::class, EntityPolicy::class);
+        Gate::policy(\App\Models\Tag::class, EntityPolicy::class);
+        Gate::policy(\App\Models\Publisher::class, EntityPolicy::class);
+        Gate::policy(\App\Models\Series::class, EntityPolicy::class);
+        Gate::policy(\App\Models\Topic::class, EntityPolicy::class);
 
         Book::flushEventListeners();
         Video::flushEventListeners();
@@ -102,6 +108,7 @@ class AppServiceProvider extends ServiceProvider
         $lifecycleObserver = app(EntityLifecycleObserver::class);
         $auditObserver = app(EntityAuditObserver::class);
         $cacheObserver = app(EntityCacheObserver::class);
+        $contentObserver = app(EntityContentObserver::class);
 
         // قائمة الموديلات التي تحتاج observers
         $entityModels = [
@@ -116,14 +123,14 @@ class AppServiceProvider extends ServiceProvider
             $modelClass::observe($lifecycleObserver);
             $modelClass::observe($auditObserver);
             $modelClass::observe($cacheObserver);
+            $modelClass::observe($contentObserver);
         }
 
         // تسجيل cache observer فقط لـ Tag و Category
         Tag::observe($cacheObserver);
         Category::observe($cacheObserver);
 
-        // تسجيل BookObserver لمزامنة الحذف مع MongoDB
-        Book::observe(BookObserver::class);
+
     }
 
     /**

@@ -1,94 +1,199 @@
-<script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+<template>
+  <AuthenticatedLayout :title="'تصنيف: ' + category.name">
+    <!-- Premium Hero Section -->
+    <template #header>
+      <div class="relative overflow-hidden bg-emerald-700 rounded-[2.5rem] p-12 text-white shadow-2xl shadow-emerald-900/40">
+        <!-- Abstract Background Elements -->
+        <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl" />
+        <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-lime-400/10 rounded-full blur-3xl" />
 
-defineProps({
+        <div class="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+          <div class="flex items-center gap-6">
+            <div class="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-xl flex items-center justify-center text-4xl border border-white/20 shadow-inner">
+              <svg
+                class="w-10 h-10 text-lime-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              ><path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2zm5-3a2 2 0 100 4 2 2 0 000-4z"
+              /></svg>
+            </div>
+            <div>
+              <div class="flex items-center gap-3 flex-wrap">
+                <h1 class="text-4xl font-black tracking-tight">
+                  {{ category.name }}
+                </h1>
+                <Badge
+                  color="emerald"
+                  class="bg-emerald-500/30 text-emerald-100 border-emerald-400/30"
+                >
+                  تصنيف هيكلي
+                </Badge>
+              </div>
+              <div class="mt-4 flex flex-wrap items-center gap-6 text-emerald-100/80 text-sm font-bold uppercase tracking-widest">
+                <div
+                  v-if="category.parent"
+                  class="flex items-center gap-2"
+                >
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  ><path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  /></svg>
+                  <span>التصنيف الأعلى: {{ category.parent.name }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  ><path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  /></svg>
+                  <span>إجمالي المحتوى: {{ totalContent }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <Link :href="route('categories.edit', category.id)">
+              <PrimaryButton class="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-md">
+                تعديل بيانات التصنيف
+              </PrimaryButton>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <div class="space-y-12 py-8">
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <Card class="bg-emerald-50/50 dark:bg-emerald-500/5 border-emerald-100 dark:border-emerald-500/10">
+          <div class="flex flex-col items-center text-center p-2">
+            <div class="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-2">
+              كتب
+            </div>
+            <div class="text-3xl font-black text-emerald-900 dark:text-white">
+              {{ category.books_count }}
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div class="flex flex-col items-center text-center p-2">
+            <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+              صوتيات
+            </div>
+            <div class="text-3xl font-black text-gray-900 dark:text-white">
+              {{ category.audio_count }}
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div class="flex flex-col items-center text-center p-2">
+            <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+              مرئيات
+            </div>
+            <div class="text-3xl font-black text-gray-900 dark:text-white">
+              {{ category.videos_count }}
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div class="flex flex-col items-center text-center p-2">
+            <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+              مخطوطات
+            </div>
+            <div class="text-3xl font-black text-gray-900 dark:text-white">
+              {{ category.manuscripts_count }}
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Description -->
+        <div class="lg:col-span-2">
+          <Card class="h-full">
+            <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+              <span class="w-1 h-4 bg-emerald-500 rounded-full" />
+              الوصف والتعريف
+            </h3>
+            <p class="text-gray-600 dark:text-gray-300 leading-relaxed italic">
+              {{ category.description || 'لا يوجد وصف متاح لهذا التصنيف حالياً.' }}
+            </p>
+          </Card>
+        </div>
+
+        <!-- Sub-categories -->
+        <div v-if="category.children?.length > 0">
+          <div class="space-y-4">
+            <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+              <span class="w-1 h-4 bg-lime-500 rounded-full" />
+              التصنيفات الفرعية ({{ category.children.length }})
+            </h3>
+            <div class="space-y-3">
+              <Link
+                v-for="child in category.children"
+                :key="child.id"
+                :href="route('categories.show', child.id)"
+              >
+                <Card class="!p-4 hover:border-emerald-500 group transition-all cursor-pointer">
+                  <div class="flex items-center justify-between">
+                    <span class="font-black text-gray-900 dark:text-white group-hover:text-emerald-600">{{ child.name }}</span>
+                    <svg
+                      class="w-4 h-4 text-gray-300 group-hover:text-emerald-500 transition-transform group-hover:translate-x-[-4px]"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    ><path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5l7 7-7 7"
+                    /></svg>
+                  </div>
+                </Card>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </AuthenticatedLayout>
+</template>
+
+<script setup>
+import { computed } from 'vue';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { Link } from '@inertiajs/vue3';
+import Card from '@/Components/Card.vue';
+import Badge from '@/Components/Badge.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+
+const props = defineProps({
     category: Object,
 });
+
+const totalContent = computed(() => {
+    return (props.category.books_count || 0) +
+           (props.category.audio_count || 0) +
+           (props.category.videos_count || 0) +
+           (props.category.manuscripts_count || 0);
+});
 </script>
-
-<template>
-    <AuthenticatedLayout :title="category.name">
-        <template #header>
-            <div class="flex justify-between items-center">
-                <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                    تفاصيل التصنيف: {{ category.name }}
-                </h2>
-                <div class="flex space-x-2 space-x-reverse">
-                    <Link
-                        :href="route('categories.edit', category.id)"
-                        class="px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-900 focus:outline-none focus:border-green-900 focus:ring ring-green-300 transition duration-150 ease-in-out"
-                    >
-                        تعديل
-                    </Link>
-                    <Link
-                        :href="route('categories.index')"
-                        class="px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:border-gray-900 focus:ring ring-gray-300 transition duration-150 ease-in-out"
-                    >
-                        العودة للقائمة
-                    </Link>
-                </div>
-            </div>
-        </template>
-
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900 dark:text-gray-100">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">المعلومات الأساسية</h3>
-                                <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-                                    <div class="sm:col-span-1">
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">الاسم</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ category.name }}</dd>
-                                    </div>
-                                    <div class="sm:col-span-1">
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">التصنيف الأب</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ category.parent?.name || 'لا يوجد' }}</dd>
-                                    </div>
-                                    <div class="sm:col-span-2">
-                                        <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">الوصف</dt>
-                                        <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ category.description || 'لا يوجد وصف' }}</dd>
-                                    </div>
-                                </dl>
-                            </div>
-                            
-                            <div>
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">التصنيفات الفرعية</h3>
-                                <ul class="list-disc list-inside space-y-2">
-                                    <li v-for="child in category.children" :key="child.id">
-                                        <Link :href="route('categories.show', child.id)" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400">{{ child.name }}</Link>
-                                    </li>
-                                    <li v-if="!category.children.length" class="text-sm text-gray-400 italic">لا يوجد تصنيفات فرعية</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div class="mt-10 border-t border-gray-200 dark:border-gray-700 pt-8">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">المحتويات المرتبطة</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                    <h4 class="font-semibold mb-2">الكتب</h4>
-                                    <p class="text-2xl">{{ category.books.length }}</p>
-                                </div>
-                                <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                    <h4 class="font-semibold mb-2">الصوتيات</h4>
-                                    <p class="text-2xl">{{ category.audio.length }}</p>
-                                </div>
-                                <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                    <h4 class="font-semibold mb-2">المرئيات</h4>
-                                    <p class="text-2xl">{{ category.videos.length }}</p>
-                                </div>
-                                <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                    <h4 class="font-semibold mb-2">المخطوطات</h4>
-                                    <p class="text-2xl">{{ category.manuscripts.length }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </AuthenticatedLayout>
-</template>

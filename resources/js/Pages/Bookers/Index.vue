@@ -1,124 +1,225 @@
 <template>
-    <AuthenticatedLayout title="المساهمون">
-        <template #header>
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl bg-cyan-50 dark:bg-cyan-500/10 flex items-center justify-center text-cyan-600 dark:text-cyan-400 shadow-sm">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+  <AuthenticatedLayout title="المساهمون">
+    <template #header>
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-2xl bg-cyan-50 dark:bg-cyan-500/10 flex items-center justify-center text-cyan-600 dark:text-cyan-400 shadow-sm">
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+            /></svg>
+          </div>
+          <div>
+            <h2 class="font-black text-2xl dark:text-white leading-tight">
+              فريق العمل والمساهمون
+            </h2>
+            <p class="text-xs text-gray-400 font-bold mt-1">
+              إدارة بيانات المحققين، المترجمين، وكافة المساهمين
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+          <button
+            v-if="selectedIds.length > 0"
+            class="px-6 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black text-xs transition-all shadow-xl shadow-rose-500/20 active:scale-95"
+            @click="bulkDelete"
+          >
+            حذف المحدد ({{ selectedIds.length }})
+          </button>
+          <Link
+            :href="route('bookers.create')"
+            class="flex-1 sm:flex-none px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black text-xs transition-all shadow-xl shadow-indigo-500/20 active:scale-95 text-center"
+          >
+            إضافة مساهم جديد
+          </Link>
+        </div>
+      </div>
+    </template>
+
+    <div class="space-y-8">
+      <!-- Search Bubble -->
+      <div class="bg-white dark:bg-[#0a0a0a] border border-gray-100 dark:border-white/5 rounded-[2.5rem] p-8 shadow-sm">
+        <div class="flex flex-wrap gap-4 items-center">
+          <div class="flex-1 min-w-[300px] relative group">
+            <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors">
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              ><path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              /></svg>
+            </div>
+            <input
+              id="booker-search-input"
+              v-model="search"
+              name="q"
+              type="text"
+              placeholder="بحث عن مساهم..."
+              class="w-full pr-12 pl-4 py-3 bg-gray-50 dark:bg-white/5 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-black focus:ring-4 focus:ring-indigo-500/10 rounded-2xl text-sm font-medium transition-all"
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Table View -->
+      <div class="bg-white dark:bg-[#0a0a0a] border border-gray-100 dark:border-white/5 rounded-[2.5rem] shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-100 dark:divide-white/5">
+            <thead class="bg-gray-50/50 dark:bg-white/2">
+              <tr>
+                <th
+                  scope="col"
+                  class="px-8 py-5 text-right"
+                >
+                  <input
+                    id="bookers-select-all"
+                    v-model="allSelected"
+                    name="select_all"
+                    type="checkbox"
+                    class="rounded-lg border-gray-300 dark:border-white/10 dark:bg-black text-indigo-600 shadow-sm focus:ring-indigo-500"
+                  >
+                </th>
+                <th
+                  scope="col"
+                  class="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest"
+                >
+                  المساهم
+                </th>
+                <th
+                  scope="col"
+                  class="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest text-center"
+                >
+                  أدوار شائعة
+                </th>
+                <th
+                  scope="col"
+                  class="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest"
+                >
+                  المشاركات العلمية
+                </th>
+                <th
+                  scope="col"
+                  class="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest"
+                >
+                  الإجراءات
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50 dark:divide-white/5">
+              <tr
+                v-for="booker in bookers.data"
+                :key="booker.id"
+                class="group hover:bg-gray-50/50 dark:hover:bg-white/2 transition-colors"
+              >
+                <td class="px-8 py-6 whitespace-nowrap">
+                  <input
+                    :id="'booker-select-' + booker.id"
+                    v-model="selectedIds"
+                    name="selected_ids[]"
+                    type="checkbox"
+                    :value="booker.id"
+                    class="rounded-lg border-gray-300 dark:border-white/10 dark:bg-black text-indigo-600 shadow-sm focus:ring-indigo-500"
+                  >
+                </td>
+                <td class="px-8 py-6 whitespace-nowrap">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 flex items-center justify-center text-xs font-black text-cyan-600">
+                      {{ booker.name.substring(0, 1) }}
                     </div>
                     <div>
-                        <h2 class="font-black text-2xl dark:text-white leading-tight">فريق العمل والمساهمون</h2>
-                        <p class="text-xs text-gray-400 font-bold mt-1">إدارة بيانات المحققين، المترجمين، وكافة المساهمين</p>
+                      <div class="text-sm font-black text-gray-900 dark:text-white">
+                        {{ booker.name }}
+                      </div>
+                      <div class="text-[10px] text-gray-400 font-bold mt-1 uppercase tracking-tighter">
+                        ID: {{ booker.id.substring(0, 8) }}...
+                      </div>
                     </div>
-                </div>
-                <div class="flex items-center gap-3 w-full sm:w-auto">
-                    <button
-                        v-if="selectedIds.length > 0"
-                        @click="bulkDelete"
-                        class="px-6 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black text-xs transition-all shadow-xl shadow-rose-500/20 active:scale-95"
-                    >
-                        حذف المحدد ({{ selectedIds.length }})
-                    </button>
+                  </div>
+                </td>
+                <td class="px-8 py-6 whitespace-nowrap text-center">
+                  <div class="flex flex-wrap justify-center gap-1">
+                    <span class="px-2 py-0.5 bg-gray-100 dark:bg-white/5 rounded-md text-[9px] font-black text-gray-500 border border-gray-200 dark:border-white/10">مساهم نظام</span>
+                  </div>
+                </td>
+                <td class="px-8 py-6 whitespace-nowrap">
+                  <div class="flex items-center gap-3">
+                    <div class="flex flex-col">
+                      <span class="text-[10px] font-black text-gray-400 uppercase tracking-tighter">كتب: {{ booker.books_count }}</span>
+                      <span class="text-[10px] font-black text-gray-400 uppercase tracking-tighter mt-1">صوتيات: {{ booker.audios_count }}</span>
+                    </div>
+                    <div class="h-8 w-px bg-gray-100 dark:bg-white/5" />
+                    <div class="flex flex-col">
+                      <span class="text-[10px] font-black text-gray-400 uppercase tracking-tighter">مرئيات: {{ booker.videos_count }}</span>
+                      <span class="text-[10px] font-black text-gray-400 uppercase tracking-tighter mt-1">مخطوطات: {{ booker.manuscripts_count }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-8 py-6 whitespace-nowrap text-left text-sm font-medium">
+                  <div class="flex items-center justify-end gap-2">
                     <Link
-                        :href="route('bookers.create')"
-                        class="flex-1 sm:flex-none px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black text-xs transition-all shadow-xl shadow-indigo-500/20 active:scale-95 text-center"
+                      :href="route('bookers.show', booker.id)"
+                      class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl transition-all"
+                      title="عرض"
                     >
-                        إضافة مساهم جديد
+                      <svg
+                        class="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      ><path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      /><path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      /></svg>
                     </Link>
-                </div>
-            </div>
-        </template>
-
-        <div class="space-y-8">
-            <!-- Search Bubble -->
-            <div class="bg-white dark:bg-[#0a0a0a] border border-gray-100 dark:border-white/5 rounded-[2.5rem] p-8 shadow-sm">
-                <div class="flex flex-wrap gap-4 items-center">
-                    <div class="flex-1 min-w-[300px] relative group">
-                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                        </div>
-                        <input
-                            id="booker-search-input"
-                            name="q"
-                            v-model="search"
-                            type="text"
-                            placeholder="بحث عن مساهم..."
-                            class="w-full pr-12 pl-4 py-3 bg-gray-50 dark:bg-white/5 border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-black focus:ring-4 focus:ring-indigo-500/10 rounded-2xl text-sm font-medium transition-all"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            <!-- Table View -->
-            <div class="bg-white dark:bg-[#0a0a0a] border border-gray-100 dark:border-white/5 rounded-[2.5rem] shadow-sm overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-100 dark:divide-white/5">
-                        <thead class="bg-gray-50/50 dark:bg-white/2">
-                            <tr>
-                                <th scope="col" class="px-8 py-5 text-right">
-                                    <input id="bookers-select-all" name="select_all" type="checkbox" v-model="allSelected" class="rounded-lg border-gray-300 dark:border-white/10 dark:bg-black text-indigo-600 shadow-sm focus:ring-indigo-500" />
-                                </th>
-                                <th scope="col" class="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">المساهم</th>
-                                <th scope="col" class="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">أدوار شائعة</th>
-                                <th scope="col" class="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">المشاركات العلمية</th>
-                                <th scope="col" class="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-50 dark:divide-white/5">
-                            <tr v-for="booker in bookers.data" :key="booker.id" class="group hover:bg-gray-50/50 dark:hover:bg-white/2 transition-colors">
-                                <td class="px-8 py-6 whitespace-nowrap">
-                                    <input :id="'booker-select-' + booker.id" name="selected_ids[]" type="checkbox" :value="booker.id" v-model="selectedIds" class="rounded-lg border-gray-300 dark:border-white/10 dark:bg-black text-indigo-600 shadow-sm focus:ring-indigo-500" />
-                                </td>
-                                <td class="px-8 py-6 whitespace-nowrap">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 flex items-center justify-center text-xs font-black text-cyan-600">
-                                            {{ booker.name.substring(0, 1) }}
-                                        </div>
-                                        <div>
-                                            <div class="text-sm font-black text-gray-900 dark:text-white">{{ booker.name }}</div>
-                                            <div class="text-[10px] text-gray-400 font-bold mt-1 uppercase tracking-tighter">ID: {{ booker.id.substring(0, 8) }}...</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-8 py-6 whitespace-nowrap text-center">
-                                    <div class="flex flex-wrap justify-center gap-1">
-                                        <span class="px-2 py-0.5 bg-gray-100 dark:bg-white/5 rounded-md text-[9px] font-black text-gray-500 border border-gray-200 dark:border-white/10">مساهم نظام</span>
-                                    </div>
-                                </td>
-                                <td class="px-8 py-6 whitespace-nowrap">
-                                    <div class="flex items-center gap-3">
-                                        <div class="flex flex-col">
-                                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-tighter">كتب: {{ booker.books_count }}</span>
-                                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-tighter mt-1">صوتيات: {{ booker.audios_count }}</span>
-                                        </div>
-                                        <div class="h-8 w-px bg-gray-100 dark:bg-white/5"></div>
-                                        <div class="flex flex-col">
-                                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-tighter">مرئيات: {{ booker.videos_count }}</span>
-                                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-tighter mt-1">مخطوطات: {{ booker.manuscripts_count }}</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-8 py-6 whitespace-nowrap text-left text-sm font-medium">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <Link :href="route('bookers.show', booker.id)" class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl transition-all" title="عرض">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                        </Link>
-                                        <Link :href="route('bookers.edit', booker.id)" class="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl transition-all" title="تعديل">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                        </Link>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <!-- Pagination -->
-                <div class="px-8 py-6 bg-gray-50/50 dark:bg-white/2 border-t border-gray-100 dark:border-white/5">
-                    <Pagination :links="bookers.links" />
-                </div>
-            </div>
+                    <Link
+                      :href="route('bookers.edit', booker.id)"
+                      class="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl transition-all"
+                      title="تعديل"
+                    >
+                      <svg
+                        class="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      ><path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      /></svg>
+                    </Link>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-    </AuthenticatedLayout>
+        <!-- Pagination -->
+        <div class="px-8 py-6 bg-gray-50/50 dark:bg-white/2 border-t border-gray-100 dark:border-white/5">
+          <Pagination :links="bookers.links" />
+        </div>
+      </div>
+    </div>
+  </AuthenticatedLayout>
 </template>
 
 <script setup>

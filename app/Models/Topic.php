@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @mixin \Illuminate\Database\Eloquent\Builder
+ */
 class Topic extends Model
 {
     use HasFactory, HasUuids, SoftDeletes;
@@ -25,6 +28,23 @@ class Topic extends Model
     public function children()
     {
         return $this->hasMany(Topic::class, 'parent_id');
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($topic) {
+            if (empty($topic->slug)) {
+                $topic->slug = \Illuminate\Support\Str::slug($topic->name);
+            }
+        });
+
+        static::updating(function ($topic) {
+            if (empty($topic->slug)) {
+                $topic->slug = \Illuminate\Support\Str::slug($topic->name);
+            }
+        });
     }
 
     public function books()

@@ -2,162 +2,59 @@
 
 namespace App\Http\Controllers;
 
-
 use App\Models\Audio;
-use App\Services\EntityManagerService;
-use App\Services\EntityQueryService;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
-use Illuminate\Http\RedirectResponse;
+use App\Services\MediaManagerService;
+use Illuminate\Database\Eloquent\Model;
 
-use Illuminate\Support\Facades\Gate;
-use App\Http\Requests\StoreEntityRequest;
-use App\Http\Requests\UpdateEntityRequest;
-
-class AudioController extends Controller
+/**
+ * AudioController - Highly simplified using EntityController Hooks
+ */
+class AudioController extends EntityController
 {
-    protected $manager;
-    protected $query;
-    protected $mediaManager;
+    use Traits\HasEditor;
 
-    public function __construct(EntityManagerService $manager, EntityQueryService $query, \App\Services\MediaManagerService $mediaManager)
+    //Configuration
+    protected function getModelClass(): string { return Audio::class; }
+    protected function getViewPath(): string { return 'Audios'; }
+    protected function getRouteName(): string { return 'audios'; }
+    protected function getStoreRequestClass(): ?string { return \App\Http\Requests\StoreAudioRequest::class; }
+    protected function getUpdateRequestClass(): ?string { return \App\Http\Requests\UpdateAudioRequest::class; }
+
+    //Customization
+    protected function getRelations(): array { return ['tags', 'categories', 'authors', 'versions.publisher', 'comments.user']; }
+    protected function getSearchFields(): array { return ['title']; }
+    protected function getSearchRelations(): array { return ['authors' => 'name']; }
+    protected function getPerPage(): int { return 16; }
+    protected function getFileUploads(): array { return ['file' => 'audio', 'cover' => 'covers']; }
+    protected function shouldLoadFirstChild(): bool { return true; }
+    
+    protected function getCreateSuccessMessage(): string { return 'تم إنشاء الملف الصوتي بنجاح'; }
+    protected function getUpdateSuccessMessage(): string { return 'تم تحديث الملف الصوتي بنجاح'; }
+    protected function getDeleteSuccessMessage(): string { return 'تم حذف الملف الصوتي بنجاح'; }
+
+    protected function getFormData(): array
     {
-        $this->manager = $manager;
-        $this->query = $query;
-        $this->mediaManager = $mediaManager;
-    }
-
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request): Response
-    {
-        Gate::authorize('viewAny', Audio::class);
-        $filters = $request->only(['search', 'category', 'tag']);
-
-        $audios = Audio::with(['tags', 'categories', 'authors', 'versions.publisher'])
-            ->when($request->search, function ($query, $search) {
-                $query->where('title', 'like', "%{$search}%")
-                    ->orWhereHas('authors', function ($q) use ($search) {
-                        $q->where('name', 'like', "%{$search}%");
-                    });
-            })
-            ->when($request->category, function ($query, $category) {
-                $query->whereHas('categories', function ($q) use ($category) {
-                    $q->where('categories.id', $category);
-                });
-            })
-            ->when($request->tag, function ($query, $tag) {
-                $query->whereHas('tags', function ($q) use ($tag) {
-                    $q->where('tags.id', $tag);
-                });
-            })
-            ->latest()
-            ->paginate($request->get('per_page', 10))
-            ->withQueryString();
-
-        return Inertia::render('Audio/Index', [
-            'audios' => $audios,
-            'filters' => $filters,
-            'categories' => \App\Models\Category::all(['id', 'name']),
-            'tags' => \App\Models\Tag::all(['id', 'name']),
-        ]);
-    }
-
-    public function create(): Response
-    {
-        Gate::authorize('create', Audio::class);
-        return Inertia::render('Audio/Create', [
+        return [
             'authors' => \App\Models\Author::orderBy('name')->get(['id', 'name']),
             'publishers' => \App\Models\Publisher::orderBy('name')->get(['id', 'name']),
             'categories' => \App\Models\Category::orderBy('name')->get(['id', 'name']),
-        ]);
+        ];
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Hook: Use MediaManagerService for persistence
      */
-    public function store(StoreEntityRequest $request): RedirectResponse
+    protected function persistModel(Model $model, array $data, Request $request): void
     {
-        Gate::authorize('create', Audio::class);
-        $data = $request->validated();
-
-        if (!isset($data['type'])) {
-            $data['type'] = 'audio';
-        }
-
-        if ($request->hasFile('cover')) {
-            $data['cover_path'] = $request->file('cover')->store('covers', 'public');
-        }
-
-        if ($request->hasFile('file')) {
-            $data['file_path'] = $request->file('file')->store('audios', 'public');
-        }
-
+        /** @var \App\Models\Entity $model */
         $data['type'] = 'audio';
-        $this->mediaManager->createMedia($data);
-
-        return redirect()->route('audios.index')
-            ->with('message', 'تم إنشاء الملف الصوتي بنجاح');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Audio $audio): Response
-    {
-        Gate::authorize('view', $audio);
-        return Inertia::render('Audio/Show', [
-            'audio' => $audio->load(['tags', 'categories', 'authors', 'versions.publisher', 'comments.user']),
-        ]);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Audio $audio): Response
-    {
-        Gate::authorize('update', $audio);
-        return Inertia::render('Audio/Edit', [
-            'audio' => $audio->load(['tags', 'categories', 'authors', 'versions']),
-            'authors' => \App\Models\Author::orderBy('name')->get(['id', 'name']),
-            'publishers' => \App\Models\Publisher::orderBy('name')->get(['id', 'name']),
-            'categories' => \App\Models\Category::orderBy('name')->get(['id', 'name']),
-        ]);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateEntityRequest $request, Audio $audio): RedirectResponse
-    {
-        Gate::authorize('update', $audio);
-        $data = $request->validated();
-
-        if ($request->hasFile('cover')) {
-            $data['cover_path'] = $request->file('cover')->store('covers', 'public');
+        $manager = app(MediaManagerService::class);
+        
+        if ($model->exists) {
+            $manager->updateMedia($model, $data);
+        } else {
+            $manager->createMedia($data);
         }
-
-        if ($request->hasFile('file')) {
-            $data['file_path'] = $request->file('file')->store('audios', 'public');
-        }
-
-        $this->mediaManager->updateMedia($audio, $data);
-
-        return redirect()->route('audios.show', $audio)
-            ->with('message', 'تم تحديث الملف الصوتي بنجاح');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Audio $audio): RedirectResponse
-    {
-        Gate::authorize('delete', $audio);
-        $this->manager->delete($audio);
-
-        return redirect()->route('audios.index')
-            ->with('message', 'تم حذف الملف الصوتي بنجاح');
     }
 }

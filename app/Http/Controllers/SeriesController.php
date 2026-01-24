@@ -2,107 +2,26 @@
 
 namespace App\Http\Controllers;
 
-
 use App\Models\Series;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
-use Illuminate\Http\RedirectResponse;
 
-class SeriesController extends Controller
+/**
+ * SeriesController - Refactored to use EntityController Hooks
+ */
+class SeriesController extends EntityController
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request): Response
-    {
-        $filters = $request->only(['search']);
+    //Configuration
+    protected function getModelClass(): string { return Series::class; }
+    protected function getViewPath(): string { return 'Series'; }
+    protected function getRouteName(): string { return 'series'; }
+    protected function getStoreRequestClass(): ?string { return \App\Http\Requests\StoreSeriesRequest::class; }
+    protected function getUpdateRequestClass(): ?string { return \App\Http\Requests\UpdateSeriesRequest::class; }
 
-        $series = Series::withCount(['books', 'videos', 'audio', 'manuscripts'])
-            ->when($request->search, function ($query, $search) {
-                $query->where('title', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%");
-            })
-            ->latest()
-            ->paginate(15)
-            ->withQueryString();
+    //Customization
+    protected function getRelations(): array { return ['books', 'videos', 'audio', 'manuscripts']; }
+    protected function getSearchFields(): array { return ['title', 'description']; }
+    protected function getPerPage(): int { return 15; }
 
-        return Inertia::render('Series/Index', [
-            'series' => $series,
-            'filters' => $filters,
-        ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): Response
-    {
-        return Inertia::render('Series/Create');
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'order_column' => 'integer'
-        ]);
-
-        Series::create($request->only(['title', 'description', 'order_column']));
-
-        return redirect()->route('series.index')
-            ->with('message', 'تم إنشاء السلسلة بنجاح');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Series $series): Response
-    {
-        return Inertia::render('Series/Show', [
-            'series' => $series->load(['books', 'videos', 'audio', 'manuscripts']),
-        ]);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Series $series): Response
-    {
-        return Inertia::render('Series/Edit', [
-            'series' => $series,
-        ]);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Series $series): RedirectResponse
-    {
-        $request->validate([
-            'title' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
-            'order_column' => 'integer'
-        ]);
-
-        $series->update($request->only(['title', 'description', 'order_column']));
-
-        return redirect()->route('series.index')
-            ->with('message', 'تم تحديث السلسلة بنجاح');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Series $series): RedirectResponse
-    {
-        $series->delete();
-
-        return redirect()->route('series.index')
-            ->with('message', 'تم حذف السلسلة بنجاح');
-    }
+    protected function getCreateSuccessMessage(): string { return 'تم إنشاء السلسلة بنجاح'; }
+    protected function getUpdateSuccessMessage(): string { return 'تم تحديث السلسلة بنجاح'; }
+    protected function getDeleteSuccessMessage(): string { return 'تم حذف السلسلة بنجاح'; }
 }

@@ -26,9 +26,16 @@ class BookChildTest extends TestCase
             'language' => 'ar',
             'content_blocks' => [
                 [
-                    'title' => 'Chapter 1: The Beginning',
-                    'blocks' => [
-                        ['type' => 'text', 'content' => 'Hello from MongoDB!']
+                    'type' => 'heading',
+                    'attrs' => ['level' => 1],
+                    'content' => [
+                        ['type' => 'text', 'text' => 'Chapter 1: The Beginning']
+                    ]
+                ],
+                [
+                    'type' => 'paragraph',
+                    'content' => [
+                        ['type' => 'text', 'text' => 'Hello from MongoDB!']
                     ]
                 ]
             ]
@@ -37,11 +44,11 @@ class BookChildTest extends TestCase
         // 3. Assertions
         $this->assertNotNull($content->id);
         $this->assertEquals($book->id, $content->book_id);
-        
+
         // Find it back from MongoDB
         $retrieved = BookChild::find($content->id);
-        $this->assertEquals('Chapter 1: The Beginning', $retrieved->content_blocks[0]['title']);
-        $this->assertEquals('Hello from MongoDB!', $retrieved->content_blocks[0]['blocks'][0]['content']);
+        $this->assertEquals('Chapter 1: The Beginning', $retrieved->content_blocks[0]['content'][0]['text']);
+        $this->assertEquals('Hello from MongoDB!', $retrieved->content_blocks[1]['content'][0]['text']);
     }
 
     /** @test */
@@ -49,21 +56,21 @@ class BookChildTest extends TestCase
     {
         $content = BookChild::create([
             'book_id' => 'some-id',
-            'content_blocks' => [['title' => 'Old Title']]
+            'content_blocks' => [['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'Old Title']]]]
         ]);
 
         $content->update([
-            'content_blocks' => [['title' => 'New Title']]
+            'content_blocks' => [['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'New Title']]]]
         ]);
 
-        $this->assertEquals('New Title', BookChild::find($content->id)->content_blocks[0]['title']);
+        $this->assertEquals('New Title', BookChild::find($content->id)->content_blocks[0]['content'][0]['text']);
     }
 
     /** @test */
     public function a_book_can_access_its_mongodb_children()
     {
         $book = Book::factory()->create();
-        
+
         BookChild::create([
             'book_id' => $book->id,
             'title' => 'Chapter 1'
@@ -98,7 +105,7 @@ class BookChildTest extends TestCase
 
         $this->assertCount(2, $hierarchy);
         $this->assertEquals('chapter', $hierarchy->where('title', 'Chapter One')->first()->type);
-        $this->assertEquals($part->id, $hierarchy->where('title', 'Chapter One')->first()->parent_id);
+        $this->assertEquals((string) $part->id, (string) $hierarchy->where('title', 'Chapter One')->first()->parent_id);
     }
 
     /** @test */
@@ -108,23 +115,35 @@ class BookChildTest extends TestCase
         $child = BookChild::create(['book_id' => '123', 'title' => 'Masala 1']);
 
         $service->addBlock($child, [
-            'body' => 'Main text content',
-            'annotations' => [
-                ['type' => 'footnote', 'content' => 'Footnote 1']
+            'type' => 'paragraph',
+            'content' => [
+                [
+                    'type' => 'text',
+                    'text' => 'Main text content',
+                    'marks' => [
+                        [
+                            'type' => 'scholarlyFootnote',
+                            'attrs' => ['content' => 'Footnote 1', 'marker' => '*']
+                        ]
+                    ]
+                ]
             ]
         ]);
 
         $updatedChild = BookChild::find($child->id);
         $this->assertCount(1, $updatedChild->content_blocks);
-        $this->assertEquals('Main text content', $updatedChild->content_blocks[0]['body']);
-        $this->assertEquals('footnote', $updatedChild->content_blocks[0]['annotations'][0]['type']);
+        // Check text
+        $this->assertEquals('Main text content', $updatedChild->content_blocks[0]['content'][0]['text']);
+        // Check annotation/mark
+        $this->assertEquals('scholarlyFootnote', $updatedChild->content_blocks[0]['content'][0]['marks'][0]['type']);
+        $this->assertEquals('Footnote 1', $updatedChild->content_blocks[0]['content'][0]['marks'][0]['attrs']['content']);
     }
 
     /** @test */
     public function deleting_a_book_deletes_its_mongodb_children()
     {
         $book = Book::factory()->create();
-        
+
         BookChild::create([
             'book_id' => $book->id,
             'title' => 'Chapter to be deleted'

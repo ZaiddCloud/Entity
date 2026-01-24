@@ -13,10 +13,11 @@ use App\Models\Tag;
 use App\Models\Comment;
 use App\Models\Activity;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(): Response
     {
         $stats = [
             'books' => Book::count(),

@@ -39,4 +39,8 @@ Route::middleware(['auth:sanctum'])->name('api.')->group(function () {
     Route::apiResource('deletions', DeletionController::class)->only(['index', 'show']);
     // Order Management
     Route::post('books/{book}/contents/reorder', [App\Http\Controllers\Api\BookContentOrderController::class, 'update'])->name('books.contents.reorder');
+
+    // Export Engine
+    Route::get('books/{book}/export/{format}', [App\Http\Controllers\Api\BookExportController::class, 'exportBook'])->name('books.export');
+    Route::get('book-children/{child}/export/{format}', [App\Http\Controllers\Api\BookExportController::class, 'exportChild'])->name('book-children.export');
 });

@@ -49,9 +49,11 @@ class SecurityValidationTest extends TestCase
         /** @var \App\Models\User $user */
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->post(route('books.store'), [
-            'title' => '',
-        ]);
+        $response = $this->actingAs($user)
+            ->from(route('books.create'))
+            ->post(route('books.store'), [
+                'title' => '',
+            ]);
 
         $response->assertSessionHasErrors('title');
     }

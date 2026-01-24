@@ -59,15 +59,19 @@ trait HasPolymorphicRelations
         return $this->morphMany(Comment::class, 'entity');
     }
 
+    /*
     public function reviews()
     {
         return $this->morphMany(Review::class, 'entity');
     }
+    */
 
+    /*
     public function favourites()
     {
         return $this->morphMany(Favourite::class, 'entity');
     }
+    */
 
     public function notes()
     {
@@ -79,15 +83,19 @@ trait HasPolymorphicRelations
         return $this->morphMany(Deletion::class, 'entity');
     }
 
+    /*
     public function searchTerms()
     {
         return $this->morphMany(SearchTerm::class, 'entity');
     }
+    */
 
+    /*
     public function views()
     {
         return $this->morphMany(View::class, 'entity');
     }
+    */
 
     /**
      * علاقة Many-to-Many بوليمورفية (الأصلية)
@@ -268,5 +276,14 @@ trait HasPolymorphicRelations
         }
 
         return null;
+    }
+
+    /**
+     * العلاقة الموحدة مع المحتوى في MongoDB (Unified Content)
+     */
+    public function contents()
+    {
+        return $this->hasMany(\App\Models\EntityContent::class, 'entity_id', 'id')
+            ->where('entity_type', strtolower(class_basename($this)));
     }
 }

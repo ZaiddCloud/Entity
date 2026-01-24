@@ -10,10 +10,11 @@ use App\Models\Author;
 use App\Models\Series;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class GlobalSearchController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $term = $request->input('q');
 

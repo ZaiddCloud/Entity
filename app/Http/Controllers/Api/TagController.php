@@ -32,9 +32,9 @@ class TagController extends Controller
         ]);
 
         $tag = Tag::create([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name, '-', null),
-            'type' => $request->type
+            'name' => $request->input('name'),
+            'slug' => Str::slug($request->input('name'), '-', null),
+            'type' => $request->input('type')
         ]);
 
         return response()->json([

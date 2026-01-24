@@ -7,9 +7,36 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property string $id
+ * @property string $name
+ * @property string $slug
+ * @property string|null $bio
+ * @property int|null $birth_year
+ * @property int|null $death_year
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @mixin \Illuminate\Database\Eloquent\Builder
+ */
 class Author extends Model
 {
     use HasFactory, HasUuids, SoftDeletes;
+
+    protected static function booted()
+    {
+        static::creating(function ($author) {
+            if (!$author->slug) {
+                $author->slug = \Illuminate\Support\Str::slug($author->name) . '-' . \Illuminate\Support\Str::random(6);
+            }
+        });
+
+        static::updating(function ($author) {
+            if ($author->isDirty('name') && !$author->slug) {
+                $author->slug = \Illuminate\Support\Str::slug($author->name) . '-' . \Illuminate\Support\Str::random(6);
+            }
+        });
+    }
 
     protected $fillable = [
         'name',

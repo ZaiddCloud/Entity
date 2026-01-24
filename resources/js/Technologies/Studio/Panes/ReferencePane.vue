@@ -1,0 +1,59 @@
+<script setup>
+import { computed, inject } from 'vue' // Added inject
+import ManuscriptClient from '../../Manuscripter/ManuscriptClient.vue'
+import PlayerClient from '../../Player/PlayerClient.vue'
+
+const props = defineProps({
+    type: { type: String, required: true }, // 'manuscript' | 'audio' | 'video'
+    entity: { type: Object, required: true },
+    activeSlug: { type: String, default: null },
+    isIntegrated: { type: Boolean, default: false } // NEW
+})
+
+const isPlayerDocked = inject('isPlayerDocked', { value: false }) // Inject with default
+
+// Normalize type for internal switching logic
+const normalizedType = computed(() => {
+    if (props.type === 'manuscript') return 'manuscript'
+    if (['audio', 'video'].includes(props.type)) return 'media'
+    return 'unknown'
+})
+</script>
+
+<template>
+  <div class="relative" :class="(normalizedType === 'media' && !isPlayerDocked.value) ? '' : 'w-full h-full bg-black'">
+    <!-- 
+        1. Manuscript Viewer
+        Expects: manuscript, siblings
+     -->
+    <ManuscriptClient
+      v-if="normalizedType === 'manuscript'"
+      :manuscript="props.entity"
+      :siblings="props.entity.siblings || []" 
+      :active-slug="props.activeSlug"
+      @navigate="(slug) => $emit('navigate', slug)"
+    />
+
+    <!-- 
+        2. Media Player (Audio/Video)
+        Expects: media, type
+     -->
+    <PlayerClient
+      v-else-if="normalizedType === 'media'"
+      :media="props.entity"
+      :type="props.type" 
+      :active-slug="props.activeSlug"
+      :is-integrated="props.isIntegrated"
+      @toggle-dock="$emit('toggle-dock')"
+    />
+
+    <!-- Fallback -->
+    <div 
+      v-else 
+      class="w-full h-full flex flex-col items-center justify-center text-gray-500"
+    >
+      <span class="text-4xl mb-4">🧩</span>
+      <p>نوع المحتوى غير مدعوم: {{ props.type }}</p>
+    </div>
+  </div>
+</template>

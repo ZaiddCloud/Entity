@@ -1,0 +1,20 @@
+@startmindmap
+* BookEditor Development Structure
+** Pillar 1: Identity & Visual Soul
+*** TipTap Base
+*** TinyMCE-style Toolbar
+*** Glassmorphism Side Annotations
+*** Block Handles (Editor.js style)
+*** Smart Hierarchy Navigator (sub-book, Part, Bab, Chapter, Masala)
+** Pillar 2: Environment
+*** Entry via Book Index "Edit"
+*** Triple Mode: In-place, FullEditor, Split View
+** Pillar 3: Scope & Guardrails
+*** Hierarchical CRUD (Add/Move chapters/babs)
+*** Sync Protection (Manual Edit Focus)
+*** Version History & Conflict Alerts
+*** LocalStorage Persistence
+** Pillar 4: Export Options
+*** Multi-format: PDF, Word, MD, JSON
+*** Multi-scope: Chapter, Book, Volume
+@endmindmap

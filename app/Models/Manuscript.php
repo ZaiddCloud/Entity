@@ -2,15 +2,47 @@
 
 namespace App\Models;
 
+/**
+ * @property string $id
+ * @property string $title
+ * @property string $slug
+ * @property string|null $author
+ * @property int|null $century
+ * @property string|null $language
+ * @property int|null $pages
+ * @property string|null $publisher
+ * @property string|null $location
+ * @property string|null $description
+ * @property string|null $cover_path
+ * @property string|null $file_path
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string $century_display
+ * @property-read int $age
+ * @property-read string $pages_formatted
+ */
 class Manuscript extends Entity
 {
     protected $table = 'manuscripts';
 
     protected $fillable = [
         'title',
+        'original_title',
+        'code',
         'slug',
+        'catalog_number',
+        'madhab',
+        'scribe',
+        'copy_date',
+        'parts',
+        'script_type',
+        'dimensions',
+        'lines_per_page',
+        'inscriptions',
+        'notes',
         'author',
         'century',
+        'century_label',
         'language',
         'pages',
         'publisher',
@@ -60,5 +92,22 @@ class Manuscript extends Entity
     public function isModern(): bool
     {
         return $this->century >= 19; // بعد القرن 19
+    }
+
+    /**
+     * العلاقة مع صفحات المخطوطة في MongoDB
+     */
+    public function children()
+    {
+        return $this->hasMany(ManuscriptPage::class, 'manuscript_id', 'id');
+    }
+
+    /**
+     * العلاقة مع نسخ المخطوطة (Versions)
+     */
+    public function versions()
+    {
+        return $this->hasMany(Version::class, 'versionable_id', 'id')
+            ->where('versionable_type', self::class);
     }
 }

@@ -5,6 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MongoDB\Laravel\Eloquent\HybridRelations;
 
+/**
+ * @property string $id
+ * @property string $title
+ * @property string $slug
+ * @property string $author
+ * @property string|null $isbn
+ * @property string|null $description
+ * @property string|null $cover_path
+ * @property string|null $file_path
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read string $display_name
+ */
 class Book extends Entity
 {
     use HasFactory, HybridRelations;

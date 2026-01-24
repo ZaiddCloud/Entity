@@ -5,18 +5,23 @@ namespace App\Http\Controllers;
 use App\Models\Booker;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
+use Illuminate\Http\RedirectResponse;
 
 class BookerController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request): Response
     {
         $query = Booker::query();
 
         if ($request->has('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%' . $request->input('search') . '%');
         }
 
         $bookers = $query->withCount(['books', 'videos', 'audios', 'manuscripts'])
@@ -33,7 +38,7 @@ class BookerController extends Controller
     /**
      * Bulk destroy resource.
      */
-    public function bulkDestroy(Request $request)
+    public function bulkDestroy(Request $request): RedirectResponse
     {
         $request->validate([
             'ids' => 'required|array',

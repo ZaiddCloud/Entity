@@ -17,19 +17,10 @@ class EntityQueryService
      */
     public function search(string $query): Collection
     {
-        $results = new Collection();
-
-        foreach ($this->getEntityClasses() as $entityClass) {
-            $entities = $entityClass::where('title', 'like', "%{$query}%")
-                ->orWhere(function ($q) use ($query) {
-                    // يمكن إضافة حقول أخرى لاحقاً
-                })
-                ->get();
-
-            $results = $results->merge($entities);
-        }
-
-        return $results;
+        return $this->queryAllEntities(function ($q) use ($query) {
+            $q->where('title', 'like', "%{$query}%");
+            // يمكن إضافة حقول أخرى لاحقاً
+        });
     }
 
     /**
@@ -37,7 +28,6 @@ class EntityQueryService
      */
     public function filter(array $filters = []): Collection
     {
-        $results = new Collection();
         $entityClasses = $this->getEntityClasses();
 
         // فلترة حسب النوع إذا كان محدداً
@@ -46,18 +36,18 @@ class EntityQueryService
             unset($filters['type']);
         }
 
+        $results = new Collection();
         foreach ($entityClasses as $entityClass) {
             $query = $entityClass::query();
 
             // بحث نصي
             if (isset($filters['search'])) {
                 $query->where('title', 'like', "%{$filters['search']}%");
-                unset($filters['search']);
             }
 
             // تطبيق باقي الفلاتر
             foreach ($filters as $key => $value) {
-                if (in_array($key, (new $entityClass())->getFillable())) {
+                if ($key !== 'search' && in_array($key, (new $entityClass())->getFillable())) {
                     $query->where($key, $value);
                 }
             }
@@ -73,11 +63,7 @@ class EntityQueryService
      */
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
-        $results = new Collection();
-
-        foreach ($this->getEntityClasses() as $entityClass) {
-            $results = $results->merge($entityClass::all());
-        }
+        $results = $this->queryAllEntities(fn($q) => $q);
 
         // Paginate manually since we have merged collections
         $page = request()->get('page', 1);
@@ -99,17 +85,11 @@ class EntityQueryService
      */
     public function searchByTag(string $tagName): Collection
     {
-        $results = new Collection();
-
-        foreach ($this->getEntityClasses() as $entityClass) {
-            $entities = $entityClass::whereHas('tags', function ($query) use ($tagName) {
-                $query->where('name', $tagName);
-            })->get();
-
-            $results = $results->merge($entities);
-        }
-
-        return $results;
+        return $this->queryAllEntities(function ($query) use ($tagName) {
+            $query->whereHas('tags', function ($q) use ($tagName) {
+                $q->where('name', $tagName);
+            });
+        });
     }
 
     /**
@@ -117,15 +97,8 @@ class EntityQueryService
      */
     public function recent(int $days = 7): Collection
     {
-        $results = new Collection();
         $date = now()->subDays($days);
-
-        foreach ($this->getEntityClasses() as $entityClass) {
-            $entities = $entityClass::where('created_at', '>=', $date)->get();
-            $results = $results->merge($entities);
-        }
-
-        return $results;
+        return $this->queryAllEntities(fn($q) => $q->where('created_at', '>=', $date));
     }
 
     /**
@@ -133,18 +106,29 @@ class EntityQueryService
      */
     public function popular(int $limit = 10): Collection
     {
+        $results = $this->queryAllEntities(function ($query) use ($limit) {
+            $query->withCount('activities')
+                ->orderBy('activities_count', 'desc')
+                ->limit($limit);
+        });
+
+        return $results->sortByDesc('activities_count')->take($limit);
+    }
+
+    /**
+     * دالة مساعدة لتنفيذ الاستعلام على جميع أنواع الـ Entities
+     */
+    protected function queryAllEntities(callable $callback): Collection
+    {
         $results = new Collection();
 
         foreach ($this->getEntityClasses() as $entityClass) {
-            $entities = $entityClass::withCount('activities')
-                ->orderBy('activities_count', 'desc')
-                ->limit($limit)
-                ->get();
-
-            $results = $results->merge($entities);
+            $query = $entityClass::query();
+            $callback($query);
+            $results = $results->merge($query->get());
         }
 
-        return $results->sortByDesc('activities_count')->take($limit);
+        return $results;
     }
 
     /**
@@ -155,8 +139,8 @@ class EntityQueryService
         return [
             Book::class,
             Video::class,
-            Audio::class ?? null,      // إذا كان موجوداً
-            Manuscript::class ?? null, // إذا كان موجوداً
+            Audio::class,
+            Manuscript::class,
         ];
     }
 

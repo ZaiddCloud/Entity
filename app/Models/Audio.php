@@ -2,12 +2,35 @@
 
 namespace App\Models;
 
+use MongoDB\Laravel\Eloquent\HybridRelations;
+
+/**
+ * @property string $id
+ * @property string $title
+ * @property string $slug
+ * @property int $duration
+ * @property string $format
+ * @property int|null $bitrate
+ * @property int|null $sample_rate
+ * @property int|null $file_size
+ * @property string|null $description
+ * @property string|null $cover_path
+ * @property string|null $file_path
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read float $duration_in_minutes
+ * @property-read string $duration_formatted
+ * @property-read string $bitrate_formatted
+ * @property-read string $sample_rate_formatted
+ */
 class Audio extends Entity
 {
+    use HybridRelations;
     protected $table = 'audios';
 
     protected $fillable = [
         'title',
+        'code',
         'slug',
         'duration',
         'format',
@@ -53,5 +76,13 @@ class Audio extends Entity
     public function getSampleRateFormattedAttribute(): string
     {
         return $this->sample_rate . ' Hz';
+    }
+
+    /**
+     * العلاقة مع المقاطع الصوتية في MongoDB
+     */
+    public function children()
+    {
+        return $this->hasMany(AudioSegment::class, 'audio_id', 'id');
     }
 }

@@ -2,176 +2,66 @@
 
 namespace App\Http\Controllers;
 
-
 use App\Models\Book;
-use App\Services\EntityManagerService;
-use App\Services\EntityQueryService;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
-use Illuminate\Http\RedirectResponse;
+use App\Services\MediaManagerService;
+use Illuminate\Database\Eloquent\Model;
 
-use Illuminate\Support\Facades\Gate;
-use App\Http\Requests\StoreEntityRequest;
-use App\Http\Requests\UpdateEntityRequest;
-
-class BookController extends Controller
+/**
+ * BookController - Highly simplified using EntityController Hooks
+ */
+class BookController extends EntityController
 {
-    protected $manager;
-    protected $query;
-    protected $mediaManager;
+    use Traits\HasEditor;
 
-    public function __construct(EntityManagerService $manager, EntityQueryService $query, \App\Services\MediaManagerService $mediaManager)
+    // ========================================
+    // CONFIGURATION
+    // ========================================
+
+    protected function getModelClass(): string { return Book::class; }
+    protected function getViewPath(): string { return 'Books'; }
+    protected function getRouteName(): string { return 'books'; }
+    protected function getStoreRequestClass(): ?string { return \App\Http\Requests\StoreBookRequest::class; }
+    protected function getUpdateRequestClass(): ?string { return \App\Http\Requests\UpdateBookRequest::class; }
+
+    //Customization
+    protected function getRelations(): array { return ['tags', 'categories', 'authors', 'versions.publisher', 'comments.user']; }
+    protected function getSearchFields(): array { return ['title']; }
+    protected function getSearchRelations(): array { return ['authors' => 'name']; }
+    protected function getPerPage(): int { return 16; }
+    protected function getFileUploads(): array { return ['file' => 'books', 'cover' => 'covers']; }
+    protected function shouldLoadFirstChild(): bool { return true; }
+
+    protected function getCreateSuccessMessage(): string { return 'تم إنشاء الكتاب بنجاح'; }
+    protected function getUpdateSuccessMessage(): string { return 'تم تحديث الكتاب بنجاح'; }
+    protected function getDeleteSuccessMessage(): string { return 'تم حذف الكتاب بنجاح'; }
+
+    protected function getFormData(): array
     {
-        $this->manager = $manager;
-        $this->query = $query;
-        $this->mediaManager = $mediaManager;
-    }
-
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request): Response
-    {
-        Gate::authorize('viewAny', Book::class);
-
-        $filters = $request->only(['search', 'category', 'tag']);
-
-        $books = Book::with(['tags', 'categories', 'authors', 'versions.publisher']) // Eager load new relations
-            ->when($request->search, function ($query, $search) {
-                $query->where('title', 'like', "%{$search}%")
-                    ->orWhereHas('authors', function ($q) use ($search) {
-                        $q->where('name', 'like', "%{$search}%");
-                    });
-            })
-            ->when($request->category, function ($query, $category) {
-                $query->whereHas('categories', function ($q) use ($category) {
-                    $q->where('categories.id', $category);
-                });
-            })
-            ->when($request->tag, function ($query, $tag) {
-                $query->whereHas('tags', function ($q) use ($tag) {
-                    $q->where('tags.id', $tag);
-                });
-            })
-            ->latest()
-            ->paginate($request->get('per_page', 10))
-            ->withQueryString();
-
-        return Inertia::render('Books/Index', [
-            'books' => $books,
-            'filters' => $filters,
-            'categories' => \App\Models\Category::all(['id', 'name']),
-            'tags' => \App\Models\Tag::all(['id', 'name']),
-        ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): Response
-    {
-        Gate::authorize('create', Book::class);
-        return Inertia::render('Books/Create', [
+        return [
             'authors' => \App\Models\Author::orderBy('name')->get(['id', 'name']),
             'publishers' => \App\Models\Publisher::orderBy('name')->get(['id', 'name']),
             'categories' => \App\Models\Category::orderBy('name')->get(['id', 'name']),
-        ]);
+        ];
     }
 
+    // ========================================
+    // HOOKS
+    // ========================================
+
     /**
-     * Store a newly created resource in storage.
+     * Use MediaManagerService for persistence
      */
-    public function store(StoreEntityRequest $request): RedirectResponse
+    protected function persistModel(Model $model, array $data, Request $request): void
     {
-        Gate::authorize('create', Book::class);
-
-        // We need to merge file paths manually since the service expects them in the data array
-        // but StoreEntityRequest handles validation. We rely on the request being valid here.
-        $data = $request->validated();
-
-        if ($request->hasFile('file')) {
-            $data['file_path'] = $request->file('file')->store('books', 'public');
-        }
-
-        // Handle cover if present (optional for book, might belong to version or book)
-        // For now, let's keep it simple and maybe attach to version logic later or book
-        if ($request->hasFile('cover')) {
-            $data['cover_path'] = $request->file('cover')->store('covers', 'public');
-        }
-
+        /** @var \App\Models\Entity $model */
         $data['type'] = 'book';
-        $this->mediaManager->createMedia($data);
-
-        return redirect()->route('books.index')
-            ->with('message', 'تم إنشاء الكتاب بنجاح');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Book $book): Response
-    {
-        Gate::authorize('view', $book);
-        return Inertia::render('Books/Show', [
-            'book' => $book->load(['tags', 'categories', 'comments.user']),
-        ]);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Book $book): Response
-    {
-        Gate::authorize('update', $book);
-
-        // Load relationships to populate the form
-        $book->load(['authors', 'versions']);
-
-        return Inertia::render('Books/Edit', [
-            'book' => $book,
-            'authors' => \App\Models\Author::orderBy('name')->get(['id', 'name']),
-            'publishers' => \App\Models\Publisher::orderBy('name')->get(['id', 'name']),
-            'categories' => \App\Models\Category::orderBy('name')->get(['id', 'name']),
-        ]);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateEntityRequest $request, Book $book): RedirectResponse
-    {
-        Gate::authorize('update', $book);
-        $data = $request->validated();
-
-        if ($request->hasFile('cover')) {
-            $data['cover_path'] = $request->file('cover')->store('covers', 'public');
+        $manager = app(MediaManagerService::class);
+        
+        if ($model->exists) {
+            $manager->updateMedia($model, $data);
+        } else {
+            $manager->createMedia($data);
         }
-
-        if ($request->hasFile('file')) {
-            $data['file_path'] = $request->file('file')->store('books', 'public');
-        }
-
-        $this->mediaManager->updateMedia($book, $data);
-
-        $book->refresh(); // Refresh to get updated slug if changed
-
-        return redirect()->route('books.show', $book)
-            ->with('message', 'تم تحديث الكتاب بنجاح');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Book $book): RedirectResponse
-    {
-        Gate::authorize('delete', $book);
-        $this->manager->delete($book);
-
-        return redirect()->route('books.index')
-            ->with('message', 'تم حذف الكتاب بنجاح');
     }
 }

@@ -1,0 +1,11 @@
+includes:
+    - ./vendor/phpstan/phpstan/conf/bleedingEdge.neon
+
+parameters:
+
+    paths:
+        - app/
+
+    level: 5
+
+    # checkMissingIterableValueType is removed in PHPStan 2.0 as it is now the default or handled differently

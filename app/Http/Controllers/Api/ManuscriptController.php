@@ -27,7 +27,7 @@ class ManuscriptController extends Controller
     public function index(Request $request): JsonResponse
     {
         $perPage = $request->get('per_page', 15);
-        $manuscripts = Manuscript::paginate($perPage);
+        $manuscripts = Manuscript::query()->paginate($perPage);
 
         return response()->json($manuscripts);
     }

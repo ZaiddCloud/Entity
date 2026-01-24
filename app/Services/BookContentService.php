@@ -8,13 +8,6 @@ use Illuminate\Support\Collection;
 
 class BookContentService
 {
-    /**
-     * Create a new child unit for a book.
-     * 
-     * @param Book $book
-     * @param array $data
-     * @return BookChild
-     */
     public function addChild(Book $book, array $data): BookChild
     {
         return BookChild::create([
@@ -22,7 +15,9 @@ class BookContentService
             'parent_id' => $data['parent_id'] ?? null,
             'type' => $data['type'] ?? 'chapter',
             'title' => $data['title'],
+            'slug' => $data['slug'] ?? \Illuminate\Support\Str::slug($data['title']) . '-' . uniqid(),
             'order' => $data['order'] ?? 0,
+            'content' => $data['content'] ?? null,
             'content_blocks' => $data['content_blocks'] ?? [],
             'metadata' => $data['metadata'] ?? [],
             'last_updated' => now(),
@@ -45,12 +40,24 @@ class BookContentService
     public function addBlock(BookChild $child, array $block): BookChild
     {
         $blocks = $child->content_blocks ?? [];
-        $blocks[] = array_merge([
-            'id' => uniqid('b_'),
-            'type' => 'paragraph',
-            'body' => '',
-            'annotations' => []
-        ], $block);
+
+        if (isset($block['body'])) {
+            $blocks[] = [
+                'type' => 'paragraph',
+                'content' => [
+                    [
+                        'type' => 'text',
+                        'text' => $block['body']
+                    ]
+                ]
+            ];
+
+            // Append to HTML content field for Editor compatibility
+            $currentContent = $child->content ?? '';
+            $child->content = $currentContent . '<p>' . htmlspecialchars($block['body']) . '</p>';
+        } else {
+            $blocks[] = $block;
+        }
 
         $child->update(['content_blocks' => $blocks, 'last_updated' => now()]);
 

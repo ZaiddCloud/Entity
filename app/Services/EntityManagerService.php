@@ -19,17 +19,15 @@ class EntityManagerService
     {
         $this->validateCreation($data);
 
-        $entityClass = $this->resolveEntityClass($data['type']);
+        $type = $data['type'];
+        /** @var class-string<Entity> $entityClass */
+        $entityClass = $this->resolveEntityClass($type);
 
-        $entity = $entityClass::create($data);
+        /** @var Entity $entity */
+        $entity = $entityClass::query()->create($data);
 
-        \App\Models\Activity::create([
-            'user_id' => auth()->id() ?? \App\Models\User::first()?->id,
-            'entity_id' => $entity->id,
-            'entity_type' => get_class($entity),
-            'activity_type' => 'created',
-            'description' => "تم إنشاء " . $data['type'] . " جديد: " . $entity->title,
-            'changes' => ['after' => $entity->toArray()]
+        $this->logActivity($entity, 'created', "تم إنشاء {$type} جديد: {$entity->title}", [
+            'after' => $entity->toArray()
         ]);
 
         return $entity;
@@ -46,16 +44,9 @@ class EntityManagerService
         $success = $entity->update($data);
 
         if ($success) {
-            \App\Models\Activity::create([
-                'user_id' => auth()->id() ?? \App\Models\User::first()?->id,
-                'entity_id' => $entity->id,
-                'entity_type' => get_class($entity),
-                'activity_type' => 'updated',
-                'description' => "تم تحديث الـ " . class_basename($entity) . ": " . $entity->title,
-                'changes' => [
-                    'before' => $oldData,
-                    'after' => $entity->only(array_keys($data))
-                ]
+            $this->logActivity($entity, 'updated', "تم تحديث الـ " . class_basename($entity) . ": {$entity->title}", [
+                'before' => $oldData,
+                'after' => $entity->only(array_keys($data))
             ]);
         }
 
@@ -67,10 +58,10 @@ class EntityManagerService
      */
     public function delete(Entity $entity): bool
     {
-        \App\Models\Deletion::create([
+        \App\Models\Deletion::query()->create([
             'entity_id' => $entity->id,
             'entity_type' => get_class($entity),
-            'user_id' => auth()->id() ?? \App\Models\User::first()?->id,
+            'user_id' => \Illuminate\Support\Facades\Auth::id() ?? \App\Models\User::first()?->id,
             'reason' => 'حذف من لوحة التحكم',
             'data' => $entity->toArray()
         ]);
@@ -83,7 +74,26 @@ class EntityManagerService
      */
     public function restore(Entity $entity): bool
     {
-        return $entity->restore();
+        $success = $entity->restore();
+        if ($success) {
+            $this->logActivity($entity, 'restored', "تم استعادة الـ " . class_basename($entity) . ": {$entity->title}");
+        }
+        return $success;
+    }
+
+    /**
+     * تسجيل النشاط في قاعدة البيانات
+     */
+    protected function logActivity(Entity $entity, string $type, string $description, array $changes = []): void
+    {
+        \App\Models\Activity::query()->create([
+            'user_id' => \Illuminate\Support\Facades\Auth::id() ?? \App\Models\User::first()?->id,
+            'entity_id' => $entity->id,
+            'entity_type' => get_class($entity),
+            'activity_type' => $type,
+            'description' => $description,
+            'changes' => $changes
+        ]);
     }
 
     /**
@@ -96,7 +106,7 @@ class EntityManagerService
             'type' => 'required|in:book,video,audio,manuscript'
         ];
 
-        // إضافة شروط خاصة بكل نوع إذا لزم الأمر
+        // إضافة شروط خاصة بكل نوع
         if (isset($data['type'])) {
             if ($data['type'] === 'manuscript') {
                 $rules['century'] = 'nullable|integer';

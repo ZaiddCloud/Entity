@@ -34,9 +34,9 @@ class CollectionController extends Controller
         ]);
 
         $collection = Collection::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'is_public' => $request->is_public ?? false,
+            'name' => $request->input('name'),
+            'description' => $request->input('description'),
+            'is_public' => $request->input('is_public') ?? false,
             'user_id' => auth()->id() ?? \App\Models\User::first()->id, // Fallback for dev
         ]);
 

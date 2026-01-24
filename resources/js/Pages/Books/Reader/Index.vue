@@ -1,167 +1,346 @@
 <template>
-    <div class="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans" dir="rtl">
-        <!-- Top Navigation -->
-        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shadow-sm z-20">
-            <div class="flex items-center gap-4">
-                <Link href="/books" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                    </svg>
-                </Link>
-                <div>
-                    <h1 class="text-xl font-bold text-slate-800">{{ book.title }}</h1>
-                    <p class="text-xs text-slate-500">جاري القراءة...</p>
-                </div>
-            </div>
-            
-            <div class="flex items-center gap-3">
-                <button @click="toggleDarkMode" class="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors">
-                    <svg v-if="!isDark" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                    </svg>
-                    <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                </button>
-                <div class="h-6 w-px bg-slate-200 mx-2"></div>
-                <span class="text-sm font-medium text-slate-600">المحقق: {{"غير محدد"}}</span>
-            </div>
-        </header>
-
-        <div class="flex flex-1 overflow-hidden relative">
-            <!-- Sidebar: Hierarchy -->
-            <aside 
-                class="w-80 bg-white border-l border-slate-200 overflow-y-auto transition-all duration-300 z-10"
-                :class="{ '-mr-80': sidebarCollapsed }"
-            >
-                <div class="p-4 sticky top-0 bg-white z-10 border-b border-slate-100 mb-2">
-                    <input 
-                        id="sidebar-search"
-                        name="sidebar-search"
-                        type="text" 
-                        placeholder="ابحث في الفهرس..." 
-                        v-model="searchQuery"
-                        class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
-                    />
-                </div>
-                
-                <nav class="px-2 pb-10">
-                    <Draggable 
-                        v-model="rootItems" 
-                        item-key="id" 
-                        group="hierarchy" 
-                        ghost-class="ghost"
-                        @end="onRootDragEnd"
-                    >
-                        <template #item="{ element }">
-                            <TreeItem 
-                                :item="element" 
-                                :all-items="hierarchy"
-                                :selected-id="selectedId"
-                                @select="selectChapter"
-                            />
-                        </template>
-                    </Draggable>
-                </nav>
-            </aside>
-
-            <!-- Main Content Area -->
-            <main class="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12 relative bg-[#fcfbf9] selection:bg-amber-100">
-                <!-- Toggle Sidebar Button (Vertical) -->
-                <button 
-                    @click="sidebarCollapsed = !sidebarCollapsed" 
-                    class="absolute top-1/2 -right-3 -translate-y-1/2 p-1 bg-white border border-slate-200 rounded-full shadow-lg hover:bg-slate-50 transition-all z-20 group"
-                    :class="{ 'rotate-180 -left-3 right-auto': sidebarCollapsed }"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400 group-hover:text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                </button>
-
-                <div class="max-w-3xl mx-auto min-h-screen">
-                    <Transition 
-                        name="fade-slide" 
-                        mode="out-in"
-                    >
-                        <div v-if="loading" key="loading" class="flex flex-col items-center justify-center pt-32 space-y-4">
-                            <div class="w-12 h-12 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin"></div>
-                            <p class="text-slate-400 text-sm animate-pulse">جاري تحميل المحتوى...</p>
-                        </div>
-
-                        <div v-else-if="currentChapter" :key="currentChapter.id" class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                            <!-- Chapter Header -->
-                            <div class="text-center mb-12">
-                                <span class="inline-block px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-bold mb-4 tracking-wider uppercase">
-                                    {{ getTypeName(currentChapter.type) }}
-                                </span>
-                                <h2 class="text-4xl md:text-5xl font-extrabold text-slate-800 leading-tight font-serif tracking-tight">
-                                    {{ currentChapter.title }}
-                                </h2>
-                                <div class="w-24 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent mx-auto mt-8"></div>
-                            </div>
-
-                            <!-- Content Blocks -->
-                            <div class="space-y-10">
-                                <template v-if="contentBlocks.length > 0">
-                                    <BlockRenderer 
-                                        v-for="block in contentBlocks" 
-                                        :key="block.id" 
-                                        :block="block" 
-                                    />
-                                </template>
-                                <div v-else class="py-12 px-8 bg-amber-50/30 rounded-3xl border border-amber-100/50">
-                                    <div class="flex items-center gap-4 mb-6">
-                                        <div class="p-3 bg-amber-100 rounded-2xl text-amber-700">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                        </div>
-                                        <h3 class="text-lg font-bold text-amber-900">وصف القسم</h3>
-                                    </div>
-                                    <p class="text-slate-600 leading-relaxed italic">
-                                        {{ metadata.description || 'هذا القسم يعمل كمنظم للفصول والمواد العلمية التالية، لا يحتوي على نص مباشر حالياً.' }}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <!-- Footer Navigation -->
-                            <div class="pt-20 pb-10 flex justify-between items-center border-t border-slate-100">
-                                <button class="group flex items-center gap-2 text-slate-500 hover:text-amber-600 transition-colors">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 bg-slate-100 rounded p-1 group-hover:bg-amber-100 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                    <span class="text-sm font-medium">السابق</span>
-                                </button>
-                                <button class="group flex items-center gap-2 text-slate-500 hover:text-amber-600 transition-colors">
-                                    <span class="text-sm font-medium">التالي</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 bg-slate-100 rounded p-1 group-hover:bg-amber-100 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div v-else key="empty" class="flex flex-col items-center justify-center pt-48 opacity-40">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-32 w-32 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="0.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                            </svg>
-                            <p class="mt-6 text-xl font-serif">اختر فصلاً من الفهرس للبدء بالقراءة</p>
-                        </div>
-                    </Transition>
-                </div>
-            </main>
+  <div
+    class="flex flex-col h-screen bg-amber-50/30 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans"
+    dir="rtl"
+  >
+    <!-- Top Navigation -->
+    <header class="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-6 shadow-sm z-20">
+      <div class="flex items-center gap-4">
+        <Link
+          href="/books"
+          class="p-2 hover:bg-slate-100 rounded-full transition-colors"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6 text-slate-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </Link>
+        <div>
+          <h1 class="text-xl font-bold text-slate-800 dark:text-slate-100 font-serif">
+            {{ book.title }}
+          </h1>
         </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="h-6 w-px bg-slate-200 mx-2" />
+        <span class="text-sm font-medium text-slate-600">المحقق: {{ "غير محدد" }}</span>
+        <div class="h-6 w-px bg-slate-200 mx-2" />
+        <!-- Edit Button: Redirects to the Unified Editor -->
+        <Link
+          v-if="currentChapter"
+          :href="route('studio.show', { type: 'book', slug: currentChapter.id })" 
+          class="btn-secondary px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 text-indigo-600 hover:bg-indigo-50 transition-colors"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+            />
+          </svg>
+          تعديل
+        </Link>
+      </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden relative">
+      <!-- Sidebar: Hierarchy -->
+      <aside
+        class="reader-sidebar w-80 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 overflow-y-auto transition-all duration-300 z-10"
+        :class="{ '-mr-80': sidebarCollapsed }"
+      >
+        <div class="p-4 sticky top-0 bg-white dark:bg-slate-800 z-10 border-b border-slate-100 dark:border-slate-700 mb-2">
+          <input
+            id="sidebar-search"
+            v-model="searchQuery"
+            name="sidebar-search"
+            type="text"
+            placeholder="ابحث في الفهرس..."
+            class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all dark:text-slate-100 dark:placeholder-slate-400"
+          >
+
+          <div class="flex items-center justify-between mt-3 px-1">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">الفهرس</span>
+            <div class="flex items-center gap-1">
+              <button
+                class="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors text-slate-400 hover:text-amber-600 group"
+                title="توسيع الكل"
+                @click="expandAll"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 5l-7 7-7-7"
+                    class="opacity-50"
+                  />
+                </svg>
+              </button>
+              <button
+                class="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors text-slate-400 hover:text-amber-600"
+                title="طي الكل"
+                @click="collapseAll"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 15l7-7 7 7"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 19l7-7 7 7"
+                    class="opacity-50"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <nav class="px-2 pb-10">
+          <!-- Read-only Hierarchy Tree -->
+          <div
+            v-for="item in rootItems"
+            :key="item.id || item._id"
+          >
+            <TreeItem
+              :item="item"
+              :all-items="hierarchy"
+              :selected-id="selectedId"
+              @select="navigateToChapter"
+            />
+          </div>
+        </nav>
+      </aside>
+
+      <!-- Main Content Area -->
+      <main class="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12 relative bg-[#fcfbf9] dark:bg-slate-900 selection:bg-amber-100 dark:selection:bg-amber-900">
+        <!-- Toggle Sidebar Button (Vertical) -->
+        <button
+          class="absolute top-1/2 -right-3 -translate-y-1/2 p-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full shadow-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all z-20 group"
+          :class="{ 'rotate-180 -left-3 right-auto': sidebarCollapsed }"
+          @click="sidebarCollapsed = !sidebarCollapsed"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 text-slate-400 group-hover:text-amber-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </button>
+
+        <div class="max-w-3xl mx-auto min-h-screen">
+          <Transition
+            name="fade-slide"
+            mode="out-in"
+          >
+            <div
+              v-if="loading"
+              key="loading"
+              class="flex flex-col items-center justify-center pt-32 space-y-4"
+            >
+              <div class="w-12 h-12 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin" />
+              <p class="text-slate-400 text-sm animate-pulse">
+                جاري تحميل المحتوى...
+              </p>
+            </div>
+
+            <div
+              v-else-if="currentChapter"
+              :key="currentChapter.id"
+              class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700"
+            >
+              <!-- Chapter Header -->
+              <div class="text-center mb-12">
+                <span class="inline-block px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-bold mb-4 tracking-wider uppercase">
+                  {{ getTypeName(currentChapter.type) }}
+                </span>
+                <h2 class="text-4xl md:text-5xl font-extrabold text-slate-800 dark:text-slate-100 leading-tight font-serif tracking-tight">
+                  {{ currentChapter.title }}
+                </h2>
+                <div class="w-24 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent mx-auto mt-8" />
+              </div>
+
+              <!-- Content Blocks (Unified TipTap Reader) -->
+              <div class="reader-container prose prose-slate dark:prose-invert max-w-none prose-lg animate-in fade-in duration-1000">
+                <!-- Reusing the Unified Editor Component in Read-Only Mode -->
+                <TiptapEditor 
+                  v-if="currentChapter.content_blocks"
+                  :model-value="currentChapter.content_blocks"
+                  :editable="false"
+                />
+
+                <div
+                  v-if="!currentChapter.content_blocks || !currentChapter.content_blocks.length"
+                  class="py-12 px-8 bg-amber-50/30 rounded-3xl border border-amber-100/50"
+                >
+                  <div class="flex items-center gap-4 mb-6">
+                    <div class="p-3 bg-amber-100 rounded-2xl text-amber-700">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-6 w-6"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-amber-900">
+                      وصف القسم
+                    </h3>
+                  </div>
+                  <p class="text-slate-600 leading-relaxed italic">
+                    {{ metadata.description || 'هذا القسم يعمل كمنظم للفصول والمواد العلمية التالية، لا يحتوي على نص مباشر حالياً.' }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Footer Navigation -->
+              <div class="pt-20 pb-10 flex justify-between items-center border-t border-slate-100">
+                <button
+                  :disabled="!prevChapter"
+                  :class="{'opacity-50 cursor-not-allowed': !prevChapter, 'group hover:text-amber-600': prevChapter}"
+                  class="flex items-center gap-2 text-slate-500 transition-colors"
+                  @click="navigateTo(prevChapter)"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5 bg-slate-100 rounded p-1 group-hover:bg-amber-100 transition-colors"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
+                  <span class="text-sm font-medium">
+                    {{ prevChapter ? prevChapter.title : 'البداية' }}
+                  </span>
+                </button>
+
+                <button
+                  :disabled="!nextChapter"
+                  :class="{'opacity-50 cursor-not-allowed': !nextChapter, 'group hover:text-amber-600': nextChapter}"
+                  class="flex items-center gap-2 text-slate-500 transition-colors"
+                  @click="navigateTo(nextChapter)"
+                >
+                  <span class="text-sm font-medium">
+                    {{ nextChapter ? nextChapter.title : 'النهاية' }}
+                  </span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5 bg-slate-100 rounded p-1 group-hover:bg-amber-100 transition-colors"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div
+              v-else
+              key="empty"
+              class="flex flex-col items-center justify-center pt-48 opacity-40"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-32 w-32 text-slate-300"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="0.5"
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                />
+              </svg>
+              <p class="mt-6 text-xl font-serif">
+                اختر فصلاً من الفهرس للبدء بالقراءة
+              </p>
+            </div>
+          </Transition>
+        </div>
+      </main>
     </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { ref, computed, onMounted, watch, provide } from 'vue';
+import { Link, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import TreeItem from './TreeItem.vue';
-import BlockRenderer from './BlockRenderer.vue';
-import { debounce } from 'lodash';
-import Draggable from 'vuedraggable';
+// Use the Unified Editor Engine
+import TiptapEditor from '@/Technologies/Editor/Core/TiptapEditor.vue';
 
 const props = defineProps({
     book: Object,
@@ -173,70 +352,36 @@ const props = defineProps({
 const hierarchy = ref(props.initialHierarchy);
 const selectedId = ref(props.childId);
 const currentChapter = ref(props.initialContent);
-const contentBlocks = computed(() => currentChapter.value?.content_blocks || []);
 const loading = ref(false);
-const sidebarCollapsed = ref(false);
-const isDark = ref(false);
+const sidebarCollapsed = ref(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
 const searchQuery = ref('');
 
 // Metadata for the current chapter/volume
 const metadata = computed(() => currentChapter.value?.metadata || {});
 
-const rootItems = computed({
-    get() {
-        if (searchQuery.value.trim()) {
-            return hierarchy.value.filter(item => 
-                item.title.toLowerCase().includes(searchQuery.value.toLowerCase())
-            );
-        }
-        return hierarchy.value.filter(item => !item.parent_id).sort((a, b) => a.order - b.order);
-    },
-    set(newVal) {
-        // When root items are reordered, we need to update the order in the main hierarchy array
-        // This is a bit complex because hierarchy contains ALL items.
-        // We probably need to just trigger the backend update and then maybe refresh.
-        // Or simpler: We update the 'order' property of the items in 'hierarchy' matching these IDs.
-        newVal.forEach((item, index) => {
-            const hierarchyItem = hierarchy.value.find(h => h.id === item.id);
-            if (hierarchyItem) {
-                hierarchyItem.order = index;
-            }
-        });
+const rootItems = computed(() => {
+    const query = searchQuery.value.trim().toLowerCase();
+    if (query) {
+        return hierarchy.value.filter(item =>
+            item.title.toLowerCase().includes(query)
+        );
     }
+    return hierarchy.value
+        .filter(item => !item.parent_id)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
 });
 
-const onRootDragEnd = () => {
-    // 1. Get filtered root items in their new order
-    const updates = rootItems.value.map((child, index) => ({
-        id: child.id,
-        order: index,
-        parent_id: null
-    }));
-
-    // 2. Send to backend
-    axios.post(route('api.books.contents.reorder', props.book.slug), {
-        items: updates
-    }).then(() => {
-        console.log('Root order updated');
-    }).catch(err => {
-        console.error('Failed to adjust root order', err);
-    });
-};
-
-// Helper to determine if we are in search mode for the template
-const isSearching = computed(() => !!searchQuery.value.trim());
-
-// Watch for URL changes to load content without full page reload if possible
-// Though Inertia will handle the prop updates, we might want to sync local state
+// Watch for URL changes to sync state
 watch(() => props.childId, (newId) => {
     selectedId.value = newId;
+    if (newId && (!currentChapter.value || currentChapter.value.id !== newId)) {
+        fetchChapterContent(newId);
+    }
 });
 
 watch(() => props.initialContent, (newContent) => {
     if (newContent) {
         currentChapter.value = newContent;
-    } else if (!props.childId) {
-        currentChapter.value = null;
     }
 }, { immediate: true });
 
@@ -246,7 +391,6 @@ const fetchChapterContent = async (id) => {
     try {
         const response = await axios.get(route('book-contents.show', id));
         currentChapter.value = { id, ...response.data };
-        contentBlocks.value = response.data.content_blocks || [];
     } catch (error) {
         console.error("Error loading chapter content:", error);
     } finally {
@@ -254,16 +398,45 @@ const fetchChapterContent = async (id) => {
     }
 };
 
-const selectChapter = (item) => {
-    // This now just handles UI state if needed, navigation is in TreeItem
-    selectedId.value = item.id;
+const navigateToChapter = (item) => {
+    router.visit(route('books.reader', [props.book.slug, item.id]));
+};
+
+// Navigation Logic
+const flattenedHierarchy = computed(() => {
+    const flatten = (parentId = null) => {
+        return hierarchy.value
+            .filter(item => item.parent_id === parentId)
+            .sort((a, b) => (a.order || 0) - (b.order || 0))
+            .reduce((acc, item) => {
+                return [...acc, item, ...flatten(item.id)];
+            }, []);
+    };
+    return flatten();
+});
+
+const prevChapter = computed(() => {
+    if (!currentChapter.value) return null;
+    const index = flattenedHierarchy.value.findIndex(item => item.id === currentChapter.value.id);
+    return index > 0 ? flattenedHierarchy.value[index - 1] : null;
+});
+
+const nextChapter = computed(() => {
+    if (!currentChapter.value) return null;
+    const index = flattenedHierarchy.value.findIndex(item => item.id === currentChapter.value.id);
+    return index !== -1 && index < flattenedHierarchy.value.length - 1 ? flattenedHierarchy.value[index + 1] : null;
+});
+
+const navigateTo = (chapter) => {
+    if (!chapter) return;
+    router.visit(route('books.reader', [props.book.slug, chapter.id]));
 };
 
 const getTypeName = (type) => {
     const types = {
         'sub-book': 'كتاب فرعي',
         'part': 'جزء',
-        'door': 'باب',
+        'bab': 'باب',
         'chapter': 'فصل',
         'masala': 'مسألة',
         // Fallbacks or others
@@ -273,8 +446,7 @@ const getTypeName = (type) => {
     return types[type] || 'قسم';
 };
 
-// Persistence Logic
-// Initialize from LocalStorage
+// Persistence Logic for Sidebar
 const getStoredExpanded = () => {
     if (typeof window === 'undefined') return new Set();
     const key = `book_reader_expanded_${props.book.id}`;
@@ -306,18 +478,26 @@ const toggleExpand = (id) => {
 
 const isExpanded = (id) => expandedIds.value.has(id);
 
+const expandAll = () => {
+    const parentIds = new Set();
+    hierarchy.value.forEach(item => {
+        if (item.parent_id) {
+            parentIds.add(String(item.parent_id));
+        }
+    });
+    expandedIds.value = parentIds;
+};
+
+const collapseAll = () => {
+    expandedIds.value = new Set();
+};
+
 // Provide to recursive children
-import { provide } from 'vue';
 provide('sidebarContext', {
     expandedIds,
     toggleExpand,
     isExpanded
 });
-
-const toggleDarkMode = () => {
-    isDark.value = !isDark.value;
-    // Implementation for dark mode toggle on body if needed
-};
 </script>
 
 <style scoped>
@@ -354,16 +534,10 @@ const toggleDarkMode = () => {
     background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
+    background: #cbd5e1;
     border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #cbd5e1;
-}
-
-.ghost {
-    background-color: #fef3c7; /* amber-100 */
-    opacity: 0.5;
-    border: 2px dashed #d97706; /* amber-600 */
+    background: #94a3b8;
 }
 </style>

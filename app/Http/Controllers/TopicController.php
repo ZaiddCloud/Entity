@@ -4,92 +4,39 @@ namespace App\Http\Controllers;
 
 use App\Models\Topic;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
-class TopicController extends Controller
+/**
+ * TopicController - Refactored to use EntityController Hooks
+ */
+class TopicController extends EntityController
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request)
+    //Configuration
+    protected function getModelClass(): string { return Topic::class; }
+    protected function getViewPath(): string { return 'Topics'; }
+    protected function getRouteName(): string { return 'topics'; }
+    protected function getStoreRequestClass(): ?string { return \App\Http\Requests\StoreTopicRequest::class; }
+    protected function getUpdateRequestClass(): ?string { return \App\Http\Requests\UpdateTopicRequest::class; }
+
+    //Customization
+    protected function getRelations(): array { return ['parent', 'children', 'books', 'videos', 'audios', 'manuscripts']; }
+    protected function getSearchFields(): array { return ['name']; }
+    protected function getPerPage(): int { return 12; }
+    
+    protected function getCreateSuccessMessage(): string { return 'تم إضافة الموضوع بنجاح'; }
+    protected function getUpdateSuccessMessage(): string { return 'تم تحديث الموضوع بنجاح'; }
+    protected function getDeleteSuccessMessage(): string { return 'تم حذف الموضوع بنجاح'; }
+
+    protected function getFormData(): array
     {
-        $query = Topic::query();
+        $topic = request()->route('topic');
+        $id = ($topic instanceof Topic) ? $topic->id : $topic;
 
-        if ($request->has('search')) {
-            $query->where('title', 'like', '%' . $request->search . '%');
-        }
+        $topics = Topic::when($id, fn($q) => $q->where('id', '!=', $id))
+            ->select('id', 'name')
+            ->get();
 
-        $topics = $query->withCount(['books', 'videos', 'audios', 'manuscripts'])
-            ->latest()
-            ->paginate(12)
-            ->withQueryString();
-
-        return Inertia::render('Topics/Index', [
-            'topics' => $topics,
-            'filters' => $request->only(['search']),
-        ]);
-    }
-
-    /**
-     * Bulk destroy resource.
-     */
-    public function bulkDestroy(Request $request)
-    {
-        $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'required|exists:topics,id',
-        ]);
-
-        Topic::whereIn('id', $request->ids)->delete();
-
-        return back()->with('success', 'تم حذف المواضيع بنجاح.');
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return [
+            'parentTopics' => $topics
+        ];
     }
 }

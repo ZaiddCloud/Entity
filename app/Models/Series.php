@@ -6,6 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
+/**
+ * @property string $id
+ * @property string $title
+ * @property string|null $description
+ * @property int $order_column
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Support\Collection $entities
+ */
 class Series extends Model
 {
     use \App\Traits\HasPolymorphicRelations;

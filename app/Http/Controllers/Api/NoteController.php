@@ -32,10 +32,10 @@ class NoteController extends Controller
         ]);
 
         $note = Note::create([
-            'content' => $request->content,
+            'content' => $request->input('content'),
             'user_id' => auth()->id() ?? \App\Models\User::first()->id,
-            'notable_id' => $request->notable_id,
-            'notable_type' => $request->notable_type,
+            'notable_id' => $request->input('notable_id'),
+            'notable_type' => $request->input('notable_type'),
         ]);
 
         return response()->json([

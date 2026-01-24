@@ -42,16 +42,47 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/search', [GlobalSearchController::class, 'index'])->name('search');
 
+    // Unified Smart Editor Routes
+    // Unified Smart Editor Routes (Entity Studio)
+    Route::get('/studio/resume', [App\Http\Controllers\UnifiedEditorController::class, 'resume'])->name('studio.resume');
+    Route::get('/studio/{type}/{slug}', [App\Http\Controllers\UnifiedEditorController::class, 'show'])->name('studio.show');
+    Route::post('/studio/{type}/{slug}/save', [App\Http\Controllers\UnifiedEditorController::class, 'save'])->name('studio.save');
+
+    // Missing API routes for Book Children (Compatibility Layer)
+    Route::post('api/book-children/{id}/save', [BookContentController::class, 'updateValidation'])->name('api.book-children.save');
+    Route::post('api/book-children/{id}/restore/{version?}', [BookContentController::class, 'restoreVersion'])->name('api.book-children.restore');
+
+    // API routes for Segments (Audio/Video)
+    Route::post('api/segments', [App\Http\Controllers\Api\SegmentController::class, 'store'])->name('api.segments.store');
+
+    // System Commands API
+    Route::post('api/system/run-command', [App\Http\Controllers\SystemController::class, 'runCommand'])->name('api.system.run-command');
+
+    // Command Dashboard Page
+    Route::get('/system/commands', function () {
+        return Inertia\Inertia::render('System/Commands');
+    })->name('system.commands');
+
+    // Editor Test Route
+    Route::get('/editor-test', [App\Http\Controllers\EditorTestController::class, 'index'])->name('editor.test');
+
+
     // Web Resource Routes
     Route::resource('books', BookController::class);
     Route::resource('audios', AudioController::class);
-    Route::resource('videos', VideoController::class);
-    Route::resource('manuscripts', ManuscriptController::class);
+    Route::get('audios/{audio}/editor/{child}', [AudioController::class, 'editor'])->name('audios.editor');
 
-    // Book Reader Routes
+    Route::resource('videos', VideoController::class);
+    Route::get('videos/{video}/editor/{child}', [VideoController::class, 'editor'])->name('videos.editor');
+
+    Route::resource('manuscripts', ManuscriptController::class);
+    Route::get('manuscripts/{manuscript}/editor/{child}', [ManuscriptController::class, 'editor'])->name('manuscripts.editor');
+
+    // Book Reader & Editor Routes
     Route::get('books/{book}/reader/{child?}', [BookContentController::class, 'show'])->name('books.reader');
+    Route::get('books/{book}/editor/{child}', [BookController::class, 'editor'])->name('books.editor');
     Route::get('book-contents/{child}', [BookContentController::class, 'getChildContent'])->name('book-contents.show');
-// routes/web.php or routes/api.php
+    // routes/web.php or routes/api.php
 
     Route::get('authors', [AuthorController::class, 'index'])->name('authors.index');
     // Taxonomy and Organization
@@ -62,6 +93,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('tags', TagController::class);
 
     Route::post('authors/bulk-destroy', [AuthorController::class, 'bulkDestroy'])->name('authors.bulk-destroy');
+    Route::post('authors/{author}/restore', [AuthorController::class, 'restore'])->name('authors.restore');
+    Route::delete('authors/{author}/force-delete', [AuthorController::class, 'forceDelete'])->name('authors.force-delete');
     Route::resource('authors', AuthorController::class);
 
     Route::post('publishers/bulk-destroy', [PublisherController::class, 'bulkDestroy'])->name('publishers.bulk-destroy');
@@ -80,6 +113,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('shelves', ShelfController::class);
 
     Route::resource('collections', CollectionController::class);
+    Route::post('series/bulk-destroy', [SeriesController::class, 'bulkDestroy'])->name('series.bulk-destroy');
     Route::resource('series', SeriesController::class);
 
     // Metadata and Logs
@@ -87,4 +121,28 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('comments', CommentController::class);
     Route::resource('notes', NoteController::class);
     Route::resource('deletions', DeletionController::class)->only(['index', 'show']);
+
 });
+
+// 🧪 SANDBOX ROUTES (Temporary for Development)
+Route::get('/dev/editor', function () {
+    return \Inertia\Inertia::render('Technologies/Editor/Sandbox');
+})->name('dev.editor');
+
+Route::get('/dev/player/{type}/{slug}', function ($type, $slug) {
+    $modelClass = match ($type) {
+        'audio' => \App\Models\Audio::class,
+        'video' => \App\Models\Video::class,
+        default => abort(404, 'Media type not found'),
+    };
+
+    $media = $modelClass::where('slug', $slug)->with(['authors', 'versions.publisher'])->firstOrFail();
+
+    return \Inertia\Inertia::render('Technologies/Player/Sandbox', [
+        'media' => $media,
+        'type' => $type
+    ]);
+})->name('dev.player');
+
+Route::get('/dev/manuscripter/{manuscript:slug}', [\App\Http\Controllers\ManuscriptController::class, 'sandbox'])->name('dev.manuscripter');
+

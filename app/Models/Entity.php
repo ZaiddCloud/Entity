@@ -11,6 +11,21 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use App\Traits\HasPolymorphicRelations;
 
+/**
+ * @property string $id
+ * @property string $title
+ * @property string $slug
+ * @property int $serial_number
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property string|null $file_path
+ * @property int|null $duration
+ * @property-read string $type
+ * @property-read string $formatted_serial_number
+ * @mixin \Illuminate\Database\Eloquent\Builder
+ * @mixin \Illuminate\Database\Query\Builder
+ */
 abstract class Entity extends Model
 {
     use HasFactory, SoftDeletes, HasPolymorphicRelations, HasCommonScopes, HasUuids;
@@ -85,11 +100,11 @@ abstract class Entity extends Model
 
         return Cache::remember($cacheKey, now()->addMinutes(30), function () {
             return [
-                'views_count' => $this->views()->count(),
-                'favourites_count' => $this->favourites()->count(),
+                // 'views_count' => $this->views()->count(),
+                // 'favourites_count' => $this->favourites()->count(),
                 'comments_count' => $this->comments()->count(),
                 'reviews_count' => $this->reviews()->count(),
-                'average_rating' => $this->reviews()->avg('rating') ?? 0,
+                // 'average_rating' => $this->reviews()->avg('rating') ?? 0,
                 'tags_count' => $this->tags()->count(),
                 'categories_count' => $this->categories()->count(),
                 'last_activity' => $this->activities()->latest()->first()?->created_at,

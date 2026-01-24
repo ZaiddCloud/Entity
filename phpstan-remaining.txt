@@ -1,0 +1,1631 @@
+ ------ ------------------------------- 
+  Line   Console/Commands/AnalyzeArchi  
+         tecture.php                    
+ ------ ------------------------------- 
+  :141   Strict comparison using ===    
+         between                        
+         mixed~(0|0.0|''|'0'|array{}|f  
+         alse|null) and '0' will        
+         always evaluate to false.      
+         🪪  identical.alwaysFalse      
+         💡  Type                       
+         0|0.0|''|'0'|array{}|false|nu  
+         ll has already been            
+         eliminated from mixed.         
+  :245   Offset 0 on array{list<string  
+         >, list<non-empty-string>} on  
+          left side of ?? always        
+         exists and is not nullable.    
+         🪪  nullCoalesce.offset        
+  :246   Offset 0 on array{list<string  
+         >, list<non-empty-string>} on  
+          left side of ?? always        
+         exists and is not nullable.    
+         🪪  nullCoalesce.offset        
+  :247   Offset 0 on array{list<string  
+         >, list<non-empty-string>} on  
+          left side of ?? always        
+         exists and is not nullable.    
+         🪪  nullCoalesce.offset        
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Console/Commands/SeedRealisti  
+         cData.php                      
+ ------ ------------------------------- 
+  :56    Call to an undefined static    
+         method                         
+         App\Models\Book::truncate().   
+         🪪  staticMethod.notFound      
+  :57    Call to an undefined static    
+         method                         
+         App\Models\Audio::truncate().  
+         🪪  staticMethod.notFound      
+  :58    Call to an undefined static    
+         method                         
+         App\Models\Video::truncate().  
+         🪪  staticMethod.notFound      
+  :59    Call to an undefined static    
+         method                         
+         App\Models\Manuscript::trunca  
+         te().                          
+         🪪  staticMethod.notFound      
+  :60    Call to an undefined static    
+         method                         
+         App\Models\Author::truncate()  
+         .                              
+         🪪  staticMethod.notFound      
+  :61    Call to an undefined static    
+         method                         
+         App\Models\Publisher::truncat  
+         e().                           
+         🪪  staticMethod.notFound      
+  :62    Call to an undefined static    
+         method                         
+         App\Models\Booker::truncate()  
+         .                              
+         🪪  staticMethod.notFound      
+  :63    Call to an undefined static    
+         method                         
+         App\Models\Category::truncate  
+         ().                            
+         🪪  staticMethod.notFound      
+  :64    Call to an undefined static    
+         method                         
+         App\Models\Tag::truncate().    
+         🪪  staticMethod.notFound      
+  :65    Call to an undefined static    
+         method                         
+         App\Models\Activity::truncate  
+         ().                            
+         🪪  staticMethod.notFound      
+  :66    Call to an undefined static    
+         method                         
+         App\Models\Comment::truncate(  
+         ).                             
+         🪪  staticMethod.notFound      
+  :67    Call to an undefined static    
+         method                         
+         App\Models\Note::truncate().   
+         🪪  staticMethod.notFound      
+  :68    Call to an undefined static    
+         method                         
+         App\Models\Collection::trunca  
+         te().                          
+         🪪  staticMethod.notFound      
+  :69    Call to an undefined static    
+         method                         
+         App\Models\Series::truncate()  
+         .                              
+         🪪  staticMethod.notFound      
+  :70    Call to an undefined static    
+         method                         
+         App\Models\Shelf::truncate().  
+         🪪  staticMethod.notFound      
+  :76    Call to an undefined static    
+         method                         
+         App\Models\User::firstOrCreat  
+         e().                           
+         🪪  staticMethod.notFound      
+  :80    Call to an undefined static    
+         method                         
+         App\Models\User::count().      
+         🪪  staticMethod.notFound      
+  :96    Call to an undefined static    
+         method                         
+         App\Models\Category::firstOrC  
+         reate().                       
+         🪪  staticMethod.notFound      
+  :109   Call to an undefined static    
+         method                         
+         App\Models\Tag::firstOrCreate  
+         ().                            
+         🪪  staticMethod.notFound      
+  :130   Call to an undefined static    
+         method                         
+         App\Models\Topic::firstOrCrea  
+         te().                          
+         🪪  staticMethod.notFound      
+  :132   Call to an undefined static    
+         method                         
+         App\Models\Topic::firstOrCrea  
+         te().                          
+         🪪  staticMethod.notFound      
+  :134   Call to an undefined static    
+         method                         
+         App\Models\Topic::firstOrCrea  
+         te().                          
+         🪪  staticMethod.notFound      
+  :144   Call to an undefined static    
+         method                         
+         App\Models\Author::firstOrCre  
+         ate().                         
+         🪪  staticMethod.notFound      
+  :150   Call to an undefined static    
+         method                         
+         App\Models\Publisher::firstOr  
+         Create().                      
+         🪪  staticMethod.notFound      
+  :156   Call to an undefined static    
+         method                         
+         App\Models\Booker::firstOrCre  
+         ate().                         
+         🪪  staticMethod.notFound      
+  :271   Call to an undefined static    
+         method                         
+         App\Models\Shelf::create().    
+         🪪  staticMethod.notFound      
+  :330   Access to an undefined         
+         property                       
+         Illuminate\Database\Eloquent\  
+         Model::$id.                    
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :342   Access to an undefined         
+         property                       
+         Illuminate\Database\Eloquent\  
+         Model::$id.                    
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :358   Offset int<1, 5> on array{1:   
+         'الأولى', 2: 'الثانية', 3:     
+         'الثالثة', 4: 'الرابعة', 5:    
+         'الخامسة'} on left side of ??  
+         always exists and is not       
+         nullable.                      
+         🪪  nullCoalesce.offset        
+  :389   Call to an undefined static    
+         method                         
+         App\Models\Author::where().    
+         🪪  staticMethod.notFound      
+  :408   Match arm comparison between   
+         4 and 4 is always true.        
+         🪪  match.alwaysTrue           
+         💡  Remove remaining cases     
+         below this one and this error  
+         will disappear too.            
+  :411   Call to an undefined static    
+         method                         
+         App\Models\Version::create().  
+         🪪  staticMethod.notFound      
+  :426   Call to an undefined static    
+         method                         
+         App\Models\Shelf::inRandomOrd  
+         er().                          
+         🪪  staticMethod.notFound      
+  :439   Call to an undefined static    
+         method                         
+         App\Models\Comment::create().  
+         🪪  staticMethod.notFound      
+  :448   Call to an undefined static    
+         method                         
+         App\Models\Note::create().     
+         🪪  staticMethod.notFound      
+  :456   Call to an undefined static    
+         method                         
+         App\Models\Activity::create()  
+         .                              
+         🪪  staticMethod.notFound      
+  :475   Call to an undefined static    
+         method                         
+         App\Models\Collection::create  
+         ().                            
+         🪪  staticMethod.notFound      
+  :488   Call to an undefined static    
+         method                         
+         App\Models\Series::create().   
+         🪪  staticMethod.notFound      
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Console/Commands/StorageSync.  
+         php                            
+ ------ ------------------------------- 
+  :153   Call to an undefined static    
+         method                         
+         App\Models\Version::where().   
+         🪪  staticMethod.notFound      
+  :157   Call to an undefined static    
+         method                         
+         App\Models\Version::updateOrC  
+         reate().                       
+         🪪  staticMethod.notFound      
+  :225   Static call to instance        
+         method                         
+         Illuminate\Database\Eloquent\  
+         Builder<Illuminate\Database\E  
+         loquent\Model>::where().       
+         🪪  method.staticCall          
+  :453   Static call to instance        
+         method                         
+         Illuminate\Database\Eloquent\  
+         Builder<Illuminate\Database\E  
+         loquent\Model>::where().       
+         🪪  method.staticCall          
+  :460   Access to an undefined         
+         property                       
+         Illuminate\Database\Eloquent\  
+         Model::$id.                    
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :519   Call to an undefined static    
+         method                         
+         App\Models\Tag::firstOrCreate  
+         ().                            
+         🪪  staticMethod.notFound      
+  :550   Call to an undefined static    
+         method                         
+         App\Models\Manuscript::where(  
+         ).                             
+         🪪  staticMethod.notFound      
+  :552   Call to an undefined static    
+         method                         
+         App\Models\Manuscript::create  
+         ().                            
+         🪪  staticMethod.notFound      
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/ActivityCont  
+         roller.php                     
+ ------ ------------------------------- 
+  :21    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$sea  
+         rch.                           
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :29    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$typ  
+         e.                             
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/Api/AudioCon  
+         troller.php                    
+ ------ ------------------------------- 
+  :30    Call to an undefined static    
+         method                         
+         App\Models\Audio::paginate().  
+         🪪  staticMethod.notFound      
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/Api/BookCont  
+         roller.php                     
+ ------ ------------------------------- 
+  :30    Call to an undefined static    
+         method                         
+         App\Models\Book::paginate().   
+         🪪  staticMethod.notFound      
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/Api/BookExpo  
+         rtController.php               
+ ------ ------------------------------- 
+  :21    Static call to instance        
+         method                         
+         Illuminate\Database\Eloquent\  
+         Builder<Illuminate\Database\E  
+         loquent\Model>::where().       
+         🪪  method.staticCall          
+  :30    Access to an undefined         
+         property                       
+         App\Models\BookChild::$title.  
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/Api/Category  
+         Controller.php                 
+ ------ ------------------------------- 
+  :19    Call to an undefined static    
+         method                         
+         App\Models\Category::withCoun  
+         t().                           
+         🪪  staticMethod.notFound      
+  :37    Call to an undefined static    
+         method                         
+         App\Models\Category::create()  
+         .                              
+         🪪  staticMethod.notFound      
+  :38    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$nam  
+         e.                             
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :39    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$nam  
+         e.                             
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :40    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$par  
+         ent_id.                        
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :41    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$des  
+         cription.                      
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/Api/Collecti  
+         onController.php               
+ ------ ------------------------------- 
+  :18    Call to an undefined static    
+         method                         
+         App\Models\Collection::withCo  
+         unt().                         
+         🪪  staticMethod.notFound      
+  :36    Call to an undefined static    
+         method                         
+         App\Models\Collection::create  
+         ().                            
+         🪪  staticMethod.notFound      
+  :37    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$nam  
+         e.                             
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :38    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$des  
+         cription.                      
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :40    Call to an undefined method    
+         Illuminate\Contracts\Auth\Fac  
+         tory::id().                    
+         🪪  method.notFound            
+  :40    Call to an undefined static    
+         method                         
+         App\Models\User::first().      
+         🪪  staticMethod.notFound      
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/Api/CommentC  
+         ontroller.php                  
+ ------ ------------------------------- 
+  :34    Call to an undefined static    
+         method                         
+         App\Models\Comment::create().  
+         🪪  staticMethod.notFound      
+  :35    Access to protected property   
+         Illuminate\Http\Request::$con  
+         tent.                          
+         🪪  property.protected         
+  :36    Call to an undefined method    
+         Illuminate\Contracts\Auth\Fac  
+         tory::id().                    
+         🪪  method.notFound            
+  :36    Call to an undefined static    
+         method                         
+         App\Models\User::first().      
+         🪪  staticMethod.notFound      
+  :37    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$com  
+         mentable_id.                   
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :38    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$com  
+         mentable_type.                 
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/Api/Manuscri  
+         ptController.php               
+ ------ ------------------------------- 
+  :30    Call to an undefined static    
+         method                         
+         App\Models\Manuscript::pagina  
+         te().                          
+         🪪  staticMethod.notFound      
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/Api/NoteCont  
+         roller.php                     
+ ------ ------------------------------- 
+  :34    Call to an undefined static    
+         method                         
+         App\Models\Note::create().     
+         🪪  staticMethod.notFound      
+  :35    Access to protected property   
+         Illuminate\Http\Request::$con  
+         tent.                          
+         🪪  property.protected         
+  :36    Call to an undefined method    
+         Illuminate\Contracts\Auth\Fac  
+         tory::id().                    
+         🪪  method.notFound            
+  :36    Call to an undefined static    
+         method                         
+         App\Models\User::first().      
+         🪪  staticMethod.notFound      
+  :37    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$not  
+         able_id.                       
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :38    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$not  
+         able_type.                     
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/Api/SeriesCo  
+         ntroller.php                   
+ ------ ------------------------------- 
+  :18    Call to an undefined static    
+         method                         
+         App\Models\Series::withCount(  
+         ).                             
+         🪪  staticMethod.notFound      
+  :34    Call to an undefined static    
+         method                         
+         App\Models\Series::create().   
+         🪪  staticMethod.notFound      
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/Api/TagContr  
+         oller.php                      
+ ------ ------------------------------- 
+  :19    Call to an undefined static    
+         method                         
+         App\Models\Tag::withCount().   
+         🪪  staticMethod.notFound      
+  :34    Call to an undefined static    
+         method                         
+         App\Models\Tag::create().      
+         🪪  staticMethod.notFound      
+  :35    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$nam  
+         e.                             
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :36    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$nam  
+         e.                             
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :37    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$typ  
+         e.                             
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/Api/VideoCon  
+         troller.php                    
+ ------ ------------------------------- 
+  :30    Call to an undefined static    
+         method                         
+         App\Models\Video::paginate().  
+         🪪  staticMethod.notFound      
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/AudioControl  
+         ler.php                        
+ ------ ------------------------------- 
+  :39    Call to an undefined static    
+         method                         
+         App\Models\Author::orderBy().  
+         🪪  staticMethod.notFound      
+  :40    Call to an undefined static    
+         method                         
+         App\Models\Publisher::orderBy  
+         ().                            
+         🪪  staticMethod.notFound      
+  :41    Call to an undefined static    
+         method                         
+         App\Models\Category::orderBy(  
+         ).                             
+         🪪  staticMethod.notFound      
+  :54    Parameter #1 $entity of        
+         method                         
+         App\Services\MediaManagerServ  
+         ice::updateMedia() expects     
+         App\Models\Entity,             
+         Illuminate\Database\Eloquent\  
+         Model given.                   
+         🪪  argument.type              
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/Auth/Registe  
+         rController.php                
+ ------ ------------------------------- 
+  :29    Call to an undefined static    
+         method                         
+         App\Models\User::create().     
+         🪪  staticMethod.notFound      
+  :30    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$nam  
+         e.                             
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :31    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$ema  
+         il.                            
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :32    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$pas  
+         sword.                         
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/BookContentC  
+         ontroller.php                  
+ ------ ------------------------------- 
+  :27    Static call to instance        
+         method                         
+         Illuminate\Database\Eloquent\  
+         Builder<Illuminate\Database\E  
+         loquent\Model>::where().       
+         🪪  method.staticCall          
+  :30    Access to an undefined         
+         property                       
+         Illuminate\Database\Eloquent\  
+         Model::$_id.                   
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :31    Access to an undefined         
+         property                       
+         Illuminate\Database\Eloquent\  
+         Model::$title.                 
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :32    Access to an undefined         
+         property                       
+         Illuminate\Database\Eloquent\  
+         Model::$type.                  
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :54    Access to an undefined         
+         property                       
+         App\Models\BookChild::$title.  
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :55    Access to an undefined         
+         property                       
+         App\Models\BookChild::$type.   
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :62    Static call to instance        
+         method                         
+         Illuminate\Database\Eloquent\  
+         Builder<Illuminate\Database\E  
+         loquent\Model>::find().        
+         🪪  method.staticCall          
+  :72    Call to an undefined method    
+         Illuminate\Database\Eloquent\  
+         Collection<int, Illuminate\Da  
+         tabase\Eloquent\Model>|Illumi  
+         nate\Database\Eloquent\Model:  
+         :createVersion().              
+         🪪  method.notFound            
+  :74    Access to an undefined         
+         property                       
+         Illuminate\Database\Eloquent\  
+         Collection<int, Illuminate\Da  
+         tabase\Eloquent\Model>|Illumi  
+         nate\Database\Eloquent\Model:  
+         :$content_blocks.              
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :75    Access to an undefined         
+         property                       
+         Illuminate\Database\Eloquent\  
+         Collection<int, Illuminate\Da  
+         tabase\Eloquent\Model>|Illumi  
+         nate\Database\Eloquent\Model:  
+         :$is_manually_edited.          
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :83    Static call to instance        
+         method                         
+         Illuminate\Database\Eloquent\  
+         Builder<Illuminate\Database\E  
+         loquent\Model>::find().        
+         🪪  method.staticCall          
+  :92    Access to an undefined         
+         property                       
+         Illuminate\Database\Eloquent\  
+         Collection<int, Illuminate\Da  
+         tabase\Eloquent\Model>|Illumi  
+         nate\Database\Eloquent\Model:  
+         :$content_blocks.              
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/BookControll  
+         er.php                         
+ ------ ------------------------------- 
+  :42    Call to an undefined static    
+         method                         
+         App\Models\Author::orderBy().  
+         🪪  staticMethod.notFound      
+  :43    Call to an undefined static    
+         method                         
+         App\Models\Publisher::orderBy  
+         ().                            
+         🪪  staticMethod.notFound      
+  :44    Call to an undefined static    
+         method                         
+         App\Models\Category::orderBy(  
+         ).                             
+         🪪  staticMethod.notFound      
+  :61    Parameter #1 $entity of        
+         method                         
+         App\Services\MediaManagerServ  
+         ice::updateMedia() expects     
+         App\Models\Entity,             
+         Illuminate\Database\Eloquent\  
+         Model given.                   
+         🪪  argument.type              
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/BookerContro  
+         ller.php                       
+ ------ ------------------------------- 
+  :19    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$sea  
+         rch.                           
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :43    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$ids  
+         .                              
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :43    Call to an undefined static    
+         method                         
+         App\Models\Booker::whereIn().  
+         🪪  staticMethod.notFound      
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/CategoryCont  
+         roller.php                     
+ ------ ------------------------------- 
+  :34    Call to an undefined static    
+         method                         
+         App\Models\Category::when().   
+         🪪  staticMethod.notFound      
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/CollectionCo  
+         ntroller.php                   
+ ------ ------------------------------- 
+  :21    Call to an undefined static    
+         method                         
+         App\Models\Collection::withCo  
+         unt().                         
+         🪪  staticMethod.notFound      
+  :23    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$sea  
+         rch.                           
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :56    Call to an undefined static    
+         method                         
+         App\Models\Collection::create  
+         ().                            
+         🪪  staticMethod.notFound      
+  :57    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$nam  
+         e.                             
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :58    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$des  
+         cription.                      
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :60    Call to an undefined method    
+         Illuminate\Contracts\Auth\Fac  
+         tory::id().                    
+         🪪  method.notFound            
+  :60    Call to an undefined static    
+         method                         
+         App\Models\User::first().      
+         🪪  staticMethod.notFound      
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/CommentContr  
+         oller.php                      
+ ------ ------------------------------- 
+  :20    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$sea  
+         rch.                           
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :52    Call to an undefined static    
+         method                         
+         App\Models\Comment::create().  
+         🪪  staticMethod.notFound      
+  :53    Access to protected property   
+         Illuminate\Http\Request::$con  
+         tent.                          
+         🪪  property.protected         
+  :54    Call to an undefined method    
+         Illuminate\Contracts\Auth\Fac  
+         tory::id().                    
+         🪪  method.notFound            
+  :55    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$ent  
+         ity_id.                        
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :56    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$ent  
+         ity_type.                      
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/DashboardCon  
+         troller.php                    
+ ------ ------------------------------- 
+  :22    Call to an undefined static    
+         method                         
+         App\Models\Book::count().      
+         🪪  staticMethod.notFound      
+  :23    Call to an undefined static    
+         method                         
+         App\Models\Author::count().    
+         🪪  staticMethod.notFound      
+  :24    Call to an undefined static    
+         method                         
+         App\Models\Publisher::count()  
+         .                              
+         🪪  staticMethod.notFound      
+  :25    Call to an undefined static    
+         method                         
+         App\Models\Video::count().     
+         🪪  staticMethod.notFound      
+  :26    Call to an undefined static    
+         method                         
+         App\Models\Audio::count().     
+         🪪  staticMethod.notFound      
+  :27    Call to an undefined static    
+         method                         
+         App\Models\Manuscript::count(  
+         ).                             
+         🪪  staticMethod.notFound      
+  :28    Call to an undefined static    
+         method                         
+         App\Models\Collection::count(  
+         ).                             
+         🪪  staticMethod.notFound      
+  :29    Call to an undefined static    
+         method                         
+         App\Models\Series::count().    
+         🪪  staticMethod.notFound      
+  :30    Call to an undefined static    
+         method                         
+         App\Models\Category::count().  
+         🪪  staticMethod.notFound      
+  :31    Call to an undefined static    
+         method                         
+         App\Models\Tag::count().       
+         🪪  staticMethod.notFound      
+  :32    Call to an undefined static    
+         method                         
+         App\Models\Comment::count().   
+         🪪  staticMethod.notFound      
+  :33    Call to an undefined static    
+         method                         
+         App\Models\Activity::count().  
+         🪪  staticMethod.notFound      
+  :34    Call to an undefined static    
+         method                         
+         App\Models\Version::count().   
+         🪪  staticMethod.notFound      
+  :59    Using nullsafe property        
+         access "?->title" on left      
+         side of ?? is unnecessary.     
+         Use -> instead.                
+         🪪  nullsafe.neverNull         
+  :60    Using nullsafe property        
+         access "?->name" on left side  
+         of ?? is unnecessary. Use ->   
+         instead.                       
+         🪪  nullsafe.neverNull         
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/DeletionCont  
+         roller.php                     
+ ------ ------------------------------- 
+  :21    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$sea  
+         rch.                           
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/EntityContro  
+         ller.php                       
+ ------ ------------------------------- 
+  :444   Parameter #1 $entity of        
+         method                         
+         App\Services\EntityManagerSer  
+         vice::delete() expects         
+         App\Models\Entity,             
+         Illuminate\Database\Eloquent\  
+         Model given.                   
+         🪪  argument.type              
+  :506   Call to function               
+         method_exists() with           
+         Illuminate\Database\Eloquent\  
+         Model and 'forceDelete' will   
+         always evaluate to true.       
+         🪪                             
+         function.alreadyNarrowedType   
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/GlobalSearch  
+         Controller.php                 
+ ------ ------------------------------- 
+  :28    Call to an undefined static    
+         method                         
+         App\Models\Book::where().      
+         🪪  staticMethod.notFound      
+  :29    Call to an undefined static    
+         method                         
+         App\Models\Manuscript::where(  
+         ).                             
+         🪪  staticMethod.notFound      
+  :30    Call to an undefined static    
+         method                         
+         App\Models\Audio::where().     
+         🪪  staticMethod.notFound      
+  :31    Call to an undefined static    
+         method                         
+         App\Models\Video::where().     
+         🪪  staticMethod.notFound      
+  :32    Call to an undefined static    
+         method                         
+         App\Models\Author::where().    
+         🪪  staticMethod.notFound      
+  :33    Call to an undefined static    
+         method                         
+         App\Models\Series::where().    
+         🪪  staticMethod.notFound      
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/LanguageCont  
+         roller.php                     
+ ------ ------------------------------- 
+  :18    Call to an undefined static    
+         method                         
+         App\Models\Language::withCoun  
+         t().                           
+         🪪  staticMethod.notFound      
+  :19    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$sea  
+         rch.                           
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :51    Call to an undefined static    
+         method                         
+         App\Models\Language::create()  
+         .                              
+         🪪  staticMethod.notFound      
+  :83    Access to an undefined         
+         property                       
+         App\Models\Language::$id.      
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :84    Access to an undefined         
+         property                       
+         App\Models\Language::$id.      
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :114   Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$ids  
+         .                              
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :114   Call to an undefined static    
+         method                         
+         App\Models\Language::whereIn(  
+         ).                             
+         🪪  staticMethod.notFound      
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/ManuscriptCo  
+         ntroller.php                   
+ ------ ------------------------------- 
+  :39    Call to an undefined static    
+         method                         
+         App\Models\Author::orderBy().  
+         🪪  staticMethod.notFound      
+  :40    Call to an undefined static    
+         method                         
+         App\Models\Publisher::orderBy  
+         ().                            
+         🪪  staticMethod.notFound      
+  :41    Call to an undefined static    
+         method                         
+         App\Models\Category::orderBy(  
+         ).                             
+         🪪  staticMethod.notFound      
+  :54    Parameter #1 $entity of        
+         method                         
+         App\Services\MediaManagerServ  
+         ice::updateMedia() expects     
+         App\Models\Entity,             
+         Illuminate\Database\Eloquent\  
+         Model given.                   
+         🪪  argument.type              
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/NoteControll  
+         er.php                         
+ ------ ------------------------------- 
+  :20    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$sea  
+         rch.                           
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :52    Call to an undefined static    
+         method                         
+         App\Models\Note::create().     
+         🪪  staticMethod.notFound      
+  :53    Access to protected property   
+         Illuminate\Http\Request::$con  
+         tent.                          
+         🪪  property.protected         
+  :54    Call to an undefined method    
+         Illuminate\Contracts\Auth\Fac  
+         tory::id().                    
+         🪪  method.notFound            
+  :55    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$ent  
+         ity_id.                        
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :56    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$ent  
+         ity_type.                      
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/ShelfControl  
+         ler.php                        
+ ------ ------------------------------- 
+  :18    Call to an undefined static    
+         method                         
+         App\Models\Shelf::withCount()  
+         .                              
+         🪪  staticMethod.notFound      
+  :19    Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$sea  
+         rch.                           
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :50    Call to an undefined static    
+         method                         
+         App\Models\Shelf::create().    
+         🪪  staticMethod.notFound      
+  :82    Access to an undefined         
+         property                       
+         App\Models\Shelf::$id.         
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :113   Access to an undefined         
+         property                       
+         Illuminate\Http\Request::$ids  
+         .                              
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :113   Call to an undefined static    
+         method                         
+         App\Models\Shelf::whereIn().   
+         🪪  staticMethod.notFound      
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/TopicControl  
+         ler.php                        
+ ------ ------------------------------- 
+  :32    Access to an undefined         
+         property                       
+         App\Models\Topic::$id.         
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :34    Call to an undefined static    
+         method                         
+         App\Models\Topic::when().      
+         🪪  staticMethod.notFound      
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/Traits/HasEd  
+         itor.php (in context of class  
+         App\Http\Controllers\AudioCon  
+         troller)                       
+ ------ ------------------------------- 
+  :31    Parameter #1 $entity of        
+         method                         
+         App\Services\EntityContentSer  
+         vice::prepareEditorData()      
+         expects App\Models\Entity,     
+         Illuminate\Database\Eloquent\  
+         Model given.                   
+         🪪  argument.type              
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/Traits/HasEd  
+         itor.php (in context of class  
+         App\Http\Controllers\BookCont  
+         roller)                        
+ ------ ------------------------------- 
+  :31    Parameter #1 $entity of        
+         method                         
+         App\Services\EntityContentSer  
+         vice::prepareEditorData()      
+         expects App\Models\Entity,     
+         Illuminate\Database\Eloquent\  
+         Model given.                   
+         🪪  argument.type              
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/Traits/HasEd  
+         itor.php (in context of class  
+         App\Http\Controllers\Manuscri  
+         ptController)                  
+ ------ ------------------------------- 
+  :31    Parameter #1 $entity of        
+         method                         
+         App\Services\EntityContentSer  
+         vice::prepareEditorData()      
+         expects App\Models\Entity,     
+         Illuminate\Database\Eloquent\  
+         Model given.                   
+         🪪  argument.type              
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/Traits/HasEd  
+         itor.php (in context of class  
+         App\Http\Controllers\VideoCon  
+         troller)                       
+ ------ ------------------------------- 
+  :31    Parameter #1 $entity of        
+         method                         
+         App\Services\EntityContentSer  
+         vice::prepareEditorData()      
+         expects App\Models\Entity,     
+         Illuminate\Database\Eloquent\  
+         Model given.                   
+         🪪  argument.type              
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/UnifiedEdito  
+         rController.php                
+ ------ ------------------------------- 
+  :84    Access to protected property   
+         Illuminate\Http\Request::$con  
+         tent.                          
+         🪪  property.protected         
+  :102   Call to an undefined static    
+         method                         
+         App\Models\Book::first().      
+         🪪  staticMethod.notFound      
+  :107   Static call to instance        
+         method                         
+         Illuminate\Database\Eloquent\  
+         Builder<Illuminate\Database\E  
+         loquent\Model>::where().       
+         🪪  method.staticCall          
+  :112   Access to an undefined         
+         property                       
+         Illuminate\Database\Eloquent\  
+         Model::$slug.                  
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Http/Controllers/VideoControl  
+         ler.php                        
+ ------ ------------------------------- 
+  :39    Call to an undefined static    
+         method                         
+         App\Models\Author::orderBy().  
+         🪪  staticMethod.notFound      
+  :40    Call to an undefined static    
+         method                         
+         App\Models\Publisher::orderBy  
+         ().                            
+         🪪  staticMethod.notFound      
+  :41    Call to an undefined static    
+         method                         
+         App\Models\Category::orderBy(  
+         ).                             
+         🪪  staticMethod.notFound      
+  :54    Parameter #1 $entity of        
+         method                         
+         App\Services\MediaManagerServ  
+         ice::updateMedia() expects     
+         App\Models\Entity,             
+         Illuminate\Database\Eloquent\  
+         Model given.                   
+         🪪  argument.type              
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Models/BookChild.php           
+ ------ ------------------------------- 
+  :36    Access to an undefined         
+         property                       
+         App\Models\BookChild::$conten  
+         t_blocks.                      
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :40    Access to an undefined         
+         property                       
+         App\Models\BookChild::$versio  
+         ns.                            
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Models/Category.php            
+ ------ ------------------------------- 
+  :65    Call to an undefined static    
+         method                         
+         App\Models\Category::where().  
+         🪪  staticMethod.notFound      
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Models/Entity.php              
+ ------ ------------------------------- 
+  :66    Parameter #1 $string of        
+         function str_pad expects       
+         string, int given.             
+         🪪  argument.type              
+  :74    Call to an undefined static    
+         method                         
+         App\Models\Entity::find().     
+         🪪  staticMethod.notFound      
+  :102   Call to an undefined method    
+         App\Models\Entity::reviews().  
+         🪪  method.notFound            
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Models/ManuscriptChild.php     
+ ------ ------------------------------- 
+  :33    Access to an undefined         
+         property                       
+         App\Models\ManuscriptChild::$  
+         content_blocks.                
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :37    Access to an undefined         
+         property                       
+         App\Models\ManuscriptChild::$  
+         versions.                      
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Models/ManuscriptPage.php      
+ ------ ------------------------------- 
+  :36    Access to an undefined         
+         property                       
+         App\Models\ManuscriptPage::$c  
+         ontent_blocks.                 
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :40    Access to an undefined         
+         property                       
+         App\Models\ManuscriptPage::$v  
+         ersions.                       
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Observers/EntityAuditObserver  
+         .php                           
+ ------ ------------------------------- 
+  :71    Call to an undefined static    
+         method                         
+         App\Models\Activity::create()  
+         .                              
+         🪪  staticMethod.notFound      
+  :75    Call to an undefined method    
+         Illuminate\Contracts\Auth\Fac  
+         tory::id().                    
+         🪪  method.notFound            
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Observers/EntityCacheObserver  
+         .php                           
+ ------ ------------------------------- 
+  :159   Call to function               
+         method_exists() with           
+         App\Models\Entity and 'tags'   
+         will always evaluate to true.  
+         🪪                             
+         function.alreadyNarrowedType   
+  :165   Access to an undefined         
+         property                       
+         App\Models\Entity::$tags.      
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :173   Call to function               
+         method_exists() with           
+         App\Models\Entity and          
+         'categories' will always       
+         evaluate to true.              
+         🪪                             
+         function.alreadyNarrowedType   
+  :179   Access to an undefined         
+         property                       
+         App\Models\Entity::$categorie  
+         s.                             
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :214   Call to function               
+         method_exists() with           
+         App\Models\Entity and 'tags'   
+         will always evaluate to true.  
+         🪪                             
+         function.alreadyNarrowedType   
+  :218   Call to function               
+         method_exists() with           
+         App\Models\Entity and          
+         'categories' will always       
+         evaluate to true.              
+         🪪                             
+         function.alreadyNarrowedType   
+  :222   Call to function               
+         method_exists() with           
+         App\Models\Entity and          
+         'activities' will always       
+         evaluate to true.              
+         🪪                             
+         function.alreadyNarrowedType   
+  :244   Call to function               
+         method_exists() with           
+         App\Models\Entity and 'tags'   
+         will always evaluate to true.  
+         🪪                             
+         function.alreadyNarrowedType   
+  :245   Call to function               
+         method_exists() with           
+         App\Models\Entity and          
+         'categories' will always       
+         evaluate to true.              
+         🪪                             
+         function.alreadyNarrowedType   
+  :246   Call to function               
+         method_exists() with           
+         App\Models\Entity and          
+         'activities' will always       
+         evaluate to true.              
+         🪪                             
+         function.alreadyNarrowedType   
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Observers/EntityContentObserv  
+         er.php                         
+ ------ ------------------------------- 
+  :21    Static call to instance        
+         method                         
+         Illuminate\Database\Eloquent\  
+         Builder<Illuminate\Database\E  
+         loquent\Model>::where().       
+         🪪  method.staticCall          
+  :22    Static call to instance        
+         method                         
+         Illuminate\Database\Eloquent\  
+         Builder<Illuminate\Database\E  
+         loquent\Model>::where().       
+         🪪  method.staticCall          
+  :23    Static call to instance        
+         method                         
+         Illuminate\Database\Eloquent\  
+         Builder<Illuminate\Database\E  
+         loquent\Model>::where().       
+         🪪  method.staticCall          
+  :24    Static call to instance        
+         method                         
+         Illuminate\Database\Eloquent\  
+         Builder<Illuminate\Database\E  
+         loquent\Model>::where().       
+         🪪  method.staticCall          
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Observers/EntityLifecycleObse  
+         rver.php                       
+ ------ ------------------------------- 
+  :73    Cannot call static method      
+         where() on                     
+         class-string|false.            
+         🪪  staticMethod.nonObject     
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Services/Book/MarkdownStructu  
+         reParser.php                   
+ ------ ------------------------------- 
+  :44    Cannot assign new offset to    
+         string.                        
+         🪪  offsetAssign.dimType       
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Services/BookContentService.p  
+         hp                             
+ ------ ------------------------------- 
+  :13    Method                         
+         App\Services\BookContentServi  
+         ce::addChild() should return   
+         App\Models\BookChild but       
+         returns                        
+         Illuminate\Database\Eloquent\  
+         Model.                         
+         🪪  return.type                
+  :13    Static call to instance        
+         method                         
+         Illuminate\Database\Eloquent\  
+         Builder<Illuminate\Database\E  
+         loquent\Model>::create().      
+         🪪  method.staticCall          
+  :32    Static call to instance        
+         method                         
+         Illuminate\Database\Eloquent\  
+         Builder<Illuminate\Database\E  
+         loquent\Model>::where().       
+         🪪  method.staticCall          
+  :57    Access to an undefined         
+         property                       
+         App\Models\BookChild::$conten  
+         t.                             
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+  :72    Static call to instance        
+         method                         
+         Illuminate\Database\Eloquent\  
+         Builder<Illuminate\Database\E  
+         loquent\Model>::where().       
+         🪪  method.staticCall          
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Services/EntityContentService  
+         .php                           
+ ------ ------------------------------- 
+  :176   Access to an undefined         
+         property                       
+         App\Models\Entity::$file_path  
+         .                              
+         🪪  property.notFound          
+         💡  Learn more: https://phpsta  
+         n.org/blog/solving-phpstan-ac  
+         cess-to-undefined-property     
+ ------ ------------------------------- 
+
+ ------ ------------------------------- 
+  Line   Services/EntityManagerService  
+         .php                           
+ ------ ------------------------------- 
+  :64    Call to an undefined method    
+         Illuminate\Contracts\Auth\Fac  
+         tory::id().                    
+         🪪  method.notFound            
+  :64    Call to an undefined static    
+         method                         
+         App\Models\User::first().      
+         🪪  staticMethod.notFound      
+  :90    Call to an undefined method    
+         Illuminate\Contracts\Auth\Fac  
+         tory::id().                    
+         🪪  method.notFound            
+  :90    Call to an undefined static    
+         method                         
+         App\Models\User::first().      
+         🪪  staticMethod.notFound      
+ ------ ------------------------------- 
+
+ [ERROR] Found 229 errors               
+

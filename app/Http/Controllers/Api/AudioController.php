@@ -27,7 +27,7 @@ class AudioController extends Controller
     public function index(Request $request): JsonResponse
     {
         $perPage = $request->get('per_page', 15);
-        $audios = Audio::paginate($perPage);
+        $audios = Audio::query()->paginate($perPage);
 
         return response()->json($audios);
     }

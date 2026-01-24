@@ -2,120 +2,26 @@
 
 namespace App\Http\Controllers;
 
-
 use App\Models\Tag;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Str;
 
-class TagController extends Controller
+/**
+ * TagController - Refactored to use EntityController Hooks
+ */
+class TagController extends EntityController
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request): Response
-    {
-        $filters = $request->only(['search']);
+    //Configuration
+    protected function getModelClass(): string { return Tag::class; }
+    protected function getViewPath(): string { return 'Tags'; }
+    protected function getRouteName(): string { return 'tags'; }
+    protected function getStoreRequestClass(): ?string { return \App\Http\Requests\StoreTagRequest::class; }
+    protected function getUpdateRequestClass(): ?string { return \App\Http\Requests\UpdateTagRequest::class; }
 
-        $tags = Tag::withCount(['books', 'videos', 'audio', 'manuscripts'])
-            ->when($request->search, function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%");
-            })
-            ->paginate(30)
-            ->withQueryString();
+    //Customization
+    protected function getRelations(): array { return ['books', 'videos', 'audio', 'manuscripts']; }
+    protected function getSearchFields(): array { return ['name']; }
+    protected function getPerPage(): int { return 30; }
 
-        return Inertia::render('Tags/Index', [
-            'tags' => $tags,
-            'filters' => $filters,
-        ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): Response
-    {
-        return Inertia::render('Tags/Create');
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'nullable|string'
-        ]);
-
-        Tag::create([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name, '-', null),
-            'type' => $request->type
-        ]);
-
-        return redirect()->route('tags.index')
-            ->with('message', 'تم إنشاء الوسم بنجاح');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Tag $tag): Response
-    {
-        return Inertia::render('Tags/Show', [
-            'tag' => $tag->load(['books', 'videos', 'audio', 'manuscripts']),
-        ]);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Tag $tag): Response
-    {
-        return Inertia::render('Tags/Edit', [
-            'tag' => $tag,
-        ]);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Tag $tag): RedirectResponse
-    {
-        $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'type' => 'nullable|string'
-        ]);
-
-        $tag->update($request->only(['name', 'type']));
-
-        return redirect()->route('tags.index')
-            ->with('message', 'تم تحديث الوسم بنجاح');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Tag $tag): RedirectResponse
-    {
-        $tag->delete();
-
-        return redirect()->route('tags.index')
-            ->with('message', 'تم حذف الوسم بنجاح');
-    }
-
-    /**
-     * Remove multiple resources from storage.
-     */
-    public function bulkDestroy(Request $request): RedirectResponse
-    {
-        $ids = $request->input('ids', []);
-        Tag::whereIn('id', $ids)->delete();
-
-        return redirect()->route('tags.index')
-            ->with('message', 'تم حذف الوسوم المحددة بنجاح');
-    }
+    protected function getCreateSuccessMessage(): string { return 'تم إنشاء الوسم بنجاح'; }
+    protected function getUpdateSuccessMessage(): string { return 'تم تحديث الوسم بنجاح'; }
+    protected function getDeleteSuccessMessage(): string { return 'تم حذف الوسم بنجاح'; }
 }
