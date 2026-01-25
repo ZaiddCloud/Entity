@@ -63,7 +63,7 @@ const currentSource = computed(() => {
 const currentPoster = computed(() => {
     const poster = props.media?.cover_path 
         ? `/storage/${props.media.cover_path}` 
-        : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg";
+        : null;
     console.log('[PlayerClient] Poster:', poster);
     return poster;
 });
