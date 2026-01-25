@@ -123,6 +123,16 @@ const formatDate = (dateString) => {
 
             <!-- Actions -->
             <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4">
+              <div class="flex flex-wrap gap-3">
+              <Link :href="route('reader.show', { type: 'audio', slug: audio.slug })">
+                <button class="bg-lime-400 hover:bg-lime-300 text-emerald-950 px-8 py-3 rounded-xl font-black text-sm transition shadow-lg shadow-lime-400/20 hover:scale-105 active:scale-95 ring-2 ring-lime-400 ring-offset-2 ring-offset-emerald-950 flex items-center gap-2">
+                  <svg class="w-5 h-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                  </svg>
+                  بدء الاستماع والقراءة
+                </button>
+              </Link>
+
               <Link 
                 :href="route('dev.player', { type: 'audio', slug: audio.slug })"
               >
@@ -154,24 +164,23 @@ const formatDate = (dateString) => {
                   </div>
                 </PrimaryButton>
               </Link>
-              <div class="flex gap-2">
-                <Link :href="route('audios.edit', audio.slug)">
-                  <button class="px-6 py-4 bg-emerald-900/50 hover:bg-emerald-900 text-emerald-100 rounded-xl font-bold backdrop-blur-sm border border-emerald-500/20 transition-all flex items-center gap-2">
-                    <svg
-                      class="w-5 h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    ><path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    /></svg>
-                    تعديل
-                  </button>
-                </Link>
-              </div>
+              
+              <Link :href="route('audios.edit', audio.slug)">
+                <button class="px-6 py-4 bg-emerald-900/50 hover:bg-emerald-900 text-emerald-100 rounded-xl font-bold backdrop-blur-sm border border-emerald-500/20 transition-all flex items-center gap-2">
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  ><path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  /></svg>
+                  تعديل
+                </button>
+              </Link>
             </div>
           </div>
         </div>

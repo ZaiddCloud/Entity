@@ -139,7 +139,7 @@ const tabs = [
 
               <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                 <Link
-                  :href="route('books.reader', book.slug)"
+                  :href="route('reader.show', { type: 'book', slug: book.slug })"
                   class="inline-flex items-center justify-center px-8 py-4 bg-lime-400 text-emerald-950 rounded-xl font-black text-sm hover:bg-lime-300 transition shadow-lg shadow-lime-400/20 hover:scale-105 active:scale-95 ring-2 ring-lime-400 ring-offset-2 ring-offset-emerald-900"
                 >
                   <svg

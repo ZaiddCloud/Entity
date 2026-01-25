@@ -76,6 +76,25 @@ class ReaderController extends Controller
             $savedPosition = $this->positionService->getPosition(auth()->user(), $entity);
         }
 
+        // 6. Special Handling for Manuscripts (Vertical Scroll)
+        $siblingsContent = [];
+        if ($type === 'manuscript') {
+            $siblingsContent = $entity->children->map(function($child) use ($type) {
+                // Determine content node for each child
+                $childNode = $child; 
+                // Logic usually handled in prepareEditorData, simplified here for read-only View
+                // If the child HAS content, use it.
+                return [
+                    'id' => $child->id,
+                    'slug' => $child->slug,
+                    'title' => $child->title,
+                    'content' => $child->json_content ?? ['type' => 'doc', 'content' => []],
+                    'html_content' => $child->content ?? '',
+                    'metadata' => $child->metadata ?? [],
+                ];
+            });
+        }
+
         return Inertia::render('Technologies/Reader/ReaderClient', [
             'type' => $type,
             'entity' => $entity,
@@ -85,6 +104,7 @@ class ReaderController extends Controller
             'hierarchy' => $entity->children, // Already loaded by resolveEntity
             'readingPosition' => $savedPosition,
             'title' => $entity->title . ' | القارئ',
+            'siblings_content' => $siblingsContent, // New prop for Vertical Scroll
         ]);
     }
 

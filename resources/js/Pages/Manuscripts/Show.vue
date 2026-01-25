@@ -101,14 +101,23 @@ const tabs = [
               </p>
 
               <div class="flex flex-wrap items-center justify-center md:justify-start gap-4">
+                <Link :href="route('reader.show', { type: 'manuscript', slug: manuscript.slug })">
+                  <PrimaryButton class="!bg-lime-400 !text-emerald-950 hover:!bg-lime-300 !border-0 !text-sm !px-8 !py-4 !rounded-xl shadow-lg shadow-lime-400/20 hover:scale-105 active:scale-95 ring-2 ring-lime-400 ring-offset-2 ring-offset-emerald-950 flex items-center gap-2">
+                    <svg class="w-5 h-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                    بدء القراءة والتحقيق
+                  </PrimaryButton>
+                </Link>
+
                 <Link :href="route('dev.manuscripter', { manuscript: manuscript.slug })">
-                  <PrimaryButton class="!bg-lime-400 !text-black hover:!bg-lime-300 !border-0 !text-sm !px-6 !py-3 !rounded-xl !shadow-[0_0_20px_rgba(163,230,53,0.3)] flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <button class="px-6 py-4 rounded-xl bg-emerald-900/50 backdrop-blur-md text-emerald-50 border border-emerald-500/30 font-bold text-sm hover:bg-emerald-800 transition hover:scale-105 active:scale-95 flex items-center gap-2">
+                    <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
-                    استعراض المخطوطة (غرفة المعاينة)
-                  </PrimaryButton>
+                    غرفة المعاينة
+                  </button>
                 </Link>
 
                 <Link

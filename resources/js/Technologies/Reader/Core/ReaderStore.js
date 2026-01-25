@@ -13,6 +13,7 @@ export const useReaderStore = defineStore('reader', {
         isFullscreen: false,
         isTocOpen: false,
         isSearchOpen: false,
+        isMediaVisible: true, // Default to showing media
         scrollProgress: 0,
         bookmarks: JSON.parse(localStorage.getItem('reader_bookmarks')) || [],
         isLoading: false,
@@ -62,6 +63,10 @@ export const useReaderStore = defineStore('reader', {
         setTheme(theme) {
             this.theme = theme;
             localStorage.setItem('reader_theme', theme);
+        },
+
+        toggleMedia() {
+            this.isMediaVisible = !this.isMediaVisible;
         },
 
         toggleToc() {
