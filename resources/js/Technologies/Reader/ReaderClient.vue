@@ -1,0 +1,256 @@
+<script setup>
+import { ref, onMounted, onUnmounted, provide, computed } from 'vue';
+import { useReaderStore } from './Core/ReaderStore';
+import { useTheme } from './Core/useTheme';
+import ContentView from './UI/ContentView.vue';
+import TableOfContents from './UI/TableOfContents.vue';
+import ReadingControls from './UI/ReadingControls.vue';
+import ProgressBar from './UI/ProgressBar.vue';
+import MediaSync from './UI/MediaSync.vue';
+import SearchPanel from './UI/SearchPanel.vue';
+import PlayerClient from '@/Technologies/Player/PlayerClient.vue';
+
+const props = defineProps({
+    type: String,
+    entity: Object,
+    content: Object,
+    html_content: String,
+    activeSlug: String,
+    hierarchy: Array,
+    readingPosition: Object,
+    title: String,
+});
+
+const store = useReaderStore();
+const { currentThemeClasses } = useTheme();
+const isSettingsOpen = ref(false);
+const currentTime = ref(0);
+const playerRef = ref(null);
+
+// Initialize Store
+onMounted(() => {
+    store.init(props);
+    
+    // Restore position if available
+    if (props.readingPosition) {
+        // Implementation for scroll restoration will be in ContentView
+    }
+
+    // Add keyboard listeners
+    window.addEventListener('keydown', handleKeydown);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeydown);
+});
+
+const handleKeydown = (e) => {
+    if (e.key === 'ArrowRight' && store.nextNode) {
+        store.navigate(store.nextNode.slug);
+    } else if (e.key === 'ArrowLeft' && store.prevNode) {
+        store.navigate(store.prevNode.slug);
+    } else if (e.key === 'f' || e.key === 'F') {
+        store.toggleFullscreen();
+    } else if (e.key === 't' || e.key === 'T') {
+        store.toggleToc();
+    } else if (e.key === '/') {
+        e.preventDefault();
+        store.toggleSearch();
+    } else if (e.key === ',' && (e.metaKey || e.ctrlKey)) {
+        isSettingsOpen.value = !isSettingsOpen.value;
+    }
+};
+
+const handleSearchResult = (result) => {
+    if (result.slug !== props.activeSlug) {
+        store.navigate(result.slug);
+    }
+    
+    if (result.timestamp !== null) {
+        handleSeek(result.timestamp);
+    }
+    
+    store.isSearchOpen = false;
+};
+
+// Provide state to children
+provide('readerStore', store);
+provide('themeClasses', currentThemeClasses);
+
+const handleTimeUpdate = (time) => {
+    currentTime.value = time;
+};
+
+// We'll need a way for the player to accept seeks from the transcript
+// For now, we'll implement a simple communication via events or a shared store if needed
+// But let's start with a simpler approach: 
+// The Player is handled by PlayerClient which wraps DraggableMediaPlayer.
+const handleSeek = (time) => {
+    console.log('[ReaderClient] Seeking to:', time);
+    // Implementation: In a real scenario, we might use a bus or a ref method.
+    // For now, we'll emit to the player if possible or just log.
+};
+
+</script>
+
+<template>
+    <div 
+        :class="['min-h-screen flex flex-col transition-colors duration-300', currentThemeClasses.bg, currentThemeClasses.text]"
+        :dir="'rtl'"
+    >
+        <!-- Header HUD -->
+        <header :class="['sticky top-0 z-30 border-b px-4 h-14 flex items-center justify-between backdrop-blur-md bg-opacity-80', currentThemeClasses.bg, currentThemeClasses.border]">
+            <div class="flex items-center gap-4">
+                <button @click="$inertia.get(route(`${props.type}s.show`, props.entity.slug))" class="p-2 hover:bg-black/5 rounded-full transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                </button>
+                <div class="overflow-hidden">
+                    <h1 class="font-bold text-lg truncate max-w-[200px] sm:max-w-md">{{ entity.title }}</h1>
+                    <p class="text-xs opacity-60 truncate">{{ store.currentNode?.title }}</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <!-- Search Toggle -->
+                <button @click="store.toggleSearch" :class="['p-2 rounded-lg transition-colors', store.isSearchOpen ? 'bg-blue-500 text-white' : 'hover:bg-black/5']">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </button>
+
+                <!-- TOC Toggle -->
+                <button @click="store.toggleToc" :class="['p-2 rounded-lg transition-colors', store.isTocOpen ? 'bg-blue-500 text-white' : 'hover:bg-black/5']">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                
+                <!-- Settings Button -->
+                <button @click="isSettingsOpen = true" class="p-2 hover:bg-black/5 rounded-lg transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Progress Bar HUD -->
+            <div class="absolute bottom-0 left-0 w-full translate-y-1/2 px-4 pointer-events-auto">
+                <ProgressBar />
+            </div>
+        </header>
+
+        <!-- Main Layout Section -->
+        <div class="flex-1 flex overflow-hidden relative">
+            <!-- Sidebar TOC & Search -->
+            <transition name="slide-rtl">
+                <aside v-if="store.isTocOpen" class="w-80 h-full absolute right-0 top-0 z-20">
+                   <TableOfContents @close="store.toggleToc" />
+                </aside>
+            </transition>
+
+            <transition name="slide-rtl">
+                <aside v-if="store.isSearchOpen" class="w-80 h-full absolute right-0 top-0 z-20">
+                   <SearchPanel @close="store.toggleSearch" @select="handleSearchResult" />
+                </aside>
+            </transition>
+
+            <!-- Main Content Area -->
+            <main class="flex-1 overflow-y-auto relative custom-scrollbar" id="reader-viewport">
+                <!-- Video/Audio Transcript Sync -->
+                <MediaSync 
+                    v-if="['audio', 'video'].includes(props.type)"
+                    :current-time="currentTime"
+                    :hierarchy="props.hierarchy"
+                    :active-slug="props.activeSlug"
+                    @seek="handleSeek"
+                />
+
+                <!-- Standard Content (Books/Manuscripts) -->
+                <ContentView 
+                    v-else
+                    :content="props.content"
+                    :html="props.html_content"
+                    :font-size="store.fontSize"
+                />
+
+                <!-- Integrated Player (for A/V) -->
+                <PlayerClient 
+                    v-if="['audio', 'video'].includes(props.type)"
+                    ref="playerRef"
+                    :media="props.entity"
+                    :active-slug="props.activeSlug"
+                    :type="props.type"
+                    :is-embedded="true"
+                    @timeupdate="handleTimeUpdate"
+                />
+            </main>
+        </div>
+
+        <!-- Reading Controls Modal -->
+        <ReadingControls 
+            :is-open="isSettingsOpen" 
+            @close="isSettingsOpen = false" 
+        />
+
+        <!-- Footer Navigation -->
+        <footer :class="['h-16 border-t flex items-center justify-between px-6 shrink-0', currentThemeClasses.bg, currentThemeClasses.border]">
+            <button 
+                @click="store.prevNode && store.navigate(store.prevNode.slug)"
+                :disabled="!store.prevNode"
+                class="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-black/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+                <span>السابق</span>
+            </button>
+
+            <div class="hidden sm:flex items-center gap-4 text-sm opacity-60">
+                <span>{{ store.activeNodeIndex + 1 }} من {{ store.hierarchy.length }}</span>
+            </div>
+
+            <button 
+                @click="store.nextNode && store.navigate(store.nextNode.slug)"
+                :disabled="!store.nextNode"
+                class="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-black/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+                <span>التالي</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+            </button>
+        </footer>
+    </div>
+</template>
+
+<style scoped>
+.slide-rtl-enter-active,
+.slide-rtl-leave-active {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-rtl-enter-from,
+.slide-rtl-leave-to {
+  transform: translateX(100%);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.theme-dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+</style>

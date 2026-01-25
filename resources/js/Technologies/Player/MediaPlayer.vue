@@ -126,6 +126,10 @@ onMounted(() => {
 onUnmounted(() => {
     window.removeEventListener('keydown', handleKeyDown);
 });
+
+defineExpose({
+    seek
+});
 </script>
 
 <template>

@@ -146,3 +146,14 @@ Route::get('/dev/player/{type}/{slug}', function ($type, $slug) {
 
 Route::get('/dev/manuscripter/{manuscript:slug}', [\App\Http\Controllers\ManuscriptController::class, 'sandbox'])->name('dev.manuscripter');
 
+// Reader Technology Routes
+Route::get('/reader/{type}/{slug}', [App\Http\Controllers\ReaderController::class, 'show'])
+    ->name('reader.show');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/reader/{type}/{slug}/search', [App\Http\Controllers\ReaderController::class, 'search'])
+        ->name('reader.search');
+    Route::post('/api/reader/position', [App\Http\Controllers\ReaderController::class, 'savePosition'])
+        ->name('reader.save-position');
+});
+

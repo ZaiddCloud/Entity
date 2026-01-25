@@ -1,16 +1,27 @@
 <script setup>
-import { ref, computed, watch, inject } from 'vue';
+import { ref, computed, watch, inject, onMounted } from 'vue';
 import DraggableMediaPlayer from './MediaPlayer.vue';
 import { router } from '@inertiajs/vue3';
+import { useMediaStore } from '@/Technologies/Store/MediaStore';
 
 const props = defineProps({
     media: Object,
     activeSlug: String, 
     type: String,
-    isIntegrated: { type: Boolean, default: false } // NEW
+    isIntegrated: { type: Boolean, default: false },
+    isEmbedded: { type: Boolean, default: false }
 });
 
+const emit = defineEmits(['timeupdate', 'segment-change', 'seek', 'toggle-dock']);
+
+const mediaStore = useMediaStore();
 const isPlayerDocked = inject('isPlayerDocked', { value: false });
+
+onMounted(() => {
+    if (props.isEmbedded || props.isIntegrated) {
+        mediaStore.setDockMode(false, true);
+    }
+});
 const toggleDock = inject('toggleDock', () => {});
 
 // --- Computed State ---
@@ -85,6 +96,13 @@ const closePlayer = () => {
     // For now, maybe just redirect to dashboard or do nothing (since it's persistent in studio)
     // or arguably, minimize it?
 };
+
+const playerRef = ref(null);
+const seek = (time) => playerRef.value?.seek(time);
+
+defineExpose({
+    seek
+});
 </script>
 
 <template>
@@ -94,15 +112,17 @@ const closePlayer = () => {
         This container should not have visible dimensions that block the UI.
     -->
     <DraggableMediaPlayer
+        ref="playerRef"
         :src="currentSource"
         :title="media?.title || 'Unknown Media'"
         :type="type || 'video'"
         :poster="currentPoster"
         :segments="segments"
         :is-docked="isPlayerDocked.value"
-        :is-integrated="isIntegrated"
+        :is-integrated="isIntegrated || isEmbedded"
         @close="closePlayer"
         @toggle-dock="() => { toggleDock(); $emit('toggle-dock'); }"
-        @segment-change="handleSegmentChange"
+        @segment-change="(seg) => { emit('segment-change', seg); handleSegmentChange(seg); }"
+        @timeupdate="(time) => emit('timeupdate', time)"
     />
 </template>
