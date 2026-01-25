@@ -398,7 +398,22 @@ abstract class EntityController extends Controller
             return null;
         }
 
-        return $model->children()->orderBy('order')->first()?->slug;
+        // Check if children relation is already loaded (works for both SQL and Mongo)
+        if ($model->relationLoaded('children')) {
+            $children = $model->getRelation('children');
+            if ($children && $children->isNotEmpty()) {
+                return $children->sortBy('order')->first()?->slug;
+            }
+            return null;
+        }
+
+        // Fallback: Try to query (may not work for Mongo)
+        try {
+            return $model->children()->orderBy('order')->first()?->slug;
+        } catch (\Exception $e) {
+            \Log::warning("getFirstChildSlug failed for " . get_class($model) . ": " . $e->getMessage());
+            return null;
+        }
     }
 
     /**

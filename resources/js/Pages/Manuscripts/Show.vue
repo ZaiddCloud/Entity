@@ -112,7 +112,7 @@ const tabs = [
                 </Link>
 
                 <Link
-                  :href="route('studio.show', { type: 'manuscript', slug: first_content_slug })"
+                  :href="route('studio.show', { type: 'manuscript', slug: first_content_slug || manuscript.slug })"
                 >
                   <button class="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-sm border border-white/10 backdrop-blur-sm transition-all flex items-center gap-2 group">
                     <span class="w-8 h-8 rounded-lg bg-lime-500/20 text-lime-400 flex items-center justify-center group-hover:bg-lime-500 group-hover:text-black transition-colors">
