@@ -18,4 +18,8 @@ class SlugHelper
         // 4. Trim dashes from ends
         return trim($slug, '-');
     }
+    public static function generate(string $text): string
+    {
+        return static::arabicSlug($text);
+    }
 }

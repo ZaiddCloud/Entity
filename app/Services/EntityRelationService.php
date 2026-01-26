@@ -137,7 +137,7 @@ class EntityRelationService
             foreach ($names as $name) {
                 $model = $modelClass::firstOrCreate(
                     ['name' => $name],
-                    ['slug' => Str::slug($name, '-', null)]
+                    ['slug' => \App\Helpers\SlugHelper::generate($name)]
                 );
                 $ids[] = $model->id;
             }

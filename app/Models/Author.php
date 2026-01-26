@@ -27,13 +27,13 @@ class Author extends Model
     {
         static::creating(function ($author) {
             if (!$author->slug) {
-                $author->slug = \Illuminate\Support\Str::slug($author->name) . '-' . \Illuminate\Support\Str::random(6);
+                $author->slug = \App\Helpers\SlugHelper::generate($author->name) . '-' . \Illuminate\Support\Str::random(6);
             }
         });
 
         static::updating(function ($author) {
             if ($author->isDirty('name') && !$author->slug) {
-                $author->slug = \Illuminate\Support\Str::slug($author->name) . '-' . \Illuminate\Support\Str::random(6);
+                $author->slug = \App\Helpers\SlugHelper::generate($author->name) . '-' . \Illuminate\Support\Str::random(6);
             }
         });
     }

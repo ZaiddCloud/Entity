@@ -58,7 +58,7 @@ class Category extends Model
      */
     protected static function generateUniqueSlug($name)
     {
-        $slug = Str::slug($name, '-', null);
+        $slug = \App\Helpers\SlugHelper::generate($name);
         $originalSlug = $slug;
         $count = 1;
 

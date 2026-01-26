@@ -33,7 +33,7 @@ class TagController extends Controller
 
         $tag = Tag::create([
             'name' => $request->input('name'),
-            'slug' => Str::slug($request->input('name'), '-', null),
+            'slug' => \App\Helpers\SlugHelper::generate($request->input('name')),
             'type' => $request->input('type')
         ]);
 

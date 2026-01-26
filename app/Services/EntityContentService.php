@@ -19,7 +19,7 @@ class EntityContentService
      * هذا هو "الدستور" الذي يمنع الفوضى في قاعدة البيانات
      */
     protected array $allowedTypes = [
-        'book' => ['chapter', 'page', 'section', 'part', 'sub-book'],
+        'book' => ['sub-book', 'part', 'bab', 'chapter', 'masalah', 'page', 'section'],
         'manuscript' => ['page', 'folio', 'section'],
         'audio' => ['segment', 'track', 'marker'],
         'video' => ['segment', 'scene', 'shot'],

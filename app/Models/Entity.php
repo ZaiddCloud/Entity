@@ -42,7 +42,7 @@ abstract class Entity extends Model
     {
         static::saving(function ($entity) {
             if (empty($entity->slug)) {
-                $entity->slug = Str::slug($entity->title) ?: Str::uuid()->toString();
+                $entity->slug = \App\Helpers\SlugHelper::generate($entity->title) ?: Str::uuid()->toString();
             }
         });
     }

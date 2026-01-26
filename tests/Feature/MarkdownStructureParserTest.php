@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use App\Services\Book\MarkdownStructureParser;
+use App\Enums\ContentNodeType;
 
 class MarkdownStructureParserTest extends TestCase
 {
@@ -19,12 +20,12 @@ class MarkdownStructureParserTest extends TestCase
         $structure = $parser->parse($markdown);
 
         $this->assertCount(8, $structure);
-        $this->assertEquals('sub-book', $structure[0]['type']); // H1 -> sub-book
-        $this->assertEquals('part', $structure[1]['type']);     // H2 -> part
-        $this->assertEquals('bab', $structure[2]['type']);      // H3 -> bab
-        $this->assertEquals('chapter', $structure[3]['type']);  // H4 -> chapter
-        $this->assertEquals('masala', $structure[4]['type']);   // H5 -> masala
-        $this->assertEquals('masala', $structure[5]['type']);   // H6+ -> masala (capped)
+        $this->assertEquals(ContentNodeType::SUB_BOOK->value, $structure[0]['type']); 
+        $this->assertEquals(ContentNodeType::PART->value, $structure[1]['type']);     
+        $this->assertEquals(ContentNodeType::BAB->value, $structure[2]['type']);      
+        $this->assertEquals(ContentNodeType::CHAPTER->value, $structure[3]['type']);  
+        $this->assertEquals(ContentNodeType::MASALAH->value, $structure[4]['type']);   
+        $this->assertEquals(ContentNodeType::MASALAH->value, $structure[5]['type']);   
     }
 
     /**

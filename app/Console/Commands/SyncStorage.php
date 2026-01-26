@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\EntityType;
+use App\Enums\ContentNodeType;
 use App\Models\Audio;
 use App\Models\Video;
 use Illuminate\Console\Command;
@@ -10,17 +12,18 @@ use Illuminate\Support\Str;
 
 class SyncStorage extends Command
 {
-    protected $signature = 'storage:sync {path? : Optional external path to sync}';
+    protected $signature = 'storage:sync {path? : Optional external path to sync} {--force : Force update metadata for existing items}';
     protected $description = 'Scan storage directory (or external path via symlink) and register new media files';
 
     public function handle()
     {
+        $this->info('Starting storage synchronization...');
+        
         $targetPath = $this->argument('path');
 
         // Default: Scan internal storage
         if (!$targetPath) {
-            $rootPath = storage_path('app/public');
-            $this->scanDirectory($rootPath, '');
+            $this->scanDirectory(null, '');
         } else {
             // External Path Logic
             if (!File::exists($targetPath)) {
@@ -55,46 +58,59 @@ class SyncStorage extends Command
             $this->scanDirectory($linkPath, "imports/$folderName");
         }
 
-        $this->info("Sync complete!");
+        $this->info('Synchronization completed successfully!');
     }
 
 
 
     protected function scanDirectory($directory, $baseRelativePath)
     {
-        $this->info("Scanning: $directory");
-
-        // Extensions
-        $audioExts = ['mp3', 'm4a', 'wav', 'ogg'];
-        $videoExts = ['mp4', 'mov', 'avi', 'mkv', 'webm'];
-        $bookExts = ['md', 'txt', 'pdf'];
-        $imageExts = ['jpg', 'jpeg', 'png', 'webp'];
-
-        $allFiles = File::allFiles($directory);
+        if ($directory) {
+            $this->info("Scanning directory: $directory");
+            $allFiles = File::allFiles($directory);
+        } else {
+            $this->info("Scanning default storage (public)");
+            $allFiles = \Illuminate\Support\Facades\Storage::disk('public')->allFiles();
+            // Convert to SplFileInfo-like objects or adapt the loop
+        }
+        
         $count = 0;
 
         // Grouping for bundles (Manuscripts)
         $manuscriptFolders = [];
 
         foreach ($allFiles as $file) {
-            $ext = strtolower($file->getExtension());
-            
-            // Calculate relative path for DB/Web
-            if ($baseRelativePath) {
-                // For external symlinks: baseRelativePath + relative path inside the target
-                $relativePathInside = $file->getRelativePathname();
-                $relativePath = $baseRelativePath . '/' . $relativePathInside;
-                $relativePath = str_replace('//', '/', $relativePath);
+            if ($file instanceof \Symfony\Component\Finder\SplFileInfo) {
+                $ext = strtolower($file->getExtension());
+                $fullPath = $file->getPathname();
+                $itemFilename = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+                $relativeDir = $file->getRelativePath();
+                
+                // Calculate relative path for DB/Web
+                if ($baseRelativePath) {
+                    $relativePathInside = $file->getRelativePathname();
+                    $relativePath = $baseRelativePath . '/' . $relativePathInside;
+                    $relativePath = str_replace('//', '/', $relativePath);
+                } else {
+                    $relativePath = $file->getRelativePathname();
+                }
             } else {
-                // For internal storage
-                $relativePath = $file->getRelativePathname();
+                // It's a string path (from Storage::allFiles)
+                $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                $fullPath = \Illuminate\Support\Facades\Storage::disk('public')->path($file);
+                $itemFilename = pathinfo($file, PATHINFO_FILENAME);
+                $relativeDir = dirname($file);
+                $relativePath = $file;
             }
 
-            $filename = pathinfo($file->getFilename(), PATHINFO_FILENAME);
-            $fullPath = $file->getPathname();
-            $pathParts = explode('/', $file->getRelativePath()); // Directories as tags
-
+            $pathParts = explode('/', $relativeDir); // Directories as tags
             $media = null;
+
+            // Extensions
+            $audioExts = ['mp3', 'm4a', 'wav', 'ogg'];
+            $videoExts = ['mp4', 'mov', 'avi', 'mkv', 'webm'];
+            $bookExts = ['md', 'txt', 'pdf'];
+            $imageExts = ['jpg', 'jpeg', 'png', 'webp'];
 
             // 1. Audio
             if (in_array($ext, $audioExts)) {
@@ -102,11 +118,12 @@ class SyncStorage extends Command
                     ['file_path' => $relativePath],
                     [
                         'id' => (string) Str::uuid(),
-                        'title' => $this->cleanTitle($filename),
-                        'slug' => Str::slug($filename) . '-' . Str::random(6),
-                        'type' => 'audio',
+                        'title' => $this->cleanTitle($itemFilename),
+                        'slug' => Str::slug($itemFilename) . '-' . Str::random(6),
+                        'type' => EntityType::AUDIO->value,
                         'author_id' => 1,
-                        'duration' => 0
+                        'duration' => 0,
+                        'description' => 'Automatically synced from storage.'
                     ]
                 );
             }
@@ -116,32 +133,49 @@ class SyncStorage extends Command
                     ['file_path' => $relativePath],
                     [
                         'id' => (string) Str::uuid(),
-                        'title' => $this->cleanTitle($filename),
-                        'slug' => Str::slug($filename) . '-' . Str::random(6),
-                        'type' => 'video',
+                        'title' => $this->cleanTitle($itemFilename),
+                        'slug' => Str::slug($itemFilename) . '-' . Str::random(6),
+                        'type' => EntityType::VIDEO->value,
                         'author_id' => 1,
-                        'duration' => 0
+                        'duration' => 0,
+                        'description' => 'Automatically synced from storage.'
                     ]
                 );
             }
             // 3. Books (Markdown/PDF)
             elseif (in_array($ext, $bookExts)) {
-                 $media = \App\Models\Book::firstOrCreate(
-                    ['file_path' => $relativePath],
-                    [
+                 $media = \App\Models\Book::where('file_path', $relativePath)
+                    ->orWhere('slug', Str::slug($itemFilename))
+                    ->first();
+
+                 if ($media) {
+                     $media->update([
+                         'file_path' => $relativePath,
+                         'type' => EntityType::BOOK->value,
+                     ]);
+                 } else {
+                     $media = \App\Models\Book::create([
                         'id' => (string) Str::uuid(),
-                        'title' => $this->cleanTitle($filename),
-                        'slug' => Str::slug($filename), // Simple slug for specific test case 'sira'
-                        'type' => 'book',
+                        'title' => $this->cleanTitle($itemFilename),
+                        'slug' => Str::slug($itemFilename), // Simple slug for specific test case 'sira'
+                        'type' => EntityType::BOOK->value,
                         'author_id' => 1,
-                        'pages' => 0
-                    ]
-                );
+                        'pages' => 0,
+                        'description' => 'Automatically synced from storage.',
+                        'file_path' => $relativePath
+                    ]);
+                 }
+
+                 // If it's a markdown file, sync content
+                 if ($ext === 'md') {
+                     $this->syncMarkdownContent($media, $fullPath);
+                 }
             }
             // 4. Manuscript (Images in Folder) - Collect first, process later or real-time?
             // Test implication: 'manuscripts/Bundle_X/page1.jpg' -> Bundle_X is the Manuscript.
             elseif (in_array($ext, $imageExts) && str_contains($relativePath, 'manuscripts/')) {
-                 $folderName = basename(dirname($fullPath));
+                 $parentFolderName = basename($relativeDir);
+                 $folderName = ($parentFolderName === 'manuscripts') ? $itemFilename : $parentFolderName;
                  $manuscriptFolders[$folderName][] = [
                      'file' => $file,
                      'relativePath' => $relativePath
@@ -162,15 +196,29 @@ class SyncStorage extends Command
                               $media->tags()->syncWithoutDetaching([$tag->id]);
                          }
                     }
+
+                    // Create initial version
+                    \App\Models\Version::create([
+                        'versionable_id' => $media->id,
+                        'versionable_type' => $media->type,
+                        'file_path' => $relativePath,
+                        'edition_number' => 1,
+                        'title' => 'Original',
+                        'format' => $ext,
+                    ]);
                 }
                 
                 // Audio/Video Metadata Updates... (Existing Logic)
-                if (($media instanceof Audio || $media instanceof Video) && ($media->duration === 0 || !$media->bitrate)) {
+                if ($this->option('force') || (($media instanceof Audio || $media instanceof Video) && ($media->duration === 0 || !$media->bitrate))) {
                      $meta = $this->getMetadata($fullPath);
                      $updates = [];
                      if ($meta['duration'] > 0) $updates['duration'] = $meta['duration'];
                      if ($meta['bitrate'] > 0) $updates['bitrate'] = $meta['bitrate'];
                      if ($meta['format']) $updates['format'] = $meta['format'];
+                     
+                     if ($this->option('force')) {
+                         $updates['description'] = 'Automatically synced from storage.';
+                     }
                      
                      if (!empty($updates)) $media->update($updates);
                 }
@@ -184,7 +232,7 @@ class SyncStorage extends Command
                   [
                       'id' => (string) Str::uuid(),
                       'slug' => Str::slug($folderName),
-                      'type' => 'manuscript',
+                      'type' => EntityType::MANUSCRIPT->value,
                       'pages' => count($pages)
                   ]
              );
@@ -198,7 +246,7 @@ class SyncStorage extends Command
                           'slug' => Str::slug($folderName . '-page-' . ($index + 1)),
                           'title' => 'Page ' . ($index + 1),
                           'order' => $index + 1,
-                          'type' => 'page'
+                          'type' => ContentNodeType::PAGE->value
                       ]
                   );
              }
@@ -207,9 +255,44 @@ class SyncStorage extends Command
         $this->info("Scan processed $count files.");
     }
 
+    /**
+     * Sync Markdown content to Book Children
+     */
+    protected function syncMarkdownContent($book, $filePath)
+    {
+        $content = File::get($filePath);
+        $parser = new \App\Services\Book\MarkdownStructureParser();
+        $structure = $parser->parse($content);
+        
+        $contentService = app(\App\Services\EntityContentService::class);
+        
+        foreach ($structure as $index => $node) {
+            $existing = \App\Models\BookChild::where('book_id', $book->id)
+                ->where('title', $node['title'])
+                ->first();
+                
+            if ($existing && $existing->is_manually_edited) {
+                continue;
+            }
+
+            $nodeData = [
+                'type' => $node['type'],
+                'title' => $node['title'],
+                'content_blocks' => $node['blocks'],
+                'order' => $index + 1
+            ];
+
+            if ($existing) {
+                $existing->update($nodeData);
+            } else {
+                $contentService->createNode($book, $nodeData);
+            }
+        }
+    }
+
     protected function cleanTitle($filename)
     {
-        return str_replace(['_', '-'], ' ', $filename);
+        return Str::headline($filename);
     }
 
     protected function getMetadata($filePath)

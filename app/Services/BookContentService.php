@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\ContentNodeType;
 use App\Models\Book;
 use App\Models\BookChild;
 use Illuminate\Support\Collection;
@@ -13,9 +14,9 @@ class BookContentService
         return BookChild::create([
             'book_id' => $book->id,
             'parent_id' => $data['parent_id'] ?? null,
-            'type' => $data['type'] ?? 'chapter',
+            'type' => $data['type'] ?? ContentNodeType::CHAPTER->value,
             'title' => $data['title'],
-            'slug' => $data['slug'] ?? \Illuminate\Support\Str::slug($data['title']) . '-' . uniqid(),
+            'slug' => $data['slug'] ?? \App\Helpers\SlugHelper::generate($data['title']) . '-' . uniqid(),
             'order' => $data['order'] ?? 0,
             'content' => $data['content'] ?? null,
             'content_blocks' => $data['content_blocks'] ?? [],

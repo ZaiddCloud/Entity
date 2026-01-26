@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\EntityType;
+use App\Enums\ContentNodeType;
 use Illuminate\Console\Command;
 
 use App\Models\User;
@@ -294,7 +296,7 @@ class SeedRealisticData extends Command
                     $attributes['code'] = strtoupper($type) . '_GROUP_' . $groupIndex;
                 }
 
-                if ($type === 'manuscript') {
+                if (EntityType::tryFrom($type) === EntityType::MANUSCRIPT) {
                     $centuryNum = rand(2, 14);
                     $attributes['century'] = (string) $centuryNum;
                     $attributes['century_label'] = $centuryNum . ' هـ';
@@ -318,7 +320,7 @@ class SeedRealisticData extends Command
                     $attributes['notes'] = 'نسخة نفيسة بخط جميل ومقروء، مع حواشٍ قيّمة.';
                     $attributes['location'] = $locations[array_rand($locations)];
                     
-                } elseif ($type === 'audio' || $type === 'video') {
+                } elseif (EntityType::tryFrom($type)?->supportsDuration()) {
                     $attributes['duration'] = rand(300, 3600);
                 }
 
@@ -326,7 +328,7 @@ class SeedRealisticData extends Command
                 // This now applies to ALL types (Book, Manuscript, Audio, Video)
                 if ($type !== 'shelf') {
                     $typeDir = $type . 's'; // books, manuscripts, etc.
-                    $fallbackName = "sample-" . ($i % 3 + 1) . "." . ($type === 'book' ? 'pdf' : ($type === 'audio' ? 'mp3' : 'mp4'));
+                    $fallbackName = "sample-" . ($i % 3 + 1) . "." . (EntityType::tryFrom($type)?->defaultFormat() ?? 'pdf');
                     // Manuscript fallback uses existing logic if present, or generic
                     if (isset($itemData['filename'])) {
                         $targetFilename = $itemData['filename'];
@@ -340,14 +342,14 @@ class SeedRealisticData extends Command
                     if ($foundPath !== null) {
                         // Found a local file!
                         $attributes['file_path'] = $foundPath;
-                        if ($type === 'manuscript') $attributes['cover_path'] = $foundPath;
+                        if (EntityType::tryFrom($type) === EntityType::MANUSCRIPT) $attributes['cover_path'] = $foundPath;
                         $this->line("    [+] Linked local file: $foundPath");
                     } else {
                         // Download Logic (Fallback)
                         if (isset($itemData['file_source']) && isset($itemData['filename'])) {
                              $this->ensureFileExists($itemData['file_source'], $itemData['filename']);
                              $attributes['file_path'] = $itemData['filename'];
-                             if ($type === 'manuscript') $attributes['cover_path'] = $itemData['filename'];
+                             if (EntityType::tryFrom($type) === EntityType::MANUSCRIPT) $attributes['cover_path'] = $itemData['filename'];
                         }
                     }
                 }
@@ -362,7 +364,7 @@ class SeedRealisticData extends Command
                     $subBookCount = rand(1, 2);
                     for ($sb = 1; $sb <= $subBookCount; $sb++) {
                         $subBook = $contentService->createNode($entity, [
-                            'type' => 'sub-book',
+                            'type' => ContentNodeType::SUB_BOOK->value,
                             'title' => "كتاب " . ($sb === 1 ? 'المقدمات' : 'الأحكام'),
                             'content' => '<p>مقدمة للكتاب الفرعي...</p>',
                             'json_content' => $this->generateJsonContent('<p>مقدمة للكتاب الفرعي...</p>'),
@@ -376,7 +378,7 @@ class SeedRealisticData extends Command
                         for ($p = 1; $p <= $partCount; $p++) {
                             $part = $contentService->createNode($entity, [
                                 'parent_id' => $subBook->id,
-                                'type' => 'part',
+                                'type' => ContentNodeType::PART->value,
                                 'title' => "الجزء {$p}",
                                 'content' => '<p>مقدمة الجزء...</p>',
                                 'json_content' => $this->generateJsonContent('<p>مقدمة الجزء...</p>'),
@@ -390,7 +392,7 @@ class SeedRealisticData extends Command
                             for ($c = 1; $c <= $chapCount; $c++) {
                                 $chapter = $contentService->createNode($entity, [
                                     'parent_id' => $part->id,
-                                    'type' => 'chapter',
+                                    'type' => ContentNodeType::CHAPTER->value,
                                     'title' => "فصل {$c}: في المسائل المهمة",
                                     'content' => "<p>هذا هو محتوى الفصل رقم {$c}. يحتوي على نصوص وتفريعات.</p>",
                                     'json_content' => $this->generateJsonContent("<p>هذا هو محتوى الفصل رقم {$c}. يحتوي على نصوص وتفريعات.</p>"),
@@ -401,12 +403,12 @@ class SeedRealisticData extends Command
                             }
                         }
                     }
-                } elseif ($type === 'manuscript') {
+                } elseif (EntityType::tryFrom($type) === EntityType::MANUSCRIPT) {
                     // Create 5 "Pages" for Manuscript
                     for ($p = 1; $p <= 5; $p++) {
                         $pageTitles = [1 => 'الأولى', 2 => 'الثانية', 3 => 'الثالثة', 4 => 'الرابعة', 5 => 'الخامسة'];
                         $contentService->createNode($entity, [
-                            'type' => 'page',
+                            'type' => ContentNodeType::PAGE->value,
                             'title' => 'الصفحة ' . ($pageTitles[$p] ?? $p),
                             'slug' => "page-{$p}-" . mb_substr($entity->slug, 0, 4),
                             'content' => "<p>محتوى الصفحة {$p} من المخطوطة " . $entity->title . "...</p>",
@@ -415,10 +417,10 @@ class SeedRealisticData extends Command
                             'order' => $p,
                         ]);
                     }
-                } elseif ($type === 'audio') {
+                } elseif (EntityType::tryFrom($type) === EntityType::AUDIO) {
                     // Create a dummy "Segment" for Audio
                     $contentService->createNode($entity, [
-                        'type' => 'segment',
+                        'type' => ContentNodeType::SEGMENT->value,
                         'title' => 'المقطع الأول',
                         'slug' => 'segment-1-' . mb_substr($entity->slug, 0, 4),
                         'content' => '<p>تفريغ نصي للمقطع الأول...</p>',
@@ -426,10 +428,10 @@ class SeedRealisticData extends Command
                         'plain_text' => 'تفريغ نصي للمقطع الأول...',
                         'order' => 1,
                     ]);
-                } elseif ($type === 'video') {
+                } elseif (EntityType::tryFrom($type) === EntityType::VIDEO) {
                     // Create a dummy "Scene" for Video
                     $contentService->createNode($entity, [
-                        'type' => 'scene',
+                        'type' => ContentNodeType::SCENE->value,
                         'title' => 'المشهد الأول',
                         'slug' => 'scene-1-' . mb_substr($entity->slug, 0, 4),
                         'content' => '<p>وصف ومحتوى المشهد الأول...</p>',
@@ -452,13 +454,13 @@ class SeedRealisticData extends Command
                 }
 
                 // Attach Contributors (Bookers) for Books and Manuscripts
-                if (($type === 'book' || $type === 'manuscript') && rand(1, 10) > 4) {
-                    $role = ($type === 'book') ? 'editor' : 'illustrator';
+                if (EntityType::tryFrom($type)?->supportsPages() && rand(1, 10) > 4) {
+                    $role = (EntityType::tryFrom($type) === EntityType::BOOK) ? 'editor' : 'illustrator';
                     $entity->bookers()->attach($bookers->random()->id, ['role' => $role]);
                 }
 
                 // Create Versions for each entity (Manuscripts: 4, Others: 3)
-                $versionCount = ($type === 'manuscript') ? 4 : 3;
+                $versionCount = (EntityType::tryFrom($type) === EntityType::MANUSCRIPT) ? 4 : 3;
                 for ($v = 1; $v <= $versionCount; $v++) {
                     $vTitle = match ($type) {
                         'audio', 'video' => "تسجيل {$v}",
@@ -471,8 +473,8 @@ class SeedRealisticData extends Command
                         'versionable_type' => $type, // Matches morphMap
                         'publisher_id' => $publishers->random()->id,
                         'title' => $vTitle,
-                        'isbn' => ($type === 'book') ? Str::random(13) : null,
-                        'pages' => ($type === 'book' || $type === 'manuscript') ? rand(100, 1000) : null,
+                        'isbn' => (EntityType::tryFrom($type) === EntityType::BOOK) ? Str::random(13) : null,
+                        'pages' => EntityType::tryFrom($type)?->supportsPages() ? rand(100, 1000) : null,
                         'published_year' => rand(1900, 2024),
                         'edition_number' => $v,
                         'format' => match ($type) {
@@ -488,7 +490,7 @@ class SeedRealisticData extends Command
                 // Relationships (Every entity MUST have these)
                 $entity->categories()->attach($categories->random(1)->pluck('id'));
                 $entity->tags()->attach($tags->random(rand(2, 4))->pluck('id'));
-                if ($type === 'book') {
+                if (EntityType::tryFrom($type) === EntityType::BOOK) {
                     $entity->topics()->attach($topics->random(rand(1, 2))->pluck('id'));
                 }
 

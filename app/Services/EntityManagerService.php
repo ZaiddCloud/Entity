@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\EntityType;
 use App\Models\Entity;
 use App\Models\Book;
 use App\Models\Video;
@@ -103,14 +104,16 @@ class EntityManagerService
     {
         $rules = [
             'title' => 'required|string|max:255',
-            'type' => 'required|in:book,video,audio,manuscript'
+            'type' => 'required|in:' . implode(',', EntityType::values())
         ];
 
         // إضافة شروط خاصة بكل نوع
         if (isset($data['type'])) {
-            if ($data['type'] === 'manuscript') {
+            $entityType = EntityType::tryFrom($data['type']);
+            
+            if ($entityType === EntityType::MANUSCRIPT) {
                 $rules['century'] = 'nullable|integer';
-            } elseif ($data['type'] === 'book') {
+            } elseif ($entityType === EntityType::BOOK) {
                 $rules['author'] = 'nullable|string|max:255';
             }
         }

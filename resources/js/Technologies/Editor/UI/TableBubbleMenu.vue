@@ -1,6 +1,6 @@
 <script setup>
 import { BubbleMenu } from '@tiptap/vue-3/menus'
-import ToolbarButton from '../Toolbar/Components/ToolbarButton.vue'
+import ToolbarButton from './Toolbar/Components/ToolbarButton.vue'
 
 const props = defineProps({
     editor: {

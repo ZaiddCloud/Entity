@@ -36,13 +36,13 @@ class Topic extends Model
 
         static::creating(function ($topic) {
             if (empty($topic->slug)) {
-                $topic->slug = \Illuminate\Support\Str::slug($topic->name);
+                $topic->slug = \App\Helpers\SlugHelper::generate($topic->name);
             }
         });
 
         static::updating(function ($topic) {
             if (empty($topic->slug)) {
-                $topic->slug = \Illuminate\Support\Str::slug($topic->name);
+                $topic->slug = \App\Helpers\SlugHelper::generate($topic->name);
             }
         });
     }

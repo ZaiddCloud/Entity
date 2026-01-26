@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\EntityType;
+use App\Enums\ContentNodeType;
 use App\Http\Controllers\Controller;
 use App\Services\EntityContentService;
+use App\Models\AudioSegment;
+use App\Models\VideoSegment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -39,7 +43,8 @@ class SegmentController extends Controller
         $entity = $modelClass::findOrFail($request->entity_id);
 
         // Determine segment type
-        $type = $request->entity_type === 'audio' ? 'segment' : 'scene';
+        $entityType = EntityType::from($request->entity_type);
+        $type = ContentNodeType::defaultFor($entityType)->value;
 
         // Get next order number
         $maxOrder = $this->contentService->getMaxOrder($entity);
@@ -48,7 +53,7 @@ class SegmentController extends Controller
         $segment = $this->contentService->createNode($entity, [
             'type' => $type,
             'title' => $request->title,
-            'slug' => Str::slug($request->title) . '-' . Str::random(8),
+            'slug' => \App\Helpers\SlugHelper::generate($request->title) . '-' . Str::random(8),
             'content' => '<p></p>', // Empty content initially
             'start_time' => $request->start_time ?? 0,
             'end_time' => $request->end_time ?? 0,

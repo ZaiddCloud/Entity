@@ -22,7 +22,7 @@ class ManuscriptController extends EntityController
     protected function getUpdateRequestClass(): ?string { return \App\Http\Requests\UpdateManuscriptRequest::class; }
 
     //Customization
-    protected function getRelations(): array { return ['tags', 'categories', 'authors', 'versions.publisher', 'comments.user', 'children']; }
+    protected function getRelations(): array { return ['tags', 'categories', 'authors', 'versions.publisher', 'comments.user']; }
     protected function getSearchFields(): array { return ['title']; }
     protected function getSearchRelations(): array { return ['authors' => 'name']; }
     protected function getPerPage(): int { return 16; }

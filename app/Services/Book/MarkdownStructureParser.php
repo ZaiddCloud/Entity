@@ -2,6 +2,8 @@
 
 namespace App\Services\Book;
 
+use App\Enums\ContentNodeType;
+
 class MarkdownStructureParser
 {
     /**
@@ -14,14 +16,14 @@ class MarkdownStructureParser
         $currentIndex = -1;
 
         $typeMap = [
-            1 => 'sub-book',
-            2 => 'part',
-            3 => 'bab',
-            4 => 'chapter',
-            5 => 'masala',
-            6 => 'masala',
-            7 => 'masala',
-            8 => 'masala'
+            1 => ContentNodeType::SUB_BOOK->value,
+            2 => ContentNodeType::PART->value,
+            3 => ContentNodeType::BAB->value,
+            4 => ContentNodeType::CHAPTER->value,
+            5 => ContentNodeType::MASALAH->value,
+            6 => ContentNodeType::MASALAH->value,
+            7 => ContentNodeType::MASALAH->value,
+            8 => ContentNodeType::MASALAH->value
         ];
 
         foreach ($lines as $line) {
@@ -36,7 +38,7 @@ class MarkdownStructureParser
                 $nodes[] = [
                     'title' => $title,
                     'level' => $level,
-                    'type' => $typeMap[$level] ?? 'chapter',
+                    'type' => $typeMap[$level] ?? ContentNodeType::CHAPTER->value,
                     'blocks' => []
                 ];
                 $currentIndex = count($nodes) - 1;

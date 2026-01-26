@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\EntityType;
 use App\Models\Book;
 use App\Models\Audio;
 use App\Models\Video;
@@ -56,7 +57,7 @@ class UnifiedEditorController extends Controller
         Gate::authorize('update', $entity);
 
         // Load siblings for Manuscript if 'code' exists
-        if ($type === 'manuscript' && $entity->code) {
+        if (EntityType::tryFrom($type) === EntityType::MANUSCRIPT && $entity->code) {
              $siblings = Manuscript::where('code', $entity->code)
                 ->where('id', '!=', $entity->id)
                 ->get();
@@ -215,7 +216,7 @@ class UnifiedEditorController extends Controller
         } 
         // For Book (if BookChild is Mongo), we should also load manually or check if it works via standard relation
         // Assuming BookChild is also Mongo based on previous checks
-        elseif ($type === 'book') {
+        elseif (EntityType::tryFrom($type) === EntityType::BOOK) {
              $children = BookChild::where('book_id', $entity->id)
                 ->orderBy('order', 'asc')
                 ->get();

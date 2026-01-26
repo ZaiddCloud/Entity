@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\EntityType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
 use App\Models\Entity;
@@ -30,13 +31,13 @@ class StoreEntityRequest extends FormRequest
     {
         // Example: if route is books.store, we imply type=book
         if ($this->routeIs('books.store')) {
-            $this->merge(['type' => 'book']);
+            $this->merge(['type' => EntityType::BOOK->value]);
         } elseif ($this->routeIs('audios.store')) {
-            $this->merge(['type' => 'audio']);
+            $this->merge(['type' => EntityType::AUDIO->value]);
         } elseif ($this->routeIs('videos.store')) {
-            $this->merge(['type' => 'video']);
+            $this->merge(['type' => EntityType::VIDEO->value]);
         } elseif ($this->routeIs('manuscripts.store')) {
-            $this->merge(['type' => 'manuscript']);
+            $this->merge(['type' => EntityType::MANUSCRIPT->value]);
         }
     }
 
@@ -49,7 +50,7 @@ class StoreEntityRequest extends FormRequest
     {
         $rules = [
             'title' => 'required|string|max:255',
-            'type' => 'required|in:book,video,audio,manuscript',
+            'type' => 'required|in:' . implode(',', EntityType::values()),
             'author' => 'nullable|string|max:255', // Legacy support
             'author_ids' => 'nullable|array',
             'author_ids.*' => 'exists:authors,id',
@@ -67,13 +68,13 @@ class StoreEntityRequest extends FormRequest
             'tags.*' => 'exists:tags,id',
         ];
 
-        $type = $this->input('type');
+        $type = EntityType::tryFrom($this->input('type'));
 
-        if ($type === 'book' || $type === 'manuscript') {
+        if ($type?->supportsPages()) {
             $rules['file'] = 'nullable|mimes:pdf|max:51200'; // 50MB
-        } elseif ($type === 'audio') {
+        } elseif ($type === EntityType::AUDIO) {
             $rules['file'] = 'nullable|mimes:mp3,wav|max:51200';
-        } elseif ($type === 'video') {
+        } elseif ($type === EntityType::VIDEO) {
             $rules['file'] = 'nullable|mimes:mp4,mov,avi|max:102400'; // 100MB
         }
 

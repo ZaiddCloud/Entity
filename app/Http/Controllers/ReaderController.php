@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\EntityType;
 use App\Models\Book;
 use App\Models\Audio;
 use App\Models\Video;
@@ -78,7 +79,7 @@ class ReaderController extends Controller
 
         // 6. Special Handling for Manuscripts (Vertical Scroll)
         $siblingsContent = [];
-        if ($type === 'manuscript') {
+        if (EntityType::tryFrom($type) === EntityType::MANUSCRIPT) {
             $siblingsContent = $entity->children->map(function($child) use ($type) {
                 // Determine content node for each child
                 $childNode = $child; 
@@ -236,7 +237,7 @@ class ReaderController extends Controller
                     ->get();
                 $entity->setRelation('children', $children);
             }
-        } elseif ($type === 'book') {
+        } elseif (EntityType::tryFrom($type) === EntityType::BOOK) {
             $children = BookChild::where('book_id', $entity->id)
                 ->orderBy('order', 'asc')
                 ->get();

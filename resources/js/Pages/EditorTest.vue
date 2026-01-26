@@ -1,5 +1,5 @@
 <script setup>
-import EditorPage from './Editor/EditorPage.vue'
+import EditorClient from '../Technologies/Editor/EditorClient.vue'
 
 const props = defineProps({
     book: {
@@ -14,8 +14,9 @@ const props = defineProps({
 </script>
 
 <template>
-  <EditorPage
-    :book="book"
-    :child="child"
+  <EditorClient
+    :initial-content="child.content"
+    :media-entity="book"
+    type="book"
   />
 </template>

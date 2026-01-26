@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\EntityType;
+use App\Enums\ContentNodeType;
 use App\Models\Audio;
 use App\Models\AudioSegment;
 use App\Models\Video;
@@ -245,8 +247,8 @@ class ImportTranscripts extends Command
 
     protected function storeSegments($media, $segments)
     {
-        $type = ($media instanceof Audio) ? 'audio' : 'video';
-        $nodeType = ($type === 'audio') ? 'segment' : 'scene';
+        $entityType = $media instanceof Audio ? EntityType::AUDIO : EntityType::VIDEO;
+        $nodeType = ContentNodeType::defaultFor($entityType)->value;
 
         $startOrder = $this->contentService->getMaxOrder($media) + 1;
 

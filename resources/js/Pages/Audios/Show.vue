@@ -35,26 +35,26 @@ const formatDate = (dateString) => {
     <div class="relative bg-emerald-950 -mt-8 -mx-8 mb-8 overflow-hidden shadow-2xl">
       <!-- Background Elements -->
       <div class="absolute inset-0 opacity-20">
-        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay" />
-        <div class="absolute top-0 right-0 w-96 h-96 bg-emerald-500 rounded-full blur-3xl opacity-20 translate-x-1/2 -translate-y-1/2" />
-        <div class="absolute bottom-0 left-0 w-96 h-96 bg-lime-500 rounded-full blur-3xl opacity-20 -translate-x-1/2 translate-y-1/2" />
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay"></div>
+        <div class="absolute top-0 right-0 w-96 h-96 bg-emerald-500 rounded-full blur-3xl opacity-20 translate-x-1/2 -translate-y-1/2"></div>
+        <div class="absolute bottom-0 left-0 w-96 h-96 bg-lime-500 rounded-full blur-3xl opacity-20 -translate-x-1/2 translate-y-1/2"></div>
       </div>
             
-      <div class="absolute inset-0 bg-gradient-to-t from-emerald-950 via-transparent to-transparent" />
+      <div class="absolute inset-0 bg-gradient-to-t from-emerald-950 via-transparent to-transparent"></div>
 
       <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
         <div class="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
           <!-- Audio Cover/Thumbnail -->
           <div class="w-full lg:w-auto flex-shrink-0 flex justify-center lg:justify-start">
             <div class="relative group">
-              <div class="absolute -inset-1 bg-gradient-to-tr from-lime-400 to-emerald-600 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500" />
+              <div class="absolute -inset-1 bg-gradient-to-tr from-lime-400 to-emerald-600 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
               <div class="relative w-48 h-48 lg:w-64 lg:h-64 rounded-2xl overflow-hidden shadow-2xl bg-emerald-900 border-4 border-emerald-900/50 flex items-center justify-center">
                 <img 
                   v-if="audio.cover_path" 
                   :src="'/storage/' + audio.cover_path" 
                   :alt="audio.title"
                   class="w-full h-full object-cover transform duration-700 group-hover:scale-110"
-                >
+                />
                 <div
                   v-else
                   class="text-emerald-700/50 flex flex-col items-center"
@@ -105,7 +105,7 @@ const formatDate = (dateString) => {
               <!-- Version Switcher -->
               <div v-if="siblings?.length" class="flex items-center justify-center lg:justify-start gap-4 py-2 border-y border-white/5">
                 <div class="flex items-center gap-2">
-                  <div class="w-2 h-2 rounded-full bg-lime-500 animate-pulse" />
+                  <div class="w-2 h-2 rounded-full bg-lime-500 animate-pulse"></div>
                   <span class="text-[10px] font-black uppercase tracking-widest text-emerald-400">تسجيلات أخرى متاحة في هذا العمل:</span>
                 </div>
                 <div class="flex flex-wrap gap-2">
@@ -185,6 +185,8 @@ const formatDate = (dateString) => {
           </div>
         </div>
       </div>
+    </div>
+
     </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-10 pb-20">
@@ -387,7 +389,7 @@ const formatDate = (dateString) => {
                 </h4>
                 <div class="space-y-4">
                   <div class="flex items-center gap-3 text-sm">
-                    <div class="w-2 h-2 rounded-full bg-emerald-500" />
+                    <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
                     <span class="text-gray-500">تاريخ الإضافة:</span>
                     <span class="font-mono font-bold text-gray-700 dark:text-gray-300 ltr:ml-auto rtl:mr-auto">{{ formatDate(audio.created_at) }}</span>
                   </div>

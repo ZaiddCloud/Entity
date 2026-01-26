@@ -35,13 +35,13 @@ class Publisher extends Model
 
         static::creating(function ($publisher) {
             if (empty($publisher->slug)) {
-                $publisher->slug = \Illuminate\Support\Str::slug($publisher->name);
+                $publisher->slug = \App\Helpers\SlugHelper::generate($publisher->name);
             }
         });
 
         static::updating(function ($publisher) {
             if (empty($publisher->slug)) {
-                $publisher->slug = \Illuminate\Support\Str::slug($publisher->name);
+                $publisher->slug = \App\Helpers\SlugHelper::generate($publisher->name);
             }
         });
     }

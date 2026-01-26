@@ -25,8 +25,8 @@ class EditorRoutingTest extends TestCase
         $response->assertStatus(200);
         $response->assertInertia(
             fn($page) => $page
-                ->component('Editor/EditorPage')
-                ->where('editor_mode', 'book')
+                ->component('Technologies/Studio/StudioLayout', false)
+                ->where('type', 'book')
         );
     }
 
@@ -45,9 +45,9 @@ class EditorRoutingTest extends TestCase
         $response->assertStatus(200);
         $response->assertInertia(
             fn($page) => $page
-                ->component('Editor/EditorPage')
-                ->where('editor_mode', 'manuscript')
-                ->has('resource_data')
+                ->component('Technologies/Studio/StudioLayout', false)
+                ->where('type', 'manuscript')
+                ->has('entity')
         );
     }
 

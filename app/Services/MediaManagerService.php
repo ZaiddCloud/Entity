@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\EntityType;
 use App\Models\Book;
 use App\Models\Entity;
 use App\Models\Version;
@@ -102,7 +103,9 @@ class MediaManagerService
         }
 
         // Type-specific attributes
-        if ($type === 'manuscript') {
+        $entityTypeEnum = EntityType::tryFrom($type);
+        
+        if ($entityTypeEnum === EntityType::MANUSCRIPT) {
             $manuscriptFields = [
                 'century', 'century_label', 'original_title', 'catalog_number', 'madhab', 'scribe', 
                 'copy_date', 'parts', 'script_type', 'dimensions', 'lines_per_page', 
@@ -114,7 +117,7 @@ class MediaManagerService
                     $entityData[$field] = $data[$field];
                 }
             }
-        } elseif (($type === 'audio' || $type === 'video') && isset($data['duration'])) {
+        } elseif ($entityTypeEnum?->supportsDuration() && isset($data['duration'])) {
             $entityData['duration'] = $data['duration'];
         }
 
@@ -132,7 +135,7 @@ class MediaManagerService
             'pages' => $data['pages'] ?? null,
             'published_year' => $data['published_year'] ?? null,
             'edition_number' => $data['edition_number'] ?? 1,
-            'format' => $data['format'] ?? ($entity->type === 'book' ? 'pdf' : 'mp4'),
+            'format' => $data['format'] ?? (EntityType::tryFrom($entity->type)?->defaultFormat() ?? 'mp4'),
             'file_size' => $data['file_size'] ?? 0,
         ];
     }
@@ -142,7 +145,7 @@ class MediaManagerService
         $validator = Validator::make($data, [
             'title' => 'required|string|max:255',
             'code' => 'nullable|string|max:100',
-            'type' => 'sometimes|required|string|in:book,video,audio,manuscript',
+            'type' => 'sometimes|required|string|in:' . implode(',', EntityType::values()),
             'file_path' => 'nullable|string',
             'author_ids' => 'nullable|array',
             'author_ids.*' => 'exists:authors,id',

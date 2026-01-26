@@ -36,7 +36,7 @@ class Tag extends Model
 
         static::creating(function ($tag) {
             if (empty($tag->slug)) {
-                $tag->slug = Str::slug($tag->name, '-', null);
+                $tag->slug = \App\Helpers\SlugHelper::generate($tag->name);
             }
         });
     }

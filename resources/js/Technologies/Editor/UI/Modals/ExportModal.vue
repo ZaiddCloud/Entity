@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { EXPORT_FORMATS, EXPORT_FORMAT_LABELS } from '../Core/Constants/exportFormats'
+import { EXPORT_FORMATS, EXPORT_FORMAT_LABELS } from '../../Core/Constants/exportFormats'
 
 const props = defineProps({
     isOpen: {

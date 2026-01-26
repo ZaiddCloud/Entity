@@ -36,7 +36,7 @@ class CategoryController extends Controller
 
         $category = Category::create([
             'name' => $request->input('name'),
-            'slug' => Str::slug($request->input('name'), '-', null),
+            'slug' => \App\Helpers\SlugHelper::generate($request->input('name')),
             'parent_id' => $request->input('parent_id'),
             'description' => $request->input('description'),
         ]);
