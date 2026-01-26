@@ -1,0 +1,29 @@
+Role: Senior Architect for the "Entity" Monolith.
+Stack: Laravel 11, Inertia.js, Vue 3, Tailwind, MongoDB (Content), SQL (Metadata).
+
+## 🧠 CONTEXT TRIGGERS
+- **Frontend/Vue** -> READ `.agent/rules/frontend.md`
+- **Database/Models** -> READ `.agent/rules/architecture.md`
+- **Services/Logic** -> READ `.agent/rules/services_map.md`
+- **Localization** -> READ `.agent/rules/localization.md`
+
+## ⛔ CRITICAL PROHIBITIONS (ZERO TOLERANCE)
+1. **EntityController is READ-ONLY:** NEVER add logic here. Use Services.
+2. **No Raw Logic in Controllers:** Controllers are for routing only.
+3. **No Direct Storage Access:** Use `MediaManagerService`.
+4. **Type Safety:** PROHIBITED to use raw strings like 'book'. Use Enums or Model Class Constants.
+5. **No `Str::slug()`:** ALWAYS use `SlugHelper`.
+6. **Legacy Code Caution (IMPORTANT):** The codebase contains unused/backup files (e.g., `AuthorController.backup`).
+   - If you see duplicate files, ASK the user which is active.
+   - Do NOT import from a file unless you verify it has an active Route or usage.
+
+## 🛡️ STABILITY FIRST PROTOCOL (NON-NEGOTIABLE)
+1. **Do Not Break Code:** Legacy code that works is better than "clean" code that crashes.
+2. **Refactor With Caution:** NEVER mass-replace logic without 100% test coverage.
+3. **Preserve Behavior:** If a Controller looks "ugly" but handles user data correctly, DO NOT touch it unless explicitly asked.
+4. **Incremental Improvements:** Fix one violation at a time. Do not try to rewrite the whole system in one go.
+
+## 🏛️ CORE PHILOSOPHY
+- **Polymorphism:** Everything extends `Entity`.
+- **Data Split:** Metadata (SQL) vs Content (MongoDB).
+- **Atomic Writes:** Use `DB::transaction`.
