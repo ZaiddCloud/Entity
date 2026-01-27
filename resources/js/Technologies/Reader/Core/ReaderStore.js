@@ -13,7 +13,8 @@ export const useReaderStore = defineStore('reader', {
         isFullscreen: false,
         isTocOpen: false,
         isSearchOpen: false,
-        isMediaVisible: true, // Default to showing media
+        isFullView: false,
+        activeChildId: null,
         scrollProgress: 0,
         bookmarks: JSON.parse(localStorage.getItem('reader_bookmarks')) || [],
         isLoading: false,
@@ -22,7 +23,7 @@ export const useReaderStore = defineStore('reader', {
     getters: {
         activeNodeIndex: (state) => {
             if (!state.currentNode || !state.hierarchy.length) return -1;
-            return state.hierarchy.findIndex(node => node.slug === state.currentNode.slug);
+            return state.hierarchy.findIndex(node => (node._id || node.id) === state.activeChildId);
         },
         prevNode: (state) => {
             const index = state.activeNodeIndex;
@@ -39,15 +40,28 @@ export const useReaderStore = defineStore('reader', {
             this.entity = props.entity;
             this.type = props.type;
             this.hierarchy = props.hierarchy || [];
-            this.currentNode = {
-                slug: props.activeSlug,
-                title: props.entity.title,
-            };
+            this.isFullView = props.isFullView || false;
+            this.activeChildId = props.activeChildId;
+            
+            // Find current node in hierarchy
+            const node = this.activeChildId 
+                ? this.hierarchy.find(n => (n._id || n.id) === this.activeChildId)
+                : this.hierarchy[0];
+
+            this.currentNode = node ? {
+                id: node._id || node.id,
+                slug: node.slug,
+                title: node.title,
+            } : null;
         },
 
-        navigate(slug) {
+        navigate(id = null) {
             this.isLoading = true;
-            router.visit(route('reader.show', { type: this.type, slug: slug }), {
+            router.visit(route('reader.show', { 
+                type: this.type, 
+                slug: this.entity.slug,
+                childId: id 
+            }), {
                 preserveState: true,
                 onSuccess: () => {
                     this.isLoading = false;

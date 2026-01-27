@@ -25,7 +25,7 @@ const handleSearch = async () => {
     try {
         const response = await axios.get(route('reader.search', { 
             type: store.type, 
-            slug: store.currentNode.slug 
+            slug: store.entity.slug 
         }), {
             params: { q: searchQuery.value }
         });

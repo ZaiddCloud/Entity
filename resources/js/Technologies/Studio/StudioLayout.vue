@@ -1,5 +1,5 @@
 <script setup>
-import { Head } from '@inertiajs/vue3'
+import { Head, router } from '@inertiajs/vue3'
 import SplitPane from './Layouts/SplitPane.vue'
 import ReferencePane from './Panes/ReferencePane.vue'
 import EditorPane from './Panes/EditorPane.vue'
@@ -71,8 +71,33 @@ const saveStatusText = computed(() => {
 })
 
 const navigateToFull = () => {
-    $inertia.visit(route('studio.show', { type: props.type, slug: props.entity.slug }))
+    router.visit(route('studio.show', { type: props.type, slug: props.entity.slug }))
 }
+
+const navigateToSpecific = () => {
+    // Determine target ID: use activeChildId (if valid) or fallback to first child
+    let targetId = props.activeChildId;
+    
+    // Check entity.children
+    if (!targetId && props.entity.children && props.entity.children.length > 0) {
+        targetId = props.entity.children[0]._id || props.entity.children[0].id;
+    }
+    
+    // Fallback to hierarchy from service (more reliable for Mongo hybrid)
+    if (!targetId && props._legacy && props._legacy.hierarchy && props._legacy.hierarchy.length > 0) {
+        const firstNode = props._legacy.hierarchy[0];
+        targetId = firstNode._id || firstNode.id;
+    }
+    
+    if (targetId) {
+        router.visit(route('studio.show', { type: props.type, slug: props.entity.slug, childId: targetId }))
+    }
+}
+
+const specificNodeTitle = computed(() => {
+    if (props.isFullView) return 'عرض مقطع محدد';
+    return props._legacy?.contentNode?.title || 'المقطع الحالي';
+})
 </script>
 
 <template>
@@ -109,30 +134,51 @@ const navigateToFull = () => {
 
       <!-- Actions -->
       <div class="flex items-center gap-3">
-        <!-- Full View Button (Switch to Server-side Aggregated View) -->
-        <button 
-            v-if="!props.isFullView"
-            class="hidden md:flex items-center gap-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-[11px] px-2.5 py-1.5 rounded border border-gray-700 transition-all"
-            title="عرض كافة المحتوى مدمجاً"
-            @click="navigateToFull"
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <polyline points="10 9 9 9 8 9"></polyline>
-            </svg>
-            عرض المحتوى الكامل
-        </button>
+        <!-- Dual View Toggle -->
+        <div class="hidden md:flex items-center bg-gray-800 rounded-lg p-1 gap-1 border border-gray-700">
+            <!-- Full View Button -->
+            <button 
+                @click="navigateToFull"
+                :class="[
+                    'flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded transition-all',
+                    props.isFullView 
+                        ? 'bg-amber-500/10 text-amber-500 font-bold shadow-sm' 
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                ]"
+                title="عرض كافة المحتوى مدمجاً"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                كامل المحتوى
+            </button>
 
-        <!-- Full View Badge -->
-        <span 
-            v-else
-            class="text-[10px] px-2 py-1 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 font-bold"
-        >
-            كامل المحتوى
-        </span>
+            <!-- Divider -->
+            <div class="w-px h-3 bg-gray-700"></div>
+
+            <!-- Specific View Button -->
+            <button 
+                @click="navigateToSpecific"
+                :class="[
+                    'flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded transition-all',
+                    !props.isFullView 
+                        ? 'bg-blue-500/10 text-blue-400 font-bold shadow-sm' 
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                ]"
+                :title="!props.isFullView ? 'أنت في وضع التركيز على هذا المقطع' : 'الانتقال للتركيز على مقطع محدد'"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                {{ specificNodeTitle }}
+            </button>
+        </div>
 
         <!-- Save Status -->
         <span class="text-[10px] flex items-center gap-1.5 border-r border-gray-800 pr-3 mr-1" :class="saveStatusColor">
@@ -178,8 +224,8 @@ const navigateToFull = () => {
             :type="props.type"
             :entity="props.entity" 
             :active-child-id="props.activeChildId"
-            @navigate="(id) => $inertia.visit(route('studio.show', { type: props.type, slug: props.entity.slug, childId: id }))"
-            @navigate-full="() => $inertia.visit(route('studio.show', { type: props.type, slug: props.entity.slug }))"
+            @navigate="(id) => router.visit(route('studio.show', { type: props.type, slug: props.entity.slug, childId: id }))"
+            @navigate-full="() => router.visit(route('studio.show', { type: props.type, slug: props.entity.slug }))"
           />
         </template>
       </SplitPane>

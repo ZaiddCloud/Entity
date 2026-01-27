@@ -45,6 +45,13 @@ watch(() => store.shotNumber, (newShot) => {
     if (version && version.pages) {
         const page = version.pages[newShot - 1]
         const pageId = page?._id || page?.id
+        
+        // Prevent auto-navigation on initial load if in Full View (null activeChildId)
+        // We assume Shot 1 is the default visual state and shouldn't trigger a route change
+        if (!props.activeChildId && newShot === 1) {
+            return
+        }
+
         if (pageId && pageId !== props.activeChildId) {
             emit('navigate', pageId)
         }

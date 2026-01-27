@@ -15,8 +15,9 @@ const props = defineProps({
     entity: Object,
     content: Object,
     html_content: String,
-    activeSlug: String,
-    hierarchy: Array,
+    isFullView: Boolean,
+    activeChildId: String,
+    activeSlug: String, // Keep for legacy if needed, but primarily use activeChildId
     hierarchy: Array,
     readingPosition: Object,
     title: String,
@@ -51,9 +52,9 @@ onUnmounted(() => {
 
 const handleKeydown = (e) => {
     if (e.key === 'ArrowRight' && store.nextNode) {
-        store.navigate(store.nextNode.slug);
+        store.navigate(store.nextNode._id || store.nextNode.id);
     } else if (e.key === 'ArrowLeft' && store.prevNode) {
-        store.navigate(store.prevNode.slug);
+        store.navigate(store.prevNode._id || store.prevNode.id);
     } else if (e.key === 'f' || e.key === 'F') {
         store.toggleFullscreen();
     } else if (e.key === 't' || e.key === 'T') {
@@ -67,8 +68,8 @@ const handleKeydown = (e) => {
 };
 
 const handleSearchResult = (result) => {
-    if (result.slug !== props.activeSlug) {
-        store.navigate(result.slug);
+    if ((result.id || result._id) !== props.activeChildId) {
+        store.navigate(result.id || result._id);
     }
     
     if (result.timestamp !== null) {
@@ -113,7 +114,10 @@ const handleSeek = (time) => {
                 </button>
                 <div class="overflow-hidden">
                     <h1 class="font-bold text-lg truncate max-w-[200px] sm:max-w-md">{{ entity.title }}</h1>
-                    <p class="text-xs opacity-60 truncate">{{ store.currentNode?.title }}</p>
+                    <div class="flex items-center gap-2">
+                        <span v-if="props.isFullView" class="text-[10px] bg-amber-500/10 text-amber-600 px-1.5 py-0.5 rounded border border-amber-500/20 font-bold uppercase">كامل المحتوى</span>
+                        <p class="text-xs opacity-60 truncate">{{ props.isFullView ? 'استعراض شامل' : store.currentNode?.title }}</p>
+                    </div>
                 </div>
             </div>
 
@@ -244,7 +248,7 @@ const handleSeek = (time) => {
         <!-- Footer Navigation -->
         <footer :class="['h-16 border-t flex items-center justify-between px-6 shrink-0', currentThemeClasses.bg, currentThemeClasses.border]">
             <button 
-                @click="store.prevNode && store.navigate(store.prevNode.slug)"
+                @click="store.prevNode && store.navigate(store.prevNode._id || store.prevNode.id)"
                 :disabled="!store.prevNode"
                 class="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-black/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
@@ -259,7 +263,7 @@ const handleSeek = (time) => {
             </div>
 
             <button 
-                @click="store.nextNode && store.navigate(store.nextNode.slug)"
+                @click="store.nextNode && store.navigate(store.nextNode._id || store.nextNode.id)"
                 :disabled="!store.nextNode"
                 class="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-black/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >

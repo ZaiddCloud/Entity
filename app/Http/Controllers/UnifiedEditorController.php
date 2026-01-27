@@ -34,8 +34,11 @@ class UnifiedEditorController extends Controller
      */
     public function show(string $type, string $slug, ?string $childId = null)
     {
+        $entityType = EntityType::tryFrom($type);
+        if (!$entityType) abort(404, 'Invalid entity type');
+
         // 1. Resolve Parent Entity
-        $parentEntity = $this->resolveParentEntity($type, $slug);
+        $parentEntity = $this->resolveParentEntity($entityType, $slug);
         
         if (!$parentEntity) {
             abort(404, 'Parent resource not found');
@@ -47,11 +50,11 @@ class UnifiedEditorController extends Controller
         $isFullView = false;
 
         if ($childId) {
-            $modelClass = $this->getContentModelClass($type);
+            $modelClass = $this->getContentModelClass($entityType);
             $node = $modelClass::find($childId);
             
             // Validate child belongs to parent
-            $foreignKey = $this->getForeignKey($type);
+            $foreignKey = $this->getForeignKey($entityType);
             if (!$node || $node->$foreignKey != $parentEntity->id) {
                 // If ID is actually a slug (legacy or mistake), try finding by slug
                 $node = $modelClass::where('slug', $childId)
@@ -75,13 +78,11 @@ class UnifiedEditorController extends Controller
 
         $entity = $parentEntity;
 
-
-
         // التحقق من الصلاحية
         Gate::authorize('update', $entity);
 
         // Load siblings for Manuscript if 'code' exists
-        if (EntityType::tryFrom($type) === EntityType::MANUSCRIPT && $entity->code) {
+        if ($entityType === EntityType::MANUSCRIPT && $entity->code) {
              $siblings = Manuscript::where('code', $entity->code)
                 ->where('id', '!=', $entity->id)
                 ->get();
@@ -91,7 +92,7 @@ class UnifiedEditorController extends Controller
         // Record last active session
         if (auth()->check()) {
             auth()->user()->update([
-                'last_studio_type' => $type,
+                'last_studio_type' => $type, // DB stores string
                 'last_studio_slug' => $slug,
                 'last_studio_child_id' => $childId ? ($node->_id ?? $node->id) : null
             ]);
@@ -102,7 +103,7 @@ class UnifiedEditorController extends Controller
         
         // Map to Studio Props
         $studioProps = [
-            'type' => $type,
+            'type' => $type, // Frontend expects string currently
             'entity' => $entity, // Entity now includes siblings if loaded
             'editorContent' => $editorContent,
             'isFullView' => $isFullView,
@@ -137,11 +138,14 @@ class UnifiedEditorController extends Controller
              return response()->json(['error' => 'Child ID is required for saving'], 422);
         }
 
-        $modelClass = $this->getContentModelClass($type);
+        $entityType = EntityType::tryFrom($type);
+        if (!$entityType) abort(404, 'Invalid entity type');
+
+        $modelClass = $this->getContentModelClass($entityType);
         $node = $modelClass::findOrFail($childToSave);
 
         // Authorize via parent
-        $parent = $this->resolveParentEntity($type, $slug);
+        $parent = $this->resolveParentEntity($entityType, $slug);
         Gate::authorize('update', $parent);
 
 
@@ -192,20 +196,19 @@ class UnifiedEditorController extends Controller
         $book = Book::first();
 
         if ($book) {
-            return redirect()->route('studio.show', ['type' => 'book', 'slug' => $book->slug]);
+            return redirect()->route('studio.show', ['type' => EntityType::BOOK->value, 'slug' => $book->slug]);
         }
 
         return redirect()->route('dashboard');
     }
 
-    protected function getForeignKey(string $type): string
+    protected function getForeignKey(EntityType $type): string
     {
         return match ($type) {
-            'book' => 'book_id',
-            'manuscript' => 'manuscript_id',
-            'audio' => 'audio_id',
-            'video' => 'video_id',
-            default => 'entity_id'
+            EntityType::BOOK => 'book_id',
+            EntityType::MANUSCRIPT => 'manuscript_id',
+            EntityType::AUDIO => 'audio_id',
+            EntityType::VIDEO => 'video_id',
         };
     }
 
@@ -213,37 +216,25 @@ class UnifiedEditorController extends Controller
     /**
      * حل الكيان برمجياً بناءً على النوع
      */
-    protected function resolveEntity(string $type, string $slug): Entity
+    protected function resolveEntity(EntityType $type, string $slug): Entity
     {
-        $entityModel = match ($type) {
-            'book' => Book::class,
-            'audio' => Audio::class,
-            'video' => Video::class,
-            'manuscript' => Manuscript::class,
-            default => abort(404, "Unknown entity type")
-        };
+        $entityModel = $type->modelClass();
 
         $contentModel = $this->getContentModelClass($type);
         $node = $contentModel::where('slug', $slug)->firstOrFail();
 
         // Determine foreign key based on type
-        $foreignKey = match ($type) {
-            'book' => 'book_id',
-            'manuscript' => 'manuscript_id',
-            'audio' => 'audio_id',
-            'video' => 'video_id',
-            default => 'entity_id'
-        };
+        $foreignKey = $this->getForeignKey($type);
 
         $entity = $entityModel::findOrFail($node->$foreignKey);
 
         // Manually load children for Mongo-Hybrid relations if needed
         // Since we removed HybridRelations from Entity, standard eager loading fails for Mongo children
-        if (in_array($type, ['manuscript', 'audio', 'video'])) {
+        if (in_array($type, [EntityType::MANUSCRIPT, EntityType::AUDIO, EntityType::VIDEO])) {
             $childrenModel = match ($type) {
-                'manuscript' => ManuscriptPage::class,
-                'audio' => AudioSegment::class,
-                'video' => VideoSegment::class,
+                EntityType::MANUSCRIPT => ManuscriptPage::class,
+                EntityType::AUDIO => AudioSegment::class,
+                EntityType::VIDEO => VideoSegment::class,
                 default => null
             };
 
@@ -254,18 +245,10 @@ class UnifiedEditorController extends Controller
                     ->get();
                 
              $entity->setRelation('children', $children);
-             \Illuminate\Support\Facades\Log::info("UnifiedEditorController: Manually loaded {$children->count()} children");
-             \Illuminate\Support\Facades\Log::info("Serialized Entity Keys: " . implode(',', array_keys($entity->toArray())));
-             if(isset($entity->toArray()['children'])) {
-                 \Illuminate\Support\Facades\Log::info("Children in serialized: " . count($entity->toArray()['children']));
-             } else {
-                 \Illuminate\Support\Facades\Log::info("Children MISSING in serialized array");
-             }
             }
         } 
         // For Book (if BookChild is Mongo), we should also load manually or check if it works via standard relation
-        // Assuming BookChild is also Mongo based on previous checks
-        elseif (EntityType::tryFrom($type) === EntityType::BOOK) {
+        elseif ($type === EntityType::BOOK) {
              $children = BookChild::where('book_id', $entity->id)
                 ->orderBy('order', 'asc')
                 ->get();
@@ -282,31 +265,21 @@ class UnifiedEditorController extends Controller
     /**
      * Helper to get model class name
      */
-    protected function getContentModelClass(string $type): string
+    protected function getContentModelClass(EntityType $type): string
     {
         return match ($type) {
-            'book' => BookChild::class,
-            'manuscript' => ManuscriptPage::class,
-            'audio' => AudioSegment::class,
-            'video' => VideoSegment::class,
-            default => EntityContent::class,
+            EntityType::BOOK => BookChild::class,
+            EntityType::MANUSCRIPT => ManuscriptPage::class,
+            EntityType::AUDIO => AudioSegment::class,
+            EntityType::VIDEO => VideoSegment::class,
         };
     }
     /**
      * Resolve Parent Entity directly
      */
-    protected function resolveParentEntity(string $type, string $slug)
+    protected function resolveParentEntity(EntityType $type, string $slug)
     {
-        $modelClass = match ($type) {
-            'book' => Book::class,
-            'audio' => Audio::class,
-            'video' => Video::class,
-            'manuscript' => Manuscript::class,
-            default => null
-        };
-
-        if (!$modelClass) return null;
-
+        $modelClass = $type->modelClass();
         return $modelClass::where('slug', $slug)->first();
     }
 }

@@ -178,11 +178,28 @@ class EntityContentService
     /**
      * تحضير بيانات المحرر (Data Preparation)
      */
-    public function prepareEditorData(Entity $entity, string $slug): array
+    /**
+     * تحضير بيانات المحرر (Data Preparation)
+     */
+    public function prepareEditorData(Entity $entity, ?string $slug = null): array
     {
-        $node = $this->getNode($entity, $slug);
+        $node = null;
+        if ($slug) {
+            try {
+                $node = $this->getNode($entity, $slug);
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+                // If specific slug not found, try fallback to first child
+                $node = $this->getFirstChild($entity);
+            }
+        } else {
+            // Default to first child if no slug provided
+            $node = $this->getFirstChild($entity);
+        }
+
         $hierarchy = $this->getHierarchy($entity, 500);
-        $navigation = $this->getNavigation($entity, $node);
+        
+        // Navigation relies on node, if no node exists (empty entity), nav is null
+        $navigation = $node ? $this->getNavigation($entity, $node) : ['prev' => null, 'next' => null];
 
         $resourceData = [
             'id' => $entity->id,

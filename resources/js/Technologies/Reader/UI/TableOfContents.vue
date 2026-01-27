@@ -55,10 +55,10 @@ const emit = defineEmits(['close']);
                 <button 
                     v-for="node in filteredHierarchy" 
                     :key="node.id"
-                    @click="store.navigate(node.slug)"
+                    @click="store.navigate(node._id || node.id)"
                     :class="[
                         'w-full text-right p-4 rounded-2xl transition-all duration-200 flex items-center justify-between group',
-                        node.slug === store.currentNode?.slug 
+                        (node._id || node.id) === store.activeChildId 
                             ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20 scale-[1.02]' 
                             : 'hover:bg-black/5'
                     ]"
