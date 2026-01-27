@@ -9,6 +9,7 @@ import PlayerControls from './UI/PlayerControls.vue';
 import VideoScreen from './UI/VideoScreen.vue';
 import PlayerPlaylist from './UI/PlayerPlaylist.vue';
 import ResizeHandles from './UI/ResizeHandles.vue';
+import WaveformVisualizer from './UI/WaveformVisualizer.vue';
 
 const props = defineProps({
     src: String,

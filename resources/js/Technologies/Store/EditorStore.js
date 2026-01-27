@@ -15,6 +15,7 @@ export const useEditorStore = defineStore('editor', () => {
     const hierarchy = ref([])
     const navigation = ref({ prev: null, next: null })
     const contentVersion = ref(0)
+    const currentTime = ref(0) // New state for player sync
 
     // Getters
     const documentTitle = computed(() => currentContentNode.value?.title || 'مستند جديد')
@@ -40,6 +41,10 @@ export const useEditorStore = defineStore('editor', () => {
     const updateContent = (newContent) => {
         content.value = newContent
         contentVersion.value++
+    }
+
+    const updateCurrentTime = (time) => {
+        currentTime.value = time
     }
 
     const togglePin = () => {
@@ -133,6 +138,6 @@ export const useEditorStore = defineStore('editor', () => {
         executeCommand, isActive,
         setEditorMode, setResourceData, setTitle,
         addMediaNode, removeMediaNode,
-        contentVersion
+        contentVersion, currentTime, updateCurrentTime
     }
 })

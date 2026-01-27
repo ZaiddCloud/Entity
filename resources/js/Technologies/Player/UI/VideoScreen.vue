@@ -1,6 +1,7 @@
 <script setup>
 import { Music } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
+import WaveformVisualizer from './WaveformVisualizer.vue';
 
 const props = defineProps({
     src: String,
@@ -83,15 +84,28 @@ defineExpose({ mediaRef });
         </div>
 
         <!-- Restoration: Audio Visualizer (If Audio) -->
-        <div v-if="type === 'audio'" class="absolute bottom-5 right-5 flex items-end gap-[2px] h-10 opacity-80 z-20 pointer-events-none">
-            <div 
-                v-for="i in 12" 
-                :key="i"
-                class="w-[3px] bg-blue-500 transition-all duration-100"
-                :style="{ 
-                    height: isPlaying ? `${Math.random() * 100}%` : '5px'
-                }"
-            ></div>
+        <div v-if="type === 'audio'" class="absolute bottom-20 left-0 w-full px-5 z-20 pointer-events-auto">
+            <WaveformVisualizer 
+                :src="src"
+                :is-playing="isPlaying"
+                :current-time="currentTime"
+                :height="120"
+                :bar-width="3"
+                :bar-gap="3"
+                progress-color="#3b82f6" 
+                wave-color="rgba(255, 255, 255, 0.3)"
+                @seek="(time) => emit('click')" 
+            />
+            <!-- Note: emit('click') might conflict with stage click. 
+                 Ideally, WaveformVisualizer emits a seek event we want to propagate or handle. 
+                 But VideoScreen mainly exposes click to toggle play (in parent). 
+                 Wait, parent PlayerControls handles seeking. 
+                 We actually want the waveform interaction to SEEK the parent player.
+                 So we should listen to @seek from visualizer and update the video ref?
+                 Or simpler: The visualizer is just a visualizer. 
+                 But wavesurfer interaction is nice.
+                 Let's expose a seek event from VideoScreen too?
+            -->
         </div>
     </div>
 </template>

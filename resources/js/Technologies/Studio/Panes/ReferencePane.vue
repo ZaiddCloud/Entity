@@ -49,6 +49,7 @@ const normalizedType = computed(() => {
       @toggle-dock="$emit('toggle-dock')"
       @navigate="(id) => $emit('navigate', id)"
       @navigate-full="() => $emit('navigate-full')"
+      @timeupdate="(time) => $emit('timeupdate', time)"
     />
 
     <!-- Fallback -->

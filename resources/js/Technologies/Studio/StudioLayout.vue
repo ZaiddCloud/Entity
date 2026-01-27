@@ -284,6 +284,7 @@ const specificNodeTitle = computed(() => {
             :active-child-id="props.activeChildId"
             @navigate="(id) => router.visit(route('studio.show', { type: props.type, slug: props.entity.slug, childId: id }))"
             @navigate-full="() => router.visit(route('studio.show', { type: props.type, slug: props.entity.slug }))"
+            @timeupdate="(time) => store.updateCurrentTime(time)"
           />
         </template>
       </SplitPane>
