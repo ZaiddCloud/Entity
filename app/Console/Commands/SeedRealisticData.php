@@ -71,6 +71,9 @@ class SeedRealisticData extends Command
         Series::query()->truncate();
         Shelf::query()->truncate();
         BookChild::query()->truncate();
+        \App\Models\ManuscriptPage::query()->truncate();
+        \App\Models\AudioSegment::query()->truncate();
+        \App\Models\VideoSegment::query()->truncate();
         \App\Models\EntityContent::truncate();
         \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
 

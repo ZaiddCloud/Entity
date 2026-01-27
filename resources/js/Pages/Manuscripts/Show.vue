@@ -121,7 +121,7 @@ const tabs = [
                 </Link>
 
                 <Link
-                  :href="route('studio.show', { type: 'manuscript', slug: first_content_slug || manuscript.slug })"
+                  :href="route('studio.show', { type: 'manuscript', slug: manuscript.slug })"
                 >
                   <button class="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-sm border border-white/10 backdrop-blur-sm transition-all flex items-center gap-2 group">
                     <span class="w-8 h-8 rounded-lg bg-lime-500/20 text-lime-400 flex items-center justify-center group-hover:bg-lime-500 group-hover:text-black transition-colors">
@@ -417,7 +417,7 @@ const tabs = [
             <p class="text-gray-500 mb-6">
               يمكنك استعراض وتحرير المحتوى النصي للمخطوطة، وإضافة الحواشي والتعليقات العلمية عبر المحرر المتطور.
             </p>
-            <Link :href="`/editor/manuscript/${first_content_slug}`">
+            <Link :href="route('studio.show', { type: 'manuscript', slug: manuscript.slug })">
               <PrimaryButton class="!px-8 !py-4 !text-base shadow-xl shadow-emerald-500/20">
                 فتح محرر النصوص
               </PrimaryButton>

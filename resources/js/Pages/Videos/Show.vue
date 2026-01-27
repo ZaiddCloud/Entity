@@ -187,7 +187,7 @@ const formatDate = (dateString) => {
               </Link>
 
               <Link 
-                :href="route('studio.show', { type: 'video', slug: first_content_slug || video.slug })"
+                :href="route('studio.show', { type: 'video', slug: video.slug })"
               >
                 <PrimaryButton class="!bg-lime-500 hover:!bg-lime-400 !text-emerald-950 !border-0 shadow-[0_0_20px_rgba(132,204,22,0.4)] flex items-center gap-2 px-8 py-3">
                   <svg
@@ -503,7 +503,7 @@ const formatDate = (dateString) => {
               </h3>
               <Link 
                 v-if="first_content_slug"
-                :href="route('studio.show', { type: 'video', slug: first_content_slug })"
+                :href="route('studio.show', { type: 'video', slug: video.slug })"
               >
                 <PrimaryButton class="!bg-blue-600 hover:!bg-blue-500">
                   فتح في المحرر

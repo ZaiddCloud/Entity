@@ -29,29 +29,53 @@ class UnifiedEditorController extends Controller
     }
 
     /**
-     * المسار الموحد للمحرر: /editor/{type}/{slug}
-     * Note: Type hint removed to allow RedirectResponse
+     * المسار الموحد للمحرر: /studio/{type}/{slug}/{childId?}
+     * slug is PARENT slug. childId is specific node ID.
      */
-    public function show(string $type, string $slug)
+    public function show(string $type, string $slug, ?string $childId = null)
     {
-        // 1. Try to resolve as a specific Content Node (Segment/Page)
-        try {
-            $entity = $this->resolveEntity($type, $slug);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            // 2. If not found, try to resolve as a Parent Entity (Book/Audio/etc)
-            $parentEntity = $this->resolveParentEntity($type, $slug);
-
-            if ($parentEntity) {
-                // Find the first child node
-                $firstChild = $this->contentService->getFirstChild($parentEntity);
-                
-                if ($firstChild) {
-                    return redirect()->route('studio.show', ['type' => $type, 'slug' => $firstChild->slug]);
-                }
-            }
-            // If still not found, throw 404
-            abort(404, 'Resource not found');
+        // 1. Resolve Parent Entity
+        $parentEntity = $this->resolveParentEntity($type, $slug);
+        
+        if (!$parentEntity) {
+            abort(404, 'Parent resource not found');
         }
+
+        // 2. Load Content
+        $node = null;
+        $editorContent = '';
+        $isFullView = false;
+
+        if ($childId) {
+            $modelClass = $this->getContentModelClass($type);
+            $node = $modelClass::find($childId);
+            
+            // Validate child belongs to parent
+            $foreignKey = $this->getForeignKey($type);
+            if (!$node || $node->$foreignKey != $parentEntity->id) {
+                // If ID is actually a slug (legacy or mistake), try finding by slug
+                $node = $modelClass::where('slug', $childId)
+                    ->where($foreignKey, $parentEntity->id)
+                    ->first();
+            }
+
+            if (!$node) {
+                abort(404, 'Specific content node not found');
+            }
+
+            $editorContent = $node->content ?? '';
+        } else {
+            // Default: Load FULL CONTENT
+            $editorContent = $this->contentService->aggregateFullContent($parentEntity);
+            $isFullView = true;
+            
+            // For UI state, we still might need a "reference" node if it's manuscript
+            $node = $this->contentService->getFirstChild($parentEntity);
+        }
+
+        $entity = $parentEntity;
+
+
 
         // التحقق من الصلاحية
         Gate::authorize('update', $entity);
@@ -68,17 +92,21 @@ class UnifiedEditorController extends Controller
         if (auth()->check()) {
             auth()->user()->update([
                 'last_studio_type' => $type,
-                'last_studio_slug' => $slug
+                'last_studio_slug' => $slug,
+                'last_studio_child_id' => $childId ? ($node->_id ?? $node->id) : null
             ]);
         }
 
-        $data = $this->contentService->prepareEditorData($entity, $slug);
+        $data = $this->contentService->prepareEditorData($entity, $node->slug);
+
         
         // Map to Studio Props
         $studioProps = [
             'type' => $type,
             'entity' => $entity, // Entity now includes siblings if loaded
-            'editorContent' => $data['contentNode']->content ?? '',
+            'editorContent' => $editorContent,
+            'isFullView' => $isFullView,
+            'activeChildId' => $isFullView ? null : ($node->_id ?? $node->id),
             'title' => $entity->title . ' | Entity Studio',
             // Pass legacy data if needed by EditorClient internally via provide/inject or initial config
             '_legacy' => $data 
@@ -93,20 +121,29 @@ class UnifiedEditorController extends Controller
     /**
      * حفظ المحتوى: /editor/{type}/{slug}/save
      */
-    public function save(Request $request, string $type, string $slug)
+    public function save(Request $request, string $type, string $slug, ?string $childId = null)
     {
         $request->validate([
             'content' => 'required', // Can be string (legacy) or payload array
             'html_content' => 'nullable|string',
             'json_content' => 'nullable|array',
             'plain_text' => 'nullable|string',
+            'child_id' => 'nullable|string', // Support explicit ID in payload
         ]);
 
-        $entity = $this->resolveEntity($type, $slug);
-        Gate::authorize('update', $entity);
+        $childToSave = $childId ?: $request->input('child_id');
+
+        if (!$childToSave) {
+             return response()->json(['error' => 'Child ID is required for saving'], 422);
+        }
 
         $modelClass = $this->getContentModelClass($type);
-        $node = $modelClass::where('slug', $slug)->firstOrFail();
+        $node = $modelClass::findOrFail($childToSave);
+
+        // Authorize via parent
+        $parent = $this->resolveParentEntity($type, $slug);
+        Gate::authorize('update', $parent);
+
 
         // Prepare Payload
         $updateData = [
@@ -146,20 +183,32 @@ class UnifiedEditorController extends Controller
         if ($user && $user->last_studio_type && $user->last_studio_slug) {
             return redirect()->route('studio.show', [
                 'type' => $user->last_studio_type, 
-                'slug' => $user->last_studio_slug
+                'slug' => $user->last_studio_slug,
+                'childId' => $user->last_studio_child_id
             ]);
         }
 
         // Fallback: Check if we have any recently updated content
-        // For simplicity, we fallback to first book child
-        $node = BookChild::first();
+        $book = Book::first();
 
-        if ($node) {
-            return redirect()->route('studio.show', ['type' => 'book', 'slug' => $node->slug]);
+        if ($book) {
+            return redirect()->route('studio.show', ['type' => 'book', 'slug' => $book->slug]);
         }
 
         return redirect()->route('dashboard');
     }
+
+    protected function getForeignKey(string $type): string
+    {
+        return match ($type) {
+            'book' => 'book_id',
+            'manuscript' => 'manuscript_id',
+            'audio' => 'audio_id',
+            'video' => 'video_id',
+            default => 'entity_id'
+        };
+    }
+
 
     /**
      * حل الكيان برمجياً بناءً على النوع

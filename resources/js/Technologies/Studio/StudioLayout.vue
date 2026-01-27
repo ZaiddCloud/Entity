@@ -10,6 +10,8 @@ const props = defineProps({
     type: { type: String, required: true }, // 'manuscript' | 'audio' | 'video'
     entity: { type: Object, required: true },
     editorContent: { type: String, default: '' },
+    isFullView: { type: Boolean, default: false },
+    activeChildId: { type: String, default: null },
     title: { type: String, default: 'Entity Studio' },
     _legacy: { type: Object, default: () => ({}) }
 })
@@ -38,16 +40,22 @@ onMounted(() => {
     }
     
     // Load document state
-    if (props._legacy?.contentNode) {
+    if (props.isFullView) {
+        // Pseudo-node for full view to satisfy store if needed
+        store.loadDocument(props.entity, { id: 'full', title: 'كامل المحتوى', content: props.editorContent }, [], {})
+    } else if (props._legacy?.contentNode) {
         store.loadDocument(props.entity, props._legacy.contentNode, [], {})
     }
 })
 
 // Watch for content node changes (when navigating between segments/pages)
-// Watch the slug specifically for better reactivity
-watch(() => props._legacy?.contentNode?.slug, (newSlug, oldSlug) => {
-    if (newSlug && newSlug !== oldSlug && props._legacy?.contentNode) {
-        store.loadDocument(props.entity, props._legacy.contentNode, [], {})
+watch(() => props.activeChildId, (newId, oldId) => {
+    if (newId !== oldId) {
+        if (props.isFullView) {
+             store.loadDocument(props.entity, { id: 'full', title: 'كامل المحتوى', content: props.editorContent }, [], {})
+        } else if (props._legacy?.contentNode) {
+             store.loadDocument(props.entity, props._legacy.contentNode, [], {})
+        }
     }
 })
 
@@ -62,55 +70,8 @@ const saveStatusText = computed(() => {
     return 'محفوظ'
 })
 
-const fetchFullTranscript = () => {
-    console.log('StudioLayout entity:', props.entity)
-    const children = props.entity.children || []
-
-    const typeLabel = props.type === 'manuscript' ? 'كامل صفحات المخطوط' : 'كامل التفريغ النصي للملف';
-    // if (!confirm(`سيتم استبدال المحتوى الحالي بـ ${typeLabel}. هل أنت متأكد؟`)) {
-    //    return
-    // }
-
-    // Sort nodes by order
-    const sortedNodes = Array.from(children).sort((a, b) => (a.order || 0) - (b.order || 0))
-
-    let fullTranscript = ''
-    let lastHeader = null
-
-    sortedNodes.forEach((child) => {
-        let currentHeader = null;
-        let content = child.content || '';
-
-        if (props.type === 'audio' || props.type === 'video') {
-            currentHeader = child.metadata?.speaker || child.title || (props.type === 'audio' ? 'متحدث' : 'مشهد');
-            
-            // Clean up: avoid "Speaker: Speaker: text" redundancy
-            const headerPattern = new RegExp(`^<p><strong>${currentHeader}</strong></p>|^<strong>${currentHeader}</strong>\n?`, 'i');
-            content = content.replace(headerPattern, '').trim();
-        } else if (props.type === 'manuscript') {
-            // Use folio number as header for manuscripts
-            currentHeader = child.title || `الصفحة ${child.order || '?'}`;
-        }
-
-        // Add header if it changed or if it's a manuscript (always header per page)
-        if (currentHeader !== lastHeader || props.type === 'manuscript') {
-            // Add vertical space before new header (except first one)
-            if (lastHeader !== null) fullTranscript += '<p><br/></p>'
-            
-            fullTranscript += `<p><strong>${currentHeader}:</strong></p>`
-            lastHeader = currentHeader
-        }
-
-        // Add description for video if content is empty
-        if (props.type === 'video' && !content && child.description) {
-            content = `<p>${child.description}</p>`;
-        }
-
-        fullTranscript += content
-    })
-
-    console.log('Final Full Transcript Length:', fullTranscript.length)
-    store.updateContent(fullTranscript)
+const navigateToFull = () => {
+    $inertia.visit(route('studio.show', { type: props.type, slug: props.entity.slug }))
 }
 </script>
 
@@ -148,12 +109,12 @@ const fetchFullTranscript = () => {
 
       <!-- Actions -->
       <div class="flex items-center gap-3">
-        <!-- Full Transcript Button (Supported for all types now) -->
+        <!-- Full View Button (Switch to Server-side Aggregated View) -->
         <button 
-            v-if="['audio', 'video', 'manuscript'].includes(props.type)"
+            v-if="!props.isFullView"
             class="hidden md:flex items-center gap-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-[11px] px-2.5 py-1.5 rounded border border-gray-700 transition-all"
-            title="جلب كافة مقاطع التفريغ إلى المحرر"
-            @click="fetchFullTranscript"
+            title="عرض كافة المحتوى مدمجاً"
+            @click="navigateToFull"
         >
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -162,8 +123,16 @@ const fetchFullTranscript = () => {
                 <line x1="16" y1="17" x2="8" y2="17"></line>
                 <polyline points="10 9 9 9 8 9"></polyline>
             </svg>
-            جلب التفريغ الكامل
+            عرض المحتوى الكامل
         </button>
+
+        <!-- Full View Badge -->
+        <span 
+            v-else
+            class="text-[10px] px-2 py-1 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 font-bold"
+        >
+            كامل المحتوى
+        </span>
 
         <!-- Save Status -->
         <span class="text-[10px] flex items-center gap-1.5 border-r border-gray-800 pr-3 mr-1" :class="saveStatusColor">
@@ -208,8 +177,9 @@ const fetchFullTranscript = () => {
           <ReferencePane
             :type="props.type"
             :entity="props.entity" 
-            :active-slug="props._legacy?.contentNode?.slug"
-            @navigate="(slug) => $inertia.visit(route('studio.show', { type: props.type, slug: slug }))"
+            :active-child-id="props.activeChildId"
+            @navigate="(id) => $inertia.visit(route('studio.show', { type: props.type, slug: props.entity.slug, childId: id }))"
+            @navigate-full="() => $inertia.visit(route('studio.show', { type: props.type, slug: props.entity.slug }))"
           />
         </template>
       </SplitPane>

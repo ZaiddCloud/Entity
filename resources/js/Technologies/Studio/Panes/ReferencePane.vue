@@ -6,7 +6,8 @@ import PlayerClient from '../../Player/PlayerClient.vue'
 const props = defineProps({
     type: { type: String, required: true }, // 'manuscript' | 'audio' | 'video'
     entity: { type: Object, required: true },
-    activeSlug: { type: String, default: null },
+    activeSlug: { type: String, default: null }, // Legacy
+    activeChildId: { type: String, default: null },
     isIntegrated: { type: Boolean, default: false } // NEW
 })
 
@@ -30,8 +31,9 @@ const normalizedType = computed(() => {
       v-if="normalizedType === 'manuscript'"
       :manuscript="props.entity"
       :siblings="props.entity.siblings || []" 
-      :active-slug="props.activeSlug"
-      @navigate="(slug) => $emit('navigate', slug)"
+      :active-child-id="props.activeChildId"
+      @navigate="(id) => $emit('navigate', id)"
+      @navigate-full="() => $emit('navigate-full')"
     />
 
     <!-- 
@@ -42,9 +44,11 @@ const normalizedType = computed(() => {
       v-else-if="normalizedType === 'media'"
       :media="props.entity"
       :type="props.type" 
-      :active-slug="props.activeSlug"
+      :active-child-id="props.activeChildId"
       :is-integrated="props.isIntegrated"
       @toggle-dock="$emit('toggle-dock')"
+      @navigate="(id) => $emit('navigate', id)"
+      @navigate-full="() => $emit('navigate-full')"
     />
 
     <!-- Fallback -->

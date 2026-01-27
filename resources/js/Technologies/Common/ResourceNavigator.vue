@@ -77,7 +77,7 @@ const selectItem = (item) => {
     isOpen.value = false
     // Navigate to the editor for this item
     // Route: studio.show { type, slug }
-    router.visit(route('studio.show', { type: props.type, slug: item.slug || item.id }))
+    router.visit(route('studio.show', { type: props.type, slug: item.slug }))
 }
 
 // Close on click outside

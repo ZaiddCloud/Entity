@@ -111,6 +111,21 @@ class EntityContentService
     }
 
     /**
+     * Get Node by ID
+     */
+    public function getNodeById(Entity $entity, string $id): Model
+    {
+        /** @var class-string<Model> $model */
+        $model = $this->getContentModel($entity);
+        $idField = $this->getEntityIdField($entity);
+
+        return $model::query()
+            ->where($idField, $entity->id)
+            ->where('_id', $id)
+            ->firstOrFail();
+    }
+
+    /**
      * جلب الهيكلية (Hierarchy)
      */
     public function getHierarchy(Entity $entity, ?int $limit = null): Collection
@@ -172,6 +187,7 @@ class EntityContentService
         $resourceData = [
             'id' => $entity->id,
             'title' => $entity->title,
+            'slug' => $entity->slug, // Parent slug
             'type' => strtolower(class_basename($entity)),
             'url' => $entity->file_path ? asset('storage/' . $entity->file_path) : null,
         ];
@@ -251,6 +267,44 @@ class EntityContentService
             ->max('order');
 
         return $maxOrder ?? 0;
+    }
+
+    /**
+     * تجميع كافة محتويات الأبناء في نص واحد (Full Transcript)
+     */
+    public function aggregateFullContent(Entity $entity): string
+    {
+        $children = $this->getHierarchy($entity);
+        
+        // Load full data for children (since getHierarchy might be light)
+        $modelClass = $this->getContentModel($entity);
+        $foreignKey = $this->getEntityIdField($entity);
+        
+        $fullChildren = $modelClass::where($foreignKey, $entity->id)
+            ->orderBy('order')
+            ->get();
+
+        $fullTranscript = '';
+        $type = strtolower(class_basename($entity));
+
+        foreach ($fullChildren as $index => $child) {
+            $title = $child->title ?: "قسم " . ($index + 1);
+            
+            // Add header for each node
+            $fullTranscript .= "<p><strong>{$title}:</strong></p>";
+            
+            $content = $child->content ?: '';
+            
+            // Handle Video special case (if no content but has description)
+            if ($type === 'video' && empty($content) && $child->description) {
+                $content = "<p>{$child->description}</p>";
+            }
+
+            $fullTranscript .= $content;
+            $fullTranscript .= "<p><br/></p>"; // Space between nodes
+        }
+
+        return $fullTranscript;
     }
 
     /**

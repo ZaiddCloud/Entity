@@ -6,13 +6,13 @@ import { useMediaStore } from '@/Technologies/Store/MediaStore';
 
 const props = defineProps({
     media: Object,
-    activeSlug: String, 
+    activeChildId: String, 
     type: String,
     isIntegrated: { type: Boolean, default: false },
     isEmbedded: { type: Boolean, default: false }
 });
 
-const emit = defineEmits(['timeupdate', 'segment-change', 'seek', 'toggle-dock']);
+const emit = defineEmits(['timeupdate', 'segment-change', 'seek', 'toggle-dock', 'navigate', 'navigate-full']);
 
 const mediaStore = useMediaStore();
 const isPlayerDocked = inject('isPlayerDocked', { value: false });
@@ -46,8 +46,8 @@ const segments = computed(() => {
 // 2. Determine Current Source
 const currentSource = computed(() => {
     // A. Priority: Active Segment (Bundle Mode)
-    if (props.activeSlug && segments.value.length) {
-        const activeSeg = segments.value.find(s => s.slug === props.activeSlug);
+    if (props.activeChildId && segments.value.length) {
+        const activeSeg = segments.value.find(s => (s.id || s.slug) === props.activeChildId);
         if (activeSeg?.file_path) {
             const path = `/storage/${activeSeg.file_path}`;
             console.log('[PlayerClient] Using segment source:', path);
@@ -81,12 +81,9 @@ const currentPoster = computed(() => {
 
 // --- Navigation ---
 const handleSegmentChange = (segment) => {
-    // When a segment is clicked in the playlist, navigate to its content
-    if (segment.slug) {
-        router.visit(route('studio.show', { 
-            type: props.type, 
-            slug: segment.slug 
-        }));
+    // When a segment is clicked in the playlist, emit navigate to parent
+    if (segment.id) {
+        emit('navigate', segment.id);
     }
 };
 

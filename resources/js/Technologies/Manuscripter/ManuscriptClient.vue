@@ -13,26 +13,24 @@ import CompareView from './UI/CompareView.vue'
 const props = defineProps({
     manuscript: Object,
     siblings: { type: Array, default: () => [] },
-    activeSlug: { type: String, default: null }
+    activeChildId: { type: String, default: null }
 })
 
-const emit = defineEmits(['navigate'])
+const emit = defineEmits(['navigate', 'navigate-full'])
 const store = useManuscriptStore()
 
 // Initialize Store
 onMounted(() => {
-    store.setResource(props.manuscript, props.siblings, props.activeSlug)
-    // Optional: Attach resizing logic for responsiveness if needed
-    // window.addEventListener('resize', ...)
+    store.setResource(props.manuscript, props.siblings, props.activeChildId)
 })
 
 // Watch props to update store if parent changes them
-watch(() => props.activeSlug, (newSlug) => {
-    if (newSlug) {
-        // Find shot number for slug
+watch(() => props.activeChildId, (newId) => {
+    if (newId) {
+        // Find shot number for ID
         const version = store.allVersions[0]
         if (version && version.pages) {
-            const index = version.pages.findIndex(p => p.slug === newSlug)
+            const index = version.pages.findIndex(p => (p._id || p.id) === newId)
             if (index !== -1) {
                 store.shotNumber = index + 1
             }
@@ -46,8 +44,9 @@ watch(() => store.shotNumber, (newShot) => {
     const version = store.allVersions[0]
     if (version && version.pages) {
         const page = version.pages[newShot - 1]
-        if (page && page.slug !== props.activeSlug) {
-            emit('navigate', page.slug)
+        const pageId = page?._id || page?.id
+        if (pageId && pageId !== props.activeChildId) {
+            emit('navigate', pageId)
         }
     }
 })
