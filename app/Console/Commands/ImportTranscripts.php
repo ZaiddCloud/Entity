@@ -16,7 +16,7 @@ use ZipArchive;
 
 class ImportTranscripts extends Command
 {
-    protected $signature = 'media:import-transcripts {path? : Path to folder containing docx files}';
+    protected $signature = 'media:import-transcripts {path? : Path to folder containing docx files} {--dry-run : Preview segments without saving}';
     protected $description = 'Parse docx transcripts and create media segments automatically';
 
     protected $contentService;
@@ -55,19 +55,39 @@ class ImportTranscripts extends Command
         }
 
         $count = 0;
+        $totalCreated = 0;
+        $totalSkipped = 0;
+        
         foreach ($files as $file) {
             if ($file->getExtension() !== 'docx')
                 continue;
 
             $this->info("Processing: " . $file->getFilename());
-            $this->processFile($file);
+            $stats = $this->processFile($file);
+            $totalCreated += $stats['created'] ?? 0;
+            $totalSkipped += $stats['skipped'] ?? 0;
             $count++;
         }
 
         if ($count === 0) {
             $this->warn("No .docx files found in the specified path.");
         } else {
-            $this->info("Completed processing $count files.");
+            $this->newLine();
+            $this->info("═══════════════════════════════════════");
+            $this->info("  Import Complete!");
+            $this->info("═══════════════════════════════════════");
+            $this->table(
+                ['Metric', 'Count'],
+                [
+                    ['Files Processed', $count],
+                    ['Segments Created', $totalCreated],
+                    ['Duplicates Skipped', $totalSkipped],
+                ]
+            );
+            
+            if ($this->option('dry-run')) {
+                $this->warn("⚠ DRY RUN MODE - No changes were saved to database");
+            }
         }
     }
 
@@ -76,7 +96,7 @@ class ImportTranscripts extends Command
         $text = $this->readDocx($file->getPathname());
         if (!$text) {
             $this->warn("   - Could not read text from file.");
-            return;
+            return ['created' => 0, 'skipped' => 0];
         }
 
         // 1. Find Media Entities (Audio/Video) matching the filename
@@ -86,7 +106,7 @@ class ImportTranscripts extends Command
 
         if ($mediaCollection->isEmpty()) {
             $this->warn("   - No matching media found for '$filename'");
-            return;
+            return ['created' => 0, 'skipped' => 0];
         }
 
         $this->info("   - Found " . $mediaCollection->count() . " matching entities.");
@@ -96,17 +116,30 @@ class ImportTranscripts extends Command
 
         if (empty($segments)) {
             $this->warn("   - No segments found in text.");
-            return;
+            return ['created' => 0, 'skipped' => 0];
         }
 
         $this->info("   - Parsed " . count($segments) . " segments.");
 
-        // 3. Store Segments for ALL matches
+        // 3. Store Segments for ALL matches (or preview if dry-run)
+        $isDryRun = $this->option('dry-run');
+        
+        if ($isDryRun) {
+            $this->warn("   [DRY RUN MODE] - No changes will be saved");
+        }
+
+        $totalCreated = 0;
+        $totalSkipped = 0;
+
         foreach ($mediaCollection as $media) {
             /** @var \Illuminate\Database\Eloquent\Model $media */
-            $this->info("   > Attaching to: {$media->title} ({$media->getTable()}: {$media->id})");
-            $this->storeSegments($media, $segments);
+            $this->info("   > " . ($isDryRun ? "Would attach to" : "Attaching to") . ": {$media->title} ({$media->getTable()}: {$media->id})");
+            $stats = $this->storeSegments($media, $segments, $isDryRun);
+            $totalCreated += $stats['created'];
+            $totalSkipped += $stats['skipped'];
         }
+        
+        return ['created' => $totalCreated, 'skipped' => $totalSkipped];
     }
 
     protected function findMediaEntities($filename)
@@ -119,10 +152,12 @@ class ImportTranscripts extends Command
 
             $audios = Audio::where('file_path', 'LIKE', "%$datePrefix%")
                 ->orWhere('title', 'LIKE', "%$datePrefix%")
+                ->orWhere('slug', 'LIKE', "%$datePrefix%")
                 ->get();
 
             $videos = Video::where('file_path', 'LIKE', "%$datePrefix%")
                 ->orWhere('title', 'LIKE', "%$datePrefix%")
+                ->orWhere('slug', 'LIKE', "%$datePrefix%")
                 ->get();
 
             $matches = $matches->merge($audios)->merge($videos);
@@ -132,13 +167,15 @@ class ImportTranscripts extends Command
             }
         }
 
-        // Strategy 2: Exact Containment (Fallback)
+        // Strategy 2: Exact Containment (Fallback) - Now includes slug
         $audios = Audio::where('title', 'LIKE', "%$filename%")
             ->orWhere('file_path', 'LIKE', "%$filename%")
+            ->orWhere('slug', 'LIKE', "%$filename%")
             ->get();
 
         $videos = Video::where('title', 'LIKE', "%$filename%")
             ->orWhere('file_path', 'LIKE', "%$filename%")
+            ->orWhere('slug', 'LIKE', "%$filename%")
             ->get();
 
         return $matches->merge($audios)->merge($videos)->unique('id');
@@ -245,16 +282,36 @@ class ImportTranscripts extends Command
         return $parsed;
     }
 
-    protected function storeSegments($media, $segments)
+    protected function storeSegments($media, $segments, $isDryRun = false)
     {
         $entityType = $media instanceof Audio ? EntityType::AUDIO : EntityType::VIDEO;
         $nodeType = ContentNodeType::defaultFor($entityType)->value;
 
         $startOrder = $this->contentService->getMaxOrder($media) + 1;
+        
+        $created = 0;
+        $skipped = 0;
 
         foreach ($segments as $index => $seg) {
             $nextSeg = $segments[$index + 1] ?? null;
             $endTime = $nextSeg ? $nextSeg['start'] : 0; // 0 means until end/unknown
+
+            // Check for duplicate
+            $exists = $media->children()
+                ->where('start_time', $seg['start'])
+                ->exists();
+            
+            if ($exists) {
+                $this->warn("      ⚠ Skipped (duplicate): [{$this->secondsToTime($seg['start'])}] {$seg['title']}");
+                $skipped++;
+                continue;
+            }
+
+            if ($isDryRun) {
+                $this->line("      + [PREVIEW] [{$this->secondsToTime($seg['start'])}] {$seg['title']}");
+                $created++;
+                continue;
+            }
 
             $htmlContent = nl2br(trim($seg['content']));
             $plainText = trim(strip_tags($seg['content']));
@@ -273,8 +330,17 @@ class ImportTranscripts extends Command
                 'order' => $startOrder + $index
             ]);
 
-            $this->line("      + Created: [{$this->secondsToTime($seg['start'])}] {$seg['title']}");
+            $this->line("      <fg=green>✓</> Created: [{$this->secondsToTime($seg['start'])}] {$seg['title']}");
+            $created++;
         }
+        
+        // Summary
+        if ($created > 0 || $skipped > 0) {
+            $this->newLine();
+            $this->info("      Summary: " . ($isDryRun ? "Would create" : "Created") . " {$created} segment(s)" . ($skipped > 0 ? ", skipped {$skipped} duplicate(s)" : ""));
+        }
+        
+        return ['created' => $created, 'skipped' => $skipped];
     }
 
     /**
