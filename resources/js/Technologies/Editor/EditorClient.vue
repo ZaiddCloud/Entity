@@ -60,7 +60,6 @@ const handleCommand = ({ command, value }) => {
              :entity="props.mediaEntity"
              :is-integrated="!isFloating"
              @toggle-dock="toggleDock"
-             @timeupdate="(t) => store.updateCurrentTime(t)"
            />
         </div>
 
