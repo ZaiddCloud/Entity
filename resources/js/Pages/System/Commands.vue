@@ -16,6 +16,10 @@ const syncForm = ref({
     path: '' 
 });
 
+const manuscriptForm = ref({
+    path: '/home/z/PhpstormProjects/Entity/storage/app/manuscripts'
+});
+
 const runCommand = async (command, args = {}) => {
     isRunning.value = true;
     output.value = 'Running command...\n';
@@ -44,6 +48,10 @@ const handleImport = () => {
 
 const handleSync = () => {
     runCommand('storage:sync', { path: syncForm.value.path });
+};
+
+const handleManuscriptSync = () => {
+    runCommand('manuscript:sync', { path: manuscriptForm.value.path });
 };
 
 </script>
@@ -107,6 +115,18 @@ const handleSync = () => {
                         <div>
                             <div class="font-bold">توليد بيانات</div>
                             <div class="text-xs opacity-60">project:seed-realistic</div>
+                        </div>
+                    </button>
+
+                    <button 
+                        @click="activeTab = 'manuscript'"
+                        class="w-full text-right p-4 rounded-xl border transition-all flex items-center gap-3"
+                        :class="activeTab === 'manuscript' ? 'bg-amber-900/20 border-amber-500/50 text-white' : 'bg-gray-900 border-gray-800 hover:border-gray-700'"
+                    >
+                        <span class="text-2xl">📜</span>
+                        <div>
+                            <div class="font-bold">مزامنة المخطوطات</div>
+                            <div class="text-xs opacity-60">manuscript:sync</div>
                         </div>
                     </button>
 
@@ -218,6 +238,36 @@ const handleSync = () => {
                              >
                                  <span v-if="isRunning" class="animate-spin">⏳</span>
                                  <span>تنظيف النظام</span>
+                             </button>
+                         </div>
+
+                         <!-- MANUSCRIPT SYNC TAB -->
+                         <div v-if="activeTab === 'manuscript'">
+                             <h2 class="text-xl font-bold text-white mb-4">مزامنة صفحات المخطوطات</h2>
+                             <p class="text-gray-400 text-sm mb-6 leading-relaxed">
+                                 يقوم هذا الأمر بقراءة ملفات WORD (.docx) واستخراج الصفحات منها بناءً على علامات الصفحات مثل [ص1] أو [صفحة 2]، ثم ربطها بالمخطوطات الموجودة.
+                             </p>
+                             
+                             <div class="mb-6">
+                                <label class="block text-sm font-medium text-gray-300 mb-2">مسار الملفات (مجلد أو ملف)</label>
+                                <div class="flex gap-2">
+                                    <input 
+                                        v-model="manuscriptForm.path" 
+                                        type="text" 
+                                        class="flex-1 bg-gray-950 border border-gray-700 rounded-lg px-4 py-2 text-white font-mono text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent dir-ltr"
+                                        placeholder="/path/to/manuscripts"
+                                    >
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2">يقبل المسار الكامل لمجلد يحتوي على ملفات docx، أو مسار لملف واحد.</p>
+                            </div>
+
+                             <button 
+                                 @click="handleManuscriptSync" 
+                                 :disabled="isRunning"
+                                 class="w-full py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+                             >
+                                 <span v-if="isRunning" class="animate-spin">⏳</span>
+                                 <span>تنفيذ المزامنة</span>
                              </button>
                          </div>
 
