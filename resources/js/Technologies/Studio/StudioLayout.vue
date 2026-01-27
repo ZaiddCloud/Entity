@@ -75,23 +75,40 @@ const navigateToFull = () => {
 }
 
 const navigateToSpecific = () => {
-    // Determine target ID: use activeChildId (if valid) or fallback to first child
-    let targetId = props.activeChildId;
+    // If we have a child ID active, do nothing (already there), just open dropdown?
+    // User wants to see dropdown ON CLICK.
+    // If user clicks button, we toggle dropdown.
+    toggleDropdown();
+}
+
+// Dropdown Logic
+const isDropdownOpen = ref(false)
+const toggleDropdown = () => isDropdownOpen.value = !isDropdownOpen.value
+
+const availableNodes = computed(() => {
+    let nodes = []
     
-    // Check entity.children
-    if (!targetId && props.entity.children && props.entity.children.length > 0) {
-        targetId = props.entity.children[0]._id || props.entity.children[0].id;
+    // Source 1: Entity Children (SQL)
+    if (props.entity.children && props.entity.children.length > 0) {
+        nodes = props.entity.children.map(c => ({
+            id: c._id || c.id,
+            title: c.title || `مقطع #${c.order || '?'}`
+        }))
+    } 
+    // Source 2: Legacy Hierarchy (Mongo/Hybrid)
+    else if (props._legacy && props._legacy.hierarchy) {
+        nodes = props._legacy.hierarchy.map(c => ({
+            id: c._id || c.id,
+            title: c.title || 'بدون عنوان'
+        }))
     }
     
-    // Fallback to hierarchy from service (more reliable for Mongo hybrid)
-    if (!targetId && props._legacy && props._legacy.hierarchy && props._legacy.hierarchy.length > 0) {
-        const firstNode = props._legacy.hierarchy[0];
-        targetId = firstNode._id || firstNode.id;
-    }
-    
-    if (targetId) {
-        router.visit(route('studio.show', { type: props.type, slug: props.entity.slug, childId: targetId }))
-    }
+    return nodes
+})
+
+const navigateToNode = (id) => {
+    isDropdownOpen.value = false
+    router.visit(route('studio.show', { type: props.type, slug: props.entity.slug, childId: id }))
 }
 
 const specificNodeTitle = computed(() => {
@@ -108,7 +125,7 @@ const specificNodeTitle = computed(() => {
         Global Studio Header 
         (Top Bar: Navigation, Save, User, etc.)
      -->
-    <header class="h-12 bg-[#1e1e1e] border-b border-gray-800 flex items-center justify-between px-4 shrink-0 z-50">
+    <header class="h-12 bg-[#1e1e1e] border-b border-gray-800 flex items-center justify-between px-4 shrink-0 z-[90]">
       <div class="flex items-center gap-4">
         <!-- Logo / Home -->
         <a href="/dashboard" class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
@@ -160,24 +177,65 @@ const specificNodeTitle = computed(() => {
             <!-- Divider -->
             <div class="w-px h-3 bg-gray-700"></div>
 
-            <!-- Specific View Button -->
-            <button 
-                @click="navigateToSpecific"
-                :class="[
-                    'flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded transition-all',
-                    !props.isFullView 
-                        ? 'bg-blue-500/10 text-blue-400 font-bold shadow-sm' 
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
-                ]"
-                :title="!props.isFullView ? 'أنت في وضع التركيز على هذا المقطع' : 'الانتقال للتركيز على مقطع محدد'"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                    <polyline points="21 15 16 10 5 21"></polyline>
-                </svg>
-                {{ specificNodeTitle }}
-            </button>
+            <!-- Specific View Group (Button + Dropdown) -->
+            <div class="relative flex items-center">
+                <button 
+                    @click="toggleDropdown"
+                    :class="[
+                        'flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-r transition-all',
+                        !props.isFullView 
+                            ? 'bg-blue-500/10 text-blue-400 font-bold shadow-sm' 
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    ]"
+                    :title="!props.isFullView ? 'أنت في وضع التركيز على هذا المقطع' : 'الانتقال للتركيز على مقطع محدد'"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                    {{ specificNodeTitle }}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-gray-500" :class="{'rotate-180': isDropdownOpen}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div 
+                    v-if="isDropdownOpen"
+                    class="absolute top-full right-0 mt-2 w-64 bg-[#1e1e1e] border border-gray-700 rounded-md shadow-xl overflow-hidden z-[60] flex flex-col max-h-[80vh]"
+                >
+                    <!-- Header -->
+                    <div class="px-3 py-2 bg-gray-800 border-b border-gray-700 text-[10px] text-gray-400 font-bold">
+                        اختر المقطع للانتقال إليه
+                    </div>
+
+                    <!-- Scrollable List -->
+                    <div class="overflow-y-auto flex-1 p-1">
+                        <button 
+                            v-for="node in availableNodes" 
+                            :key="node.id"
+                            @click="navigateToNode(node.id)"
+                            class="w-full text-right px-3 py-2 text-xs rounded hover:bg-white/5 flex items-center justify-between gap-2 tranisition-colors"
+                            :class="node.id === props.activeChildId ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'text-gray-300'"
+                        >
+                            <span class="truncate">{{ node.title }}</span>
+                            <span v-if="node.id === props.activeChildId" class="text-blue-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </span>
+                        </button>
+                        
+                        <div v-if="availableNodes.length === 0" class="text-center py-4 text-gray-500 text-xs">
+                            لا توجد مقاطع متاحة
+                        </div>
+                    </div>
+                </div>
+            
+                <!-- Backdrop to close -->
+                <div v-if="isDropdownOpen" @click="isDropdownOpen = false" class="fixed inset-0 z-[55] cursor-default"></div>
+            </div>
         </div>
 
         <!-- Save Status -->
