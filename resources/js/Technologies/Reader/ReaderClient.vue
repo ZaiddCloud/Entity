@@ -101,7 +101,7 @@ const handleSeek = (time) => {
 
 <template>
     <div 
-        :class="['min-h-screen flex flex-col transition-colors duration-300', currentThemeClasses.bg, currentThemeClasses.text]"
+        :class="['h-screen flex flex-col transition-colors duration-300', currentThemeClasses.bg, currentThemeClasses.text]"
         :dir="'rtl'"
     >
         <!-- Header HUD -->
@@ -168,20 +168,22 @@ const handleSeek = (time) => {
 
         <!-- Main Layout Section -->
         <div class="flex-1 flex overflow-hidden relative">
-            <!-- Sidebar TOC & Search -->
-            <transition name="slide-rtl">
-                <aside v-if="store.isTocOpen" class="w-80 h-full absolute right-0 top-0 z-20">
-                   <TableOfContents @close="store.toggleToc" />
-                </aside>
-            </transition>
+            <!-- Sidebar TOC & Search (Now part of flex layout, not absolute) -->
+            <aside 
+                v-if="store.isTocOpen" 
+                class="w-80 flex-shrink-0 z-20 h-full transition-all duration-300"
+            >
+               <TableOfContents @close="store.toggleToc" />
+            </aside>
 
-            <transition name="slide-rtl">
-                <aside v-if="store.isSearchOpen" class="w-80 h-full absolute right-0 top-0 z-20">
-                   <SearchPanel @close="store.toggleSearch" @select="handleSearchResult" />
-                </aside>
-            </transition>
+            <aside 
+                v-else-if="store.isSearchOpen" 
+                class="w-80 flex-shrink-0 z-20 h-full transition-all duration-300"
+            >
+               <SearchPanel @close="store.toggleSearch" @select="handleSearchResult" />
+            </aside>
 
-            <!-- Main Content Area -->
+            <!-- Main Content Area (Independent scroll) -->
             <main class="flex-1 overflow-y-auto relative custom-scrollbar" id="reader-viewport">
                 <!-- Video/Audio Transcript Sync -->
                 <MediaSync 
