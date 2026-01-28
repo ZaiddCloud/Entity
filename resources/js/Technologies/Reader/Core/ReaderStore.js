@@ -11,7 +11,7 @@ export const useReaderStore = defineStore('reader', {
         fontSize: parseInt(localStorage.getItem('reader_font_size')) || 18,
         theme: localStorage.getItem('reader_theme') || 'light',
         isFullscreen: false,
-        isTocOpen: false,
+        isTocOpen: true,
         isSearchOpen: false,
         isFullView: false,
         activeChildId: null,
@@ -42,9 +42,9 @@ export const useReaderStore = defineStore('reader', {
             this.hierarchy = props.hierarchy || [];
             this.isFullView = props.isFullView || false;
             this.activeChildId = props.activeChildId;
-            
+
             // Find current node in hierarchy
-            const node = this.activeChildId 
+            const node = this.activeChildId
                 ? this.hierarchy.find(n => (n._id || n.id) === this.activeChildId)
                 : this.hierarchy[0];
 
@@ -57,10 +57,10 @@ export const useReaderStore = defineStore('reader', {
 
         navigate(id = null) {
             this.isLoading = true;
-            router.visit(route('reader.show', { 
-                type: this.type, 
+            router.visit(route('reader.show', {
+                type: this.type,
                 slug: this.entity.slug,
-                childId: id 
+                childId: id
             }), {
                 preserveState: true,
                 onSuccess: () => {
