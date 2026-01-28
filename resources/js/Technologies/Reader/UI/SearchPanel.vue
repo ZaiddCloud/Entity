@@ -96,9 +96,14 @@ const handleResultClick = (result) => {
                 >
                     <div class="flex items-center justify-between mb-2">
                         <span class="font-black text-[10px] text-blue-500 uppercase tracking-widest">{{ result.title }}</span>
-                        <span v-if="result.timestamp" class="text-[10px] font-mono opacity-40 group-hover:opacity-100 transition-opacity">
-                            {{ Math.floor(result.timestamp / 60) }}:{{ (result.timestamp % 60).toString().padStart(2, '0') }}
-                        </span>
+                        <div class="flex items-center gap-2">
+                            <span v-if="result.timestamp" class="text-[10px] font-mono opacity-40 bg-black/5 px-1.5 py-0.5 rounded-md group-hover:opacity-100 transition-opacity">
+                                🕒 {{ Math.floor(result.timestamp / 60) }}:{{ (result.timestamp % 60).toString().padStart(2, '0') }}
+                            </span>
+                            <span v-if="result.page" class="text-[10px] font-bold opacity-40 bg-black/5 px-1.5 py-0.5 rounded-md group-hover:opacity-100 transition-opacity">
+                                📄 صفحة {{ result.page }}
+                            </span>
+                        </div>
                     </div>
                     <p class="text-xs leading-relaxed opacity-70 line-clamp-3" v-html="result.snippet.replace(new RegExp(searchQuery, 'gi'), match => `<mark class='bg-blue-500/20 text-blue-700 px-0.5 rounded'>${match}</mark>`)"></p>
                 </button>

@@ -45,8 +45,9 @@ class ReaderController extends Controller
             $childNode = $this->resolveEntityNode($type, $slug);
             if ($childNode) {
                  // Redirect to canonical parent-based URL
-                 $foreignKey = $this->getForeignKey($type);
-                 $parent = $childNode->getRelationValue(str_replace('_id', '', $foreignKey)) ?: $this->resolveParentModel($type)::find($childNode->$foreignKey);
+                 $entityType = EntityType::tryFrom($type);
+                 $foreignKey = $this->getForeignKey($entityType);
+                 $parent = $childNode->getRelationValue(str_replace('_id', '', $foreignKey)) ?: $this->resolveParentModel($entityType)::find($childNode->$foreignKey);
                  return redirect()->route('reader.show', ['type' => $type, 'slug' => $parent->slug, 'childId' => $childNode->_id ?? $childNode->id]);
             }
             abort(404, 'المصدر غير موجود');
@@ -63,11 +64,12 @@ class ReaderController extends Controller
         $currentNodeSlug = null;
 
         if ($childId) {
-            $modelClass = $this->getContentModelClass($type);
+            $entityType = EntityType::tryFrom($type);
+            $modelClass = $this->getContentModelClass($entityType);
             $node = $modelClass::find($childId);
 
             // Validate child belongs to parent
-            $foreignKey = $this->getForeignKey($type);
+            $foreignKey = $this->getForeignKey($entityType);
             if (!$node || $node->$foreignKey != $entity->id) {
                 // Try finding by slug if ID failed
                 $node = $modelClass::where('slug', $childId)
@@ -169,6 +171,9 @@ class ReaderController extends Controller
             return response()->json(['results' => []]);
         }
 
+        $entityType = EntityType::tryFrom($type);
+        if (!$entityType) abort(404, "Unknown entity type");
+
         // 1. Resolve Parent Entity
         $entity = $this->resolveParentEntity($type, $slug);
         
@@ -178,42 +183,44 @@ class ReaderController extends Controller
         }
 
         // 2. Query Content Nodes
-        $contentModel = $this->getContentModelClass($type);
-        $foreignKey = match ($type) {
-            'book' => 'book_id',
-            'manuscript' => 'manuscript_id',
-            'audio' => 'audio_id',
-            'video' => 'video_id',
-            default => 'entity_id'
-        };
+        $contentModel = $this->getContentModelClass($entityType);
+        $foreignKey = $this->getForeignKey($entityType);
 
-        // Perform text search (using simple like for now, or full-text if supported)
+        // Perform text search
         $results = $contentModel::where($foreignKey, $entity->id)
             ->where(function($q) use ($query) {
                 $q->where('plain_text', 'LIKE', "%{$query}%")
                   ->orWhere('title', 'LIKE', "%{$query}%");
             })
             ->orderBy('order', 'asc')
-            ->get(['id', 'slug', 'title', 'plain_text', 'start_time']); // Optimize select
+            ->get(); 
 
         // 3. Format results with snippets
-        $formattedResults = $results->map(function($node) use ($query) {
+        $formattedResults = $results->map(function($node) use ($query, $entityType) {
             $snippet = '';
-            if ($node->plain_text) {
-                $pos = mb_stripos($node->plain_text, $query);
-                $start = max(0, $pos - 40);
-                $length = mb_strlen($query) + 80;
-                $snippet = mb_substr($node->plain_text, $start, $length);
-                if ($start > 0) $snippet = '...' . $snippet;
-                if (mb_strlen($node->plain_text) > $start + $length) $snippet .= '...';
+            $plainText = $node->plain_text ?? '';
+            
+            if ($plainText) {
+                $pos = mb_stripos($plainText, $query);
+                if ($pos !== false) {
+                    $start = max(0, $pos - 40);
+                    $length = mb_strlen($query) + 80;
+                    $snippet = mb_substr($plainText, $start, $length);
+                    if ($start > 0) $snippet = '...' . $snippet;
+                    if (mb_strlen($plainText) > $start + $length) $snippet .= '...';
+                } else {
+                    // Query found in title, show start of content as snippet
+                    $snippet = mb_substr($plainText, 0, 100) . '...';
+                }
             }
 
             return [
-                'id' => $node->id,
+                'id' => $node->_id ?? $node->id,
                 'slug' => $node->slug,
                 'title' => $node->title,
                 'snippet' => $snippet,
                 'timestamp' => $node->start_time ?? null,
+                'page' => $node->page_number ?? null,
             ];
         });
 
@@ -268,9 +275,12 @@ class ReaderController extends Controller
         return $entity;
     }
 
-    protected function resolveEntityNode(EntityType $type, string $slug)
+    protected function resolveEntityNode(string $type, string $slug)
     {
-        $contentModel = $this->getContentModelClass($type);
+        $entityType = EntityType::tryFrom($type);
+        if (!$entityType) return null;
+        
+        $contentModel = $this->getContentModelClass($entityType);
         return $contentModel::where('slug', $slug)->first();
     }
 
