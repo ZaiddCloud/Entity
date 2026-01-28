@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, provide, computed } from 'vue';
+import { ref, onMounted, onUnmounted, provide, computed, watch } from 'vue';
 import { useReaderStore } from './Core/ReaderStore';
 import { useTheme } from './Core/useTheme';
 import ContentView from './UI/ContentView.vue';
@@ -87,15 +87,27 @@ const handleTimeUpdate = (time) => {
     currentTime.value = time;
 };
 
-// We'll need a way for the player to accept seeks from the transcript
-// For now, we'll implement a simple communication via events or a shared store if needed
-// But let's start with a simpler approach: 
-// The Player is handled by PlayerClient which wraps DraggableMediaPlayer.
 const handleSeek = (time) => {
-    console.log('[ReaderClient] Seeking to:', time);
-    // Implementation: In a real scenario, we might use a bus or a ref method.
-    // For now, we'll emit to the player if possible or just log.
+    if (playerRef.value) {
+        playerRef.value.seek(time);
+    }
 };
+
+// Sync player when navigating via TOC/URL
+watch(() => props.activeSlug, (newSlug) => {
+    if (!newSlug || props.type === 'book' || props.type === 'manuscript') return;
+    
+    const node = props.hierarchy.find(n => n.slug === newSlug);
+    if (node && node.start_time !== undefined) {
+        // Only seek if we're not already within this segment's range 
+        // (to avoid loops or jumping while naturally playing)
+        const isAlreadyInSegment = currentTime.value >= node.start_time && currentTime.value <= (node.end_time || node.start_time + 1);
+        
+        if (!isAlreadyInSegment) {
+            handleSeek(node.start_time);
+        }
+    }
+}, { immediate: true });
 
 </script>
 

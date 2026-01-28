@@ -27,6 +27,8 @@ const activeSegmentIndex = computed(() => {
 
 // Auto-scroll logic to keep current segment in view
 const segmentRefs = ref([]);
+
+// 1. Watch time for auto-scroll during playback
 watch(activeSegmentIndex, (newIndex) => {
     if (newIndex !== -1 && segmentRefs.value[newIndex]) {
         segmentRefs.value[newIndex].scrollIntoView({
@@ -35,6 +37,20 @@ watch(activeSegmentIndex, (newIndex) => {
         });
     }
 });
+
+// 2. Watch activeSlug for manual navigation (from TOC etc.)
+watch(() => props.activeSlug, (newSlug) => {
+    if (!newSlug) return;
+    const index = props.hierarchy.findIndex(n => n.slug === newSlug);
+    if (index !== -1 && segmentRefs.value[index]) {
+        // Only scroll if it's not already the active time segment 
+        // to avoid double scrolling or interfering with play scroll
+        segmentRefs.value[index].scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+    }
+}, { immediate: true });
 
 const formatTime = (seconds) => {
     if (!seconds) return '00:00';
@@ -85,7 +101,7 @@ const handleSegmentClick = (node) => {
                 
                 <p 
                     :class="['text-sm leading-8 transition-colors duration-500', activeSegmentIndex === index ? '' : 'opacity-40']"
-                    v-html="node.metadata?.description || 'لا يوجد وصف متاح لهذا المقطع'"
+                    v-html="node.content || 'لا يوجد محتوى متاح لهذا المقطع'"
                 ></p>
 
                 <!-- Progress inside segment -->
