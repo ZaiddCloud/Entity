@@ -11,3 +11,6 @@
 1. **Isolation:** Modules must NOT import from each other. Use Shared Stores.
 2. **Props over Fetch:** Components receive data via Inertia Props.
 3. **Editors:** We use Tiptap. Configurations are in `Technologies/Editor`.
+
+## Design & UI Standards
+- **Reader UX Patterns:** Refer to [.agent/reader-milestones.md](../reader-milestones.md) for established UX patterns.
