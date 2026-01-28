@@ -88,10 +88,9 @@ const handleSegmentChange = (segment) => {
 };
 
 
-// Handle closing the player (optional, maybe hide or navigate away)
+// Handle closing the player
 const closePlayer = () => {
-    // For now, maybe just redirect to dashboard or do nothing (since it's persistent in studio)
-    // or arguably, minimize it?
+    mediaStore.setOpen(false);
 };
 
 const playerRef = ref(null);
@@ -109,6 +108,7 @@ defineExpose({
         This container should not have visible dimensions that block the UI.
     -->
     <DraggableMediaPlayer
+        v-show="mediaStore.isOpen"
         ref="playerRef"
         :src="currentSource"
         :title="media?.title || 'Unknown Media'"

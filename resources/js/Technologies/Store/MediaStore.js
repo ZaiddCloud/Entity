@@ -7,6 +7,7 @@ export const useMediaStore = defineStore('media-global', () => {
     const isIntegrated = ref(false); // Text-wrap mode
     const isMaximized = ref(false);
     const isPlaylistOpen = ref(false);
+    const isOpen = ref(true); // Central player visibility state
 
     // Position & Dimensions
     const windowPos = ref({ left: 100, top: 100 });
@@ -152,6 +153,10 @@ export const useMediaStore = defineStore('media-global', () => {
         isMaximized.value = !isMaximized.value;
     };
 
+    const setOpen = (status) => {
+        isOpen.value = status;
+    }
+
     // Computed
     const isFloating = computed(() => !isDocked.value && !isIntegrated.value);
 
@@ -161,6 +166,7 @@ export const useMediaStore = defineStore('media-global', () => {
         isIntegrated,
         isMaximized,
         isPlaylistOpen,
+        isOpen,
         windowPos,
         dimensions,
         currentMedia,
@@ -180,6 +186,7 @@ export const useMediaStore = defineStore('media-global', () => {
         loadMedia,
         startDrag,
         startResize,
-        toggleMaximize
+        toggleMaximize,
+        setOpen
     };
 });

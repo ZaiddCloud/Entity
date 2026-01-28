@@ -4,6 +4,8 @@ import SplitPane from './Layouts/SplitPane.vue'
 import ReferencePane from './Panes/ReferencePane.vue'
 import EditorPane from './Panes/EditorPane.vue'
 import { useEditorStore } from '../Store/EditorStore'
+import { useMediaStore } from '../Store/MediaStore'
+import { Play } from 'lucide-vue-next'
 import { onMounted, onUnmounted, computed, watch, ref, provide } from 'vue'
 
 const props = defineProps({
@@ -17,6 +19,7 @@ const props = defineProps({
 })
 
 const store = useEditorStore()
+const mediaStore = useMediaStore()
 
 const isPlayerDocked = ref(true) // Default integrated (side-by-side) to avoid covering text
 
@@ -243,6 +246,16 @@ const specificNodeTitle = computed(() => {
             <div class="w-1 h-1 rounded-full bg-current" :class="store.isSaving ? 'animate-pulse' : ''"></div>
             {{ saveStatusText }}
         </span>
+
+        <!-- Open Player Button (Touch #2) -->
+        <button 
+          v-if="props.type !== 'manuscript' && !mediaStore.isOpen"
+          @click="mediaStore.setOpen(true)"
+          class="flex items-center justify-center w-8 h-8 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-95"
+          title="فتح المشغل"
+        >
+          <Play class="w-4 h-4 fill-current" />
+        </button>
         
         <button 
             class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-4 py-1.5 rounded font-bold transition-colors shadow-lg shadow-blue-900/20"

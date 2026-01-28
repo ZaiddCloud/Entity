@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { router } from '@inertiajs/vue3';
 import axios from 'axios';
+import { useMediaStore } from '@/Technologies/Store/MediaStore';
 
 export const useReaderStore = defineStore('reader', {
     state: () => ({
@@ -39,6 +40,10 @@ export const useReaderStore = defineStore('reader', {
         nextNode: (state) => {
             const index = state.activeNodeIndex;
             return index >= 0 && index < state.activeList.length - 1 ? state.activeList[index + 1] : null;
+        },
+        isMediaVisible: (state) => {
+            const mediaStore = useMediaStore();
+            return mediaStore.isOpen;
         }
     },
 
@@ -87,7 +92,8 @@ export const useReaderStore = defineStore('reader', {
         },
 
         toggleMedia() {
-            this.isMediaVisible = !this.isMediaVisible;
+            const mediaStore = useMediaStore();
+            mediaStore.setOpen(!mediaStore.isOpen);
         },
 
         toggleToc() {
