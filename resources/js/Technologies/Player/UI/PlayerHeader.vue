@@ -21,7 +21,7 @@ const emit = defineEmits(['toggle-dock', 'toggle-max', 'close', 'start-drag']);
         <!-- Brand & Title (Right in RTL) -->
         <div class="flex items-center" dir="ltr">
             <div class="pot-logo ml-2 text-[#aaa] hover:text-white transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-bold">
-                PotPlayer <ChevronDown class="w-3 h-3" />
+                EntPlayer <ChevronDown class="w-3 h-3" />
             </div>
             <span class="file-info text-yellow-500 opacity-80 text-[11px] mx-2 font-bold">MP3</span>
             <span class="border-l border-gray-700 h-3 mx-1"></span>

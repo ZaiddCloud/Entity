@@ -68,7 +68,7 @@ const handleVolumeClick = (e) => {
 
         <!-- Controls Row -->
         <div class="controls flex-1 flex items-center justify-between px-3 h-9 text-[#888]">
-            <!-- Left: Playback Controls (PotPlayer Style) -->
+            <!-- Left: Playback Controls (EntPlayer Style) -->
             <div class="flex items-center gap-2">
                  <button class="hover:text-white" title="Previous 10s" @click="$emit('seek', currentTime - 10)">
                     <SkipBack class="w-4 h-4" />
