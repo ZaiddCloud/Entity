@@ -112,6 +112,22 @@ const scrollToTop = () => {
     }
 };
 
+// Keep store in sync with props activeChildId changes (Inertia navigation)
+watch(() => props.activeChildId, (newId) => {
+    store.activeChildId = newId;
+    // Also update current node reference
+    if (newId) {
+        const node = store.hierarchy.find(n => (n._id || n.id) === newId);
+        if (node) {
+            store.currentNode = {
+                id: node._id || node.id,
+                slug: node.slug,
+                title: node.title,
+            };
+        }
+    }
+}, { immediate: true });
+
 // Sync player when navigating via TOC/URL
 watch(() => props.activeSlug, (newSlug) => {
     if (!newSlug || props.type === 'book' || props.type === 'manuscript') return;

@@ -193,37 +193,40 @@ const emit = defineEmits(['close']);
                     v-for="node in filteredHierarchy" 
                     :key="node.id || node._id"
                     :class="[
-                        'w-full text-right p-3 rounded-2xl transition-all duration-200 flex items-center gap-2 group cursor-pointer border border-transparent',
-                        (node._id || node.id) === store.activeChildId 
-                            ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' 
-                            : 'hover:bg-black/5 dark:hover:bg-white/5'
+                        'w-full text-right p-3 my-1 transition-all duration-300 flex items-center gap-2 group cursor-pointer relative',
+                        String(node._id || node.id) === String(store.activeChildId)
+                            ? 'bg-blue-500 text-white shadow-xl shadow-blue-500/30 rounded-2xl scale-[1.02]' 
+                            : 'hover:bg-black/5 dark:hover:bg-white/5 rounded-xl text-slate-700 dark:text-slate-300'
                     ]"
-                    :style="{ marginRight: (node.level * 1.2) + 'rem' }"
+                    :style="{ marginRight: (String(node._id || node.id) === String(store.activeChildId) ? 0 : node.level * 1.2) + 'rem' }"
                     @click="handleNavigate(node)"
                 >
                     <!-- Expand/Collapse Button (Logical Property for RTL) -->
                     <button 
                         v-if="node.hasChildren"
                         @click.stop="toggleNode(node._id || node.id)"
-                        class="shrink-0 p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-lg transition-transform duration-300"
-                        :class="{ 'rotate-0': !node.isExpanded, '-rotate-90': node.isExpanded }"
+                        class="shrink-0 p-1 rounded-lg transition-transform duration-300"
+                        :class="[
+                            String(node._id || node.id) === String(store.activeChildId) ? 'hover:bg-white/20' : 'hover:bg-black/10 dark:hover:bg-white/10',
+                            { 'rotate-0': !node.isExpanded, '-rotate-90': node.isExpanded }
+                        ]"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                         </svg>
                     </button>
-                    <div v-else class="w-6 shrink-0 flex items-center justify-center opacity-20">•</div>
+                    <div v-else class="w-6 shrink-0 flex items-center justify-center opacity-40">•</div>
 
                     <div class="flex-1 min-w-0">
-                        <div :class="['truncate text-sm', (node._id || node.id) === store.activeChildId ? 'font-bold' : 'font-medium']">
+                        <div :class="['truncate text-sm transition-all', String(node._id || node.id) === String(store.activeChildId) ? 'font-bold' : 'font-medium group-hover:translate-x-[-2px]']">
                             {{ node.title }}
                         </div>
                     </div>
 
                     <svg 
-                        v-if="node.slug === store.currentNode?.slug"
+                        v-if="String(node._id || node.id) === String(store.activeChildId)"
                         xmlns="http://www.w3.org/2000/svg" 
-                        class="h-4 w-4 shrink-0 opacity-100" 
+                        class="h-5 w-5 shrink-0 opacity-100 animate-pulse ml-2" 
                         fill="none" 
                         viewBox="0 0 24 24" 
                         stroke="currentColor"

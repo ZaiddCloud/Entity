@@ -49,6 +49,9 @@ const handleResultClick = (result) => {
     emit('select', result);
 };
 
+const isActive = (result) => {
+    return (result.id || result._id) === store.activeChildId;
+};
 </script>
 
 <template>
@@ -92,20 +95,37 @@ const handleResultClick = (result) => {
                     v-for="result in results" 
                     :key="result.id"
                     @click="handleResultClick(result)"
-                    class="w-full text-right p-4 rounded-2xl bg-black/5 hover:bg-black/10 transition-all border border-transparent hover:border-blue-500/20 group"
+                    :class="[
+                        'w-full text-right p-4 my-1 transition-all duration-300 border group items-center relative',
+                        isActive(result)
+                            ? 'bg-blue-500 text-white shadow-xl shadow-blue-500/30 rounded-2xl scale-[1.02] border-transparent' 
+                            : 'bg-black/5 hover:bg-black/10 border-transparent hover:border-blue-500/20 rounded-2xl'
+                    ]"
                 >
                     <div class="flex items-center justify-between mb-2">
-                        <span class="font-black text-[10px] text-blue-500 uppercase tracking-widest">{{ result.title }}</span>
+                        <span :class="['font-black text-[10px] uppercase tracking-widest', isActive(result) ? 'text-white' : 'text-blue-500']">{{ result.title }}</span>
                         <div class="flex items-center gap-2">
-                            <span v-if="result.timestamp" class="text-[10px] font-mono opacity-40 bg-black/5 px-1.5 py-0.5 rounded-md group-hover:opacity-100 transition-opacity">
+                            <span v-if="result.timestamp" :class="['text-[10px] font-mono px-1.5 py-0.5 rounded-md transition-opacity', isActive(result) ? 'bg-white/20 text-white' : 'bg-black/5 opacity-40 group-hover:opacity-100']">
                                 🕒 {{ Math.floor(result.timestamp / 60) }}:{{ (result.timestamp % 60).toString().padStart(2, '0') }}
                             </span>
-                            <span v-if="result.page" class="text-[10px] font-bold opacity-40 bg-black/5 px-1.5 py-0.5 rounded-md group-hover:opacity-100 transition-opacity">
+                            <span v-if="result.page" :class="['text-[10px] font-bold px-1.5 py-0.5 rounded-md transition-opacity', isActive(result) ? 'bg-white/20 text-white' : 'bg-black/5 opacity-40 group-hover:opacity-100']">
                                 📄 صفحة {{ result.page }}
                             </span>
                         </div>
                     </div>
-                    <p class="text-xs leading-relaxed opacity-70 line-clamp-3" v-html="result.snippet.replace(new RegExp(searchQuery, 'gi'), match => `<mark class='bg-blue-500/20 text-blue-700 px-0.5 rounded'>${match}</mark>`)"></p>
+                    <p :class="['text-xs leading-relaxed line-clamp-3', isActive(result) ? 'opacity-90' : 'opacity-70']" v-html="result.snippet.replace(new RegExp(searchQuery, 'gi'), match => `<mark class='${isActive(result) ? 'bg-white/30 text-white' : 'bg-blue-500/20 text-blue-700'} px-0.5 rounded'>${match}</mark>`)"></p>
+                    
+                    <!-- Capsule Chevron Indicator -->
+                    <svg 
+                        v-if="isActive(result)"
+                        xmlns="http://www.w3.org/2000/svg" 
+                        class="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 opacity-100 animate-pulse text-white" 
+                        fill="none" 
+                        viewBox="0 0 24 24" 
+                        stroke="currentColor"
+                    >
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
                 </button>
             </div>
 
