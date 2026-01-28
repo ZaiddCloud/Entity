@@ -76,7 +76,7 @@ const handleSearchResult = (result) => {
         handleSeek(result.timestamp);
     }
     
-    store.isSearchOpen = false;
+    // store.isSearchOpen = false; // Kept open per user request
 };
 
 // Provide state to children
