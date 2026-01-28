@@ -93,6 +93,25 @@ const handleSeek = (time) => {
     }
 };
 
+// Back to Top Logic
+const showScrollTop = ref(false);
+
+const handleScroll = (e) => {
+    // Show button if scrolled more than 300px
+    showScrollTop.value = e.target.scrollTop > 300;
+};
+
+const scrollToTop = () => {
+    const viewport = document.getElementById('reader-viewport');
+    const mediaViewport = document.getElementById('media-sync-viewport');
+    
+    if (mediaViewport) {
+        mediaViewport.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (viewport) {
+        viewport.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+};
+
 // Sync player when navigating via TOC/URL
 watch(() => props.activeSlug, (newSlug) => {
     if (!newSlug || props.type === 'book' || props.type === 'manuscript') return;
@@ -196,7 +215,7 @@ watch(() => props.activeSlug, (newSlug) => {
             </aside>
 
             <!-- Main Content Area (Independent scroll) -->
-            <main class="flex-1 overflow-y-auto relative custom-scrollbar" id="reader-viewport">
+            <main class="flex-1 overflow-y-auto relative custom-scrollbar" id="reader-viewport" @scroll="handleScroll">
                 <!-- Video/Audio Transcript Sync -->
                 <MediaSync 
                     v-if="['audio', 'video'].includes(props.type)"
@@ -204,6 +223,7 @@ watch(() => props.activeSlug, (newSlug) => {
                     :hierarchy="props.hierarchy"
                     :active-slug="props.activeSlug"
                     @seek="handleSeek"
+                    @scroll="handleScroll"
                 />
 
                 <!-- Standard Content (Books/Manuscripts) -->
@@ -250,6 +270,21 @@ watch(() => props.activeSlug, (newSlug) => {
                         @timeupdate="handleTimeUpdate"
                     />
                 </div>
+
+                <!-- Back to Top Button -->
+                <button 
+                    v-show="showScrollTop"
+                    @click="scrollToTop"
+                    :class="[
+                        'fixed bottom-20 left-6 z-40 p-3 rounded-full shadow-xl transition-all duration-500 transform hover:scale-110',
+                        currentThemeClasses.bg,
+                        'border border-black/10'
+                    ]"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                    </svg>
+                </button>
             </main>
         </div>
 

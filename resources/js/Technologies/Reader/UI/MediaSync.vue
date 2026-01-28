@@ -13,7 +13,7 @@ const props = defineProps({
     activeSlug: String
 });
 
-const emit = defineEmits(['seek']);
+const emit = defineEmits(['seek', 'scroll']);
 
 const store = inject('readerStore');
 const themeClasses = inject('themeClasses');
@@ -65,11 +65,18 @@ const handleSegmentClick = (node) => {
     }
     emit('seek', node.start_time);
 };
+const handleScroll = (e) => {
+    emit('scroll', e);
+};
 </script>
 
 <template>
     <div class="flex flex-col h-full overflow-hidden">
-        <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+        <div 
+            class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6"
+            id="media-sync-viewport"
+            @scroll="handleScroll"
+        >
             <div 
                 v-for="(node, index) in hierarchy" 
                 :key="node.id"
