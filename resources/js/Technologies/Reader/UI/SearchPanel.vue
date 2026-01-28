@@ -16,6 +16,7 @@ const emit = defineEmits(['close', 'select']);
 const handleSearch = async () => {
     if (!searchQuery.value.trim()) {
         results.value = [];
+        store.setSearchResults([]);
         return;
     }
 
@@ -30,9 +31,11 @@ const handleSearch = async () => {
             params: { q: searchQuery.value }
         });
         results.value = response.data.results;
+        store.setSearchResults(response.data.results); // Update store for navigation
     } catch (error) {
         console.error('Search failed:', error);
         results.value = [];
+        store.setSearchResults([]);
     } finally {
         isSearching.value = false;
     }
@@ -52,6 +55,18 @@ const handleResultClick = (result) => {
 const isActive = (result) => {
     return (result.id || result._id) === store.activeChildId;
 };
+
+// Auto-scroll to active search result
+watch(() => store.activeChildId, (newId) => {
+    if (!newId || !results.value.length) return;
+
+    setTimeout(() => {
+        const activeEl = document.getElementById(`search-result-${newId}`);
+        if (activeEl) {
+            activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 100);
+});
 </script>
 
 <template>
@@ -94,6 +109,7 @@ const isActive = (result) => {
                 <button 
                     v-for="result in results" 
                     :key="result.id"
+                    :id="`search-result-${result.id}`"
                     @click="handleResultClick(result)"
                     :class="[
                         'w-full text-right p-4 my-1 transition-all duration-300 border group items-center relative',

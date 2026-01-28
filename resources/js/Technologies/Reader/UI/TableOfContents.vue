@@ -114,6 +114,8 @@ const collapseAll = () => {
 // Auto-expand path to active node
 watch(() => store.activeChildId, (newId) => {
     if (!newId) return;
+    
+    // 1. Expand parents
     let currentId = newId;
     while (currentId) {
         const node = store.hierarchy.find(n => (n._id || n.id) === currentId);
@@ -124,6 +126,14 @@ watch(() => store.activeChildId, (newId) => {
             currentId = null;
         }
     }
+
+    // 2. Auto-scroll to active node (next tick to ensure DOM is updated)
+    setTimeout(() => {
+        const activeEl = document.getElementById(`toc-node-${newId}`);
+        if (activeEl) {
+            activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 100);
 }, { immediate: true });
 
 const emit = defineEmits(['close']);
@@ -192,6 +202,7 @@ const emit = defineEmits(['close']);
                 <div 
                     v-for="node in filteredHierarchy" 
                     :key="node.id || node._id"
+                    :id="`toc-node-${node.id || node._id}`"
                     :class="[
                         'w-full text-right p-3 my-1 transition-all duration-300 flex items-center gap-2 group cursor-pointer relative',
                         String(node._id || node.id) === String(store.activeChildId)
