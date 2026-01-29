@@ -8,6 +8,7 @@ export const useMediaStore = defineStore('media-global', () => {
     const isMaximized = ref(false);
     const isPlaylistOpen = ref(false);
     const isOpen = ref(true); // Central player visibility state
+    const sizeMode = ref('standard'); // 'mini' | 'standard' | 'theater' | 'full'
 
     // Position & Dimensions
     const windowPos = ref({ left: 100, top: 100 });
@@ -157,6 +158,15 @@ export const useMediaStore = defineStore('media-global', () => {
         isOpen.value = status;
     }
 
+    const cycleSize = (allowedModes = ['mini', 'standard', 'theater', 'full']) => {
+        const currentIndex = allowedModes.indexOf(sizeMode.value);
+        const nextIndex = (currentIndex + 1) % allowedModes.length;
+        sizeMode.value = allowedModes[nextIndex];
+
+        // Sync legacy isMaximized for backward compatibility if needed
+        isMaximized.value = (sizeMode.value === 'full');
+    };
+
     // Computed
     const isFloating = computed(() => !isDocked.value && !isIntegrated.value);
 
@@ -167,6 +177,7 @@ export const useMediaStore = defineStore('media-global', () => {
         isMaximized,
         isPlaylistOpen,
         isOpen,
+        sizeMode,
         windowPos,
         dimensions,
         currentMedia,
@@ -187,6 +198,7 @@ export const useMediaStore = defineStore('media-global', () => {
         startDrag,
         startResize,
         toggleMaximize,
-        setOpen
+        setOpen,
+        cycleSize
     };
 });

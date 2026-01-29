@@ -47,8 +47,8 @@ const {
 const windowRef = ref(null);
 
 const startDrag = (e) => {
-    // Parity: Prevent drag if clicking controls or resizing
-    if (e.target.closest('.win-btn') || store.isMaximized || store.isDocked) return;
+    // Parity: Prevent drag if clicking controls or resizing or if full/docked
+    if (e.target.closest('.win-btn') || store.sizeMode === 'full' || store.isDocked) return;
     store.startDrag(e);
 };
 
@@ -133,24 +133,37 @@ defineExpose({
 </script>
 
 <template>
+  <Teleport to="body" :disabled="store.sizeMode !== 'full'">
     <div
         ref="windowRef"
         dir="ltr"
         class="pot-window-v2"
         :class="{
-            'maximized': store.isMaximized,
-            'fixed z-[999999]': !store.isDocked && !store.isIntegrated,
-            'relative !left-auto !top-auto !transform-none shadow-2xl border border-[#333] rounded-sm': store.isDocked || store.isIntegrated
+            'maximized': store.sizeMode === 'full',
+            'fixed z-[999999]': store.sizeMode === 'full',
+            'fixed z-[9999]': store.sizeMode !== 'full' && !store.isDocked && !store.isIntegrated,
+            'relative !left-auto !top-auto !transform-none shadow-2xl border border-[#333] rounded-sm z-50': store.sizeMode !== 'full' && (store.isDocked || store.isIntegrated),
+            'mode-mini': store.sizeMode === 'mini',
+            'mode-theater': store.sizeMode === 'theater'
         }"
-        :style="store.isFloating ? {
-            left: store.isMaximized ? '0px' : `${store.windowPos.left}px`,
-            top: store.isMaximized ? '0px' : `${store.windowPos.top}px`,
-            width: store.isMaximized ? '100%' : `${store.dimensions.width || (store.isPlaylistOpen ? 800 : 500)}px`,
-            height: store.isMaximized ? '100%' : `${store.dimensions.height || (props.type === 'audio' ? 240 : 480)}px`,
+        :style="store.sizeMode === 'full' ? {
+            left: '0px',
+            top: '48px',
+            width: '100vw',
+            height: 'calc(100vh - 48px)',
+            transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+        } : (store.isFloating ? {
+            left: `${store.windowPos.left}px`,
+            top: `${store.windowPos.top}px`,
+            width: store.sizeMode === 'mini' ? '320px' : (store.sizeMode === 'theater' ? '800px' : `${store.dimensions.width || 500}px`),
+            height: store.sizeMode === 'mini' ? '180px' : `${store.dimensions.height || (props.type === 'audio' ? 240 : 480)}px`,
+            transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
         } : {
-            width: `${store.dimensions.width || (store.isPlaylistOpen ? 800 : 500)}px`,
-            height: `${store.dimensions.height || (props.type === 'audio' ? 240 : 480)}px`,
-        }"
+            width: store.sizeMode === 'mini' ? '320px' : (store.sizeMode === 'theater' ? '100%' : `${store.dimensions.width || 500}px`),
+            height: store.sizeMode === 'mini' ? '180px' : `${store.dimensions.height || (props.type === 'audio' ? 240 : 480)}px`,
+            transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            overflow: 'visible'
+        })"
     >
         <!-- RESIZE HANDLES (Floating only) -->
         <ResizeHandles 
@@ -167,10 +180,10 @@ defineExpose({
                     :title="title"
                     :is-docked="store.isDocked"
                     :is-integrated="store.isIntegrated"
-                    :is-maximized="store.isMaximized"
+                    :size-mode="store.sizeMode"
                     @start-drag="startDrag"
                     @toggle-dock="() => { store.setDockMode(!store.isDocked, store.isIntegrated); emit('toggle-dock'); }"
-                    @toggle-max="store.toggleMaximize"
+                    @cycle-size="store.cycleSize(props.isIntegrated ? ['mini', 'standard'] : ['mini', 'standard', 'theater', 'full'])"
                     @close="emit('close')"
                 />
 
@@ -216,4 +229,5 @@ defineExpose({
             />
         </div>
     </div>
+  </Teleport>
 </template>

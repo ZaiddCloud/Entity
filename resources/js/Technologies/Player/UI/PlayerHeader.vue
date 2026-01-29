@@ -1,20 +1,20 @@
 <script setup>
-import { Sidebar, Pin, Minus, Square, X, ChevronDown } from 'lucide-vue-next';
+import { Sidebar, Pin, Minus, Square, X, ChevronDown, Maximize2, Minimize2, StretchHorizontal } from 'lucide-vue-next';
 
 const props = defineProps({
     title: { type: String, default: '' },
     isDocked: Boolean,
     isIntegrated: Boolean,
-    isMaximized: Boolean
+    sizeMode: { type: String, default: 'standard' }
 });
 
-const emit = defineEmits(['toggle-dock', 'toggle-max', 'close', 'start-drag']);
+const emit = defineEmits(['toggle-dock', 'cycle-size', 'close', 'start-drag']);
 </script>
 
 <template>
     <div 
         dir="rtl" 
-        class="header h-[30px] bg-[#1f1f1f] flex items-center justify-between px-2 cursor-grab select-none border-b border-[#2a2a2a]"
+        class="header h-[30px] bg-[#1f1f1f] flex items-center justify-between px-2 cursor-grab select-none border-b border-[#2a2a2a] shrink-0 shadow-md relative z-[100]"
         :class="{'cursor-default': isDocked || isIntegrated}"
         @mousedown="(e) => emit('start-drag', e)"
     >
@@ -52,10 +52,14 @@ const emit = defineEmits(['toggle-dock', 'toggle-max', 'close', 'start-drag']);
             
             <div 
                 class="win-btn w-7 h-full flex items-center justify-center hover:bg-[#333] cursor-pointer" 
-                title="Maximize"
-                @click.stop="$emit('toggle-max')"
+                :title="sizeMode === 'mini' ? 'الحجم الصغير' : (sizeMode === 'standard' ? 'الحجم القياسي' : (sizeMode === 'theater' ? 'حجم المسرح' : 'الملء الكامل'))"
+                @click.stop="$emit('cycle-size')"
             >
-                <Square class="w-3 h-3 text-[#aaaaaa]" :class="{'text-yellow-500': isMaximized}" />
+                <component 
+                    :is="sizeMode === 'mini' ? Minimize2 : (sizeMode === 'standard' ? Square : (sizeMode === 'theater' ? StretchHorizontal : Maximize2))" 
+                    class="w-3 h-3 text-[#aaaaaa]" 
+                    :class="sizeMode !== 'standard' ? 'text-yellow-500' : ''" 
+                />
             </div>
             
             <div 
