@@ -23,6 +23,14 @@ onMounted(() => {
         mediaStore.setDockMode(false, true);
     }
 });
+
+// Sync props to store dynamically (Fix for "Broken" floating logic)
+watch(() => props.isIntegrated, (val) => {
+    mediaStore.setIntegratedMode(val);
+});
+watch(() => props.isEmbedded, (val) => {
+    if (val) mediaStore.setIntegratedMode(true);
+});
 const toggleDock = inject('toggleDock', () => {});
 
 // --- Computed State ---
@@ -91,6 +99,7 @@ const handleSegmentChange = (segment) => {
 
 // Handle closing the player
 const closePlayer = () => {
+    console.log('[PlayerClient] Closing player. setting isOpen to false');
     mediaStore.setOpen(false);
 };
 

@@ -95,6 +95,7 @@ const handleToggleFullscreen = () => {
 
 const handleToggleDock = () => {
     const isCurrentlyFloating = store.isFloating;
+    console.log('[MediaPlayer] Toggling dock. Currently Floating:', isCurrentlyFloating);
 
     if (!isCurrentlyFloating) {
         // We are docking OUT (Floating)
@@ -102,13 +103,9 @@ const handleToggleDock = () => {
             const rect = windowRef.value.getBoundingClientRect();
             store.updatePosition(rect.left, rect.top);
         }
-        // Force Integrated=False to enable Float
         store.setDockMode(false, false);
     } else {
         // We are docking IN (Integrated/Docked)
-        // Default to Integrated for Editor context (or Docked if sidebar)
-        // For now, let's assume we return to the state implied by props or default to Integrated if that was the origin
-        // But simply toggling Integrated=True is likely what we want for this view
         store.setDockMode(false, true); 
     }
     
@@ -163,10 +160,9 @@ defineExpose({
         dir="ltr"
         class="pot-window-v2"
         :class="{
-            'maximized': store.sizeMode === 'full',
-            'fixed z-[999999]': store.sizeMode === 'full',
-            'fixed z-[90]': store.sizeMode !== 'full' && !store.isDocked && !store.isIntegrated,
-            'relative !left-auto !top-auto !transform-none shadow-2xl border border-[#333] rounded-sm z-50': store.sizeMode !== 'full' && (store.isDocked || store.isIntegrated),
+            'maximized fixed inset-0 !top-[48px] z-[999999]': store.sizeMode === 'full',
+            'fixed z-[90]': store.isFloating && store.sizeMode !== 'full',
+            'relative z-50 shadow-2xl border border-white/10 rounded-lg overflow-visible': !store.isFloating && store.sizeMode !== 'full',
             'mode-mini': store.sizeMode === 'mini',
             'mode-theater': store.sizeMode === 'theater'
         }"
