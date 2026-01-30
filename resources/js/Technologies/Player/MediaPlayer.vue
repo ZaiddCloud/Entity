@@ -156,18 +156,18 @@ defineExpose({
             left: `${store.windowPos.left}px`,
             top: `${store.windowPos.top}px`,
             width: store.sizeMode === 'mini' ? '320px' : (store.sizeMode === 'theater' ? '800px' : `${store.dimensions.width || 500}px`),
-            height: store.sizeMode === 'mini' ? '180px' : `${store.dimensions.height || (props.type === 'audio' ? 240 : 480)}px`,
-            transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+            height: store.isCollapsed ? '86px' : (store.sizeMode === 'mini' ? '180px' : `${store.dimensions.height || (props.type === 'audio' ? 240 : 480)}px`),
+            transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)'
         } : {
             width: store.sizeMode === 'mini' ? '320px' : (store.sizeMode === 'theater' ? '100%' : `${store.dimensions.width || 500}px`),
-            height: store.sizeMode === 'mini' ? '180px' : `${store.dimensions.height || (props.type === 'audio' ? 240 : 480)}px`,
-            transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            height: store.isCollapsed ? '86px' : (store.sizeMode === 'mini' ? '180px' : `${store.dimensions.height || (props.type === 'audio' ? 240 : 480)}px`),
+            transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
             overflow: 'visible'
         })"
     >
         <!-- RESIZE HANDLES (Floating only) -->
         <ResizeHandles 
-            v-if="store.isFloating && !store.isMaximized" 
+            v-if="store.isFloating && !store.isMaximized && !store.isCollapsed" 
             @start-resize="store.startResize" 
         />
 
@@ -180,15 +180,18 @@ defineExpose({
                     :title="title"
                     :is-docked="store.isDocked"
                     :is-integrated="store.isIntegrated"
+                    :is-collapsed="store.isCollapsed"
                     :size-mode="store.sizeMode"
                     @start-drag="startDrag"
                     @toggle-dock="() => { store.setDockMode(!store.isDocked, store.isIntegrated); emit('toggle-dock'); }"
                     @cycle-size="store.cycleSize(props.isIntegrated ? ['mini', 'standard'] : ['mini', 'standard', 'theater', 'full'])"
+                    @toggle-collapse="store.toggleCollapse"
                     @close="emit('close')"
                 />
 
                 <!-- VIDEO AREA -->
                 <VideoScreen 
+                    v-show="!store.isCollapsed"
                     ref="videoScreenRef"
                     :src="src"
                     :poster="poster"

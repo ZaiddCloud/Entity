@@ -5,10 +5,11 @@ const props = defineProps({
     title: { type: String, default: '' },
     isDocked: Boolean,
     isIntegrated: Boolean,
+    isCollapsed: Boolean,
     sizeMode: { type: String, default: 'standard' }
 });
 
-const emit = defineEmits(['toggle-dock', 'cycle-size', 'close', 'start-drag']);
+const emit = defineEmits(['toggle-dock', 'cycle-size', 'close', 'start-drag', 'toggle-collapse']);
 </script>
 
 <template>
@@ -46,7 +47,11 @@ const emit = defineEmits(['toggle-dock', 'cycle-size', 'close', 'start-drag']);
                 <Pin class="w-3 h-3 text-[#aaaaaa] rotate-45" />
             </div>
             
-            <div class="win-btn w-7 h-full flex items-center justify-center hover:bg-[#333] cursor-pointer" title="Minimize">
+            <div 
+                class="win-btn w-7 h-full flex items-center justify-center hover:bg-[#333] cursor-pointer" 
+                :title="isCollapsed ? 'توسيع' : 'تصغير'"
+                @click.stop="$emit('toggle-collapse')"
+            >
                 <Minus class="w-3 h-3 text-[#aaaaaa]" />
             </div>
             

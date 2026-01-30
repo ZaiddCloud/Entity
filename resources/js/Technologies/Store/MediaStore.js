@@ -8,6 +8,7 @@ export const useMediaStore = defineStore('media-global', () => {
     const isMaximized = ref(false);
     const isPlaylistOpen = ref(false);
     const isOpen = ref(true); // Central player visibility state
+    const isCollapsed = ref(false); // Minimized to header-only bar
     const sizeMode = ref('standard'); // 'mini' | 'standard' | 'theater' | 'full'
 
     // Position & Dimensions
@@ -158,7 +159,16 @@ export const useMediaStore = defineStore('media-global', () => {
         isOpen.value = status;
     }
 
+    const toggleCollapse = () => {
+        isCollapsed.value = !isCollapsed.value;
+    };
+
     const cycleSize = (allowedModes = ['mini', 'standard', 'theater', 'full']) => {
+        // If collapsed, expand first before resizing (optional UX choice)
+        // For now, let's keep it simple: cycle size while keeping collapsed state or auto-expand?
+        // Let's auto-expand on resize for better feedback.
+        if (isCollapsed.value) isCollapsed.value = false;
+
         const currentIndex = allowedModes.indexOf(sizeMode.value);
         const nextIndex = (currentIndex + 1) % allowedModes.length;
         sizeMode.value = allowedModes[nextIndex];
@@ -177,6 +187,7 @@ export const useMediaStore = defineStore('media-global', () => {
         isMaximized,
         isPlaylistOpen,
         isOpen,
+        isCollapsed,
         sizeMode,
         windowPos,
         dimensions,
@@ -199,6 +210,7 @@ export const useMediaStore = defineStore('media-global', () => {
         startResize,
         toggleMaximize,
         setOpen,
-        cycleSize
+        cycleSize,
+        toggleCollapse
     };
 });
