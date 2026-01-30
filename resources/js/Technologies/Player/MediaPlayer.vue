@@ -92,6 +92,28 @@ const handleToggleFullscreen = () => {
     }
 };
 
+const handleToggleDock = () => {
+    const isCurrentlyFloating = store.isFloating;
+
+    if (!isCurrentlyFloating) {
+        // We are docking OUT (Floating)
+        if (windowRef.value) {
+            const rect = windowRef.value.getBoundingClientRect();
+            store.updatePosition(rect.left, rect.top);
+        }
+        // Force Integrated=False to enable Float
+        store.setDockMode(false, false);
+    } else {
+        // We are docking IN (Integrated/Docked)
+        // Default to Integrated for Editor context (or Docked if sidebar)
+        // For now, let's assume we return to the state implied by props or default to Integrated if that was the origin
+        // But simply toggling Integrated=True is likely what we want for this view
+        store.setDockMode(false, true); 
+    }
+    
+    emit('toggle-dock');
+};
+
 // --- Keyboard Shortcuts ---
 const handleKeyDown = (e) => {
     // Ignore if typing in an input
@@ -141,7 +163,7 @@ defineExpose({
         :class="{
             'maximized': store.sizeMode === 'full',
             'fixed z-[999999]': store.sizeMode === 'full',
-            'fixed z-[9999]': store.sizeMode !== 'full' && !store.isDocked && !store.isIntegrated,
+            'fixed z-[90]': store.sizeMode !== 'full' && !store.isDocked && !store.isIntegrated,
             'relative !left-auto !top-auto !transform-none shadow-2xl border border-[#333] rounded-sm z-50': store.sizeMode !== 'full' && (store.isDocked || store.isIntegrated),
             'mode-mini': store.sizeMode === 'mini',
             'mode-theater': store.sizeMode === 'theater'
@@ -183,7 +205,7 @@ defineExpose({
                     :is-collapsed="store.isCollapsed"
                     :size-mode="store.sizeMode"
                     @start-drag="startDrag"
-                    @toggle-dock="() => { store.setDockMode(!store.isDocked, store.isIntegrated); emit('toggle-dock'); }"
+                    @toggle-dock="handleToggleDock"
                     @cycle-size="store.cycleSize(props.isIntegrated ? ['mini', 'standard'] : ['mini', 'standard', 'theater', 'full'])"
                     @toggle-collapse="store.toggleCollapse"
                     @close="emit('close')"

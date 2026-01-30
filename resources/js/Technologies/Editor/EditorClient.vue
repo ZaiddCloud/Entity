@@ -52,7 +52,7 @@ const handleCommand = ({ command, value }) => {
         <div 
           v-if="['audio', 'video'].includes(props.type) && props.mediaEntity" 
           :class="[
-            isFloating ? 'fixed top-20 left-20 z-[9999]' : 'float-left ml-0 mr-8 mb-8 sticky top-4 z-10 w-fit h-fit'
+            isFloating ? 'fixed top-[150px] left-[343px] z-[90]' : 'float-left ml-0 mr-8 mb-8 sticky top-4 z-[90] w-fit h-fit'
           ]"
         >
            <ReferencePane

@@ -12,7 +12,7 @@ export const useMediaStore = defineStore('media-global', () => {
     const sizeMode = ref('standard'); // 'mini' | 'standard' | 'theater' | 'full'
 
     // Position & Dimensions
-    const windowPos = ref({ left: 100, top: 100 });
+    const windowPos = ref({ left: 343, top: 150 });
     const dimensions = ref({ width: 500, height: 480 }); // Default for Video
 
     // --- Media State ---
@@ -32,13 +32,11 @@ export const useMediaStore = defineStore('media-global', () => {
     };
 
     const updatePosition = (left, top) => {
-        if (!isDocked.value && !isIntegrated.value && !isMaximized.value) {
-            // Simple clamping to ensure visibility
-            const safeLeft = Math.min(Math.max(0, left), window.innerWidth - (dimensions.value.width || 300));
-            const safeTop = Math.min(Math.max(0, top), window.innerHeight - 30); // 30 = header height approx
+        // Simple clamping to ensure visibility
+        const safeLeft = Math.min(Math.max(0, left), window.innerWidth - (dimensions.value.width || 300));
+        const safeTop = Math.min(Math.max(0, top), window.innerHeight - 30); // 30 = header height approx
 
-            windowPos.value = { left: safeLeft, top: safeTop };
-        }
+        windowPos.value = { left: safeLeft, top: safeTop };
     };
 
     const updateDimensions = (width, height) => {

@@ -1,5 +1,5 @@
 <script setup>
-import { Sidebar, Pin, Minus, Square, X, ChevronDown, Maximize2, Minimize2, StretchHorizontal } from 'lucide-vue-next';
+import { Pin, PinOff, Minus, Square, X, ChevronDown, Maximize2, Minimize2, StretchHorizontal } from 'lucide-vue-next';
 
 const props = defineProps({
     title: { type: String, default: '' },
@@ -33,18 +33,20 @@ const emit = defineEmits(['toggle-dock', 'cycle-size', 'close', 'start-drag', 't
 
         <!-- Window Controls (Left in RTL) -->
         <div class="header-controls flex items-center h-full">
-            <!-- Dock Toggle -->
+            <!-- Dock/Float Toggle -->
             <div 
                 class="win-btn w-7 h-full flex items-center justify-center hover:bg-[#333] cursor-pointer transition-colors" 
-                :title="isIntegrated ? 'فك الدمج (عائم)' : (isDocked ? 'فك التثبيت (عائم)' : 'تثبيت جانبي')" 
+                :title="(isDocked || isIntegrated) ? 'إلغاء التثبيت (تعويم)' : 'تثبيت'" 
                 @click.stop="$emit('toggle-dock')"
             >
-                <Sidebar class="w-3 h-3 text-[#aaaaaa]" :class="(isDocked || isIntegrated) ? 'text-yellow-500' : ''" />
-            </div>
-
-            <!-- Always Visible Controls -->
-            <div class="win-btn w-7 h-full flex items-center justify-center hover:bg-[#333] cursor-pointer" title="Pin">
-                <Pin class="w-3 h-3 text-[#aaaaaa] rotate-45" />
+                <PinOff 
+                    v-if="!isDocked && !isIntegrated"
+                    class="w-3 h-3 text-[#aaaaaa]" 
+                />
+                <Pin 
+                    v-else
+                    class="w-3 h-3 text-yellow-500" 
+                />
             </div>
             
             <div 
