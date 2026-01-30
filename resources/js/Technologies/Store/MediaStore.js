@@ -165,6 +165,20 @@ export const useMediaStore = defineStore('media-global', () => {
         isCollapsed.value = !isCollapsed.value;
     };
 
+    const resetLayout = () => {
+        // Reset to default starting position
+        windowPos.value = { left: 343, top: 150 };
+        // Reset dimensions based on type
+        dimensions.value = {
+            width: 500,
+            height: type.value === 'audio' ? 240 : 480
+        };
+        // Reset modes
+        sizeMode.value = 'standard';
+        isMaximized.value = false;
+        isCollapsed.value = false;
+    };
+
     const cycleSize = (allowedModes = ['mini', 'standard', 'theater', 'full']) => {
         const currentIndex = allowedModes.indexOf(sizeMode.value);
         const nextIndex = (currentIndex + 1) % allowedModes.length;
@@ -208,6 +222,7 @@ export const useMediaStore = defineStore('media-global', () => {
         toggleMaximize,
         setOpen,
         cycleSize,
-        toggleCollapse
+        toggleCollapse,
+        resetLayout
     };
 });

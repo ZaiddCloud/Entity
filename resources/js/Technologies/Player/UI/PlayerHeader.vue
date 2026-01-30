@@ -1,5 +1,7 @@
 <script setup>
 import { Pin, PinOff, Minus, Square, X, ChevronDown, Maximize2, Minimize2, StretchHorizontal } from 'lucide-vue-next';
+import { ref } from 'vue';
+import PlayerMenu from './PlayerMenu.vue';
 
 const props = defineProps({
     title: { type: String, default: '' },
@@ -10,6 +12,9 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['toggle-dock', 'cycle-size', 'close', 'start-drag', 'toggle-collapse']);
+
+const isMenuOpen = ref(false);
+const toggleMenu = () => isMenuOpen.value = !isMenuOpen.value;
 </script>
 
 <template>
@@ -79,10 +84,21 @@ const emit = defineEmits(['toggle-dock', 'cycle-size', 'close', 'start-drag', 't
         </div>
 
         <!-- Brand (Now on Left in RTL = Right visually) -->
-        <div class="flex items-center" dir="ltr">
-            <div class="pot-logo ml-2 text-[#aaa] hover:text-white transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-bold">
-                EntPlayer <ChevronDown class="w-3 h-3" />
+        <div class="flex items-center relative" dir="ltr">
+            <div 
+                class="pot-logo ml-2 text-[#aaa] hover:text-white transition-all cursor-pointer flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded hover:bg-white/5 active:scale-95"
+                :class="{'text-white bg-white/10 shadow-[0_0_10px_rgba(255,255,255,0.1)]': isMenuOpen}"
+                @click.stop="toggleMenu"
+            >
+                EntPlayer <ChevronDown class="w-3 h-3 transition-transform duration-300" :class="{'rotate-180': isMenuOpen}" />
             </div>
+            
+            <PlayerMenu 
+                :is-open="isMenuOpen" 
+                @close="isMenuOpen = false" 
+                @show-shortcuts="() => { /* Implement shortcuts overlay later */ isMenuOpen = false; }"
+            />
+
             <span class="file-info text-yellow-500 opacity-80 text-[11px] mx-2 font-bold">MP3</span>
         </div>
     </div>
