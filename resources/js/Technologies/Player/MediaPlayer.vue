@@ -158,6 +158,7 @@ defineExpose({
 <template>
   <Teleport to="body" :disabled="!store.isFloating && store.sizeMode !== 'full'">
     <div
+        v-show="store.isOpen"
         ref="windowRef"
         dir="ltr"
         class="pot-window-v2"
