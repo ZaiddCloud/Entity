@@ -54,15 +54,23 @@ const handleVolumeClick = (e) => {
         <!-- Timeline -->
         <div 
             ref="timelineRef"
-            class="timeline h-3 w-full cursor-pointer relative group flex items-center"
+            class="timeline h-3 w-full cursor-pointer relative group flex items-center transition-all duration-300 px-0"
             @click="handleTimelineClick"
         >
-            <div class="seek-bg absolute inset-0 bg-transparent h-1 bg-[#333] top-1"></div>
+            <!-- Glass Seek Background -->
+            <div class="seek-bg absolute inset-x-0 bg-white/10 backdrop-blur-[2px] h-1.5 rounded-full top-1/2 -translate-y-1/2 transition-all group-hover:h-2 group-hover:bg-white/15"></div>
+            
+            <!-- Golden Gradient Progress with Glow -->
             <div 
-                class="progress h-1 bg-[#eab308] relative transition-all group-hover:h-1.5 top-0" 
-                :style="{ width: `${progressPercent}%`, top: '4px' }"
+                class="progress h-1.5 rounded-full relative transition-all duration-300 group-hover:h-2 top-0 shadow-[0_0_12px_rgba(234,179,8,0.3)]" 
+                :style="{ 
+                    width: `${progressPercent}%`, 
+                    background: 'linear-gradient(90deg, #ca8a04 0%, #eab308 100%)',
+                    boxShadow: '0 0 15px rgba(234, 179, 8, 0.4)'
+                }"
             >
-                <div class="thumb w-2.5 h-2.5 bg-white rounded-full absolute -right-1.25 -top-[3px] opacity-100 shadow"></div>
+                <!-- Interactive Thumb -->
+                <div class="thumb w-3 h-3 bg-white rounded-full absolute -right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-50 group-hover:scale-100 shadow-[0_0_10px_rgba(255,255,255,0.5)] border-2 border-yellow-600"></div>
             </div>
         </div>
 
