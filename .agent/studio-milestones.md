@@ -5,15 +5,15 @@ This document records the ten professional UI/UX enhancements applied to the Ent
 | # | Touch Description | Primary Commit ID | Key Files |
 |---|-------------------|-------------------|-----------|
 | 1 | **Modular Toolbar Architecture** (Group-based architecture) | `ded16b8` | `EditorToolbar.vue`, `Groups/*` |
-| 2 | **Scientific & Heritage Tools** (Specialized editing extensions) | `818713a` | `ScientificGroup.vue`, `HeritageGroup.vue` |
-| 3 | **Context-Aware Reference Pane** (Dynamic sidebar for MSS/Media) | `b9d9a21` | `ReferencePane.vue`, `EditorClient.vue` |
-| 4 | **Footnote Editor Integration** (Dedicated bottom pane logic) | `8fc5b89` | `FootnoteEditor.vue` |
-| 5 | **Smart Z-Index Layering** (Solved overlap collisions) | `e2f74d5` | `EditorClient.vue`, `index.css` |
-| 6 | **Media Player Docking System** (Integrated vs Floating logic) | `a23b7bc` | `MediaStore.js`, `MediaPlayer.vue` |
-| 7 | **Player UX Perfection** (0-Jump Dynamic Float Positioning) | `dd960f3` | `MediaPlayer.vue`, `MediaStore.js` |
-| 8 | **Free-Form Dragging** (Move floating player anywhere) | `dd960f3` | `MediaPlayer.vue` (Draggable Logic) |
+| 2 | **Player Close & Restore Logic** (Logic for closing/restoring player) | `1c048a5` | `MediaStore.js`, `StudioLayout.vue` |
+| 3 | **Scientific & Heritage Tools** (Specialized editing extensions) | `818713a` | `ScientificGroup.vue`, `HeritageGroup.vue` |
+| 4 | **Context-Aware Reference Pane** (Dynamic sidebar for MSS/Media) | `b9d9a21` | `ReferencePane.vue`, `EditorClient.vue` |
+| 5 | **Footnote Editor Integration** (Dedicated bottom pane logic) | `8fc5b89` | `FootnoteEditor.vue` |
+| 6 | **Smart Z-Index Layering** (Solved overlap collisions) | `e2f74d5` | `EditorClient.vue`, `index.css` |
+| 7 | **Media Player Docking System** (Integrated vs Floating logic) | `a23b7bc` | `MediaStore.js`, `MediaPlayer.vue` |
+| 8 | **Player UX Perfection** (0-Jump positioning & Free-Form Dragging) | `dd960f3` | `MediaPlayer.vue`, `MediaStore.js` |
 | 9 | **Centered Player Title** (Professional header with Smart Marquee) | `dd960f3` | `PlayerHeader.vue` |
-| 10 | **Mirrored Header Layout** (Controls left, Brand right) | `4f3c665` | `PlayerHeader.vue` |
+| 10 | **Mirrored Header Layout** (Controls left, Brand right) | `8c9455f` | `PlayerHeader.vue` |
 
 > [!CAUTION]
 > **INTEGRITY PROTECTION RULE**

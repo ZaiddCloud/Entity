@@ -5,6 +5,7 @@ import EditorToolbar from './UI/Toolbar/EditorToolbar.vue'
 import FootnoteEditor from './Extensions/Footnotes/FootnoteEditor.vue'
 import ReferencePane from '../Studio/Panes/ReferencePane.vue' // Added ReferencePane
 import { useEditorStore } from '@/Technologies/Store/EditorStore'
+import { useMediaStore } from '@/Technologies/Store/MediaStore'
 
 const props = defineProps({
     initialContent: { type: [String, Object, Array], default: '' },
@@ -15,6 +16,7 @@ const props = defineProps({
 import { useEditorSave } from './Composables/useEditorSave'
 
 const store = useEditorStore()
+const mediaStore = useMediaStore()
 const { save } = useEditorSave()
 
 const isFloating = ref(false)
@@ -51,6 +53,7 @@ const handleCommand = ({ command, value }) => {
         <!-- Wrapped/Floating Media Player -->
         <div 
           v-if="['audio', 'video'].includes(props.type) && props.mediaEntity" 
+          v-show="mediaStore.isOpen"
           :class="[
             isFloating ? 'fixed top-[150px] left-[343px] z-[90]' : 'float-left ml-0 mr-8 mb-8 sticky top-4 z-[90] w-fit h-fit'
           ]"
