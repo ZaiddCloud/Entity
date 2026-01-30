@@ -20,14 +20,20 @@ const emit = defineEmits(['toggle-dock', 'cycle-size', 'close', 'start-drag', 't
         @mousedown="(e) => emit('start-drag', e)"
     >
         <!-- Brand & Title (Right in RTL) -->
+        <!-- Brand (Right in RTL) -->
         <div class="flex items-center" dir="ltr">
             <div class="pot-logo ml-2 text-[#aaa] hover:text-white transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-bold">
                 EntPlayer <ChevronDown class="w-3 h-3" />
             </div>
             <span class="file-info text-yellow-500 opacity-80 text-[11px] mx-2 font-bold">MP3</span>
-            <span class="border-l border-gray-700 h-3 mx-1"></span>
-            <div class="track-title text-[#aaaaaa] text-[11px] max-w-[200px] truncate ml-2">
-                {{ title }}
+        </div>
+
+        <!-- Centered Title (Smart Marquee) -->
+        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[40%] h-full flex items-center justify-center overflow-hidden pointer-events-none select-none">
+            <div class="marquee-container flex items-center whitespace-nowrap">
+                <div class="track-title text-[#aaaaaa] text-[11px] font-medium">
+                    {{ title }}
+                </div>
             </div>
         </div>
 
@@ -79,3 +85,21 @@ const emit = defineEmits(['toggle-dock', 'cycle-size', 'close', 'start-drag', 't
         </div>
     </div>
 </template>
+
+<style scoped>
+.animate-marquee {
+    display: flex;
+    animation: marquee 10s linear infinite;
+    /* Pause on hover if interactive (optional) */
+}
+
+@keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); } /* Shift by 50% because we duplicated the text */
+}
+
+.track-title {
+    /* Ensure no shrink to keep proper width calc */
+    flex-shrink: 0;
+}
+</style>
