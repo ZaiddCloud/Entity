@@ -33,7 +33,11 @@ export const useMediaStore = defineStore('media-global', () => {
 
     const updatePosition = (left, top) => {
         if (!isDocked.value && !isIntegrated.value && !isMaximized.value) {
-            windowPos.value = { left, top };
+            // Simple clamping to ensure visibility
+            const safeLeft = Math.min(Math.max(0, left), window.innerWidth - (dimensions.value.width || 300));
+            const safeTop = Math.min(Math.max(0, top), window.innerHeight - 30); // 30 = header height approx
+
+            windowPos.value = { left: safeLeft, top: safeTop };
         }
     };
 

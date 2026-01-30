@@ -133,7 +133,7 @@ defineExpose({
 </script>
 
 <template>
-  <Teleport to="body" :disabled="store.sizeMode !== 'full'">
+  <Teleport to="body" :disabled="!store.isFloating && store.sizeMode !== 'full'">
     <div
         ref="windowRef"
         dir="ltr"
