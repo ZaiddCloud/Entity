@@ -166,11 +166,6 @@ export const useMediaStore = defineStore('media-global', () => {
     };
 
     const cycleSize = (allowedModes = ['mini', 'standard', 'theater', 'full']) => {
-        // If collapsed, expand first before resizing (optional UX choice)
-        // For now, let's keep it simple: cycle size while keeping collapsed state or auto-expand?
-        // Let's auto-expand on resize for better feedback.
-        if (isCollapsed.value) isCollapsed.value = false;
-
         const currentIndex = allowedModes.indexOf(sizeMode.value);
         const nextIndex = (currentIndex + 1) % allowedModes.length;
         sizeMode.value = allowedModes[nextIndex];

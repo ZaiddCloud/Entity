@@ -58,7 +58,7 @@ const handleCommand = ({ command, value }) => {
            <ReferencePane
              :type="props.type"
              :entity="props.mediaEntity"
-             :is-integrated="!isFloating"
+             :is-integrated="true"
              @toggle-dock="toggleDock"
            />
         </div>

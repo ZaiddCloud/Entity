@@ -1,6 +1,6 @@
-# Studio UX Milestones: The Nine Touches 🎨✨
+# Studio UX Milestones: The Ten Touches 🎨✨
 
-This document records the nine professional UI/UX enhancements applied to the Entity Studio to create a world-class editing experience.
+This document records the ten professional UI/UX enhancements applied to the Entity Studio to create a world-class editing experience.
 
 | # | Touch Description | Primary Commit ID | Key Files |
 |---|-------------------|-------------------|-----------|
@@ -13,6 +13,19 @@ This document records the nine professional UI/UX enhancements applied to the En
 | 7 | **Player UX Perfection** (0-Jump Dynamic Float Positioning) | `dd960f3` | `MediaPlayer.vue`, `MediaStore.js` |
 | 8 | **Free-Form Dragging** (Move floating player anywhere) | `dd960f3` | `MediaPlayer.vue` (Draggable Logic) |
 | 9 | **Centered Player Title** (Professional header with Smart Marquee) | `dd960f3` | `PlayerHeader.vue` |
+| 10 | **Mirrored Header Layout** (Controls left, Brand right) | `4f3c665` | `PlayerHeader.vue` |
+
+> [!CAUTION]
+> **INTEGRITY PROTECTION RULE**
+> 
+> When implementing new Touches (Touch #11 and beyond), you MUST:
+> 1. **Never break existing Touch implementations** - All code from commits listed above is sacred and must remain functional
+> 2. **Verify backward compatibility** - Before committing, check that ALL previous Touches still work correctly
+> 3. **Reference commit history** - If unsure about a feature's correct implementation, check the original commit (`git show <commit-id>`)
+> 4. **Test in Studio context** - Ensure size restrictions (`mini`/`standard` only) remain enforced in Studio
+> 5. **One commit per Touch** - Each Touch must be a single, atomic commit containing both code and documentation
+>
+> **Violation of this rule is unacceptable and must be immediately reverted.**
 
 ## Technical Implementation Notes
 

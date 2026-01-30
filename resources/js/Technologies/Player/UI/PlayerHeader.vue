@@ -19,27 +19,40 @@ const emit = defineEmits(['toggle-dock', 'cycle-size', 'close', 'start-drag', 't
         :class="{'cursor-default': isDocked || isIntegrated}"
         @mousedown="(e) => emit('start-drag', e)"
     >
-        <!-- Brand & Title (Right in RTL) -->
-        <!-- Brand (Right in RTL) -->
-        <div class="flex items-center" dir="ltr">
-            <div class="pot-logo ml-2 text-[#aaa] hover:text-white transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-bold">
-                EntPlayer <ChevronDown class="w-3 h-3" />
-            </div>
-            <span class="file-info text-yellow-500 opacity-80 text-[11px] mx-2 font-bold">MP3</span>
-        </div>
-
-        <!-- Centered Title (Smart Marquee) -->
-        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[40%] h-full flex items-center justify-center overflow-hidden pointer-events-none select-none">
-            <div class="marquee-container flex items-center whitespace-nowrap">
-                <div class="track-title text-[#aaaaaa] text-[11px] font-medium">
-                    {{ title }}
-                </div>
-            </div>
-        </div>
-
-        <!-- Window Controls (Left in RTL) -->
+        <!-- Window Controls (Now on Right in RTL = Left visually) -->
         <div class="header-controls flex items-center h-full">
-            <!-- Dock/Float Toggle -->
+            <!-- Close Button (First/Rightmost) -->
+            <div 
+                class="win-btn close w-7 h-full flex items-center justify-center hover:bg-[#d00] hover:text-white cursor-pointer group" 
+                @click.stop="$emit('close')" 
+                title="Close"
+            >
+                <X class="w-3 h-3 text-[#aaaaaa] group-hover:text-white" />
+            </div>
+
+            <!-- Maximize/Size Toggle -->
+            <div 
+                class="win-btn w-7 h-full flex items-center justify-center hover:bg-[#333] cursor-pointer" 
+                :title="sizeMode === 'mini' ? 'الحجم الصغير' : (sizeMode === 'standard' ? 'الحجم القياسي' : (sizeMode === 'theater' ? 'حجم المسرح' : 'الملء الكامل'))"
+                @click.stop="$emit('cycle-size')"
+            >
+                <component 
+                    :is="sizeMode === 'mini' ? Minimize2 : (sizeMode === 'standard' ? Square : (sizeMode === 'theater' ? StretchHorizontal : Maximize2))" 
+                    class="w-3 h-3 text-[#aaaaaa]" 
+                    :class="sizeMode !== 'standard' ? 'text-yellow-500' : ''" 
+                />
+            </div>
+            
+            <!-- Minimize/Collapse -->
+            <div 
+                class="win-btn w-7 h-full flex items-center justify-center hover:bg-[#333] cursor-pointer" 
+                :title="isCollapsed ? 'توسيع' : 'تصغير'"
+                @click.stop="$emit('toggle-collapse')"
+            >
+                <Minus class="w-3 h-3 text-[#aaaaaa]" />
+            </div>
+            
+            <!-- Pin/Dock Toggle (Last/Leftmost) -->
             <div 
                 class="win-btn w-7 h-full flex items-center justify-center hover:bg-[#333] cursor-pointer transition-colors" 
                 :title="(isDocked || isIntegrated) ? 'إلغاء التثبيت (تعويم)' : 'تثبيت'" 
@@ -54,34 +67,23 @@ const emit = defineEmits(['toggle-dock', 'cycle-size', 'close', 'start-drag', 't
                     class="w-3 h-3 text-yellow-500" 
                 />
             </div>
-            
-            <div 
-                class="win-btn w-7 h-full flex items-center justify-center hover:bg-[#333] cursor-pointer" 
-                :title="isCollapsed ? 'توسيع' : 'تصغير'"
-                @click.stop="$emit('toggle-collapse')"
-            >
-                <Minus class="w-3 h-3 text-[#aaaaaa]" />
+        </div>
+
+        <!-- Centered Title (Smart Marquee) -->
+        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[40%] h-full flex items-center justify-center overflow-hidden pointer-events-none select-none">
+            <div class="marquee-container flex items-center whitespace-nowrap">
+                <div class="track-title text-[#aaaaaa] text-[11px] font-medium">
+                    {{ title }}
+                </div>
             </div>
-            
-            <div 
-                class="win-btn w-7 h-full flex items-center justify-center hover:bg-[#333] cursor-pointer" 
-                :title="sizeMode === 'mini' ? 'الحجم الصغير' : (sizeMode === 'standard' ? 'الحجم القياسي' : (sizeMode === 'theater' ? 'حجم المسرح' : 'الملء الكامل'))"
-                @click.stop="$emit('cycle-size')"
-            >
-                <component 
-                    :is="sizeMode === 'mini' ? Minimize2 : (sizeMode === 'standard' ? Square : (sizeMode === 'theater' ? StretchHorizontal : Maximize2))" 
-                    class="w-3 h-3 text-[#aaaaaa]" 
-                    :class="sizeMode !== 'standard' ? 'text-yellow-500' : ''" 
-                />
+        </div>
+
+        <!-- Brand (Now on Left in RTL = Right visually) -->
+        <div class="flex items-center" dir="ltr">
+            <div class="pot-logo ml-2 text-[#aaa] hover:text-white transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-bold">
+                EntPlayer <ChevronDown class="w-3 h-3" />
             </div>
-            
-            <div 
-                class="win-btn close w-7 h-full flex items-center justify-center hover:bg-[#d00] hover:text-white cursor-pointer group" 
-                @click.stop="$emit('close')" 
-                title="Close"
-            >
-                <X class="w-3 h-3 text-[#aaaaaa] group-hover:text-white" />
-            </div>
+            <span class="file-info text-yellow-500 opacity-80 text-[11px] mx-2 font-bold">MP3</span>
         </div>
     </div>
 </template>
