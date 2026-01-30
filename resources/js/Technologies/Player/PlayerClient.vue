@@ -32,19 +32,6 @@ watch(() => props.isEmbedded, (val) => {
     if (val) mediaStore.setIntegratedMode(true);
 });
 
-// Sync type and metadata for Reset functionality
-watch(() => props.type, (newType) => {
-    mediaStore.type = newType || 'video';
-}, { immediate: true });
-
-watch(segments, (newSegments) => {
-    mediaStore.segments = newSegments;
-}, { immediate: true });
-
-watch(() => props.media, (newMedia) => {
-    mediaStore.currentMedia = newMedia;
-}, { immediate: true });
-
 const toggleDock = inject('toggleDock', () => {});
 
 // --- Computed State ---
@@ -109,6 +96,19 @@ const handleSegmentChange = (segment) => {
         emit('navigate', segment.id);
     }
 };
+
+// --- Store Sync (Metadata) ---
+watch(() => props.type, (newType) => {
+    mediaStore.type = newType || 'video';
+}, { immediate: true });
+
+watch(segments, (newSegments) => {
+    mediaStore.segments = newSegments;
+}, { immediate: true });
+
+watch(() => props.media, (newMedia) => {
+    mediaStore.currentMedia = newMedia;
+}, { immediate: true });
 
 
 // Handle closing the player
