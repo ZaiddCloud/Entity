@@ -13,7 +13,7 @@ This document records the ten professional UI/UX enhancements applied to the Ent
 | 7 | **Media Player Docking System** (Integrated vs Floating logic) | `a23b7bc` | `MediaStore.js`, `MediaPlayer.vue` |
 | 8 | **Player UX Perfection** (0-Jump positioning & Free-Form Dragging) | `dd960f3` | `MediaPlayer.vue`, `MediaStore.js` |
 | 9 | **Centered Player Title** (Professional header with Smart Marquee) | `dd960f3` | `PlayerHeader.vue` |
-| 10 | **Mirrored Header Layout** (Controls left, Brand right) | `8c9455f` | `PlayerHeader.vue` |
+| 10 | **Mirrored Header Layout** (Controls right, Brand left) | `8c9455f` | `PlayerHeader.vue` |
 | 11 | **EntPlayer Activation** (Command Center & Power Tools) | `c13aec9` | `PlayerMenu.vue`, `MediaStore.js` |
 
 > [!CAUTION]

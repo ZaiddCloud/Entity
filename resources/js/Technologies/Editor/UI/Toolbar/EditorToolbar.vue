@@ -86,11 +86,6 @@ const closeWindow = () => {
             
       <HeritageGroup />
             
-      <!-- Spacer -->
-      <div class="flex-1" />
-            
-      <!-- Placeholder for other groups -->
-      <span class="text-xs text-gray-400">أدوات التراث والوسائط قادمة...</span>
     </div>
         
     <!-- Legacy Toolbar (disabled to prevent crashes during refactoring) -->
