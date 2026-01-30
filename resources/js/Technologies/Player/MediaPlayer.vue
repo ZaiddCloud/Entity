@@ -17,7 +17,8 @@ const props = defineProps({
     poster: String,
     segments: Array,
     isDocked: Boolean, 
-    isIntegrated: Boolean
+    isIntegrated: Boolean,
+    isStudioContext: Boolean
 });
 
 const emit = defineEmits([
@@ -206,7 +207,7 @@ defineExpose({
                     :size-mode="store.sizeMode"
                     @start-drag="startDrag"
                     @toggle-dock="handleToggleDock"
-                    @cycle-size="store.cycleSize(props.isIntegrated ? ['mini', 'standard'] : ['mini', 'standard', 'theater', 'full'])"
+                    @cycle-size="store.cycleSize((props.isStudioContext || props.isIntegrated) ? ['mini', 'standard'] : ['mini', 'standard', 'theater', 'full'])"
                     @toggle-collapse="store.toggleCollapse"
                     @close="emit('close')"
                 />

@@ -9,7 +9,8 @@ const props = defineProps({
     activeChildId: String, 
     type: String,
     isIntegrated: { type: Boolean, default: false },
-    isEmbedded: { type: Boolean, default: false }
+    isEmbedded: { type: Boolean, default: false },
+    isStudioContext: { type: Boolean, default: false }
 });
 
 const emit = defineEmits(['timeupdate', 'segment-change', 'seek', 'toggle-dock', 'navigate', 'navigate-full']);
@@ -117,6 +118,7 @@ defineExpose({
         :segments="segments"
         :is-docked="isPlayerDocked.value"
         :is-integrated="isIntegrated || isEmbedded"
+        :is-studio-context="isStudioContext"
         @close="closePlayer"
         @toggle-dock="() => { toggleDock(); $emit('toggle-dock'); }"
         @segment-change="(seg) => { emit('segment-change', seg); handleSegmentChange(seg); }"

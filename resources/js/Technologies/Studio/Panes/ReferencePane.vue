@@ -8,7 +8,8 @@ const props = defineProps({
     entity: { type: Object, required: true },
     activeSlug: { type: String, default: null }, // Legacy
     activeChildId: { type: String, default: null },
-    isIntegrated: { type: Boolean, default: false } // NEW
+    isIntegrated: { type: Boolean, default: false },
+    isStudioContext: { type: Boolean, default: false } // NEW: Indicates Studio environment
 })
 
 const isPlayerDocked = inject('isPlayerDocked', { value: false }) // Inject with default
@@ -46,6 +47,7 @@ const normalizedType = computed(() => {
       :type="props.type" 
       :active-child-id="props.activeChildId"
       :is-integrated="props.isIntegrated"
+      :is-studio-context="props.isStudioContext"
       @toggle-dock="$emit('toggle-dock')"
       @navigate="(id) => $emit('navigate', id)"
       @navigate-full="() => $emit('navigate-full')"
