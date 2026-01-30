@@ -166,17 +166,22 @@ export const useMediaStore = defineStore('media-global', () => {
     };
 
     const resetLayout = () => {
-        // Reset to default starting position
-        windowPos.value = { left: 343, top: 150 };
-        // Reset dimensions based on type
+        // Reset to default starting position (Top-Left for RTL context)
+        windowPos.value = { left: 20, top: 130 };
+
+        // Reset dimensions based on type (Ensure store is synced)
+        const isAudio = type.value === 'audio';
         dimensions.value = {
             width: 500,
-            height: type.value === 'audio' ? 240 : 480
+            height: isAudio ? 240 : 480
         };
-        // Reset modes
+
+        // Reset modes (Force safe modes)
         sizeMode.value = 'standard';
         isMaximized.value = false;
         isCollapsed.value = false;
+
+        console.log('[MediaStore] Layout Reset to:', { type: type.value, pos: windowPos.value });
     };
 
     const cycleSize = (allowedModes = ['mini', 'standard', 'theater', 'full']) => {
