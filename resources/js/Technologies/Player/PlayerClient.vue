@@ -59,7 +59,9 @@ const currentSource = computed(() => {
     if (props.activeChildId && segments.value.length) {
         const activeSeg = segments.value.find(s => (s.id || s.slug) === props.activeChildId);
         if (activeSeg?.file_path) {
-            const path = `/storage/${activeSeg.file_path}`;
+            // Use streaming route for range request support
+            const streamType = props.type === 'audio' ? 'audio' : 'videos';
+            const path = `/stream/${streamType}/${activeSeg.file_path}`;
             console.log('[PlayerClient] Using segment source:', path);
             return path;
         }
@@ -68,7 +70,9 @@ const currentSource = computed(() => {
     // B. Fallback: Main Version File (Single File Mode)
     const mainFile = props.media?.versions?.[0]?.file_path || props.media?.file_path;
     if (mainFile) {
-        const path = `/storage/${mainFile}`;
+        // Use streaming route for range request support
+        const streamType = props.type === 'audio' ? 'audio' : 'videos';
+        const path = `/stream/${streamType}/${mainFile}`;
         console.log('[PlayerClient] Using main file source:', path);
         return path;
     }

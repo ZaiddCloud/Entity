@@ -38,6 +38,15 @@ Route::post('logout', [App\Http\Controllers\Auth\LoginController::class, 'destro
     ->middleware('auth')
     ->name('logout');
 
+// Media Streaming Routes (with HTTP Range Request support for seeking)
+Route::get('/stream/videos/{path}', [App\Http\Controllers\MediaStreamController::class, 'streamVideo'])
+    ->where('path', '.*')
+    ->name('stream.video');
+    
+Route::get('/stream/audio/{path}', [App\Http\Controllers\MediaStreamController::class, 'streamAudio'])
+    ->where('path', '.*')
+    ->name('stream.audio');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/search', [GlobalSearchController::class, 'index'])->name('search');

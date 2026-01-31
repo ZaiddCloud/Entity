@@ -23,17 +23,89 @@ export function useMedia(mediaRef, emit = null) {
     // Loop State
     const loopRange = ref({ start: null, end: null, active: false });
 
+    // Helper: Correctly Unwrap Media Element (Fix for Nested Refs)
+    const getMediaEl = () => mediaRef.value?.value || mediaRef.value;
+
     // Core Methods
     const togglePlay = () => {
-        if (!mediaRef.value) return;
-        mediaRef.value.paused ? mediaRef.value.play() : mediaRef.value.pause();
+        const el = getMediaEl();
+        if (!el) return;
+        el.paused ? el.play() : el.pause();
     };
 
     const seek = (time) => {
-        if (!mediaRef.value) return;
-        const t = Math.max(0, Math.min(time, duration.value));
-        mediaRef.value.currentTime = t;
-        currentTime.value = t;
+        const el = getMediaEl();
+
+        if (!el) {
+            console.warn('[useMedia] Cannot seek: No media element found');
+            return;
+        }
+
+        const t = Math.max(0, Math.min(time, duration.value || el.duration || Infinity));
+
+        // Check if media is ready for seeking
+        if (el.readyState < 2) {
+            // Queue the seek for when metadata is loaded
+            const onCanSeek = () => {
+                el.removeEventListener('loadedmetadata', onCanSeek);
+                el.removeEventListener('canplay', onCanSeek);
+                seek(time);
+            };
+            el.addEventListener('loadedmetadata', onCanSeek, { once: true });
+            el.addEventListener('canplay', onCanSeek, { once: true });
+            return;
+        }
+
+        // Check if we have any seekable data
+        if (el.seekable && el.seekable.length > 0) {
+            const seekableStart = el.seekable.start(0);
+            const seekableEnd = el.seekable.end(el.seekable.length - 1);
+
+            // If target is outside seekable range, try to wait for more data
+            if (t < seekableStart || t > seekableEnd) {
+                console.warn('[useMedia] Target time', t, 'outside seekable range - waiting for buffer...');
+
+                // Wait for progress event to see if more data becomes available
+                const onProgress = () => {
+                    if (el.seekable.length > 0) {
+                        const newEnd = el.seekable.end(el.seekable.length - 1);
+                        if (t <= newEnd) {
+                            el.removeEventListener('progress', onProgress);
+                            seek(time);
+                        }
+                    }
+                };
+                el.addEventListener('progress', onProgress, { once: true });
+
+                // Fallback: try anyway after a short delay
+                setTimeout(() => {
+                    el.removeEventListener('progress', onProgress);
+                    try {
+                        el.currentTime = t;
+                        currentTime.value = t;
+                    } catch (error) {
+                        // Ignore errors on fallback
+                    }
+                }, 500);
+                return;
+            }
+        } else if (el.duration && el.duration > 0) {
+            // No seekable ranges yet, but we have duration - wait for canplay
+            const onCanPlay = () => {
+                el.removeEventListener('canplay', onCanPlay);
+                seek(time);
+            };
+            el.addEventListener('canplay', onCanPlay, { once: true });
+            return;
+        }
+
+        // All checks passed, perform the seek
+        try {
+            el.currentTime = t;
+            currentTime.value = t;
+        } catch (error) {
+            console.error('[useMedia] Seek error:', error);
+        }
     };
 
     const skip = (seconds) => {
@@ -41,29 +113,35 @@ export function useMedia(mediaRef, emit = null) {
     };
 
     const setVolume = (val) => {
-        if (!mediaRef.value) return;
+        const el = getMediaEl();
+        if (!el) return;
         const v = Math.max(0, Math.min(val, 1));
-        mediaRef.value.volume = v;
+        el.volume = v;
         volume.value = v;
         isMuted.value = v === 0;
     };
 
     const setPlaybackRate = (rate) => {
-        if (!mediaRef.value) return;
-        mediaRef.value.playbackRate = rate;
+        const el = getMediaEl();
+        if (!el) return;
+        el.playbackRate = rate;
         playbackRate.value = rate;
     };
 
     const toggleLoopPoint = () => {
         const t = currentTime.value;
+        const el = getMediaEl();
+
         if (loopRange.value.start === null) {
             loopRange.value.start = t;
         } else if (loopRange.value.end === null) {
             if (t > loopRange.value.start) {
                 loopRange.value.end = t;
                 loopRange.value.active = true;
-                mediaRef.value.currentTime = loopRange.value.start;
-                mediaRef.value.play();
+                if (el) {
+                    el.currentTime = loopRange.value.start;
+                    el.play();
+                }
             } else {
                 loopRange.value.start = t;
             }
@@ -73,28 +151,33 @@ export function useMedia(mediaRef, emit = null) {
     };
 
     // Event Handlers
-    const updateState = () => isPlaying.value = !mediaRef.value.paused; // General handler
+    const updateState = () => {
+        const el = getMediaEl();
+        if (el) isPlaying.value = !el.paused;
+    };
     const onWaiting = () => isWaiting.value = true;
     const onPlaying = () => { isWaiting.value = false; isPlaying.value = true; };
 
     const onTimeUpdate = () => {
-        if (!mediaRef.value) return;
-        currentTime.value = mediaRef.value.currentTime;
+        const el = getMediaEl();
+        if (!el) return;
+        currentTime.value = el.currentTime;
         if (emit) emit('timeupdate', { currentTime: currentTime.value, duration: duration.value });
 
         // Loop Enforcement
         if (loopRange.value.active && loopRange.value.end !== null) {
             if (currentTime.value >= loopRange.value.end) {
-                mediaRef.value.currentTime = loopRange.value.start;
+                el.currentTime = loopRange.value.start;
             }
         }
     };
 
     const onLoadedMetadata = () => {
-        if (!mediaRef.value) return;
-        duration.value = mediaRef.value.duration;
-        volume.value = mediaRef.value.volume;
-        isMuted.value = mediaRef.value.muted;
+        const el = getMediaEl();
+        if (!el) return;
+        duration.value = el.duration;
+        volume.value = el.volume;
+        isMuted.value = el.muted;
         if (emit) emit('ready');
     };
 
@@ -103,8 +186,9 @@ export function useMedia(mediaRef, emit = null) {
     };
 
     const onProgress = () => {
-        if (mediaRef.value && mediaRef.value.buffered.length > 0) {
-            const end = mediaRef.value.buffered.end(mediaRef.value.buffered.length - 1);
+        const el = getMediaEl();
+        if (el && el.buffered.length > 0) {
+            const end = el.buffered.end(el.buffered.length - 1);
             buffered.value = (end / duration.value) * 100;
         }
     };
@@ -122,7 +206,7 @@ export function useMedia(mediaRef, emit = null) {
     ];
 
     // Setup & Cleanup (Reactive to el changes)
-    watch(() => (mediaRef.value?.value || mediaRef.value), (newEl, oldEl) => {
+    watch(() => getMediaEl(), (newEl, oldEl) => {
         if (oldEl) {
             events.forEach(([evt, handler]) => oldEl.removeEventListener(evt, handler));
         }
@@ -134,7 +218,7 @@ export function useMedia(mediaRef, emit = null) {
     }, { immediate: true });
 
     onUnmounted(() => {
-        const el = (mediaRef.value?.value || mediaRef.value);
+        const el = getMediaEl();
         if (el) {
             events.forEach(([evt, handler]) => el.removeEventListener(evt, handler));
         }

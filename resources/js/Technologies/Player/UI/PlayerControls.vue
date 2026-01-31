@@ -37,9 +37,12 @@ const timelineRef = ref(null);
 
 const handleTimelineClick = (e) => {
     if (!timelineRef.value || !props.duration) return;
+
     const rect = timelineRef.value.getBoundingClientRect();
     const pos = (e.clientX - rect.left) / rect.width;
-    emit('seek', pos * props.duration);
+    const seekTime = pos * props.duration;
+    
+    emit('seek', seekTime);
 };
 
 const handleVolumeClick = (e) => {
@@ -54,7 +57,7 @@ const handleVolumeClick = (e) => {
         <!-- Timeline -->
         <div 
             ref="timelineRef"
-            class="timeline h-3 w-full cursor-pointer relative group flex items-center transition-all duration-300 px-0"
+            class="timeline h-5 w-full cursor-pointer relative group flex items-center transition-all duration-300 px-0"
             @click="handleTimelineClick"
         >
             <!-- Glass Seek Background -->
