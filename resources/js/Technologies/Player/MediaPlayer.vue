@@ -39,6 +39,7 @@ const {
     loopRange,
     togglePlay, 
     seek,
+    setVolume,
     setPlaybackRate,
     toggleLoopPoint,
     formatTime
@@ -224,7 +225,7 @@ defineExpose({
                 />
 
                 <!-- CONTROLS -->
-                <PlayerControls 
+                <PlayerControls
                     :is-playing="isPlaying"
                     :current-time="currentTime"
                     :duration="duration"
@@ -234,7 +235,7 @@ defineExpose({
                     :is-playlist-open="store.isPlaylistOpen"
                     @toggle-play="handleTogglePlay"
                     @seek="handleSeek"
-                    @update:volume="(v) => volume = v"
+                    @update:volume="setVolume"
                     @set-playback-rate="setPlaybackRate"
                     @toggle-loop="toggleLoopPoint"
                     @toggle-playlist="() => { store.togglePlaylist(); emit('toggle-playlist'); }"
