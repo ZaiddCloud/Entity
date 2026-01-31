@@ -136,7 +136,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="footer h-14 bg-[#141414] flex flex-col" dir="ltr">
+    <div class="footer h-14 bg-transparent flex flex-col" dir="ltr">
         <!-- Timeline -->
         <div 
             ref="timelineRef"

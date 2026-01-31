@@ -50,7 +50,7 @@ This section documents the transformation of the control area into a cinematic d
 | 13 | **Cinematic Timeline** (Glassmorphism, Glow & Progress) | `c401b23` | `PlayerControls.vue` |
 | 14 | **The Command Hub** (Centralized physics-based controls) | `e83be51` | `PlayerControls.vue` |
 | 15 | **Dynamic Suite** (Smooth volume sliders & Speed counters) | `4833f74` | `PlayerControls.vue` |
-| 16 | **Visual Harmony** (Capsule design & Global Blur/Glow) | `pending` | `MediaPlayer.vue` |
+| 16 | **Visual Harmony** (Capsule design & Global Blur/Glow) | `complete` | `MediaPlayer.vue` |
 | 17 | **Segment Visualization** (Timeline markers & Chapter jumps) | `pending` | `MediaStore.js` |
 | 18 | **Timeline Hover Preview** (Time bubble & Thumbnails) | `pending` | `PlayerControls.vue` |
 | 19 | **Refined A-B Loop UI** (Interactive handles & Zone shading) | `pending` | `PlayerControls.vue` |

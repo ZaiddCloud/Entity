@@ -162,8 +162,8 @@ defineExpose({
         class="pot-window-v2"
         :class="{
             'maximized fixed inset-0 !top-[48px] z-[999999]': store.sizeMode === 'full',
-            'fixed z-[90]': store.isFloating && store.sizeMode !== 'full',
-            'relative z-50 shadow-2xl border border-white/10 rounded-lg overflow-visible': !store.isFloating && store.sizeMode !== 'full',
+            'fixed z-[90] rounded-2xl border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.5)]': store.isFloating && store.sizeMode !== 'full',
+            'relative z-50 shadow-2xl border border-white/5 rounded-2xl overflow-visible': !store.isFloating && store.sizeMode !== 'full',
             'mode-mini': store.sizeMode === 'mini',
             'mode-theater': store.sizeMode === 'theater'
         }"
@@ -193,7 +193,7 @@ defineExpose({
         />
 
         <!-- MAIN LAYOUT -->
-        <div class="flex h-full w-full overflow-hidden bg-[#141414] shadow-black drop-shadow-2xl">
+        <div class="flex h-full w-full overflow-hidden bg-[#141414]/95 backdrop-blur-md shadow-black drop-shadow-2xl">
             <!-- PLAYER CORE -->
             <div class="flex-1 flex flex-col min-w-0 border-r border-[#222]">
                 <!-- HEADER -->
