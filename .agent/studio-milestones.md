@@ -48,7 +48,7 @@ This section documents the transformation of the control area into a cinematic d
 | # | Touch Description | Primary Commit ID | Key Files |
 |---|-------------------|-------------------|-----------|
 | 13 | **Cinematic Timeline** (Glassmorphism, Glow & Progress) | `c401b23` | `PlayerControls.vue` |
-| 14 | **The Command Hub** (Centralized physics-based controls) | `pending` | `PlayerControls.vue` |
+| 14 | **The Command Hub** (Centralized physics-based controls) | `e83be51` | `PlayerControls.vue` |
 | 15 | **Dynamic Suite** (Smooth volume sliders & Speed counters) | `pending` | `PlayerControls.vue` |
 | 16 | **Visual Harmony** (Capsule design & Global Blur/Glow) | `pending` | `MediaPlayer.vue` |
 | 17 | **Segment Visualization** (Timeline markers & Chapter jumps) | `pending` | `MediaStore.js` |

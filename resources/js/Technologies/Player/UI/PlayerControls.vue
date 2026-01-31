@@ -53,7 +53,7 @@ const handleVolumeClick = (e) => {
 </script>
 
 <template>
-    <div class="footer h-14 bg-[#141414] border-t border-[#333] flex flex-col" dir="ltr">
+    <div class="footer h-14 bg-[#141414] flex flex-col" dir="ltr">
         <!-- Timeline -->
         <div 
             ref="timelineRef"
@@ -77,31 +77,19 @@ const handleVolumeClick = (e) => {
             </div>
         </div>
 
-        <!-- Controls Row -->
-        <div class="controls flex-1 flex items-center justify-between px-3 h-9 text-[#888]">
-            <!-- Left: Playback Controls (EntPlayer Style) -->
-            <div class="flex items-center gap-2">
-                 <button class="hover:text-white" title="Previous 10s" @click="$emit('seek', currentTime - 10)">
-                    <SkipBack class="w-4 h-4" />
-                </button>
-                <button class="hover:text-white p-1" title="Play/Pause" @click="$emit('toggle-play')">
-                     <component :is="isPlaying ? Pause : Play" class="w-5 h-5 fill-current text-gray-200" />
-                </button>
-                <button class="hover:text-white" title="Next 10s" @click="$emit('seek', currentTime + 10)">
-                    <SkipForward class="w-4 h-4" />
-                </button>
-            </div>
-
-            <!-- Center: Volume & Time -->
-            <div class="flex flex-1 items-center justify-center gap-4">
-                 <div class="text-[11px] font-mono text-gray-400">
+        <!-- Controls Row (Grid Layout) -->
+        <div class="grid grid-cols-3 items-center h-9 px-3 text-[#888]">
+            
+            <!-- LEFT: Time & Volume -->
+            <div class="flex items-center gap-4 justify-start">
+                 <div class="text-[10px] font-mono text-gray-400">
                      {{ formatTime(currentTime) }} / {{ formatTime(duration) }}
                  </div>
                  
                  <!-- Custom Volume Slider -->
-                 <div class="flex items-center gap-2 group cursor-pointer">
+                 <div class="flex items-center gap-2 group cursor-pointer ml-2">
                     <button @click="$emit('update:volume', volume === 0 ? 1 : 0)">
-                        <component :is="volume === 0 ? VolumeX : Volume2" class="w-3 h-3 text-gray-500 group-hover:text-white transition-colors" />
+                        <component :is="volume === 0 ? VolumeX : Volume2" class="w-2.5 h-2.5 text-gray-500 group-hover:text-white transition-colors" />
                     </button>
                     <div class="vol-slider w-16 h-1 bg-[#444] rounded overflow-hidden cursor-pointer" @click="handleVolumeClick">
                         <div class="vol-fill h-full bg-[#eab308]" :style="{ width: `${volume * 100}%` }"></div>
@@ -109,10 +97,23 @@ const handleVolumeClick = (e) => {
                  </div>
             </div>
 
-            <!-- Right: Utils -->
-            <div class="flex items-center gap-1 relative">
+            <!-- CENTER: Playback Controls (Standard Style) -->
+            <div class="flex items-center justify-center gap-3">
+                 <button class="hover:text-white transition-transform active:scale-90" title="Previous 10s" @click="$emit('seek', currentTime - 10)">
+                    <SkipBack class="w-2.5 h-2.5" />
+                </button>
+                <button class="hover:text-white p-1 transition-transform active:scale-95" title="Play/Pause" @click="$emit('toggle-play')">
+                     <component :is="isPlaying ? Pause : Play" class="w-3 h-3 fill-current text-gray-200" />
+                </button>
+                <button class="hover:text-white transition-transform active:scale-90" title="Next 10s" @click="$emit('seek', currentTime + 10)">
+                    <SkipForward class="w-2.5 h-2.5" />
+                </button>
+            </div>
+
+            <!-- RIGHT: Utils -->
+            <div class="flex items-center gap-2 justify-end">
                 <!-- Speed -->
-                <button class="text-[10px] font-bold text-yellow-600 hover:text-yellow-400 w-auto px-1" @click="showSpeedMenu = !showSpeedMenu">
+                <button class="text-[9px] font-bold text-yellow-600 hover:text-yellow-400 w-auto px-1" @click="showSpeedMenu = !showSpeedMenu">
                     {{ playbackRate }}x
                 </button>
                 <!-- Speed Menu -->
@@ -124,16 +125,16 @@ const handleVolumeClick = (e) => {
                 </div>
 
                 <button class="hover:text-white" title="Repeat" @click="$emit('toggle-loop')">
-                    <Repeat class="w-3 h-3" :class="{'text-yellow-500': loopRange.start !== null}" />
+                    <Repeat class="w-2.5 h-2.5" :class="{'text-yellow-500': loopRange.start !== null}" />
                 </button>
                 <button class="hover:text-white" title="Playlist" @click="$emit('toggle-playlist')">
-                     <Menu class="w-3 h-3" :class="{'text-white': isPlaylistOpen}" />
+                     <Menu class="w-2.5 h-2.5" :class="{'text-white': isPlaylistOpen}" />
                 </button>
                 <button class="hover:text-white" title="Segments">
-                    <List class="w-3 h-3" />
+                    <List class="w-2.5 h-2.5" />
                 </button>
                 <button class="hover:text-white" title="Fullscreen" @click="$emit('toggle-fullscreen')">
-                    <Maximize2 class="w-3 h-3" />
+                    <Maximize2 class="w-2.5 h-2.5" />
                 </button>
             </div>
         </div>
