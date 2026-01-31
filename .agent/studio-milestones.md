@@ -1,4 +1,4 @@
-# Studio UX Milestones: The Ten Touches 🎨✨
+# Studio UX Milestones: The Ten Touches (HeaderPlayer Perfect State)🎨✨
 
 > [!IMPORTANT]
 > **🏆 Golden Reference (Perfect State):**
@@ -39,3 +39,25 @@ This document records the ten professional UI/UX enhancements applied to the Ent
 2. **Modular Groups (Touch #1):** The toolbar is split into atomic functional groups (`FormattingGroup`, `StructureGroup`, etc.) to allow creating specialized editor variants (e.g. Simple vs Scientific) by simply composing components.
 3. **Context Injection:** `ReferencePane` uses `normalizedType` to dynamically render `ManuscriptClient` or `PlayerClient` without code duplication.
 4. **State Synchronization:** `handleToggleDock` manages `isDocked`, `isIntegrated`, and `windowPos` atomically to ensure smooth transitions.
+
+
+# Studio UX Milestones: The Touches (FooterPlayer Perfect State)🎨✨
+
+This section documents the transformation of the control area into a cinematic dashboard.
+
+| # | Touch Description | Primary Commit ID | Key Files |
+|---|-------------------|-------------------|-----------|
+| 13 | **Cinematic Timeline** (Glassmorphism, Glow & Progress) | `c401b23` | `PlayerControls.vue` |
+| 14 | **The Command Hub** (Centralized physics-based controls) | `pending` | `PlayerControls.vue` |
+| 15 | **Dynamic Suite** (Smooth volume sliders & Speed counters) | `pending` | `PlayerControls.vue` |
+| 16 | **Visual Harmony** (Capsule design & Global Blur/Glow) | `pending` | `MediaPlayer.vue` |
+| 17 | **Segment Visualization** (Timeline markers & Chapter jumps) | `pending` | `MediaStore.js` |
+| 18 | **Timeline Hover Preview** (Time bubble & Thumbnails) | `pending` | `PlayerControls.vue` |
+| 19 | **Refined A-B Loop UI** (Interactive handles & Zone shading) | `pending` | `PlayerControls.vue` |
+| 20 | **Keyboard Hints** (Smart tooltips with shortcut keys) | `pending` | `Header/Controls` |
+| 21 | **Live Waveform Visualizer** (Reactive audio wave feedback) | `pending` | `PlayerControls.vue` |
+
+---
+> [!TIP]
+> **Audit Logic:** Each touch must be verified against the **Golden Reference** of the Header to ensure the player remains a unified, premium capsule.
+
