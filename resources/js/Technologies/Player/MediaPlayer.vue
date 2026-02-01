@@ -283,20 +283,37 @@ defineExpose({
                     @delete-segment="handleDeleteSegment"
                     @segment-change="handleSegmentSelect"
                 />
-            </div>
 
-            <!-- PLAYLIST SIDEBAR -->
-            <PlayerPlaylist 
-                v-show="store.isPlaylistOpen"
-                :segments="store.segments"
-                :active-slug="store.activeSegmentSlug"
-                @close="store.isPlaylistOpen = false"
-                @select="handleSegmentSelect"
-                @add="addQuickSegment"
-                @delete="deleteActiveSegment"
-                @update="handleUpdateSegment"
-            />
+                <!-- PLAYLIST DRAWER (Touch #24) -->
+                <transition name="drawer-slide">
+                    <PlayerPlaylist 
+                        v-show="store.isPlaylistOpen"
+                        class="absolute top-[30px] right-0 bottom-0 z-[100] shadow-2xl"
+                        :title="title"
+                        :segments="store.segments"
+                        :active-slug="store.activeSegmentSlug"
+                        @close="store.isPlaylistOpen = false"
+                        @select="handleSegmentSelect"
+                        @add="addQuickSegment"
+                        @delete="deleteActiveSegment"
+                        @update="handleUpdateSegment"
+                    />
+                </transition>
+            </div>
         </div>
     </div>
   </Teleport>
 </template>
+
+<style scoped>
+/* Drawer Slide Animation */
+.drawer-slide-enter-active,
+.drawer-slide-leave-active {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.drawer-slide-enter-from,
+.drawer-slide-leave-to {
+    transform: translateX(100%);
+}
+</style>

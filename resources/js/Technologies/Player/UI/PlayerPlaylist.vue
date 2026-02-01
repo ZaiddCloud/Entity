@@ -1,13 +1,58 @@
 <script setup>
-import { Check, Search, Minus, X, Play, FileAudio } from 'lucide-vue-next';
-import { ref, nextTick } from 'vue';
+import { Check, Search, Minus, X, Play, FileAudio, Bookmark, ChevronDown, ChevronRight } from 'lucide-vue-next';
+import { ref, nextTick, computed, watch, onMounted } from 'vue';
 
 const props = defineProps({
+    title: String,
     segments: { type: Array, default: () => [] },
     activeSlug: String
 });
 
 const emit = defineEmits(['select', 'close', 'add', 'delete', 'update']); // Added 'update'
+
+const isSegmentsExpanded = ref(true);
+const scrollContainer = ref(null);
+const rootElement = ref(null);
+const segmentElements = ref([]);
+
+const isArabic = (text) => {
+    if (!text) return true;
+    const arabicPattern = /[\u0600-\u06FF]/;
+    return arabicPattern.test(text);
+};
+
+const titleDirection = computed(() => isArabic(props.title) ? 'rtl' : 'ltr');
+
+const scrollToActive = () => {
+    nextTick(() => {
+        let target = null;
+        if (!props.activeSlug) {
+            target = rootElement.value;
+        } else {
+            // Find the active segment element
+            const activeIndex = props.segments.findIndex(s => s.slug === props.activeSlug);
+            if (activeIndex !== -1 && segmentElements.value[activeIndex]) {
+                target = segmentElements.value[activeIndex];
+            }
+        }
+
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+                inline: 'nearest'
+            });
+        }
+    });
+};
+
+watch(() => props.activeSlug, () => {
+    scrollToActive();
+});
+
+onMounted(() => {
+    scrollToActive();
+});
 
 // --- Editing Logic ---
 const editingSlug = ref(null);
@@ -60,78 +105,78 @@ const formatTime = (seconds) => {
 </script>
 
 <template>
-    <div class="playlist w-[280px] bg-[#111] border-l border-[#333] flex flex-col h-full overflow-hidden text-[#aaa] font-sans" dir="ltr">
-        <!-- Header -->
-        <div class="pl-header h-[30px] bg-[#1f1f1f] flex items-center justify-between px-2 text-[11px] border-b border-[#2a2a2a]">
-            <span class="font-bold text-[#888]">PLAYLIST</span>
-            <div class="flex gap-2">
-                <Minus class="w-[10px] h-[10px] cursor-pointer hover:text-white" />
-                <X class="w-[10px] h-[10px] cursor-pointer hover:text-red-500" @click="$emit('close')" />
-            </div>
+    <div class="playlist w-[180px] bg-[#111]/95 backdrop-blur-xl border-l border-[#333] flex flex-col h-full overflow-hidden text-[#aaa] font-sans shadow-2xl" dir="ltr">
+        <!-- Minimal Window Controls (Transparent) -->
+        <div class="pl-header h-[20px] flex items-center justify-end px-2 shrink-0 gap-2 mt-1">
+            <Minus class="w-3 h-3 cursor-pointer hover:text-white opacity-40 hover:opacity-100 transition-opacity" />
+            <X class="w-3 h-3 cursor-pointer hover:text-red-500 opacity-40 hover:opacity-100 transition-opacity" @click="$emit('close')" />
         </div>
 
-        <!-- Tabs -->
-        <div class="pl-tabs flex bg-[#181818] text-[11px]">
-             <div class="pl-tab px-3 py-1.5 cursor-pointer border-t-2 bg-[#222] border-t-yellow-500 text-white font-medium">Default</div>
-             <div class="pl-tab px-3 py-1.5 text-gray-500 cursor-pointer border-t-2 border-transparent hover:text-gray-300">History</div>
-        </div>
-        
-        <!-- Content -->
-        <div class="flex-1 overflow-y-auto custom-scrollbar py-1">
-            <div 
-                v-for="(seg, i) in (segments || [])" 
-                :key="seg.slug || i"
-                class="item px-2 py-1 border-b border-[#1a1a1a] hover:bg-[#222] cursor-pointer group flex items-start gap-2"
-                :class="{'bg-[#2a2a2a] text-yellow-500': seg.slug === activeSlug}"
-                @click="$emit('select', seg)"
-            >
-                <div>
-                     <Play v-if="seg.slug === activeSlug" class="w-[10px] h-[10px] mt-1 fill-current text-yellow-500" />
-                     <FileAudio v-else class="w-[10px] h-[10px] mt-1 text-gray-600 group-hover:text-gray-400" />
-                </div>
-                
-                <div class="flex flex-col flex-1 min-w-0">
-                    <!-- Editing Mode -->
-                    <input 
-                        v-if="editingSlug === seg.slug"
-                        ref="titleInput"
-                        v-model="editingTitle"
-                        @blur="saveEditing"
-                        @keyup.enter="saveEditing"
-                        @keyup.esc="cancelEditing"
-                        @click.stop
-                        class="text-[11px] bg-[#333] text-white border-none py-0 px-1 rounded w-full focus:ring-1 focus:ring-yellow-500"
-                    />
-
-                    <!-- Display Mode -->
-                    <span 
-                        v-else
-                        class="text-[11px] truncate group-hover:text-white"
-                        :class="{'text-yellow-500': seg.slug === activeSlug, 'text-[#ccc]': seg.slug !== activeSlug}"
-                        @dblclick.stop="startEditing(seg)"
-                        title="Double click to rename"
-                    >
-                        {{ seg.label || seg.title }}
-                    </span>
-
-                    <span class="text-[9px] text-[#555] font-mono mt-0.5">
-                        {{ formatTime((seg.end || 0) - (seg.start || 0)) }}
-                    </span>
-                </div>
-            </div>
+        <!-- Fixed Media Root (Always Phosphorescent Green + Compact Toggle) -->
+        <div 
+            ref="rootElement"
+            class="px-3 py-1 flex items-center justify-between cursor-pointer transition-all text-lime-400 font-bold group/root border-b border-white/[0.03]"
+            :class="[isArabic(title) ? 'flex-row-reverse' : 'flex-row']"
+            @click="isSegmentsExpanded = !isSegmentsExpanded"
+        >
+            <span class="text-[10px] truncate tracking-tight uppercase flex-1" :class="[isArabic(title) ? 'text-right' : 'text-left']">{{ title || 'Original Full View' }}</span>
             
-            <div v-if="(segments || []).length === 0" class="p-4 text-center text-xs text-[#555]">
-                No segments available.
+            <!-- Toggle Icon (Smart Position) -->
+            <div class="shrink-0 flex items-center justify-center w-4 h-4 hover:bg-lime-500/10 rounded transition-colors ml-1">
+                <component 
+                    :is="isSegmentsExpanded ? ChevronDown : (isArabic(title) ? ChevronRight : ChevronRight)" 
+                    class="w-3 h-3 text-lime-400"
+                    :class="[!isSegmentsExpanded && isArabic(title) ? 'rotate-180' : '']"
+                />
             </div>
         </div>
 
-        <!-- Footer -->
-        <div class="pl-footer h-[36px] bg-[#1f1f1f] flex items-center px-2 gap-1 border-t border-[#2a2a2a]">
-             <button @click="$emit('add')" class="text-[9px] px-2 py-1 bg-[#333] text-[#ccc] rounded hover:bg-[#444] transition-colors">ADD</button>
-             <button @click="startEditingActive" class="text-[9px] px-2 py-1 bg-[#333] text-[#ccc] rounded hover:bg-[#444] transition-colors">EDIT</button>
-             <button @click="$emit('delete')" class="text-[9px] px-2 py-1 bg-[#333] text-[#ccc] rounded hover:bg-[#444] transition-colors">DEL</button>
-             <div class="flex-1"></div>
-             <Search class="w-3 h-3 text-gray-500 hover:text-white cursor-pointer" />
+        <!-- Scrollable Tree Content -->
+        <div ref="scrollContainer" class="flex-1 overflow-y-auto custom-scrollbar pt-0 pb-2">
+            <!-- Level 1: Segments (Phosphorescent Blue | Green when Active) -->
+            <div v-if="isSegmentsExpanded" class="flex flex-col relative ml-3 pl-0.5">
+                <div 
+                    v-for="(seg, i) in (segments || [])" 
+                    :key="seg.slug || i"
+                    ref="segmentElements"
+                    class="item px-2 py-0.5 mb-0.5 rounded-l-md cursor-pointer group flex items-center relative transition-all"
+                    :class="[seg.slug === activeSlug ? 'text-lime-400 font-bold' : 'text-blue-400 font-bold hover:text-blue-300']"
+                    @click="$emit('select', seg)"
+                >
+                    <div class="flex items-center min-w-0 gap-1.5 overflow-hidden" :class="[isArabic(seg.label || seg.title) ? 'flex-row-reverse ml-auto' : 'flex-row mr-auto']">
+                        <!-- Label Part (Leads for the eye) -->
+                         <div class="min-w-0 max-w-[120px]">
+                            <input 
+                                v-if="editingSlug === seg.slug"
+                                ref="titleInput"
+                                v-model="editingTitle"
+                                @blur="saveEditing"
+                                @keyup.enter="saveEditing"
+                                @keyup.esc="cancelEditing"
+                                @click.stop
+                                class="text-[10px] bg-[#333] text-white border-none py-0 px-1 rounded w-full focus:ring-1 focus:ring-lime-500 font-sans"
+                            />
+                            <span 
+                                v-else
+                                class="text-[10px] truncate block transition-colors"
+                                :class="[isArabic(seg.label || seg.title) ? 'text-right' : 'text-left']"
+                                @dblclick.stop="startEditing(seg)"
+                            >
+                                {{ seg.label || seg.title }}
+                            </span>
+                         </div>
+
+                         <!-- Time Part (Follows immediately) -->
+                        <span class="text-[8px] shrink-0 font-mono" :class="[seg.slug === activeSlug ? 'text-lime-400' : 'text-blue-400']">
+                            {{ formatTime(seg.start || 0) }}
+                        </span>
+                    </div>
+                </div>
+
+                <div v-if="(segments || []).length === 0" class="p-6 text-center text-[9px] text-[#444] italic font-sans border-t border-white/[0.03] mt-1">
+                    No segments
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -141,13 +186,13 @@ const formatTime = (seconds) => {
     width: 6px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: #111;
+    background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #333;
-    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #555;
+    background: rgba(255, 255, 255, 0.1);
 }
 </style>

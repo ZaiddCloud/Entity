@@ -68,6 +68,7 @@ const handleTitleClick = () => {
                 @click="handleTitleClick"
                 @keydown.enter.prevent
                 title="انقر للقفز إلى بداية المقطع في المشغل"
+            />
         </div>
 
         <!-- Wrapped/Floating Media Player -->
