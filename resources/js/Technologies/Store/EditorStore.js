@@ -124,6 +124,74 @@ export const useEditorStore = defineStore('editor', () => {
         return editor.value.isActive(name, attributes)
     }
 
+    const save = async () => {
+        if (!currentContentNode.value || !currentEntity.value) {
+            console.error('[EditorStore] Cannot save: missing entity or content node')
+            return
+        }
+
+        isSaving.value = true
+
+        try {
+            const childId = currentContentNode.value.id === 'full' ? 'full' : (currentContentNode.value._id || currentContentNode.value.id)
+
+            const payload = {
+                child_id: childId,
+                title: currentContentNode.value.title,
+                content: content.value,
+                html_content: content.value,
+                plain_text: editor.value?.getText() || '',
+                json_content: editor.value?.getJSON() || null
+            }
+
+            // --- SMART SPLITTING FOR FULL VIEW ---
+            if (childId === 'full' && editor.value) {
+                const doc = editor.value.state.doc
+                const segments = []
+                let currentSegment = null
+
+                doc.forEach((node, offset, index) => {
+                    // Precision Detection: Top-level paragraph containing a segmentLink mark
+                    const isHeader = node.type.name === 'paragraph' &&
+                        (node.firstChild?.marks?.some(m => m.type.name === 'segmentLink') || false)
+
+                    if (isHeader) {
+                        currentSegment = {
+                            title: node.textContent.trim().replace(/:$/, ''),
+                            nodes: []
+                        }
+                        segments.push(currentSegment)
+                    } else if (currentSegment) {
+                        currentSegment.nodes.push(node)
+                    }
+                })
+
+                payload.segments = segments.map(seg => ({
+                    title: seg.title,
+                    // Send as a proper Tiptap/ProseMirror content array
+                    json: seg.nodes.map(node => node.toJSON())
+                }))
+            }
+
+            const response = await axios.post(
+                route('studio.save', {
+                    type: editorMode.value,
+                    slug: currentEntity.value.slug,
+                    childId: childId
+                }),
+                payload
+            )
+
+            lastSaved.value = new Date()
+            console.log('[EditorStore] Content saved successfully')
+        } catch (error) {
+            console.error('[EditorStore] Save failed:', error)
+            throw error
+        } finally {
+            isSaving.value = false
+        }
+    }
+
     return {
         currentEntity, currentContentNode, content, isToolbarPinned,
         editorMode, resourceData, isSaving, lastSaved, editor,
@@ -133,6 +201,7 @@ export const useEditorStore = defineStore('editor', () => {
         executeCommand, isActive,
         setEditorMode, setResourceData, setTitle,
         addMediaNode, removeMediaNode,
+        save,
         contentVersion
     }
 })

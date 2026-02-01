@@ -63,6 +63,8 @@ Route::middleware(['auth'])->group(function () {
 
     // API routes for Segments (Audio/Video)
     Route::post('api/segments', [App\Http\Controllers\Api\SegmentController::class, 'store'])->name('api.segments.store');
+    Route::put('api/segments/{id}', [App\Http\Controllers\Api\SegmentController::class, 'update'])->name('api.segments.update');
+    Route::delete('api/segments/{id}', [App\Http\Controllers\Api\SegmentController::class, 'destroy'])->name('api.segments.destroy');
 
     // System Commands API
     Route::post('api/system/run-command', [App\Http\Controllers\SystemController::class, 'runCommand'])->name('api.system.run-command');

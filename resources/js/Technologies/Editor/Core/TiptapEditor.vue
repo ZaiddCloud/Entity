@@ -34,6 +34,10 @@ import { DragAndDrop } from '../Extensions/DragAndDrop/DragAndDropExtension'
 // Drag Handle
 import { DragHandleExtension } from '../Extensions/DragHandle/DragHandleExtension'
 
+// Interactive Segments
+import { SegmentLink } from '../Extensions/SegmentLink'
+import { useMediaStore } from '@/Technologies/Store/MediaStore'
+
 // UI Components will be added in the next step
 // import EditorBubbleMenu from '../UI/EditorBubbleMenu.vue'
 
@@ -93,6 +97,7 @@ const editor = useEditor({
             suggestion: suggestionUtils
         }),
         DragHandleExtension,
+        SegmentLink,
     ],
     editorProps: {
         attributes: {
@@ -100,6 +105,42 @@ const editor = useEditor({
             dir: 'rtl'
         },
         handleClick: (view, pos, event) => {
+            const mediaStore = useMediaStore()
+
+            // 1. Explicit SegmentLink check (Manually marked)
+            if (event.target.closest('.segment-link')) {
+                const node = view.state.doc.nodeAt(pos)
+                const mark = node?.marks.find(m => m.type.name === 'segmentLink') || 
+                            view.state.selection.$from.marks().find(m => m.type.name === 'segmentLink')
+                
+                if (mark && mark.attrs.startTime !== null) {
+                    mediaStore.requestSeek(parseFloat(mark.attrs.startTime))
+                    return true
+                }
+            }
+
+            // 2. Smart Detection: Check if clicked text/header matches a segment title
+            const clickedElement = event.target
+            const isHeader = ['H1', 'H2', 'H3', 'H4', 'H5', 'STRONG', 'B'].includes(clickedElement.tagName)
+            
+            if (isHeader || clickedElement.closest('h1, h2, h3, h4, strong')) {
+                const targetText = clickedElement.innerText?.trim() || clickedElement.textContent?.trim()
+                
+                if (targetText && mediaStore.segments.length > 0) {
+                    // Try to find a segment that matches this text
+                    const matchedSegment = mediaStore.segments.find(s => 
+                        (s.title && s.title.trim() === targetText) || 
+                        (s.label && s.label.trim() === targetText)
+                    )
+
+                    if (matchedSegment) {
+                        const seekTime = matchedSegment.start || matchedSegment.start_time || 0
+                        mediaStore.requestSeek(parseFloat(seekTime))
+                        return true
+                    }
+                }
+            }
+
             if (event.target.closest('.scientific-footnote')) {
                 const node = view.state.doc.nodeAt(pos)
                 const mark = node?.marks.find(m => m.type.name === 'scientificFootnote') || 
@@ -194,6 +235,21 @@ onBeforeUnmount(() => {
     margin-top: 1.5em;
     margin-bottom: 0.5em;
     text-align: right;
+}
+
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror strong {
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.ProseMirror h1:hover,
+.ProseMirror h2:hover,
+.ProseMirror h3:hover,
+.ProseMirror strong:hover {
+    color: #2563eb; /* Blue-600 */
 }
 
 .ProseMirror h1 {

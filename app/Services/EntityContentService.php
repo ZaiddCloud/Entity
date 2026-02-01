@@ -95,17 +95,21 @@ class EntityContentService
     /**
      * جلب صفحة محددة
      */
-    public function getNode(Entity $entity, string $slug): Model
+    public function getNode(Entity $entity, string $identifier): ?Model
     {
         /** @var class-string<Model> $model */
         $model = $this->getContentModel($entity);
         $idField = $this->getEntityIdField($entity);
 
-        /** @var Model $node */
+        /** @var Model|null $node */
         $node = $model::query()
             ->where($idField, $entity->id)
-            ->where('slug', $slug)
-            ->firstOrFail();
+            ->where(function($query) use ($identifier) {
+                $query->where('slug', $identifier)
+                      ->orWhere('_id', $identifier)
+                      ->orWhere('id', $identifier);
+            })
+            ->first();
             
         return $node;
     }
@@ -307,8 +311,8 @@ class EntityContentService
         foreach ($fullChildren as $index => $child) {
             $title = $child->title ?: "قسم " . ($index + 1);
             
-            // Add header for each node
-            $fullTranscript .= "<p><strong>{$title}:</strong></p>";
+            // Add header for each node with a machine-readable marker
+            $fullTranscript .= "<p><strong><span data-segment-link=\"true\" data-id=\"{$child->id}\">{$title}:</span></strong></p>";
             
             $content = $child->content ?: '';
             
@@ -339,5 +343,24 @@ class EntityContentService
         // or just leave it as a utility.
         
         return true;
+    }
+
+    /**
+     * حذف عقدة محتوى (Node)
+     */
+    public function deleteNode(Entity $entity, string $nodeId): bool
+    {
+        $modelClass = $this->getContentModel($entity);
+        $foreignKey = $this->getEntityIdField($entity);
+
+        $node = $modelClass::where($foreignKey, $entity->id)
+            ->where(function($query) use ($nodeId) {
+                $query->where('slug', $nodeId)
+                      ->orWhere('_id', $nodeId)
+                      ->orWhere('id', $nodeId);
+            })
+            ->firstOrFail();
+
+        return $node->delete();
     }
 }

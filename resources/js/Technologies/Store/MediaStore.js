@@ -20,6 +20,7 @@ export const useMediaStore = defineStore('media-global', () => {
     const segments = ref([]);
     const activeSegmentSlug = ref(null);
     const type = ref('video'); // 'audio' | 'video'
+    const seekRequest = ref({ time: 0, showGuide: false }); // Added seekRequest
 
     // --- Actions: Window ---
     const setDockMode = (docked, integrated) => {
@@ -67,6 +68,10 @@ export const useMediaStore = defineStore('media-global', () => {
         } else {
             dimensions.value.height = 480;
         }
+    };
+
+    const requestSeek = (time, showGuide = false) => {
+        seekRequest.value = { time: Number(time), showGuide, timestamp: Date.now() };
     };
 
     // --- Actions: Window Interactions ---
@@ -193,6 +198,18 @@ export const useMediaStore = defineStore('media-global', () => {
         isMaximized.value = (sizeMode.value === 'full');
     };
 
+    const formatTime = (seconds) => {
+        if (!seconds || isNaN(seconds)) return "00:00";
+        const date = new Date(seconds * 1000);
+        const hh = date.getUTCHours();
+        const mm = date.getUTCMinutes();
+        const ss = date.getUTCSeconds().toString().padStart(2, '0');
+        if (hh > 0) {
+            return `${hh}:${mm.toString().padStart(2, '0')}:${ss}`;
+        }
+        return `${mm}:${ss}`;
+    };
+
     // Computed
     const isFloating = computed(() => !isDocked.value && !isIntegrated.value);
 
@@ -211,6 +228,7 @@ export const useMediaStore = defineStore('media-global', () => {
         segments,
         activeSegmentSlug,
         type,
+        seekRequest, // Added state
 
         // Computed
         isFloating,
@@ -226,8 +244,10 @@ export const useMediaStore = defineStore('media-global', () => {
         startResize,
         toggleMaximize,
         setOpen,
+        formatTime,
         cycleSize,
         toggleCollapse,
-        resetLayout
+        resetLayout,
+        requestSeek // Added action
     };
 });

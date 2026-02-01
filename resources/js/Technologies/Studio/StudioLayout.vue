@@ -6,7 +6,7 @@ import EditorPane from './Panes/EditorPane.vue'
 import { useEditorStore } from '../Store/EditorStore'
 import { useMediaStore } from '../Store/MediaStore'
 import { Play } from 'lucide-vue-next'
-import { onMounted, onUnmounted, computed, watch, ref, provide } from 'vue'
+import { onMounted, onUnmounted, computed, watch, ref, provide, nextTick } from 'vue'
 
 const props = defineProps({
     type: { type: String, required: true }, // 'manuscript' | 'audio' | 'video'
@@ -48,6 +48,13 @@ onMounted(() => {
         store.loadDocument(props.entity, { id: 'full', title: 'كامل المحتوى', content: props.editorContent }, [], {})
     } else if (props._legacy?.contentNode) {
         store.loadDocument(props.entity, props._legacy.contentNode, [], {})
+        
+        // Seek player if node has start time
+        if (props._legacy.contentNode.start_time !== undefined) {
+            setTimeout(() => {
+                 mediaStore.requestSeek(props._legacy.contentNode.start_time);
+            }, 500);
+        }
     }
 })
 
@@ -58,9 +65,25 @@ watch(() => props.activeChildId, (newId, oldId) => {
              store.loadDocument(props.entity, { id: 'full', title: 'كامل المحتوى', content: props.editorContent }, [], {})
         } else if (props._legacy?.contentNode) {
              store.loadDocument(props.entity, props._legacy.contentNode, [], {})
+             
+             // Seek player if node has start time
+             if (props._legacy.contentNode.start_time !== undefined) {
+                 mediaStore.requestSeek(props._legacy.contentNode.start_time);
+             }
         }
     }
 })
+
+// SYNC: Watch for deep changes in contentNode (e.g. Title update from Player)
+watch(() => props._legacy?.contentNode, (newNode) => {
+    if (newNode && store.currentContentNode?.id === newNode.id) {
+        // Update local store if props updated via router.reload()
+        if (store.currentContentNode.title !== newNode.title) {
+            console.log('[StudioLayout] Syncing title from props:', newNode.title);
+            store.currentContentNode.title = newNode.title;
+        }
+    }
+}, { deep: true });
 
 // Auto-save is now handled by the Page/Composable, not the layout
 const saveStatusColor = computed(() => {
@@ -86,37 +109,91 @@ const navigateToSpecific = () => {
 
 // Dropdown Logic
 const isDropdownOpen = ref(false)
-const toggleDropdown = () => isDropdownOpen.value = !isDropdownOpen.value
+const searchInput = ref(null);
+
+const toggleDropdown = async () => {
+    isDropdownOpen.value = !isDropdownOpen.value;
+    
+    if (isDropdownOpen.value) {
+        searchQuery.value = ''; // Reset search
+        await nextTick();
+        if (searchInput.value) searchInput.value.focus();
+    }
+}
 
 const availableNodes = computed(() => {
-    let nodes = []
-    
-    // Source 1: Entity Children (SQL)
+    // 1. Get nodes from Props (Canonical/Permanent)
+    let propNodes = []
     if (props.entity.children && props.entity.children.length > 0) {
-        nodes = props.entity.children.map(c => ({
+        propNodes = props.entity.children.map(c => ({
             id: c._id || c.id,
+            slug: c.slug,
             title: c.title || `مقطع #${c.order || '?'}`
         }))
-    } 
-    // Source 2: Legacy Hierarchy (Mongo/Hybrid)
-    else if (props._legacy && props._legacy.hierarchy) {
-        nodes = props._legacy.hierarchy.map(c => ({
+    } else if (props._legacy && props._legacy.hierarchy) {
+        propNodes = props._legacy.hierarchy.map(c => ({
             id: c._id || c.id,
+            slug: c.slug,
             title: c.title || 'بدون عنوان'
         }))
     }
+
+    // 2. Get segments from MediaStore (Ephemeral/Active)
+    const storeSegments = mediaStore.segments.map(s => ({
+        id: s.id || s.slug,
+        slug: s.slug,
+        title: s.label || s.title || 'مقطع غير مسمى',
+        start: s.start,
+        isEphemeral: true
+    }));
+
+    // Merge: Store segments take precedence for navigation within current file
+    // But we keep prop nodes for reference.
+    const unified = [...storeSegments];
     
-    return nodes
+    // Add prop nodes that aren't already represented by slug in store
+    propNodes.forEach(pn => {
+        if (!unified.find(u => u.slug === pn.slug)) {
+            unified.push(pn);
+        }
+    });
+
+    if (!searchQuery.value) return unified;
+
+    // Filter by search query
+    const lowerQuery = searchQuery.value.toLowerCase();
+    return unified.filter(node => 
+        (node.title && node.title.toLowerCase().includes(lowerQuery))
+    );
 })
 
-const navigateToNode = (id) => {
+const searchQuery = ref('');
+
+const navigateToChild = (id) => {
+    // Determine if id is a slug or internal ID
+    // Try to find the node in availableNodes
+    const node = availableNodes.value.find(n => n.id === id || n.slug === id);
+    if (node) {
+        navigateToNode(node);
+    } else {
+        console.warn('[StudioLayout] Navigate request failed, node not found:', id);
+    }
+}
+
+const navigateToNode = (node) => {
     isDropdownOpen.value = false
-    router.visit(route('studio.show', { type: props.type, slug: props.entity.slug, childId: id }))
+    
+    // Always navigate to the segment in the editor
+    // The editor will load the segment content and the player will sync automatically
+    router.visit(route('studio.show', { type: props.type, slug: props.entity.slug, childId: node.id }))
 }
 
 const specificNodeTitle = computed(() => {
     if (props.isFullView) return 'عرض مقطع محدد';
-    return props._legacy?.contentNode?.title || 'المقطع الحالي';
+    
+    // Check if activeSlug matches any of our unified nodes
+    const active = availableNodes.value.find(n => n.slug === mediaStore.activeSegmentSlug || n.id === props.activeChildId);
+    return active?.title || props._legacy?.contentNode?.title || 'المقطع الحالي';
 })
 </script>
 
@@ -208,29 +285,42 @@ const specificNodeTitle = computed(() => {
                     v-if="isDropdownOpen"
                     class="absolute top-full right-0 mt-2 w-64 bg-[#1e1e1e] border border-gray-700 rounded-md shadow-xl overflow-hidden z-[60] flex flex-col max-h-[80vh]"
                 >
-                    <!-- Header -->
-                    <div class="px-3 py-2 bg-gray-800 border-b border-gray-700 text-[10px] text-gray-400 font-bold">
-                        اختر المقطع للانتقال إليه
+                    <!-- Header / Search -->
+                    <div class="px-2 py-2 bg-gray-800 border-b border-gray-700">
+                        <input 
+                            v-model="searchQuery"
+                            ref="searchInput"
+                            type="text" 
+                            placeholder="ابحث عن مقطع..." 
+                            class="w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-[11px] text-gray-200 placeholder-gray-500 focus:ring-1 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                            @click.stop
+                        />
                     </div>
 
                     <!-- Scrollable List -->
-                    <div class="overflow-y-auto flex-1 p-1">
+                    <div class="overflow-y-auto flex-1 p-1 custom-scrollbar bg-[#1a1a1a]/50 backdrop-blur-xl">
                         <button 
                             v-for="node in availableNodes" 
-                            :key="node.id"
-                            @click="navigateToNode(node.id)"
-                            class="w-full text-right px-3 py-2 text-xs rounded hover:bg-white/5 flex items-center justify-between gap-2 tranisition-colors"
-                            :class="node.id === props.activeChildId ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'text-gray-300'"
+                            :key="node.slug || node.id"
+                            @click="navigateToNode(node)"
+                            class="w-full text-right px-3 py-2.5 text-xs rounded-lg hover:bg-white/5 flex items-center justify-between gap-3 transition-all group/item border border-transparent"
+                            :class="(node.slug === mediaStore.activeSegmentSlug || node.id === props.activeChildId) ? 'bg-amber-500/10 text-amber-500 border-amber-500/20 font-bold' : 'text-gray-300 hover:border-white/5'"
                         >
-                            <span class="truncate">{{ node.title }}</span>
-                            <span v-if="node.id === props.activeChildId" class="text-blue-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span v-if="node.start !== undefined" class="font-mono text-[9px] px-1 rounded bg-white/5 text-gray-500 group-hover/item:text-amber-500/70 transition-colors">
+                                    {{ mediaStore.formatTime(node.start) }}
+                                </span>
+                                <span class="truncate">{{ node.title }}</span>
+                            </div>
+                            
+                            <span v-if="node.slug === mediaStore.activeSegmentSlug || node.id === props.activeChildId" class="text-amber-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                     <polyline points="20 6 9 17 4 12"></polyline>
                                 </svg>
                             </span>
                         </button>
                         
-                        <div v-if="availableNodes.length === 0" class="text-center py-4 text-gray-500 text-xs">
+                        <div v-if="availableNodes.length === 0" class="text-center py-6 text-gray-600 text-xs italic">
                             لا توجد مقاطع متاحة
                         </div>
                     </div>
@@ -307,6 +397,7 @@ const specificNodeTitle = computed(() => {
             :initial-content="props.editorContent" 
             :media-entity="props.entity"
             :type="props.type"
+            @navigate="navigateToChild"
           />
       </div>
 

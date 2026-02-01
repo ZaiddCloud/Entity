@@ -96,8 +96,12 @@ const currentPoster = computed(() => {
 // --- Navigation ---
 const handleSegmentChange = (segment) => {
     // When a segment is clicked in the playlist, emit navigate to parent
-    if (segment.id) {
-        emit('navigate', segment.id);
+    const identifier = segment.id || segment._id || segment.slug;
+    console.log('[PlayerClient] Segment selected:', segment, 'identifier:', identifier);
+    if (identifier) {
+        emit('navigate', identifier);
+    } else {
+        console.warn('[PlayerClient] Segment has no valid identifier:', segment);
     }
 };
 
@@ -116,6 +120,59 @@ watch(() => props.media, (newMedia) => {
 
 
 // Handle closing the player
+// --- Persistence Actions ---
+const handleAddSegment = async (data) => {
+    try {
+        await axios.post(route('api.segments.store'), {
+            entity_id: props.media.id,
+            entity_type: props.type,
+            title: data.title,
+            start_time: data.start
+        });
+        
+        // Refresh props to get the new segment
+        router.reload({ only: ['media'] });
+    } catch (error) {
+        console.error('[PlayerClient] Error adding segment:', error);
+    }
+};
+
+const handleDeleteSegment = async (segment) => {
+    try {
+        const id = segment.id || segment.slug;
+        await axios.delete(route('api.segments.destroy', id), {
+            data: {
+                entity_id: props.media.id,
+                entity_type: props.type
+            }
+        });
+        
+        // Always navigate to full view after deletion to avoid 404 on reload
+        router.visit(route('studio.show', { type: props.type, slug: props.media.slug }));
+    } catch (error) {
+        console.error('[PlayerClient] Error deleting segment:', error);
+    }
+};
+
+const updateSegment = async (segment) => {
+    try {
+        const id = segment.id || segment.slug;
+        const response = await axios.put(route('api.segments.update', id), {
+            entity_id: props.media.id,
+            entity_type: props.type,
+            title: segment.title
+        });
+        
+        console.log('[PlayerClient] Segment updated:', response.data);
+
+        // Refresh props
+        router.reload({ only: ['media'] });
+    } catch (error) {
+         console.error('[PlayerClient] Error updating segment:', error);
+         alert('حدث خطأ أثناء تحديث المقطع');
+    }
+};
+
 const closePlayer = () => {
     console.log('[PlayerClient] Closing player. setting isOpen to false');
     mediaStore.setOpen(false);
@@ -150,5 +207,8 @@ defineExpose({
         @toggle-dock="() => { toggleDock(); $emit('toggle-dock'); }"
         @segment-change="(seg) => { emit('segment-change', seg); handleSegmentChange(seg); }"
         @timeupdate="(time) => emit('timeupdate', time)"
+        @add-segment="handleAddSegment"
+        @delete-segment="handleDeleteSegment"
+        @update-segment="updateSegment"
     />
 </template>

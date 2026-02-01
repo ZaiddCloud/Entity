@@ -66,4 +66,65 @@ class SegmentController extends Controller
             'segment' => $segment
         ], 201);
     }
+
+    /**
+     * Update a segment
+     */
+    public function update(Request $request, string $id)
+    {
+        $request->validate([
+            'entity_id' => 'required|string',
+            'entity_type' => 'required|in:audio,video',
+            'title' => 'required|string|max:255',
+        ]);
+
+        $modelClass = match ($request->entity_type) {
+            'audio' => \App\Models\Audio::class,
+            'video' => \App\Models\Video::class,
+        };
+
+        $entity = $modelClass::findOrFail($request->entity_id);
+
+        $segment = $this->contentService->getNode($entity, $id);
+        
+        // Handle case where ID might be passed as slug or ID
+        if (!$segment) {
+            // Service usually handles resolving by ID/Slug, but let's be safe
+             return response()->json(['error' => 'Segment not found'], 404);
+        }
+
+        $segment->update([
+            'title' => $request->title,
+            'last_updated' => now()
+        ]);
+
+        return response()->json([
+            'message' => 'تم تحديث المقطع بنجاح',
+            'segment' => $segment
+        ]);
+    }
+
+    /**
+     * Delete a segment
+     */
+    public function destroy(Request $request, string $id)
+    {
+        $request->validate([
+            'entity_id' => 'required|string',
+            'entity_type' => 'required|in:audio,video',
+        ]);
+
+        $modelClass = match ($request->entity_type) {
+            'audio' => \App\Models\Audio::class,
+            'video' => \App\Models\Video::class,
+        };
+
+        $entity = $modelClass::findOrFail($request->entity_id);
+
+        $this->contentService->deleteNode($entity, $id);
+
+        return response()->json([
+            'message' => 'تم حذف المقطع بنجاح'
+        ]);
+    }
 }

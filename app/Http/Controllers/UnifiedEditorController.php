@@ -81,6 +81,27 @@ class UnifiedEditorController extends Controller
         // التحقق من الصلاحية
         Gate::authorize('update', $entity);
 
+        // --- Hybrid Data Loading (MongoDB Children) ---
+        // Since we removed HybridRelations from Entity base, we load children manually 
+        // to ensure parity across all studio views without breaking SQL queries.
+        if (in_array($entityType, [EntityType::MANUSCRIPT, EntityType::AUDIO, EntityType::VIDEO])) {
+            $childrenModel = match ($entityType) {
+                EntityType::MANUSCRIPT => ManuscriptPage::class,
+                EntityType::AUDIO => AudioSegment::class,
+                EntityType::VIDEO => VideoSegment::class,
+                default => null
+            };
+
+            if ($childrenModel) {
+                $foreignKey = $this->getForeignKey($entityType);
+                $children = $childrenModel::where($foreignKey, $entity->id)
+                    ->orderBy('order', 'asc')
+                    ->get();
+                
+                $entity->setRelation('children', $children);
+            }
+        }
+
         // Load siblings for Manuscript if 'code' exists
         if ($entityType === EntityType::MANUSCRIPT && $entity->code) {
              $siblings = Manuscript::where('code', $entity->code)
@@ -98,13 +119,18 @@ class UnifiedEditorController extends Controller
             ]);
         }
 
-        $data = $this->contentService->prepareEditorData($entity, $node->slug);
+        $data = $this->contentService->prepareEditorData($entity, $node?->slug);
 
+        // CRITICAL FIX: Ensure contentNode is explicitly set for StudioLayout
+        // When we have a specific node selected, pass it directly
+        if ($node && !$isFullView) {
+            $data['contentNode'] = $node;
+        }
         
         // Map to Studio Props
         $studioProps = [
             'type' => $type, // Frontend expects string currently
-            'entity' => $entity, // Entity now includes siblings if loaded
+            'entity' => $entity, // Entity now includes siblings and children if loaded
             'editorContent' => $editorContent,
             'isFullView' => $isFullView,
             'activeChildId' => $isFullView ? null : ($node->_id ?? $node->id),
@@ -114,7 +140,8 @@ class UnifiedEditorController extends Controller
         ];
 
         return Inertia::render('Technologies/Studio/StudioLayout', $studioProps);
-    } // Added missing brace
+    }
+ // Added missing brace
 
     /**
      * حفظ المحتوى: /editor/{type}/{slug}/save
@@ -130,30 +157,54 @@ class UnifiedEditorController extends Controller
             'json_content' => 'nullable|array',
             'plain_text' => 'nullable|string',
             'child_id' => 'nullable|string', // Support explicit ID in payload
+            'title' => 'nullable|string|max:255', // Add title validation
         ]);
 
         $childToSave = $childId ?: $request->input('child_id');
+
+        $entityType = EntityType::tryFrom($type);
+        if (!$entityType) abort(404, 'Invalid entity type');
+
+        // Authorize via parent
+        $parent = $this->resolveParentEntity($entityType, $slug);
+        if (!$parent) abort(404, 'Parent entity not found');
+        Gate::authorize('update', $parent);
+
+        // --- HANDLE SMART SAVE (FULL VIEW) ---
+        if ($childToSave === 'full') {
+            return $this->handleFullViewSave($request, $entityType, $parent);
+        }
 
         if (!$childToSave) {
              return response()->json(['error' => 'Child ID is required for saving'], 422);
         }
 
-        $entityType = EntityType::tryFrom($type);
-        if (!$entityType) abort(404, 'Invalid entity type');
-
+        // --- RESOLVE SPECIFIC NODE ---
         $modelClass = $this->getContentModelClass($entityType);
-        $node = $modelClass::findOrFail($childToSave);
+        $node = $modelClass::find($childToSave);
+        
+        // Fallback for slug if needed
+        if (!$node) {
+            $foreignKey = $this->getForeignKey($entityType);
+            $node = $modelClass::where('slug', $childToSave)
+                ->where($foreignKey, $parent->id)
+                ->first();
+        }
 
-        // Authorize via parent
-        $parent = $this->resolveParentEntity($entityType, $slug);
-        Gate::authorize('update', $parent);
-
+        if (!$node) {
+            return response()->json(['error' => 'Specific content node not found'], 404);
+        }
 
         // Prepare Payload
         $updateData = [
             'last_updated' => now(),
             'last_editor_id' => $request->user()->id
         ];
+
+        // Handle Title Update
+        if ($request->has('title')) {
+            $updateData['title'] = $request->input('title');
+        }
 
         // Handle content formats
         if (is_array($request->input('content'))) {
@@ -173,6 +224,71 @@ class UnifiedEditorController extends Controller
 
         return response()->json([
             'message' => 'تم الحفظ بنجاح',
+            'last_saved' => now()->toIso8601String()
+        ]);
+    }
+
+    /**
+     * معالجة الحفظ الذكي لوضع "كامل المحتوى"
+     * يقوم بتقسيم النص المجمع وإمالة كل جزء لمقطعه الأصلي
+     */
+    protected function handleFullViewSave(Request $request, EntityType $type, $parent)
+    {
+        $html = null;
+        if (is_array($request->input('content'))) {
+            $html = $request->input('content')['html'] ?? '';
+        } else {
+            $html = $request->input('html_content') ?? $request->input('content');
+        }
+
+        if (empty($html)) {
+            return response()->json(['error' => 'Content is required'], 422);
+        }
+
+        $modelClass = $this->getContentModelClass($type);
+        $foreignKey = $this->getForeignKey($type);
+        
+        $children = $modelClass::where($foreignKey, $parent->id)
+            ->orderBy('order')
+            ->get();
+
+        if ($children->isEmpty()) {
+            return response()->json(['message' => 'No segments found to update'], 200);
+        }
+
+        // --- PREPARE UPDATES ---
+        $segmentsData = $request->input('segments');
+        $parts = preg_split('/<p><strong>.*?:<\/strong><\/p>/', $html, -1, PREG_SPLIT_NO_EMPTY);
+        
+        foreach ($children as $index => $child) {
+            $updateData = [
+                'last_updated' => now(),
+                'last_editor_id' => $request->user()->id
+            ];
+
+            // Update HTML from parts (already split on backend)
+            if (isset($parts[$index])) {
+                $content = trim($parts[$index]);
+                $content = preg_replace('/^<p><br\/><\/p>/', '', $content);
+                $content = preg_replace('/<p><br\/><\/p>$/', '', $content);
+                
+                $updateData['content'] = $content;
+                $updateData['plain_text'] = strip_tags($content);
+            }
+
+            // Update JSON from frontend segments if available
+            if ($segmentsData && isset($segmentsData[$index]['json'])) {
+                $updateData['json_content'] = $segmentsData[$index]['json'];
+            } else {
+                // If no JSON provided, reset it so it regenerates from HTML on load
+                $updateData['json_content'] = null;
+            }
+
+            $child->update($updateData);
+        }
+
+        return response()->json([
+            'message' => 'تم تحديث كافة المقاطع بنجاح (حفظ ذكي)',
             'last_saved' => now()->toIso8601String()
         ]);
     }

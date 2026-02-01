@@ -23,8 +23,17 @@ const props = defineProps({
 
 const emit = defineEmits([
     'segment-change', 'ended', 'ready', 'timeupdate', 
-    'close', 'toggle-dock', 'toggle-playlist'
+    'close', 'toggle-dock', 'toggle-playlist',
+    'add-segment', 'delete-segment', 'update-segment' // Added update-segment
 ]);
+
+// ... (store logic) ...
+
+
+
+const handleUpdateSegment = (seg) => {
+    emit('update-segment', seg);
+}
 
 // --- Store & Media Logic ---
 const store = useMediaStore();
@@ -79,6 +88,34 @@ const handleSeek = (time) => {
     seek(time);
 };
 
+// Listen for external seek requests (e.g. from Studio Toolbar)
+watch(() => store.seekRequest, (req) => {
+    if (req?.time !== undefined) {
+        console.log('[MediaPlayer] External Seek Request:', req.time);
+        handleSeek(req.time);
+    }
+}, { immediate: true });
+
+const addQuickSegment = () => {
+    emit('add-segment', {
+        start: currentTime.value,
+        title: `مقطع عند ${store.formatTime(currentTime.value)}`
+    });
+};
+
+const deleteActiveSegment = () => {
+    if (store.activeSegmentSlug) {
+        // Find the full segment object if possible, or just send the slug/id
+        const seg = store.segments.find(s => s.slug === store.activeSegmentSlug);
+        if (seg) emit('delete-segment', seg);
+    }
+};
+
+const handleDeleteSegment = (slug) => {
+    const seg = store.segments.find(s => s.slug === slug);
+    if (seg) emit('delete-segment', seg);
+};
+
 const handleSegmentSelect = (seg) => {
     seek(seg.start || 0);
     store.activeSegmentSlug = seg.slug; // Update Store
@@ -115,8 +152,8 @@ const handleToggleDock = () => {
 
 // --- Keyboard Shortcuts ---
 const handleKeyDown = (e) => {
-    // Ignore if typing in an input
-    if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+    // Ignore if typing in an input or contenteditable (Tiptap)
+    if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName) || document.activeElement.isContentEditable) return;
 
     switch (e.key.toLowerCase()) {
         case ' ':
@@ -232,6 +269,8 @@ defineExpose({
                     :volume="volume"
                     :playback-rate="playbackRate"
                     :loop-range="loopRange"
+                    :segments="store.segments"
+                    :active-segment-slug="store.activeSegmentSlug"
                     :is-playlist-open="store.isPlaylistOpen"
                     @toggle-play="handleTogglePlay"
                     @seek="handleSeek"
@@ -240,16 +279,22 @@ defineExpose({
                     @toggle-loop="toggleLoopPoint"
                     @toggle-playlist="() => { store.togglePlaylist(); emit('toggle-playlist'); }"
                     @toggle-fullscreen="handleToggleFullscreen"
+                    @add-segment="addQuickSegment"
+                    @delete-segment="handleDeleteSegment"
+                    @segment-change="handleSegmentSelect"
                 />
             </div>
 
             <!-- PLAYLIST SIDEBAR -->
             <PlayerPlaylist 
                 v-show="store.isPlaylistOpen"
-                :segments="segments"
+                :segments="store.segments"
                 :active-slug="store.activeSegmentSlug"
+                @close="store.isPlaylistOpen = false"
                 @select="handleSegmentSelect"
-                @close="store.togglePlaylist"
+                @add="addQuickSegment"
+                @delete="deleteActiveSegment"
+                @update="handleUpdateSegment"
             />
         </div>
     </div>

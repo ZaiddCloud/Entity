@@ -1,12 +1,52 @@
 <script setup>
 import { Check, Search, Minus, X, Play, FileAudio } from 'lucide-vue-next';
+import { ref, nextTick } from 'vue';
 
 const props = defineProps({
     segments: { type: Array, default: () => [] },
     activeSlug: String
 });
 
-const emit = defineEmits(['select', 'close']);
+const emit = defineEmits(['select', 'close', 'add', 'delete', 'update']); // Added 'update'
+
+// --- Editing Logic ---
+const editingSlug = ref(null);
+const editingTitle = ref('');
+const titleInput = ref(null);
+
+const startEditing = (seg) => {
+    editingSlug.value = seg.slug;
+    editingTitle.value = seg.label || seg.title || '';
+    nextTick(() => {
+        if (titleInput.value && titleInput.value[0]) {
+            titleInput.value[0].focus();
+        }
+    });
+};
+
+const cancelEditing = () => {
+    editingSlug.value = null;
+    editingTitle.value = '';
+};
+
+const saveEditing = () => {
+    if (!editingSlug.value) return;
+    
+    // Find segment
+    const seg = props.segments.find(s => s.slug === editingSlug.value);
+    if (seg && editingTitle.value.trim() !== '') {
+        // Optimistic update (optional, but good for UX)
+        // emit update event
+        emit('update', { ...seg, title: editingTitle.value });
+    }
+    cancelEditing();
+};
+
+const startEditingActive = () => {
+    if (!props.activeSlug) return;
+    const seg = props.segments.find(s => s.slug === props.activeSlug);
+    if (seg) startEditing(seg);
+};
 
 // V1 Parity: Support hours
 const formatTime = (seconds) => {
@@ -39,7 +79,7 @@ const formatTime = (seconds) => {
         <!-- Content -->
         <div class="flex-1 overflow-y-auto custom-scrollbar py-1">
             <div 
-                v-for="(seg, i) in segments" 
+                v-for="(seg, i) in (segments || [])" 
                 :key="seg.slug || i"
                 class="item px-2 py-1 border-b border-[#1a1a1a] hover:bg-[#222] cursor-pointer group flex items-start gap-2"
                 :class="{'bg-[#2a2a2a] text-yellow-500': seg.slug === activeSlug}"
@@ -51,27 +91,45 @@ const formatTime = (seconds) => {
                 </div>
                 
                 <div class="flex flex-col flex-1 min-w-0">
+                    <!-- Editing Mode -->
+                    <input 
+                        v-if="editingSlug === seg.slug"
+                        ref="titleInput"
+                        v-model="editingTitle"
+                        @blur="saveEditing"
+                        @keyup.enter="saveEditing"
+                        @keyup.esc="cancelEditing"
+                        @click.stop
+                        class="text-[11px] bg-[#333] text-white border-none py-0 px-1 rounded w-full focus:ring-1 focus:ring-yellow-500"
+                    />
+
+                    <!-- Display Mode -->
                     <span 
+                        v-else
                         class="text-[11px] truncate group-hover:text-white"
                         :class="{'text-yellow-500': seg.slug === activeSlug, 'text-[#ccc]': seg.slug !== activeSlug}"
+                        @dblclick.stop="startEditing(seg)"
+                        title="Double click to rename"
                     >
                         {{ seg.label || seg.title }}
                     </span>
+
                     <span class="text-[9px] text-[#555] font-mono mt-0.5">
                         {{ formatTime((seg.end || 0) - (seg.start || 0)) }}
                     </span>
                 </div>
             </div>
             
-            <div v-if="segments.length === 0" class="p-4 text-center text-xs text-[#555]">
+            <div v-if="(segments || []).length === 0" class="p-4 text-center text-xs text-[#555]">
                 No segments available.
             </div>
         </div>
 
         <!-- Footer -->
         <div class="pl-footer h-[36px] bg-[#1f1f1f] flex items-center px-2 gap-1 border-t border-[#2a2a2a]">
-             <button class="text-[9px] px-2 py-1 bg-[#333] text-[#ccc] rounded hover:bg-[#444] transition-colors">ADD</button>
-             <button class="text-[9px] px-2 py-1 bg-[#333] text-[#ccc] rounded hover:bg-[#444] transition-colors">DEL</button>
+             <button @click="$emit('add')" class="text-[9px] px-2 py-1 bg-[#333] text-[#ccc] rounded hover:bg-[#444] transition-colors">ADD</button>
+             <button @click="startEditingActive" class="text-[9px] px-2 py-1 bg-[#333] text-[#ccc] rounded hover:bg-[#444] transition-colors">EDIT</button>
+             <button @click="$emit('delete')" class="text-[9px] px-2 py-1 bg-[#333] text-[#ccc] rounded hover:bg-[#444] transition-colors">DEL</button>
              <div class="flex-1"></div>
              <Search class="w-3 h-3 text-gray-500 hover:text-white cursor-pointer" />
         </div>

@@ -1,5 +1,5 @@
 <script setup>
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Maximize2, List, Repeat, Menu } from 'lucide-vue-next';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Maximize2, List, Repeat, Menu, Plus, X } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 
 const props = defineProps({
@@ -9,12 +9,14 @@ const props = defineProps({
     volume: Number,
     playbackRate: { type: Number, default: 1 },
     loopRange: { type: Object, default: () => ({ start: null, end: null, active: false }) },
-    isPlaylistOpen: Boolean
+    isPlaylistOpen: Boolean,
+    segments: { type: Array, default: () => [] },
+    activeSegmentSlug: String
 });
 
 const emit = defineEmits([
     'toggle-play', 'seek', 'update:volume', 'toggle-playlist', 'toggle-fullscreen',
-    'set-playback-rate', 'toggle-loop'
+    'set-playback-rate', 'toggle-loop', 'add-segment', 'delete-segment', 'segment-change'
 ]);
 
 // V1 Parity: Support hours
@@ -81,6 +83,7 @@ const startVolumeDrag = (e) => {
 const isVolumeLocked = ref(false);
 const volumeRef = ref(null);
 const lastVolume = ref(1);
+const showSegmentsMenu = ref(false);
 
 const toggleVolumeLock = (e) => {
     e.stopPropagation(); // Prevent bubbling to window listener
@@ -100,6 +103,20 @@ const handleClickOutside = (e) => {
     if (isVolumeLocked.value && volumeRef.value && !volumeRef.value.contains(e.target)) {
         isVolumeLocked.value = false;
     }
+    // Simple click outside for segments menu
+    if (showSegmentsMenu.value && !e.target.closest('.segments-container')) {
+        showSegmentsMenu.value = false;
+    }
+};
+
+const addQuickSegment = () => {
+    const newSeg = {
+        slug: `seg-${Date.now()}`,
+        start: props.currentTime,
+        end: props.duration,
+        label: `Segment at ${formatTime(props.currentTime)}`
+    };
+    emit('add-segment', newSeg);
 };
 
 // Volume Wheel Control
@@ -146,9 +163,18 @@ onUnmounted(() => {
             <!-- Glass Seek Background -->
             <div class="seek-bg absolute inset-x-0 bg-white/10 backdrop-blur-[2px] h-1.5 rounded-full top-1/2 -translate-y-1/2 transition-all group-hover:h-2 group-hover:bg-white/15"></div>
             
+            <!-- Segment Markers -->
+            <div 
+                v-for="seg in (segments || [])" 
+                :key="seg.slug"
+                class="absolute h-1.5 w-[2px] bg-white/40 z-10 top-1/2 -translate-y-1/2 group-hover:h-3 group-hover:bg-yellow-500/80 transition-all pointer-events-none"
+                :style="{ left: `${duration > 0 ? (seg.start / duration) * 100 : 0}%` }"
+                :title="seg.label || seg.title"
+            ></div>
+            
             <!-- Golden Gradient Progress with Glow -->
             <div 
-                class="progress h-1.5 rounded-full relative transition-all duration-300 group-hover:h-2 top-0 shadow-[0_0_12px_rgba(234,179,8,0.3)]" 
+                class="progress h-1.5 rounded-full relative transition-all duration-300 group-hover:h-2 top-0" 
                 :style="{ 
                     width: `${progressPercent}%`, 
                     background: 'linear-gradient(90deg, #ca8a04 0%, #eab308 100%)',
@@ -259,9 +285,51 @@ onUnmounted(() => {
                 <button class="hover:text-white transition-transform active:scale-95" title="Playlist" @click="$emit('toggle-playlist')">
                      <Menu class="w-2.5 h-2.5" :class="{'text-white': isPlaylistOpen}" />
                 </button>
-                <button class="hover:text-white transition-transform active:scale-95" title="Segments">
-                    <List class="w-2.5 h-2.5" />
-                </button>
+                <div class="relative segments-container flex items-center">
+                    <button class="hover:text-white transition-transform active:scale-95" title="Segments" @click="showSegmentsMenu = !showSegmentsMenu">
+                        <List class="w-2.5 h-2.5" :class="{'text-yellow-500': showSegmentsMenu}" />
+                    </button>
+
+                    <!-- Quick Chapters Menu -->
+                    <transition
+                        enter-active-class="transition duration-200 ease-out"
+                        enter-from-class="transform scale-95 opacity-0 translate-y-2"
+                        enter-to-class="transform scale-100 opacity-100 translate-y-0"
+                        leave-active-class="transition duration-150 ease-in"
+                        leave-from-class="transform scale-100 opacity-100 translate-y-0"
+                        leave-to-class="transform scale-95 opacity-0 translate-y-2"
+                    >
+                        <div v-if="showSegmentsMenu" class="absolute bottom-full right-0 mb-3 bg-[#111111]/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex flex-col py-1 z-50 min-w-[200px] origin-bottom-right overflow-hidden">
+                             <div class="text-[10px] text-gray-400 font-bold px-3 py-2 border-b border-white/5 flex justify-between items-center bg-white/5">
+                                <span class="tracking-widest uppercase opacity-70">Chapters</span>
+                                <button @click="addQuickSegment" class="hover:text-yellow-500 transition-all hover:scale-110 active:scale-95 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500/80 border border-yellow-500/20" title="Add segment at current time">
+                                    <Plus class="w-2.5 h-2.5" />
+                                    <span class="text-[9px]">ADD</span>
+                                </button>
+                             </div>
+                             <div class="max-h-[250px] overflow-y-auto custom-scrollbar">
+                                <div v-for="seg in (segments || [])" :key="seg.slug" 
+                                    class="px-3 py-2.5 text-[11px] hover:bg-white/5 transition-all flex justify-between items-center group/item border-b border-white/[0.02] last:border-0"
+                                    :class="{'bg-yellow-500/5 !border-l-2 !border-l-yellow-500': seg.slug === activeSegmentSlug, 'text-gray-300': seg.slug !== activeSegmentSlug}"
+                                >
+                                    <div class="truncate flex-1 cursor-pointer pr-2 flex flex-col gap-0.5" @click="$emit('segment-change', seg); $emit('seek', seg.start); showSegmentsMenu = false">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-mono text-[9px] px-1 rounded bg-white/5 text-gray-500 group-hover/item:text-yellow-500/70 group-hover/item:bg-yellow-500/5 transition-colors">{{ formatTime(seg.start) }}</span>
+                                            <span class="truncate group-hover/item:text-white transition-colors">{{ seg.label || seg.title }}</span>
+                                        </div>
+                                    </div>
+                                    <button @click="$emit('delete-segment', seg.slug)" class="opacity-0 group-hover/item:opacity-100 p-1.5 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all text-gray-600">
+                                        <X class="w-3 h-3" />
+                                    </button>
+                                </div>
+                                <div v-if="(segments || []).length === 0" class="p-8 text-center flex flex-col items-center gap-2">
+                                    <List class="w-6 h-6 opacity-10 text-white" />
+                                    <span class="text-[10px] text-gray-600 italic">No chapters defined</span>
+                                </div>
+                             </div>
+                        </div>
+                    </transition>
+                </div>
                 <button class="hover:text-white transition-transform active:scale-95" title="Fullscreen" @click="$emit('toggle-fullscreen')">
                     <Maximize2 class="w-2.5 h-2.5" />
                 </button>

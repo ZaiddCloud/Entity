@@ -13,6 +13,8 @@ const props = defineProps({
     type: { type: String, default: 'manuscript' } // NEW
 })
 
+const emit = defineEmits(['navigate']);
+
 import { useEditorSave } from './Composables/useEditorSave'
 
 const store = useEditorStore()
@@ -39,6 +41,13 @@ const handleCommand = ({ command, value }) => {
         store.executeCommand(command, value)
     }
 }
+
+// Seek player when clicking segment title
+const handleTitleClick = () => {
+    if (store.currentContentNode?.start_time !== undefined) {
+        mediaStore.requestSeek(store.currentContentNode.start_time);
+    }
+}
 </script>
 
 <template>
@@ -48,8 +57,19 @@ const handleCommand = ({ command, value }) => {
           
     <!-- Editor Core -->
     <div class="flex-1 overflow-y-auto bg-white custom-scrollbar">
-      <div class="w-full min-h-full p-8 md:p-12">
+      <div class="w-full min-h-full p-8 md:p-12 relative">
         
+        <!-- Segment Title Input (Only for specific segments) -->
+         <div v-if="store.currentContentNode && store.currentContentNode.id !== 'full'" class="mb-6 border-b border-gray-100 pb-4">
+            <input 
+                v-model="store.currentContentNode.title" 
+                class="text-2xl font-bold w-full border-none focus:ring-0 px-0 text-gray-800 placeholder-gray-300 bg-transparent text-right cursor-pointer hover:text-blue-600 transition-colors" 
+                placeholder="عنوان المقطع"
+                @click="handleTitleClick"
+                @keydown.enter.prevent
+                title="انقر للقفز إلى بداية المقطع في المشغل"
+        </div>
+
         <!-- Wrapped/Floating Media Player -->
         <div 
           v-if="['audio', 'video'].includes(props.type) && props.mediaEntity" 
@@ -64,6 +84,7 @@ const handleCommand = ({ command, value }) => {
              :is-integrated="!isFloating"
              :is-studio-context="true"
              @toggle-dock="toggleDock"
+             @navigate="(id) => $emit('navigate', id)"
            />
         </div>
 
