@@ -51,11 +51,13 @@ This section documents the transformation of the control area into a cinematic d
 | 14 | **The Command Hub** (Centralized physics-based controls) | `e83be51` | `PlayerControls.vue` |
 | 15 | **Dynamic Suite** (Smooth volume sliders & Speed counters) | `4833f74` | `PlayerControls.vue` |
 | 16 | **Visual Harmony** (Capsule design & Global Blur/Glow) | `complete` | `MediaPlayer.vue` |
-| 17 | **Segment Visualization** (Timeline markers & Chapter jumps) | `pending` | `MediaStore.js` |
+| 17 | **Segment Visualization** (Timeline markers & Chapter jumps) | `f006390` | `MediaStore.js`, `MediaPlayer.vue` |
 | 18 | **Timeline Hover Preview** (Time bubble & Thumbnails) | `pending` | `PlayerControls.vue` |
 | 19 | **Refined A-B Loop UI** (Interactive handles & Zone shading) | `pending` | `PlayerControls.vue` |
 | 20 | **Keyboard Hints** (Smart tooltips with shortcut keys) | `pending` | `Header/Controls` |
 | 21 | **Live Waveform Visualizer** (Reactive audio wave feedback) | `pending` | `PlayerControls.vue` |
+| 22 | **Editor-Player Interactive Sync** (Smart titles & navigation) | `f006390` | `TiptapEditor.vue`, `SegmentLink.js` |
+| 23 | **Unified Smart Save** (Full View splitting & JSON persistence) | `f006390` | `EditorStore.js`, `UnifiedEditorController.php` |
 
 ---
 > [!TIP]
