@@ -45,6 +45,7 @@ const segments = computed(() => {
             label: child.title, // Map 'title' to 'label' for DraggableMediaPlayer
             title: child.title,
             file_path: child.file_path,
+            content: child.content || child.html_content || '', // Pass content for client-side nav
             start: child.start_time || 0,
             end: child.end_time || (child.duration || 0),
             color: child.metadata?.color || '#3b82f6'
@@ -157,16 +158,32 @@ const handleDeleteSegment = async (segment) => {
 const updateSegment = async (segment) => {
     try {
         const id = segment.id || segment.slug;
-        const response = await axios.put(route('api.segments.update', id), {
+        const payload = {
             entity_id: props.media.id,
             entity_type: props.type,
             title: segment.title
-        });
+        };
+        
+        // Include start_time if it exists
+        if (segment.start !== undefined) {
+            payload.start_time = segment.start;
+        }
+        
+        const response = await axios.put(route('api.segments.update', id), payload);
         
         console.log('[PlayerClient] Segment updated:', response.data);
 
-        // Refresh props
-        router.reload({ only: ['media'] });
+        // Update store immediately for instant UI feedback
+        mediaStore.updateSegment({
+            id: segment.id,
+            slug: segment.slug,
+            title: segment.title,
+            label: segment.title,
+            start: segment.start
+        });
+
+        // Refresh props (Update entity to refresh Toolbar/Sidebar)
+        router.reload({ only: ['entity'] });
     } catch (error) {
          console.error('[PlayerClient] Error updating segment:', error);
          alert('حدث خطأ أثناء تحديث المقطع');
@@ -210,5 +227,6 @@ defineExpose({
         @add-segment="handleAddSegment"
         @delete-segment="handleDeleteSegment"
         @update-segment="updateSegment"
+        @navigate-full="$emit('navigate-full')"
     />
 </template>

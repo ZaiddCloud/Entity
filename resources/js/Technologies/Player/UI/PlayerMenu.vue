@@ -21,7 +21,7 @@ const handleReset = () => {
         <div class="fixed inset-0 z-[-1]" @click="$emit('close')"></div>
 
         <!-- Menu Card -->
-        <div class="menu-card bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/5 rounded-lg shadow-2xl py-2 min-w-[200px] overflow-hidden">
+        <div class="menu-card bg-[#1a1a1a] border border-white/5 rounded-lg shadow-2xl py-2 min-w-[200px] overflow-hidden">
             <!-- Section: System -->
             <div class="px-3 py-1.5 text-[10px] text-gray-500 font-bold uppercase tracking-wider flex items-center gap-2">
                 <Monitor class="w-3 h-3" /> أدوات التحكم

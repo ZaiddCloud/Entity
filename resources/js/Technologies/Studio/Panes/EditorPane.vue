@@ -7,7 +7,7 @@ const props = defineProps({
     type: { type: String, default: 'manuscript' } // NEW
 })
 
-const emit = defineEmits(['navigate']);
+const emit = defineEmits(['navigate', 'navigate-full']);
 </script>
 
 <template>
@@ -17,6 +17,7 @@ const emit = defineEmits(['navigate']);
         :media-entity="props.mediaEntity"
         :type="props.type"
         @navigate="(id) => $emit('navigate', id)"
+        @navigate-full="$emit('navigate-full')"
     />
   </div>
 </template>

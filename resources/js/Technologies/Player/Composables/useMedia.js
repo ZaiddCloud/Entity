@@ -27,10 +27,13 @@ export function useMedia(mediaRef, emit = null) {
     const getMediaEl = () => mediaRef.value?.value || mediaRef.value;
 
     // Core Methods
+    const play = () => getMediaEl()?.play();
+    const pause = () => getMediaEl()?.pause();
+
     const togglePlay = () => {
         const el = getMediaEl();
         if (!el) return;
-        el.paused ? el.play() : el.pause();
+        el.paused ? play() : pause();
     };
 
     const seek = (time) => {
@@ -226,6 +229,6 @@ export function useMedia(mediaRef, emit = null) {
 
     return {
         isPlaying, isMuted, isWaiting, currentTime, duration, volume, playbackRate, buffered, loopRange,
-        togglePlay, seek, skip, setVolume, setPlaybackRate, toggleLoopPoint, formatTime
+        togglePlay, play, pause, seek, skip, setVolume, setPlaybackRate, toggleLoopPoint, formatTime
     };
 }

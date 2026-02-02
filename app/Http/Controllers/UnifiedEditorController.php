@@ -35,24 +35,25 @@ class UnifiedEditorController extends Controller
     public function show(string $type, string $slug, ?string $childId = null)
     {
         $entityType = EntityType::tryFrom($type);
-        if (!$entityType) abort(404, 'Invalid entity type');
+        if (!$entityType)
+            abort(404, 'Invalid entity type');
 
         // 1. Resolve Parent Entity
         $parentEntity = $this->resolveParentEntity($entityType, $slug);
-        
+
         if (!$parentEntity) {
             abort(404, 'Parent resource not found');
         }
 
         // 2. Load Content
-        $node = null;
-        $editorContent = '';
+        // Always aggregate full content for instant client-side transitions
+        $fullContent = $this->contentService->aggregateFullContent($parentEntity);
         $isFullView = false;
 
         if ($childId) {
             $modelClass = $this->getContentModelClass($entityType);
             $node = $modelClass::find($childId);
-            
+
             // Validate child belongs to parent
             $foreignKey = $this->getForeignKey($entityType);
             if (!$node || $node->$foreignKey != $parentEntity->id) {
@@ -66,12 +67,12 @@ class UnifiedEditorController extends Controller
                 abort(404, 'Specific content node not found');
             }
 
-            $editorContent = $node->content ?? '';
+            $currentEditorContent = $node->content ?? '';
         } else {
             // Default: Load FULL CONTENT
-            $editorContent = $this->contentService->aggregateFullContent($parentEntity);
+            $currentEditorContent = $fullContent;
             $isFullView = true;
-            
+
             // For UI state, we still might need a "reference" node if it's manuscript
             $node = $this->contentService->getFirstChild($parentEntity);
         }
@@ -97,17 +98,17 @@ class UnifiedEditorController extends Controller
                 $children = $childrenModel::where($foreignKey, $entity->id)
                     ->orderBy('order', 'asc')
                     ->get();
-                
+
                 $entity->setRelation('children', $children);
             }
         }
 
         // Load siblings for Manuscript if 'code' exists
         if ($entityType === EntityType::MANUSCRIPT && $entity->code) {
-             $siblings = Manuscript::where('code', $entity->code)
+            $siblings = Manuscript::where('code', $entity->code)
                 ->where('id', '!=', $entity->id)
                 ->get();
-             $entity->setRelation('siblings', $siblings);
+            $entity->setRelation('siblings', $siblings);
         }
 
         // Record last active session
@@ -126,22 +127,23 @@ class UnifiedEditorController extends Controller
         if ($node && !$isFullView) {
             $data['contentNode'] = $node;
         }
-        
+
         // Map to Studio Props
         $studioProps = [
             'type' => $type, // Frontend expects string currently
             'entity' => $entity, // Entity now includes siblings and children if loaded
-            'editorContent' => $editorContent,
+            'editorContent' => $currentEditorContent,
+            'fullContent' => $fullContent,
             'isFullView' => $isFullView,
             'activeChildId' => $isFullView ? null : ($node->_id ?? $node->id),
             'title' => $entity->title . ' | Entity Studio',
             // Pass legacy data if needed by EditorClient internally via provide/inject or initial config
-            '_legacy' => $data 
+            '_legacy' => $data
         ];
 
         return Inertia::render('Technologies/Studio/StudioLayout', $studioProps);
     }
- // Added missing brace
+    // Added missing brace
 
     /**
      * حفظ المحتوى: /editor/{type}/{slug}/save
@@ -163,11 +165,13 @@ class UnifiedEditorController extends Controller
         $childToSave = $childId ?: $request->input('child_id');
 
         $entityType = EntityType::tryFrom($type);
-        if (!$entityType) abort(404, 'Invalid entity type');
+        if (!$entityType)
+            abort(404, 'Invalid entity type');
 
         // Authorize via parent
         $parent = $this->resolveParentEntity($entityType, $slug);
-        if (!$parent) abort(404, 'Parent entity not found');
+        if (!$parent)
+            abort(404, 'Parent entity not found');
         Gate::authorize('update', $parent);
 
         // --- HANDLE SMART SAVE (FULL VIEW) ---
@@ -176,13 +180,13 @@ class UnifiedEditorController extends Controller
         }
 
         if (!$childToSave) {
-             return response()->json(['error' => 'Child ID is required for saving'], 422);
+            return response()->json(['error' => 'Child ID is required for saving'], 422);
         }
 
         // --- RESOLVE SPECIFIC NODE ---
         $modelClass = $this->getContentModelClass($entityType);
         $node = $modelClass::find($childToSave);
-        
+
         // Fallback for slug if needed
         if (!$node) {
             $foreignKey = $this->getForeignKey($entityType);
@@ -208,16 +212,18 @@ class UnifiedEditorController extends Controller
 
         // Handle content formats
         if (is_array($request->input('content'))) {
-             // New Format direct payload
-             $payload = $request->input('content');
-             $updateData['content'] = $payload['html'] ?? '';
-             $updateData['json_content'] = $payload['json'] ?? [];
-             $updateData['plain_text'] = $payload['text'] ?? '';
+            // New Format direct payload
+            $payload = $request->input('content');
+            $updateData['content'] = $payload['html'] ?? '';
+            $updateData['json_content'] = $payload['json'] ?? [];
+            $updateData['plain_text'] = $payload['text'] ?? '';
         } else {
-             // Legacy fallback or explicit fields
-             $updateData['content'] = $request->input('html_content') ?? $request->input('content');
-             if ($request->has('json_content')) $updateData['json_content'] = $request->input('json_content');
-             if ($request->has('plain_text')) $updateData['plain_text'] = $request->input('plain_text');
+            // Legacy fallback or explicit fields
+            $updateData['content'] = $request->input('html_content') ?? $request->input('content');
+            if ($request->has('json_content'))
+                $updateData['json_content'] = $request->input('json_content');
+            if ($request->has('plain_text'))
+                $updateData['plain_text'] = $request->input('plain_text');
         }
 
         $node->update($updateData);
@@ -247,7 +253,7 @@ class UnifiedEditorController extends Controller
 
         $modelClass = $this->getContentModelClass($type);
         $foreignKey = $this->getForeignKey($type);
-        
+
         $children = $modelClass::where($foreignKey, $parent->id)
             ->orderBy('order')
             ->get();
@@ -259,7 +265,7 @@ class UnifiedEditorController extends Controller
         // --- PREPARE UPDATES ---
         $segmentsData = $request->input('segments');
         $parts = preg_split('/<p><strong>.*?:<\/strong><\/p>/', $html, -1, PREG_SPLIT_NO_EMPTY);
-        
+
         foreach ($children as $index => $child) {
             $updateData = [
                 'last_updated' => now(),
@@ -271,7 +277,7 @@ class UnifiedEditorController extends Controller
                 $content = trim($parts[$index]);
                 $content = preg_replace('/^<p><br\/><\/p>/', '', $content);
                 $content = preg_replace('/<p><br\/><\/p>$/', '', $content);
-                
+
                 $updateData['content'] = $content;
                 $updateData['plain_text'] = strip_tags($content);
             }
@@ -302,7 +308,7 @@ class UnifiedEditorController extends Controller
 
         if ($user && $user->last_studio_type && $user->last_studio_slug) {
             return redirect()->route('studio.show', [
-                'type' => $user->last_studio_type, 
+                'type' => $user->last_studio_type,
                 'slug' => $user->last_studio_slug,
                 'childId' => $user->last_studio_child_id
             ]);
@@ -359,20 +365,19 @@ class UnifiedEditorController extends Controller
                 $children = $childrenModel::where($foreignKey, $entity->id)
                     ->orderBy('order', 'asc')
                     ->get();
-                
-             $entity->setRelation('children', $children);
+
+                $entity->setRelation('children', $children);
             }
-        } 
+        }
         // For Book (if BookChild is Mongo), we should also load manually or check if it works via standard relation
         elseif ($type === EntityType::BOOK) {
-             $children = BookChild::where('book_id', $entity->id)
+            $children = BookChild::where('book_id', $entity->id)
                 ->orderBy('order', 'asc')
                 ->get();
-             $entity->setRelation('children', $children);
-        }
-        else {
-             // Fallback for standard SQL-SQL
-             $entity->load('children');
+            $entity->setRelation('children', $children);
+        } else {
+            // Fallback for standard SQL-SQL
+            $entity->load('children');
         }
 
         return $entity;

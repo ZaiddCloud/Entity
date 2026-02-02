@@ -12,6 +12,7 @@ const props = defineProps({
     type: { type: String, required: true }, // 'manuscript' | 'audio' | 'video'
     entity: { type: Object, required: true },
     editorContent: { type: String, default: '' },
+    fullContent: { type: String, default: '' }, // Source of truth for full aggregation
     isFullView: { type: Boolean, default: false },
     activeChildId: { type: String, default: null },
     title: { type: String, default: 'Entity Studio' },
@@ -21,7 +22,7 @@ const props = defineProps({
 const store = useEditorStore()
 const mediaStore = useMediaStore()
 
-const isPlayerDocked = ref(true) // Default integrated (side-by-side) to avoid covering text
+const isPlayerDocked = ref(true)
 
 const toggleDock = () => {
     isPlayerDocked.value = !isPlayerDocked.value
@@ -97,7 +98,22 @@ const saveStatusText = computed(() => {
 })
 
 const navigateToFull = () => {
-    router.visit(route('studio.show', { type: props.type, slug: props.entity.slug }))
+    // OPTIMIZATION: Client-Side Switch to Full View
+    // We now use props.fullContent which is always the full aggregation source!
+    console.log('[StudioLayout] Client-side switch to Full View');
+
+    // 1. Load Full Document from the stable source
+    store.loadDocument(props.entity, { id: 'full', title: 'كامل المحتوى', content: props.fullContent }, [], {});
+    
+    // 2. Clear Active Segment
+    mediaStore.setActiveSegment(null);
+
+    // 3. Update URL without reload
+    const newUrl = route('studio.show', { type: props.type, slug: props.entity.slug });
+    window.history.pushState({}, '', newUrl);
+
+    // 4. Reset Scroll
+    window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 const navigateToSpecific = () => {
@@ -144,11 +160,11 @@ const availableNodes = computed(() => {
         slug: s.slug,
         title: s.label || s.title || 'مقطع غير مسمى',
         start: s.start,
+        content: s.content, // Ensure content is passed if available
         isEphemeral: true
     }));
 
     // Merge: Store segments take precedence for navigation within current file
-    // But we keep prop nodes for reference.
     const unified = [...storeSegments];
     
     // Add prop nodes that aren't already represented by slug in store
@@ -171,25 +187,53 @@ const searchQuery = ref('');
 
 const navigateToChild = (id) => {
     // Determine if id is a slug or internal ID
-    // Try to find the node in availableNodes
     const node = availableNodes.value.find(n => n.id === id || n.slug === id);
-    if (node) {
-        navigateToNode(node);
-    } else {
+    if (!node) {
         console.warn('[StudioLayout] Navigate request failed, node not found:', id);
+        return;
     }
+    
+    navigateToNode(node);
 }
 
 const navigateToNode = (node) => {
     isDropdownOpen.value = false
     
-    // Always navigate to the segment in the editor
-    // The editor will load the segment content and the player will sync automatically
-    router.visit(route('studio.show', { type: props.type, slug: props.entity.slug, childId: node.id }))
+    // OPTIMIZATION: Client-Side Switching vs Server Round-Trip
+    // If the node has content available, we switch locally!
+    if (node.content || node.html_content) {
+        console.log('[StudioLayout] Client-side switch to node:', node.title);
+        
+        // 1. Load into Store
+        const content = node.content || node.html_content || '';
+        store.loadDocument(props.entity, { 
+            id: node.id, 
+            slug: node.slug,
+            title: node.title, 
+            content: content, 
+            start_time: node.start
+        }, [], {});
+
+        // 2. Seek Player (if has start time)
+        if (node.start !== undefined || node.start_time !== undefined) {
+             const time = node.start !== undefined ? node.start : node.start_time;
+             mediaStore.requestSeek(time);
+        }
+
+        // 3. Update URL
+        const newUrl = route('studio.show', { type: props.type, slug: props.entity.slug, childId: node._id || node.id || node.slug });
+        window.history.pushState({}, '', newUrl);
+
+        // 4. Reset Scroll
+        window.scrollTo({ top: 0, behavior: 'instant' });
+    } else {  
+        // Fallback: Server Round-Trip
+        router.visit(route('studio.show', { type: props.type, slug: props.entity.slug, childId: node.id }))
+    }
 }
 
 const specificNodeTitle = computed(() => {
-    if (props.isFullView) return 'عرض مقطع محدد';
+    if (store.currentContentNode?.id === 'full' || !mediaStore.activeSegmentSlug) return 'عرض مقطع محدد';
     
     // Check if activeSlug matches any of our unified nodes
     const active = availableNodes.value.find(n => n.slug === mediaStore.activeSegmentSlug || n.id === props.activeChildId);
@@ -238,7 +282,7 @@ const specificNodeTitle = computed(() => {
                 @click="navigateToFull"
                 :class="[
                     'flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded transition-all',
-                    props.isFullView 
+                    store.currentContentNode?.id === 'full' 
                         ? 'bg-amber-500/10 text-amber-500 font-bold shadow-sm' 
                         : 'text-gray-400 hover:text-white hover:bg-white/5'
                 ]"
@@ -263,7 +307,7 @@ const specificNodeTitle = computed(() => {
                     @click="toggleDropdown"
                     :class="[
                         'flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-r transition-all',
-                        !props.isFullView 
+                        store.currentContentNode?.id !== 'full' 
                             ? 'bg-blue-500/10 text-blue-400 font-bold shadow-sm' 
                             : 'text-gray-400 hover:text-white hover:bg-white/5'
                     ]"
@@ -298,7 +342,7 @@ const specificNodeTitle = computed(() => {
                     </div>
 
                     <!-- Scrollable List -->
-                    <div class="overflow-y-auto flex-1 p-1 custom-scrollbar bg-[#1a1a1a]/50 backdrop-blur-xl">
+                    <div class="overflow-y-auto flex-1 p-1 custom-scrollbar bg-[#1e1e1e]">
                         <button 
                             v-for="node in availableNodes" 
                             :key="node.slug || node.id"
@@ -398,6 +442,7 @@ const specificNodeTitle = computed(() => {
             :media-entity="props.entity"
             :type="props.type"
             @navigate="navigateToChild"
+            @navigate-full="navigateToFull"
           />
       </div>
 

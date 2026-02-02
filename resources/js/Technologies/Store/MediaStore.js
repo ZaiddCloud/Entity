@@ -74,6 +74,10 @@ export const useMediaStore = defineStore('media-global', () => {
         seekRequest.value = { time: Number(time), showGuide, timestamp: Date.now() };
     };
 
+    const setActiveSegment = (slug) => {
+        activeSegmentSlug.value = slug;
+    };
+
     // --- Actions: Window Interactions ---
     const isDragging = ref(false);
     const dragOffset = ref({ x: 0, y: 0 });
@@ -210,6 +214,33 @@ export const useMediaStore = defineStore('media-global', () => {
         return `${mm}:${ss}`;
     };
 
+    const addSegment = (segData) => {
+        const newSeg = {
+            ...segData,
+            slug: segData.slug || `seg-${Date.now()}`
+        };
+        // Add and sort chronologically (Touch #25)
+        const newSegments = [...segments.value, newSeg];
+        newSegments.sort((a, b) => (Number(a.start) || 0) - (Number(b.start) || 0));
+        segments.value = newSegments;
+
+        activeSegmentSlug.value = newSeg.slug;
+    };
+
+    const updateSegment = (updatedSeg) => {
+        // Find and update the segment
+        const index = segments.value.findIndex(s => (s.id || s.slug) === (updatedSeg.id || updatedSeg.slug));
+        if (index !== -1) {
+            // Create new array with updated segment
+            const newSegments = [...segments.value];
+            newSegments[index] = { ...newSegments[index], ...updatedSeg };
+
+            // Re-sort if time changed
+            newSegments.sort((a, b) => (Number(a.start) || 0) - (Number(b.start) || 0));
+            segments.value = newSegments;
+        }
+    };
+
     // Computed
     const isFloating = computed(() => !isDocked.value && !isIntegrated.value);
 
@@ -242,12 +273,15 @@ export const useMediaStore = defineStore('media-global', () => {
         loadMedia,
         startDrag,
         startResize,
+        setActiveSegment,
         toggleMaximize,
         setOpen,
         formatTime,
         cycleSize,
         toggleCollapse,
         resetLayout,
-        requestSeek // Added action
+        requestSeek,
+        addSegment,
+        updateSegment
     };
 });

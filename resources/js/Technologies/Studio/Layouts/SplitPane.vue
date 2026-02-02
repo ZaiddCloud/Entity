@@ -9,12 +9,29 @@ const props = defineProps({
     minSize: {
         type: Number,
         default: 20
+    },
+    persistenceKey: {
+        type: String,
+        default: 'studio-split-pane'
     }
 })
 
 const containerRef = ref(null)
 const splitPercent = ref(props.initialSplit)
 const isResizing = ref(false)
+
+onMounted(() => {
+    // Restore from localStorage
+    if (props.persistenceKey) {
+        const saved = localStorage.getItem(props.persistenceKey)
+        if (saved) {
+            const val = parseFloat(saved)
+            if (!isNaN(val) && val >= props.minSize && val <= (100 - props.minSize)) {
+                splitPercent.value = val
+            }
+        }
+    }
+})
 
 const startResize = () => {
     isResizing.value = true
@@ -28,50 +45,20 @@ const handleMouseMove = (e) => {
     if (!isResizing.value || !containerRef.value) return
 
     const rect = containerRef.value.getBoundingClientRect()
-    // In RTL, 0 is on the right.
-    // X coordinate is relative to viewport.
-    // Let's calculate percentage based on width.
-    
-    // For English (LTR): percent = ((e.clientX - rect.left) / rect.width) * 100
-    // For RTL: percent = ((rect.right - e.clientX) / rect.width) * 100
-    // Usually browser handles structure, but we need to supply width percentages.
-    
-    // Let's assume standard Flexbox behavior where order matters.
-    // If pane 1 is Right (Start) and pane 2 is Left (End).
-    
-    // Let's calculate from Left for simplicity as Flex logic usually follows DOM order.
-    // If standard LTR DOM: Left Box | Handle | Right Box
-    // If RTL: Right Box | Handle | Left Box
-    
-    // We will calculate width of the *First Child* (Start Pane).
-    // In RTL, Start is Right.
-    
-    const x = e.clientX - rect.left
     const width = rect.width
-    let percent = (x / width) * 100
     
-    // RTL Adjustment: If dir="rtl", 0 is right. 
-    // Actually, getBoundingClientRect().left is always visual left.
-    // If RTL, the logical "Start" is on the right.
-    // But let's verify DOM order. Standard: <Pane1> <Handle> <Pane2>.
-    // In RTL, Pane1 is visually on Right. Pane2 on Left.
-    // If mouse moves LEFT (decreasing X), Pane1 (Right) grows? No, Pane1 (Right) needs to grab width-difference.
-    
-    // Let's stick to simple visual calculation.
-    // We want Split to represent width of the First Pane.
-    // If RTL, First Pane is on the Right.
-    // So if I drag Left (smaller X), the Right Pane grows. 
-    // Wait, rect.right is constant. e.clientX decreases. difference increases.
-    
+    // Determine RTL
     const isRtl = document.dir === 'rtl' || document.documentElement.dir === 'rtl'
     
+    let percent = 0
     if (isRtl) {
         percent = ((rect.right - e.clientX) / width) * 100
     } else {
         percent = ((e.clientX - rect.left) / width) * 100
     }
     
-    splitPercent.value = Math.min(100 - props.minSize, Math.max(props.minSize, percent))
+    const newPercent = Math.min(100 - props.minSize, Math.max(props.minSize, percent))
+    splitPercent.value = newPercent
 }
 
 const stopResize = () => {
@@ -80,6 +67,11 @@ const stopResize = () => {
     document.body.style.userSelect = ''
     window.removeEventListener('mousemove', handleMouseMove)
     window.removeEventListener('mouseup', stopResize)
+    
+    // Save to localStorage
+    if (props.persistenceKey) {
+        localStorage.setItem(props.persistenceKey, splitPercent.value)
+    }
 }
 </script>
 

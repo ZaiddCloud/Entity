@@ -58,7 +58,8 @@ This section documents the transformation of the control area into a cinematic d
 | 21 | **Live Waveform Visualizer** (Reactive audio wave feedback) | `pending` | `PlayerControls.vue` |
 | 22 | **Editor-Player Interactive Sync** (Smart titles & navigation) | `f006390` | `TiptapEditor.vue`, `SegmentLink.js` |
 | 23 | **Unified Smart Save** (Full View splitting & JSON persistence) | `f006390` | `EditorStore.js`, `UnifiedEditorController.php` |
-| 24 | **Playlist Minimalism** (Extreme UI, Phosphorescent & Bi-Directional) | `complete` | `PlayerPlaylist.vue` |
+| 24 | **Playlist Minimalism** (Extreme UI, Phosphorescent & Bi-Directional) | `ce8cc4b` | `PlayerPlaylist.vue` |
+| 25 | **Harmony Restoration** (Master Styles, Smart Guard & Instant Switching) | `8d2446c` | `PlayerPlaylist.vue`, `MediaPlayer.vue`, `StudioLayout.vue` |
 
 ---
 > [!TIP]

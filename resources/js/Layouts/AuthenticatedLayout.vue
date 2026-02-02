@@ -8,9 +8,10 @@ defineProps({
     title: String,
 });
 
-const isSidebarOpen = ref(true);
+const isSidebarOpen = ref(localStorage.getItem('isSidebarOpen') !== 'false'); // Default to true if not set
 const toggleSidebar = () => {
     isSidebarOpen.value = !isSidebarOpen.value;
+    localStorage.setItem('isSidebarOpen', isSidebarOpen.value);
 };
 
 const isDark = ref(false);
@@ -41,7 +42,7 @@ provide('themeContext', { isDark, toggleDarkMode });
 
 <template>
   <div
-    class="h-screen overflow-hidden bg-gray-50 dark:bg-[#050505] text-gray-900 dark:text-[#ededec]"
+    class="min-h-screen bg-gray-50 dark:bg-[#050505] text-gray-900 dark:text-[#ededec]"
     dir="rtl"
   >
     <Head :title="title" />
@@ -50,9 +51,10 @@ provide('themeContext', { isDark, toggleDarkMode });
     <Sidebar :is-open="isSidebarOpen" />
 
     <!-- Main Content Area -->
-    <div :class="['transition-all duration-300 h-screen overflow-y-auto custom-scrollbar flex flex-col', isSidebarOpen ? 'mr-64' : 'mr-20']">
-      <!-- Navbar -->
+    <div :class="['transition-all duration-300 flex flex-col flex-1', isSidebarOpen ? 'mr-64' : 'mr-20']">
+      <!-- Navbar (Sticky) -->
       <Navbar 
+        class="sticky top-0 z-40 bg-gray-50 dark:bg-[#050505]"
         :title="title" 
         :is-sidebar-open="isSidebarOpen"
         @toggle-sidebar="toggleSidebar"
@@ -69,7 +71,7 @@ provide('themeContext', { isDark, toggleDarkMode });
       </header>
 
       <!-- Page Implementation Section -->
-      <main class="p-8 animate-fade-in custom-main">
+      <main class="p-8 animate-fade-in custom-main min-h-screen">
         <slot />
       </main>
             

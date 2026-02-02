@@ -104,13 +104,13 @@ class EntityContentService
         /** @var Model|null $node */
         $node = $model::query()
             ->where($idField, $entity->id)
-            ->where(function($query) use ($identifier) {
+            ->where(function ($query) use ($identifier) {
                 $query->where('slug', $identifier)
-                      ->orWhere('_id', $identifier)
-                      ->orWhere('id', $identifier);
+                    ->orWhere('_id', $identifier)
+                    ->orWhere('id', $identifier);
             })
             ->first();
-            
+
         return $node;
     }
 
@@ -201,7 +201,7 @@ class EntityContentService
         }
 
         $hierarchy = $this->getHierarchy($entity, 500);
-        
+
         // Navigation relies on node, if no node exists (empty entity), nav is null
         $navigation = $node ? $this->getNavigation($entity, $node) : ['prev' => null, 'next' => null];
 
@@ -296,11 +296,11 @@ class EntityContentService
     public function aggregateFullContent(Entity $entity): string
     {
         $children = $this->getHierarchy($entity);
-        
+
         // Load full data for children (since getHierarchy might be light)
         $modelClass = $this->getContentModel($entity);
         $foreignKey = $this->getEntityIdField($entity);
-        
+
         $fullChildren = $modelClass::where($foreignKey, $entity->id)
             ->orderBy('order')
             ->get();
@@ -310,12 +310,13 @@ class EntityContentService
 
         foreach ($fullChildren as $index => $child) {
             $title = $child->title ?: "قسم " . ($index + 1);
-            
+
             // Add header for each node with a machine-readable marker
-            $fullTranscript .= "<p><strong><span data-segment-link=\"true\" data-id=\"{$child->id}\">{$title}:</span></strong></p>";
-            
+            $startTime = $child->start_time ?? 0;
+            $fullTranscript .= "<p><strong><span data-segment-link=\"true\" data-id=\"{$child->id}\" data-start-time=\"{$startTime}\">{$title}:</span></strong></p>";
+
             $content = $child->content ?: '';
-            
+
             // Handle Video special case (if no content but has description)
             if ($type === 'video' && empty($content) && $child->description) {
                 $content = "<p>{$child->description}</p>";
@@ -341,7 +342,7 @@ class EntityContentService
         // So this method is technically not called by my previous controller code.
         // BUT, for consistency with the Interface/Plan, I should add it and maybe refactor Controller later
         // or just leave it as a utility.
-        
+
         return true;
     }
 
@@ -354,10 +355,10 @@ class EntityContentService
         $foreignKey = $this->getEntityIdField($entity);
 
         $node = $modelClass::where($foreignKey, $entity->id)
-            ->where(function($query) use ($nodeId) {
+            ->where(function ($query) use ($nodeId) {
                 $query->where('slug', $nodeId)
-                      ->orWhere('_id', $nodeId)
-                      ->orWhere('id', $nodeId);
+                    ->orWhere('_id', $nodeId)
+                    ->orWhere('id', $nodeId);
             })
             ->firstOrFail();
 

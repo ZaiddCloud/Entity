@@ -25,6 +25,7 @@ export function useEditorSave() {
 
             if (store.editor) {
                 payload = {
+                    title: store.currentContentNode?.title || '',
                     html: store.editor.getHTML(),
                     json: store.editor.getJSON(),
                     text: store.editor.getText(),
@@ -33,16 +34,19 @@ export function useEditorSave() {
                 store.content = payload.html
             }
 
-            const response = await axios.post(`/studio/${type}/${slug}/save`, {
-                content: payload
-            })
-
             if (response.data.last_saved) {
                 store.lastSaved = new Date(response.data.last_saved)
+
                 // Update local node state
                 if (store.currentContentNode) {
                     store.currentContentNode.content = payload.html
                 }
+
+                // Trigger Global Refresh to sync Toolbar and Player
+                import('@inertiajs/vue3').then(({ router }) => {
+                    router.reload({ only: ['entity'] });
+                });
+
                 return true
             }
             return false

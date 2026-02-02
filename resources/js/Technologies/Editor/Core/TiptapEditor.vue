@@ -52,7 +52,7 @@ const props = defineProps({
     }
 })
 
-const emit = defineEmits(['update:modelValue', 'setEditor'])
+const emit = defineEmits(['update:modelValue', 'setEditor', 'navigate'])
 const tiptapStore = useTiptapStore()
 
 const editor = useEditor({
@@ -115,6 +115,10 @@ const editor = useEditor({
                 
                 if (mark && mark.attrs.startTime !== null) {
                     mediaStore.requestSeek(parseFloat(mark.attrs.startTime))
+                    
+                    if (mark.attrs.segmentId) {
+                        emit('navigate', mark.attrs.segmentId)
+                    }
                     return true
                 }
             }
@@ -136,6 +140,10 @@ const editor = useEditor({
                     if (matchedSegment) {
                         const seekTime = matchedSegment.start || matchedSegment.start_time || 0
                         mediaStore.requestSeek(parseFloat(seekTime))
+                        // Also navigate if we have an ID/Slug
+                        if (matchedSegment.id || matchedSegment.slug) {
+                             emit('navigate', matchedSegment.id || matchedSegment.slug)
+                        }
                         return true
                     }
                 }

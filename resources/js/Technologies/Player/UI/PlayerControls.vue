@@ -156,7 +156,7 @@ onUnmounted(() => {
             @click="handleTimelineClick"
         >
             <!-- Glass Seek Background -->
-            <div class="seek-bg absolute inset-x-0 bg-white/10 backdrop-blur-[2px] h-1.5 rounded-full top-1/2 -translate-y-1/2 transition-all group-hover:h-2 group-hover:bg-white/15"></div>
+            <div class="seek-bg absolute inset-x-0 bg-white/10 h-1.5 rounded-full top-1/2 -translate-y-1/2 transition-all group-hover:h-2 group-hover:bg-white/15"></div>
             
             <!-- Segment Markers -->
             <div 
@@ -253,16 +253,8 @@ onUnmounted(() => {
                     {{ playbackRate }}x
                 </button>
                 
-                <!-- Animated Speed Menu -->
-                <transition
-                    enter-active-class="transition duration-200 ease-out"
-                    enter-from-class="transform scale-95 opacity-0 translate-y-2"
-                    enter-to-class="transform scale-100 opacity-100 translate-y-0"
-                    leave-active-class="transition duration-150 ease-in"
-                    leave-from-class="transform scale-100 opacity-100 translate-y-0"
-                    leave-to-class="transform scale-95 opacity-0 translate-y-2"
-                >
-                    <div v-if="showSpeedMenu" class="absolute bottom-full right-8 mb-2 bg-[#1a1a1a] border border-[#333] rounded shadow-xl flex flex-col py-1 z-50 min-w-[70px] origin-bottom-right">
+                 <!-- Speed Menu (Instant) -->
+                 <div v-if="showSpeedMenu" class="absolute bottom-full right-8 mb-2 bg-[#1a1a1a] border border-[#333] rounded shadow-xl flex flex-col py-1 z-50 min-w-[70px] origin-bottom-right">
                          <div class="text-[10px] text-gray-500 font-bold px-2 py-1 border-b border-[#333]">Speed</div>
                         <button v-for="rate in [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0]" :key="rate" 
                             class="px-2 py-1.5 text-xs hover:bg-[#333] text-left transition-colors flex justify-between items-center" 
@@ -272,16 +264,12 @@ onUnmounted(() => {
                             <span v-if="rate === playbackRate" class="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
                         </button>
                     </div>
-                </transition>
 
                 <button class="hover:text-white transition-transform active:scale-95" title="Repeat" @click="$emit('toggle-loop')">
                     <Repeat class="w-2.5 h-2.5" :class="{'text-yellow-500': loopRange.start !== null}" />
                 </button>
                 <button class="hover:text-white transition-all active:scale-95 flex items-center gap-1" :title="isPlaylistOpen ? 'Hide Chapters' : 'Show Chapters'" @click="$emit('toggle-playlist')">
                      <component :is="isPlaylistOpen ? PanelRightClose : PanelRightOpen" class="w-2.5 h-2.5" :class="{'text-white': isPlaylistOpen}" />
-                </button>
-                <button class="hover:text-white transition-transform active:scale-95" title="Quick Jumps" @click="$emit('toggle-playlist')">
-                    <List class="w-2.5 h-2.5" :class="{'text-yellow-500': isPlaylistOpen}" />
                 </button>
                 <button class="hover:text-white transition-transform active:scale-95" title="Fullscreen" @click="$emit('toggle-fullscreen')">
                     <Maximize2 class="w-2.5 h-2.5" />

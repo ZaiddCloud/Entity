@@ -1,6 +1,8 @@
 <script setup>
-import { onMounted, onUnmounted, ref, watch, computed } from 'vue';
+import { onMounted, onUnmounted, ref, watch, computed, nextTick } from 'vue';
+import { Check, X } from 'lucide-vue-next';
 import { useMediaStore } from '@/Technologies/Store/MediaStore';
+import { useEditorStore } from '@/Technologies/Store/EditorStore';
 import { useMedia } from '@/Technologies/Player/Composables/useMedia';
 
 // UI Components
@@ -24,7 +26,8 @@ const props = defineProps({
 const emit = defineEmits([
     'segment-change', 'ended', 'ready', 'timeupdate', 
     'close', 'toggle-dock', 'toggle-playlist',
-    'add-segment', 'delete-segment', 'update-segment' // Added update-segment
+    'add-segment', 'delete-segment', 'update-segment',
+    'navigate-full' // Added navigate-full
 ]);
 
 // ... (store logic) ...
@@ -37,6 +40,7 @@ const handleUpdateSegment = (seg) => {
 
 // --- Store & Media Logic ---
 const store = useMediaStore();
+const editorStore = useEditorStore();
 const videoScreenRef = ref(null);
 
 const {
@@ -47,6 +51,8 @@ const {
     playbackRate,
     loopRange,
     togglePlay, 
+    play,
+    pause,
     seek,
     setVolume,
     setPlaybackRate,
@@ -96,12 +102,35 @@ watch(() => store.seekRequest, (req) => {
     }
 }, { immediate: true });
 
+// --- Smart Auto-Tracking (Polite Automation) ---
+watch(currentTime, (now) => {
+    if (!isPlaying.value) return; 
+    
+    // SMART GUARD: Don't override if user is explicitly in "Full View" 
+    // This preserves the "Point 9" harmony where Full View is stable.
+    if (editorStore.currentContentNode?.id === 'full') return;
+
+    const found = props.segments?.find(s => 
+        now >= (s.start || 0) && now < (s.end || s.start + 10)
+    );
+
+    if (found && found.slug !== store.activeSegmentSlug) {
+        console.log('[MediaPlayer] Smart Auto-Tracking Segment:', found.slug);
+        store.activeSegmentSlug = found.slug;
+    }
+});
+
+
 const addQuickSegment = () => {
-    emit('add-segment', {
-        start: currentTime.value,
-        title: `مقطع عند ${store.formatTime(currentTime.value)}`
-    });
+    pause(); // Auto-pause (Touch #25)
+    // UI is now handled in PlayerPlaylist
 };
+
+const handleFinalizeAdd = (segData) => {
+    store.addSegment(segData);
+    emit('add-segment', segData);
+};
+
 
 const deleteActiveSegment = () => {
     if (store.activeSegmentSlug) {
@@ -209,17 +238,17 @@ defineExpose({
             top: '48px',
             width: '100vw',
             height: 'calc(100vh - 48px)',
-            transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+            transition: 'none'
         } : (store.isFloating ? {
             left: `${store.windowPos.left}px`,
             top: `${store.windowPos.top}px`,
             width: store.sizeMode === 'mini' ? '320px' : (store.sizeMode === 'theater' ? '800px' : `${store.dimensions.width || 500}px`),
             height: store.isCollapsed ? '86px' : (store.sizeMode === 'mini' ? '180px' : `${store.dimensions.height || (props.type === 'audio' ? 240 : 480)}px`),
-            transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)'
+            transition: 'none'
         } : {
             width: store.sizeMode === 'mini' ? '320px' : (store.sizeMode === 'theater' ? '100%' : `${store.dimensions.width || 500}px`),
             height: store.isCollapsed ? '86px' : (store.sizeMode === 'mini' ? '180px' : `${store.dimensions.height || (props.type === 'audio' ? 240 : 480)}px`),
-            transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+            transition: 'none',
             overflow: 'visible'
         })"
     >
@@ -230,7 +259,7 @@ defineExpose({
         />
 
         <!-- MAIN LAYOUT -->
-        <div class="flex h-full w-full overflow-hidden bg-[#141414]/95 backdrop-blur-md shadow-black drop-shadow-2xl">
+        <div class="flex h-full w-full overflow-hidden bg-[#141414] shadow-black drop-shadow-2xl">
             <!-- PLAYER CORE -->
             <div class="flex-1 flex flex-col min-w-0 border-r border-[#222]">
                 <!-- HEADER -->
@@ -247,58 +276,68 @@ defineExpose({
                     @close="emit('close')"
                 />
 
-                <!-- VIDEO AREA -->
-                <VideoScreen 
-                    v-show="!store.isCollapsed"
-                    ref="videoScreenRef"
-                    :src="src"
-                    :poster="poster"
-                    :type="type"
-                    :is-playing="isPlaying"
-                    :title="title"
-                    :current-time="currentTime"
-                    :duration="duration"
-                    @click="handleTogglePlay"
-                />
+                <!-- Integrated Content Area (Touch #25) -->
+                <div class="flex-1 flex min-h-0 overflow-hidden relative">
 
-                <!-- CONTROLS -->
-                <PlayerControls
-                    :is-playing="isPlaying"
-                    :current-time="currentTime"
-                    :duration="duration"
-                    :volume="volume"
-                    :playback-rate="playbackRate"
-                    :loop-range="loopRange"
-                    :segments="store.segments"
-                    :active-segment-slug="store.activeSegmentSlug"
-                    :is-playlist-open="store.isPlaylistOpen"
-                    @toggle-play="handleTogglePlay"
-                    @seek="handleSeek"
-                    @update:volume="setVolume"
-                    @set-playback-rate="setPlaybackRate"
-                    @toggle-loop="toggleLoopPoint"
-                    @toggle-playlist="() => { store.togglePlaylist(); emit('toggle-playlist'); }"
-                    @toggle-fullscreen="handleToggleFullscreen"
-                    @add-segment="addQuickSegment"
-                    @delete-segment="handleDeleteSegment"
-                    @segment-change="handleSegmentSelect"
-                />
+                    <!-- MAIN CONTENT: Video & Controls -->
+                    <div class="flex-1 flex flex-col min-w-0">
+                        <VideoScreen 
+                            v-show="!store.isCollapsed"
+                            ref="videoScreenRef"
+                            :src="src"
+                            :poster="poster"
+                            :type="type"
+                            :is-playing="isPlaying"
+                            :title="title"
+                            :current-time="currentTime"
+                            :duration="duration"
+                            @click="handleTogglePlay"
+                        />
 
-                <!-- PLAYLIST DRAWER (Touch #24) -->
-                <transition name="drawer-slide">
-                    <PlayerPlaylist 
-                        v-show="store.isPlaylistOpen"
-                        class="absolute top-[30px] right-0 bottom-0 z-[100] shadow-2xl"
-                        :title="title"
-                        :segments="store.segments"
-                        :active-slug="store.activeSegmentSlug"
-                        @close="store.isPlaylistOpen = false"
-                        @select="handleSegmentSelect"
-                        @add="addQuickSegment"
-                        @delete="deleteActiveSegment"
-                        @update="handleUpdateSegment"
-                    />
-                </transition>
+                        <PlayerControls
+                            :is-playing="isPlaying"
+                            :current-time="currentTime"
+                            :duration="duration"
+                            :volume="volume"
+                            :playback-rate="playbackRate"
+                            :loop-range="loopRange"
+                            :segments="store.segments"
+                            :active-segment-slug="store.activeSegmentSlug"
+                            :is-playlist-open="store.isPlaylistOpen"
+                            @toggle-play="handleTogglePlay"
+                            @seek="handleSeek"
+                            @update:volume="setVolume"
+                            @set-playback-rate="setPlaybackRate"
+                            @toggle-loop="toggleLoopPoint"
+                            @toggle-playlist="() => { store.togglePlaylist(); emit('toggle-playlist'); }"
+                            @toggle-fullscreen="handleToggleFullscreen"
+                            @add-segment="addQuickSegment"
+                            @delete-segment="handleDeleteSegment"
+                            @segment-change="handleSegmentSelect"
+                        />
+                    </div>
+
+                    <!-- SIDEBAR: Playlist (Instant) -->
+                    <div v-if="store.isPlaylistOpen" class="w-[180px] h-full shrink-0 relative z-[100]">
+                        <PlayerPlaylist 
+                            v-if="store.isPlaylistOpen"
+                            ref="playlistRef"
+                            class="w-[180px] h-full shrink-0 bg-[#0a0a0a] shadow-[-10px_0_30px_rgba(0,0,0,0.5)] border-l border-[#222]"
+                            :title="title"
+                            :segments="store.segments"
+                            :active-slug="store.activeSegmentSlug"
+                            :current-time="currentTime"
+                            :duration="duration"
+                            @close="store.isPlaylistOpen = false"
+                            @select="handleSegmentSelect"
+                            @add="addQuickSegment"
+                            @commit-add="handleFinalizeAdd"
+                            @delete="deleteActiveSegment"
+                            @update="handleUpdateSegment"
+                            @navigate-full="emit('navigate-full')"
+                        />
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -315,5 +354,13 @@ defineExpose({
 .drawer-slide-enter-from,
 .drawer-slide-leave-to {
     transform: translateX(100%);
+}
+
+.fade-enter-active, .fade-leave-active {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.fade-enter-from, .fade-leave-to {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
 }
 </style>

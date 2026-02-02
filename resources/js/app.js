@@ -7,6 +7,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue, route } from 'ziggy-js';
 import { Ziggy } from './ziggy';
 import { createPinia } from 'pinia';
+import RootLayout from './Layouts/RootLayout.vue';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -16,10 +17,18 @@ window.route = route;
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => {
-        if (name.startsWith('Technologies/')) {
-            return resolvePageComponent(`./${name}.vue`, import.meta.glob('./Technologies/**/*.vue'));
-        }
-        return resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue'));
+        const page = resolvePageComponent(
+            `./${name.startsWith('Technologies/') ? '' : 'Pages/'}${name}.vue`,
+            import.meta.glob(['./Pages/**/*.vue', './Technologies/**/*.vue'])
+        );
+
+        page.then(module => {
+            if (!module.default.layout) {
+                module.default.layout = RootLayout;
+            }
+        });
+
+        return page;
     },
     setup({ el, App, props, plugin }) {
         const pinia = createPinia();

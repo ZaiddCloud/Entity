@@ -13,7 +13,7 @@ const props = defineProps({
     type: { type: String, default: 'manuscript' } // NEW
 })
 
-const emit = defineEmits(['navigate']);
+const emit = defineEmits(['navigate', 'navigate-full']);
 
 import { useEditorSave } from './Composables/useEditorSave'
 
@@ -86,6 +86,7 @@ const handleTitleClick = () => {
              :is-studio-context="true"
              @toggle-dock="toggleDock"
              @navigate="(id) => $emit('navigate', id)"
+             @navigate-full="$emit('navigate-full')"
            />
         </div>
 
@@ -93,6 +94,7 @@ const handleTitleClick = () => {
           :key="store.contentVersion"
           v-model="store.content"
           @set-editor="store.setEditor"
+          @navigate="(id) => $emit('navigate', id)"
         />
       </div>
     </div>

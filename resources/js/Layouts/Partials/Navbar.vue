@@ -22,7 +22,7 @@ const performSearch = () => {
 </script>
 
 <template>
-  <nav class="h-16 sticky top-0 z-40 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-gray-100 dark:border-white/5 flex items-center justify-between px-8">
+  <nav class="h-16 sticky top-0 z-40 bg-white dark:bg-[#0a0a0a] border-b border-gray-100 dark:border-white/5 flex items-center justify-between px-8">
     <div class="flex items-center gap-6">
       <button
         class="p-2 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"

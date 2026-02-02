@@ -10,7 +10,7 @@
                 
         <div class="relative z-10 p-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
           <div class="max-w-2xl">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-[10px] font-black uppercase tracking-widest mb-4">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white text-[10px] font-black uppercase tracking-widest mb-4">
               <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-ping" />
               النظام يعمل بكفاءة
             </div>
@@ -23,11 +23,11 @@
           </div>
                     
           <div class="flex gap-4 shrink-0">
-            <div class="bg-black/20 backdrop-blur-xl rounded-3xl p-6 border border-white/10 text-center min-w-[140px] hover:bg-black/30 transition-colors">
+            <div class="bg-black/20 rounded-3xl p-6 border border-white/10 text-center min-w-[140px] hover:bg-black/30 transition-colors">
               <span class="block text-white/50 text-[10px] font-black uppercase mb-2 tracking-widest">إجمالي المحتوى</span>
               <span class="text-4xl font-black text-white">{{ totalEntities }}</span>
             </div>
-            <div class="bg-white/10 backdrop-blur-xl rounded-3xl p-6 border border-white/10 text-center min-w-[140px] hover:bg-white/20 transition-colors">
+            <div class="bg-white/10 rounded-3xl p-6 border border-white/10 text-center min-w-[140px] hover:bg-white/20 transition-colors">
               <span class="block text-white/70 text-[10px] font-black uppercase mb-2 tracking-widest">المؤلفون</span>
               <span class="text-4xl font-black text-white">{{ stats.authors }}</span>
             </div>
