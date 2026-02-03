@@ -148,14 +148,15 @@ export const decompressContent = (compressed) => {
 | 28 | **Service Worker** | `5a135b4` | `sw.js`, `app.js` | ✅ Complete |
 | 29 | **Offline PWA** | `5a135b4` | `/offline`, `offline.blade.php` | ✅ Complete |
 | 30 | **JSON Persistence Fix** | `5a135b4` | `sw.js`, `BookChild.php` | ✅ Complete |
-| 31 | **Migration System** | `n/a` | `migrations/` | ⏳ Pending |
-| 32 | **Export/Import** | `n/a` | `dataPortability.js` | ⏳ Pending |
+| 31 | **Collections Separation** | `HEAD` | `ManuscriptPage.php`, `AudioSegment.php` | ✅ Complete |
+| 32 | **Unified Observer** | `HEAD` | `EntityContentObserver.php` | ✅ Complete |
+| 33 | **Mongo Indexing** | `HEAD` | `MongoIndexSeeder.php` | ✅ Complete |
+| 34 | **Export/Import** | `n/a` | `dataPortability.js` | ⏳ Pending |
 
-### Touch #5: Universal Background Persistence (Phase 8 Refinement)
-- **Background Sync**: Service Worker (`sw.js`) now handles network retries for all entity types (Book, Manuscript, Audio, Video).
-- **Offline PWA**: Implemented "Sanctuary Mode" with a robust `/offline` fallback page and App Shell caching.
-- **Smart Error Handling**: Network interruptions (`ERR_NETWORK`) are now handled gracefully without console noise.
-- **Critical Fix**: Resolved JSON persistence mismatch between Frontend/Backend for Books.
+### Touch #6: Collections Separation (Phase 10)
+- **Structural Integrity**: Segregated content types into `manuscript_pages`, `audio_segments`, and `video_segments` to prevent collection bloating.
+- **Cascade Deletion**: Implemented `EntityContentObserver` to handle recursive cleanup of content when a parent Entity is deleted.
+- **Optimized Performance**: Compound indexes `[entity_id + order]` ensure instant hierarchical sorting for large manuscripts/audio streams.
 
 ### Backend/Frontend Decoupling (The Universal Adapter)
 - **Store Awareness**: Pinia stores no longer call Axios directly; they delegate to the sync engine.
