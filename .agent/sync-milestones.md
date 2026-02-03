@@ -143,11 +143,19 @@ export const decompressContent = (compressed) => {
 
 | # | Integration Point | Primary Commit ID | Key Files | Status |
 |---|-------------------|-------------------|-----------|--------|
-| 26 | **Pinia Store Integration** | `HEAD` | `EditorStore.js`, `MediaStore.js` | ✅ Complete |
-| 27 | **PHP API Updates** | `HEAD` | `UnifiedEditorController.php` | ✅ Complete |
-| 28 | **Service Worker** | `HEAD` | `sw.js`, `app.js` | ✅ Complete |
-| 29 | **Migration System** | `n/a` | `migrations/` | ⏳ Pending |
-| 30 | **Export/Import** | `n/a` | `dataPortability.js` | ⏳ Pending |
+| 26 | **Pinia Store Integration** | `5a135b4` | `EditorStore.js`, `MediaStore.js` | ✅ Complete |
+| 27 | **PHP API Updates** | `5a135b4` | `UnifiedEditorController.php` | ✅ Complete |
+| 28 | **Service Worker** | `5a135b4` | `sw.js`, `app.js` | ✅ Complete |
+| 29 | **Offline PWA** | `5a135b4` | `/offline`, `offline.blade.php` | ✅ Complete |
+| 30 | **JSON Persistence Fix** | `5a135b4` | `sw.js`, `BookChild.php` | ✅ Complete |
+| 31 | **Migration System** | `n/a` | `migrations/` | ⏳ Pending |
+| 32 | **Export/Import** | `n/a` | `dataPortability.js` | ⏳ Pending |
+
+### Touch #5: Universal Background Persistence (Phase 8 Refinement)
+- **Background Sync**: Service Worker (`sw.js`) now handles network retries for all entity types (Book, Manuscript, Audio, Video).
+- **Offline PWA**: Implemented "Sanctuary Mode" with a robust `/offline` fallback page and App Shell caching.
+- **Smart Error Handling**: Network interruptions (`ERR_NETWORK`) are now handled gracefully without console noise.
+- **Critical Fix**: Resolved JSON persistence mismatch between Frontend/Backend for Books.
 
 ### Backend/Frontend Decoupling (The Universal Adapter)
 - **Store Awareness**: Pinia stores no longer call Axios directly; they delegate to the sync engine.
