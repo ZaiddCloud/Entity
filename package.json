@@ -51,6 +51,7 @@
                 "dexie": "^4.3.0",
                 "lodash": "^4.17.21",
                 "lucide-vue-next": "^0.562.0",
+                "lz-string": "^1.5.0",
                 "mammoth": "^1.11.0",
                 "pinia": "^3.0.4",
                 "tippy.js": "^6.3.7",

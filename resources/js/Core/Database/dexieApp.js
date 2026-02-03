@@ -9,7 +9,7 @@
 import Dexie from 'dexie';
 
 // Initialize Dexie database
-export const db = new Dexie('EntityLocalDB');
+export const db = new Dexie('EntityLocalDB_v2');
 
 // Define database schema (version 1)
 db.version(1).stores({
@@ -18,8 +18,8 @@ db.version(1).stores({
     entities: 'id, slug, type, parent_id, updated_at, version_tag',
 
     // Content Blocks: Large content storage (Tiptap JSON, MongoDB transcripts)
-    // Indexes: node_id (primary), entity_id, segment_order
-    content_blocks: 'node_id, entity_id, segment_order, chunk_hash, is_loaded',
+    // Indexes: [node_id+segment_order] (compound primary), entity_id
+    content_blocks: '[node_id+segment_order], entity_id, chunk_hash, is_loaded',
 
     // Sync Registry: Pending operations queue
     // Indexes: id (primary), timestamp, priority, status
@@ -27,7 +27,14 @@ db.version(1).stores({
 
     // Ephemeral State: Transient UI state (playback positions, settings)
     // Indexes: composite key [user_id+entity_id]
+    // Ephemeral State: Transient UI state (playback positions, settings)
+    // Indexes: composite key [user_id+entity_id]
     ephemeral_state: '[user_id+entity_id], user_id, entity_id, last_accessed'
+});
+
+// Version 2: Update content_blocks to use compound primary key
+db.version(2).stores({
+    content_blocks: '[node_id+segment_order], entity_id, chunk_hash, is_loaded'
 });
 
 // Database lifecycle hooks

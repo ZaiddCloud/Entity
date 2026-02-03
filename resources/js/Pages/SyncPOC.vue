@@ -13,6 +13,8 @@
 import { ref, onMounted, computed } from 'vue';
 import { useResilientSync } from '@/Core/Sync/useResilientSync';
 import db, { getDatabaseStats } from '@/Core/Database/dexieApp';
+import { compress, decompress, getCompressionStats } from '@/Core/Storage/compressionUtils';
+import { splitContent, reassembleChunks } from '@/Core/Storage/chunkManager';
 
 const {
     isSyncing,
@@ -135,10 +137,82 @@ async function clearCache() {
     if (confirm('Clear all local data?')) {
         await db.entities.clear();
         await db.sync_registry.clear();
+        await db.content_blocks.clear();
         entity.value = null;
         await loadDbStats();
         alert('Cache cleared!');
     }
+}
+
+// --- Optimization Lab State ---
+const heavyContent = ref('');
+const compressedPreview = ref('');
+const compressionStats = ref(null);
+const chunks = ref([]);
+const chunkStats = ref(null);
+
+// Generate 500KB of dummy text
+function generateHeavyContent() {
+    const base = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. ";
+    // Repeat to reach approx 500KB
+    heavyContent.value = base.repeat(10000); 
+    compressionStats.value = null;
+    chunks.value = [];
+}
+
+// Test Compression
+function testCompression() {
+    if (!heavyContent.value) return;
+    
+    const start = performance.now();
+    const compressed = compress(heavyContent.value);
+    const end = performance.now();
+    
+    compressedPreview.value = compressed;
+    compressionStats.value = {
+        ...getCompressionStats(heavyContent.value, compressed),
+        time: (end - start).toFixed(2) + 'ms'
+    };
+}
+
+// Test Decompression (Verify)
+function testDecompression() {
+    if (!compressedPreview.value) return;
+    
+    const original = decompress(compressedPreview.value);
+    if (original === heavyContent.value) {
+        alert('✅ Decompression verified! Content matches perfectly.');
+    } else {
+        alert('❌ Verification failed! Content mismatch.');
+    }
+}
+
+// Test Chunking
+async function testChunking() {
+    if (!heavyContent.value) return;
+
+    // Split
+    const entityId = 'test-heavy-entity';
+    const splitStart = performance.now();
+    const newChunks = splitContent(heavyContent.value, entityId, 'root-node');
+    
+    chunks.value = newChunks;
+    
+    // Store in Dexie
+    await db.content_blocks.bulkPut(newChunks);
+    const splitEnd = performance.now();
+
+    // Verify Reassembly
+    const retrieved = await db.content_blocks.where({ entity_id: entityId }).toArray();
+    const reassembled = reassembleChunks(retrieved);
+    
+    chunkStats.value = {
+        count: newChunks.length,
+        time: (splitEnd - splitStart).toFixed(2) + 'ms',
+        verified: reassembled === heavyContent.value
+    };
+    
+    await loadDbStats();
 }
 
 onMounted(() => {
@@ -335,6 +409,78 @@ onMounted(() => {
                     >
                         🗑️ Clear Cache
                     </button>
+                </div>
+            </div>
+
+            <!-- Optimization Lab -->
+            <div class="mt-6 p-6 bg-slate-800/80 rounded-xl border border-indigo-500/30">
+                <h3 class="text-lg font-semibold mb-4 text-indigo-400">🧪 Optimization Lab</h3>
+                
+                <div class="flex flex-wrap gap-4 mb-4">
+                    <button 
+                        @click="generateHeavyContent"
+                        class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
+                    >
+                        📄 Generate Heavy Text (500KB)
+                    </button>
+                    
+                    <button 
+                        @click="testCompression"
+                        :disabled="!heavyContent"
+                        class="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 disabled:bg-slate-700 rounded-lg transition-colors"
+                    >
+                        🗜️ Test Compression
+                    </button>
+
+                    <button 
+                        @click="testDecompression"
+                        :disabled="!compressedPreview"
+                        class="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-slate-700 rounded-lg transition-colors"
+                    >
+                        🔓 Verify Decompression
+                    </button>
+
+                    <button 
+                        @click="testChunking"
+                        :disabled="!heavyContent"
+                        class="px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-slate-700 rounded-lg transition-colors"
+                    >
+                        🧩 Test Chunking
+                    </button>
+                </div>
+
+                <!-- Compression Stats -->
+                <div v-if="compressionStats" class="grid grid-cols-4 gap-4 mb-4 text-sm">
+                    <div class="bg-slate-900/50 p-3 rounded-lg">
+                        <div class="text-slate-400">Original Size</div>
+                        <div class="font-mono">{{ (compressionStats.originalBytes / 1024).toFixed(2) }} KB</div>
+                    </div>
+                    <div class="bg-slate-900/50 p-3 rounded-lg">
+                        <div class="text-slate-400">Compressed</div>
+                        <div class="font-mono text-emerald-400">{{ (compressionStats.compressedBytes / 1024).toFixed(2) }} KB</div>
+                    </div>
+                    <div class="bg-slate-900/50 p-3 rounded-lg">
+                        <div class="text-slate-400">Ratio</div>
+                        <div class="font-bold text-indigo-400">{{ compressionStats.ratio }}</div>
+                    </div>
+                    <div class="bg-slate-900/50 p-3 rounded-lg">
+                        <div class="text-slate-400">Time</div>
+                        <div class="font-mono">{{ compressionStats.time }}</div>
+                    </div>
+                </div>
+
+                <!-- Chunking Stats -->
+                <div v-if="chunkStats" class="p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="font-bold text-orange-400">{{ chunkStats.count }} Chunks</span>
+                            <span class="text-slate-400 mx-2">|</span>
+                            <span>Processed in {{ chunkStats.time }}</span>
+                        </div>
+                        <div class="font-bold" :class="chunkStats.verified ? 'text-emerald-400' : 'text-red-400'">
+                            {{ chunkStats.verified ? '✅ Reassembly Verified' : '❌ Reassembly Failed' }}
+                        </div>
+                    </div>
                 </div>
             </div>
 

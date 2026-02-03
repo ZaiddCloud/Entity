@@ -18,13 +18,13 @@ This document records the architectural enhancements and implementation mileston
 
 ## Phase 1: Foundation Layer (Client-Side Persistence) ✅
 
-| # | Component | Description | Key Files | Status |
-|---|-----------|-------------|-----------|--------|
-| 1 | **Dexie Database Setup** | High-performance IndexedDB with optimized indexes | `dexieApp.js` | ✅ Complete |
-| 2 | **Entities Store** | Metadata storage with polymorphic support | `schemas/entities.js` | ✅ Complete |
-| 3 | **Content Blocks Store** | Large content storage (Tiptap, MongoDB transcripts) | `schemas/contentBlocks.js` | ✅ Complete |
-| 4 | **Sync Registry** | Pending operations queue (Action Objects) | `schemas/syncRegistry.js` | ✅ Complete |
-| 5 | **Ephemeral State** | Transient data (playback positions, UI state) | `schemas/ephemeralState.js` | ✅ Complete |
+| # | Component | Primary Commit ID | Key Files | Status |
+|---|-----------|-------------------|-----------|--------|
+| 1 | **Dexie Database Setup** | `4333541` | `dexieApp.js` | ✅ Complete |
+| 2 | **Entities Store** | `4333541` | `schemas/entities.js` | ✅ Complete |
+| 3 | **Content Blocks Store** | `4333541` | `schemas/contentBlocks.js` | ✅ Complete |
+| 4 | **Sync Registry** | `4333541` | `schemas/syncRegistry.js` | ✅ Complete |
+| 5 | **Ephemeral State** | `4333541` | `schemas/ephemeralState.js` | ✅ Complete |
 
 ### Database Schema Structure
 ```javascript
@@ -39,13 +39,13 @@ ephemeral_state: 'user_id, entity_id, last_position, player_settings'
 
 ## Phase 2: Intelligent Synchronization System ✅
 
-| # | Component | Description | Key Files | Status |
-|---|-----------|-------------|-----------|--------|
-| 6 | **Resilient Sync Composable** | Central sync orchestrator with "Client-Side Truth" | `useResilientSync.js` | ✅ Complete |
-| 7 | **Fetch Strategy** | Cache-first with Delta-Sync (If-Modified-Since) | `syncStrategies/fetchStrategy.js` | ✅ Complete |
-| 8 | **Persist Strategy** | Optimistic UI with background upload | `syncStrategies/persistStrategy.js` | ✅ Complete |
-| 9 | **Network Monitor** | Real-time online/offline detection | `networkMonitor.js` | ✅ Complete |
-| 10 | **Priority Queue** | Smart operation prioritization (Critical/High/Low) | `syncQueue.js` | 🚧 In Progress |
+| # | Component | Primary Commit ID | Key Files | Status |
+|---|-----------|-------------------|-----------|--------|
+| 6 | **Resilient Sync Composable** | `4333541` | `useResilientSync.js` | ✅ Complete |
+| 7 | **Fetch Strategy** | `4333541` | `syncStrategies/fetchStrategy.js` | ✅ Complete |
+| 8 | **Persist Strategy** | `4333541` | `syncStrategies/persistStrategy.js` | ✅ Complete |
+| 9 | **Network Monitor** | `4333541` | `networkMonitor.js` | ✅ Complete |
+| 10 | **Priority Queue** | - | `syncQueue.js` | 🚧 In Progress |
 
 ### Sync Logic Flow
 ```
