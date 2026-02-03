@@ -156,6 +156,12 @@ export function useResilientSync() {
             console.log('🔄 Cache updated from server:', entity.id);
 
         } catch (error) {
+            // 304 is success (Not Modified)
+            if (error.response?.status === 304) {
+                console.log('✅ Background sync: Content up to date (304 Not Modified)');
+                return;
+            }
+
             // Silent failure for background sync
             console.warn('⚠️ Background sync failed:', error.message);
         }

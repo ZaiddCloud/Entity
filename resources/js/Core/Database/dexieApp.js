@@ -23,7 +23,7 @@ db.version(1).stores({
 
     // Sync Registry: Pending operations queue
     // Indexes: id (primary), timestamp, priority, status
-    sync_registry: '++id, timestamp, priority, operation_type, entity_id, status, retry_count',
+    sync_registry: '++id, timestamp, priority, operation_type, entity_id, status, [entity_id+status], retry_count',
 
     // Ephemeral State: Transient UI state (playback positions, settings)
     // Indexes: composite key [user_id+entity_id]

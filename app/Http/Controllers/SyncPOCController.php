@@ -70,15 +70,26 @@ class SyncPOCController extends Controller
         $entity = $modelClass::findOrFail($id);
 
         // Check for version conflicts
-        if ($request->has('version_tag')) {
-            $clientVersion = $request->input('version_tag');
+        // Check for version conflicts
+        $strategy = $request->input('strategy', 'check');
+
+        if ($strategy !== 'force' && $request->has('version_tag')) {
+            $clientVersion = (int) $request->input('version_tag');
             $serverVersion = $entity->updated_at->timestamp;
 
-            if ($clientVersion < $serverVersion) {
+            // Allow 2 second drift tolerance
+            if ($clientVersion < ($serverVersion - 2)) {
                 // Conflict detected
                 return response()->json([
                     'conflict' => true,
-                    'server_version' => $entity->toArray(),
+                    'server_version' => [
+                        'id' => $entity->id,
+                        'title' => $entity->title,
+                        'type' => $type,
+                        'updated_at' => $entity->updated_at->toIso8601String(),
+                        'version_tag' => $entity->updated_at->timestamp,
+                        // Add other fields as needed for diff
+                    ],
                     'client_version' => $request->all(),
                     'message' => 'Version conflict - server has newer data'
                 ], 409);

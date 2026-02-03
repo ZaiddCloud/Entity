@@ -27,6 +27,8 @@ const {
     getSyncStatus
 } = useResilientSync();
 
+import ConflictResolutionModal from '@/Core/UI/ConflictResolutionModal.vue';
+
 // Demo state
 const entityType = ref('book'); // Default to book
 const entityId = ref(1); // Test with entity ID 1
@@ -36,6 +38,10 @@ const editMode = ref(false);
 const editedTitle = ref('');
 const syncStatus = ref(null);
 const dbStats = ref(null);
+
+// Conflict State
+const showConflictModal = ref(false);
+const conflictData = ref(null);
 
 // Computed
 const syncStatusIcon = computed(() => {
@@ -72,24 +78,67 @@ async function loadEntity() {
 }
 
 // Save changes
-async function saveChanges() {
+async function saveChanges(strategy = 'check') {
     try {
         const updated = {
             ...entity.value,
             title: editedTitle.value
         };
         
+        // Pass strategy option (requires updating saveEntity to accept options)
+        // For now, we simulate the option passing via the sync composable or direct axios call if needed
+        // But useResilientSync primarily uses Dexie.
+        // To properly test 409, we might need to bypass queue or handle the queue error.
+        // For the POC, we will try to save to server directly to trigger 409 immediately.
+        
+        if (isOnline.value) {
+            // Direct save to trigger conflict checks immediately for demo purposes
+            await axios.put(`/api/entities/${entityType.value}/${entityId.value}`, {
+                ...updated,
+                version_tag: entity.value.version_tag, // Send OLD version to trigger conflict
+                strategy
+            });
+        }
+        
+        // If successful (or offline), save to local DB
         await saveEntity(updated);
+        
         entity.value = updated;
         editMode.value = false;
         
         // Update sync status
         syncStatus.value = await getSyncStatus(entityId.value);
         
-        alert('✅ Saved locally! Will sync when online.');
+        alert('✅ Saved successfully!');
     } catch (error) {
-        console.error('Save failed:', error);
-        alert('Failed to save: ' + error.message);
+        if (error.response?.status === 409) {
+            console.warn('⚠️ Conflict Detected:', error.response.data);
+            conflictData.value = error.response.data;
+            showConflictModal.value = true;
+        } else {
+            console.error('Save failed:', error);
+            alert('Failed to save: ' + error.message);
+        }
+    }
+}
+
+async function handleConflictResolution(strategy) {
+    showConflictModal.value = false;
+    
+    if (strategy === 'client') {
+        // Force Overwrite
+        await saveChanges('force');
+    } else {
+        // Discard Local (Take Server)
+        const serverVer = conflictData.value.server_version;
+        entity.value = {
+            ...entity.value,
+            ...serverVer
+        };
+        editedTitle.value = serverVer.title;
+        // Update local DB to match server
+        await db.entities.put(entity.value);
+        alert('⬇️ Updated with server version.');
     }
 }
 
@@ -130,6 +179,16 @@ function toggleOffline() {
     if (navigator.onLine) {
         alert('To test offline mode, use DevTools > Network > Offline');
     }
+}
+
+// Simulate Conflict (Trick server by sending old version)
+function simulateConflict() {
+    if (!entity.value) return;
+    
+    // Set version_tag to 1 hour ago
+    entity.value.version_tag = Math.floor(Date.now() / 1000) - 3600;
+    
+    alert('⚠️ Conflict Simulation Active!\n\nI have artificially aged your local copy.\nThe next SAVE will trigger a 409 Conflict.');
 }
 
 // Clear cache
@@ -404,6 +463,12 @@ onMounted(() => {
                         📡 Test Offline
                     </button>
                     <button 
+                        @click="simulateConflict"
+                        class="px-4 py-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 rounded-lg text-sm transition-colors"
+                    >
+                        ⚔️ Simulate Conflict
+                    </button>
+                    <button 
                         @click="clearCache"
                         class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm transition-colors"
                     >
@@ -492,5 +557,11 @@ onMounted(() => {
                 </div>
             </div>
         </div>
+
+        <ConflictResolutionModal 
+            :is-open="showConflictModal"
+            :conflict-data="conflictData"
+            @resolve="handleConflictResolution"
+        />
     </div>
 </template>
