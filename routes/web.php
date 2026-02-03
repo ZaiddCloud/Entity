@@ -58,6 +58,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/entities/{type}/{id}', [App\Http\Controllers\SyncPOCController::class, 'getEntity'])->name('api.entities.get');
     Route::put('/api/entities/{type}/{id}', [App\Http\Controllers\SyncPOCController::class, 'updateEntity'])->name('api.entities.update');
 
+    // 📡 Health check for network monitoring (GET handles HEAD automatically)
+    Route::get('/api/health-check', function () {
+        return response()->noContent();
+    });
+
     // Unified Smart Editor Routes
     // Unified Smart Editor Routes (Entity Studio)
     Route::get('/studio/resume', [App\Http\Controllers\UnifiedEditorController::class, 'resume'])->name('studio.resume');

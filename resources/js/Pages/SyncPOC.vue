@@ -28,6 +28,11 @@ const {
 } = useResilientSync();
 
 import ConflictResolutionModal from '@/Core/UI/ConflictResolutionModal.vue';
+import SyncStatusIcon from '@/Core/UI/SyncStatusIcon.vue';
+import GlobalSyncObserver from '@/Core/UI/GlobalSyncObserver.vue';
+import { useNetworkStatus } from '@/Core/Sync/useNetworkStatus';
+
+const { isOnline: isObservedOnline, connectionQuality } = useNetworkStatus();
 
 // Demo state
 const entityType = ref('book'); // Default to book
@@ -109,7 +114,11 @@ async function saveChanges(strategy = 'check') {
         // Update sync status
         syncStatus.value = await getSyncStatus(entityId.value);
         
-        alert('✅ Saved successfully!');
+        if (isOnline.value) {
+            window.notifySync?.('✅ Change synced to server successfully!', 'success');
+        } else {
+            window.notifySync?.('📥 Saved locally. Will sync when online.', 'info');
+        }
     } catch (error) {
         if (error.response?.status === 409) {
             console.warn('⚠️ Conflict Detected:', error.response.data);
@@ -144,13 +153,23 @@ async function handleConflictResolution(strategy) {
 
 // Manual sync trigger
 async function manualSync() {
+    if (!isOnline.value) {
+        window.notifySync?.('Cannot sync while offline 📡', 'error');
+        return;
+    }
+    isLoading.value = true;
     try {
+        window.notifySync?.('Initiating manual sync... 🔄', 'info');
         await processSyncQueue();
-        syncStatus.value = await getSyncStatus(entityId.value);
-        alert('✅ Sync completed!');
+        if (entity.value) {
+            syncStatus.value = await getSyncStatus(entityId.value);
+        }
+        window.notifySync?.('All changes pushed to server ✅', 'success');
     } catch (error) {
-        console.error('Sync failed:', error);
-        alert('Sync failed: ' + error.message);
+        console.error('Manual sync failed:', error);
+        window.notifySync?.('Sync failed: ' + error.message, 'error');
+    } finally {
+        isLoading.value = false;
     }
 }
 
@@ -304,8 +323,13 @@ onMounted(() => {
                         <span class="text-2xl">{{ syncStatusIcon }}</span>
                         <div>
                             <div class="font-semibold">{{ syncStatusText }}</div>
-                            <div class="text-sm text-slate-400">
-                                {{ isOnline ? 'Connected to server' : 'Working offline' }}
+                            <div class="flex items-center gap-2 mt-0.5">
+                                <span class="text-sm text-slate-400">
+                                    {{ isOnline ? 'Connected' : 'Sanctuary Mode (Offline)' }}
+                                </span>
+                                <span v-if="isOnline && connectionQuality" class="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] border border-slate-700 font-mono">
+                                    {{ connectionQuality.toUpperCase() }}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -313,7 +337,7 @@ onMounted(() => {
                     <button 
                         v-if="isOnline && pendingOperations > 0"
                         @click="manualSync"
-                        class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg transition-colors"
+                        class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg transition-colors font-bold shadow-lg shadow-emerald-900/40"
                     >
                         Sync Now
                     </button>
@@ -382,19 +406,20 @@ onMounted(() => {
 
             <!-- Entity Display -->
             <div v-if="entity" class="bg-slate-800/50 p-6 rounded-xl border border-slate-700">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-semibold">Entity Details</h2>
-                    <div class="flex gap-2">
-                        <span 
-                            v-if="syncStatus"
-                            class="px-3 py-1 rounded-full text-sm"
-                            :class="syncStatus.isSynced 
-                                ? 'bg-emerald-500/20 text-emerald-400' 
-                                : 'bg-yellow-500/20 text-yellow-400'"
-                        >
-                            {{ syncStatus.isSynced ? '✅ Synced' : '📥 Local Only' }}
-                        </span>
+                <div class="flex items-center justify-between mb-4 pb-4 border-b border-slate-700/50">
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl">📄</span>
+                        <div>
+                            <h2 class="text-xl font-bold text-white">{{ entity.type.toUpperCase() }} DETAILS</h2>
+                            <div class="text-[10px] font-mono text-slate-500 uppercase tracking-widest">{{ entity.id }}</div>
+                        </div>
                     </div>
+                    
+                    <!-- Touch 4: Visual Status Icon -->
+                    <SyncStatusIcon 
+                        :status="syncStatus?.isSynced ? 'synced' : (syncStatus?.isPending ? 'pending' : (isOnline ? 'synced' : 'offline'))" 
+                        size="lg"
+                    />
                 </div>
 
                 <!-- View Mode -->
@@ -563,5 +588,8 @@ onMounted(() => {
             :conflict-data="conflictData"
             @resolve="handleConflictResolution"
         />
+
+        <!-- Touch 4: Global Observer -->
+        <GlobalSyncObserver />
     </div>
 </template>
