@@ -27,6 +27,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/offline', function () {
+    return view('offline');
+})->name('offline');
+
 Route::middleware('guest')->group(function () {
     Route::get('login', [App\Http\Controllers\Auth\LoginController::class, 'create'])->name('login');
     Route::post('login', [App\Http\Controllers\Auth\LoginController::class, 'store']);

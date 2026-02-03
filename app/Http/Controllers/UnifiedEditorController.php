@@ -264,7 +264,9 @@ class UnifiedEditorController extends Controller
 
         // --- PREPARE UPDATES ---
         $segmentsData = $request->input('segments');
-        $parts = preg_split('/<p><strong>.*?:<\/strong><\/p>/', $html, -1, PREG_SPLIT_NO_EMPTY);
+        // Regex adjusted to handle optional attributes in <p> tag AND nested spans (segment-link)
+        // Matches: <p ...><strong>...segment-link...</strong></p>
+        $parts = preg_split('/<p[^>]*><strong>.*?segment-link.*?<\/strong><\/p>/', $html, -1, PREG_SPLIT_NO_EMPTY);
 
         foreach ($children as $index => $child) {
             $updateData = [

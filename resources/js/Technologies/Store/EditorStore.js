@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { useResilientSync } from '@/Core/Sync/useResilientSync'
 
 export const useEditorStore = defineStore('editor', () => {
     // State
@@ -130,18 +131,29 @@ export const useEditorStore = defineStore('editor', () => {
             return
         }
 
+        const { saveEntity } = useResilientSync()
         isSaving.value = true
 
         try {
             const childId = currentContentNode.value.id === 'full' ? 'full' : (currentContentNode.value._id || currentContentNode.value.id)
 
             const payload = {
+                id: currentEntity.value.id || currentEntity.value.slug,
+                type: editorMode.value,
                 child_id: childId,
                 title: currentContentNode.value.title,
                 content: content.value,
                 html_content: content.value,
                 plain_text: editor.value?.getText() || '',
-                json_content: editor.value?.getJSON() || null
+                json_content: editor.value?.getJSON() || null,
+
+                // --- Sync Metadata ---
+                method: 'POST',
+                url: route('studio.save', {
+                    type: editorMode.value,
+                    slug: currentEntity.value.slug,
+                    childId: childId
+                })
             }
 
             // --- SMART SPLITTING FOR FULL VIEW ---
@@ -151,9 +163,25 @@ export const useEditorStore = defineStore('editor', () => {
                 let currentSegment = null
 
                 doc.forEach((node, offset, index) => {
-                    // Precision Detection: Top-level paragraph containing a segmentLink mark
-                    const isHeader = node.type.name === 'paragraph' &&
-                        (node.firstChild?.marks?.some(m => m.type.name === 'segmentLink') || false)
+                    // Robust Header Detection: Strict match for <p><strong>Title:</strong></p>
+                    // Must be a paragraph with single text node, bold, ending with colon.
+                    let isHeader = false;
+
+                    if (node.type.name === 'paragraph') {
+                        // Priority: Explicit SegmentLink Mark
+                        if (node.firstChild?.marks?.some(m => m.type.name === 'segmentLink')) {
+                            isHeader = true;
+                        }
+                        // Fallback: Structure Matching (Bold + Colon)
+                        else if (node.content.size === 1 && node.firstChild?.type.name === 'text') {
+                            const text = node.firstChild.text;
+                            const hasBold = node.firstChild.marks?.some(m => m.type.name === 'bold');
+
+                            if (hasBold && text.trim().endsWith(':')) {
+                                isHeader = true;
+                            }
+                        }
+                    }
 
                     if (isHeader) {
                         currentSegment = {
@@ -168,22 +196,19 @@ export const useEditorStore = defineStore('editor', () => {
 
                 payload.segments = segments.map(seg => ({
                     title: seg.title,
-                    // Send as a proper Tiptap/ProseMirror content array
                     json: seg.nodes.map(node => node.toJSON())
                 }))
             }
 
-            const response = await axios.post(
-                route('studio.save', {
-                    type: editorMode.value,
-                    slug: currentEntity.value.slug,
-                    childId: childId
-                }),
-                payload
-            )
+            // Use the resilient save (Optimistic + Queue)
+            await saveEntity(payload)
 
             lastSaved.value = new Date()
-            console.log('[EditorStore] Content saved successfully')
+            console.log('[EditorStore] Content queued for sync successfully')
+
+            if (window.notifySync) {
+                window.notifySync('حفظ ذكي: سيتم المزامنة في الخلفية ✅', 'success')
+            }
         } catch (error) {
             console.error('[EditorStore] Save failed:', error)
             throw error

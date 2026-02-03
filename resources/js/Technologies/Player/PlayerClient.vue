@@ -3,6 +3,7 @@ import { ref, computed, watch, inject, onMounted } from 'vue';
 import DraggableMediaPlayer from './MediaPlayer.vue';
 import { router } from '@inertiajs/vue3';
 import { useMediaStore } from '@/Technologies/Store/MediaStore';
+import { useResilientSync } from '@/Core/Sync/useResilientSync';
 
 const props = defineProps({
     media: Object,
@@ -123,32 +124,61 @@ watch(() => props.media, (newMedia) => {
 // Handle closing the player
 // --- Persistence Actions ---
 const handleAddSegment = async (data) => {
+    const { saveEntity } = useResilientSync();
     try {
-        await axios.post(route('api.segments.store'), {
+        const payload = {
+            id: `new-${Date.now()}`, // Temporary local ID
+            entity_type: props.type, // Validation requires 'entity_type'
             entity_id: props.media.id,
-            entity_type: props.type,
             title: data.title,
-            start_time: data.start
-        });
+            start_time: data.start,
+            file_path: null, // Optional but good to be explicit
+            
+            // Sync Meta
+            method: 'POST',
+            url: route('api.segments.store')
+        };
+
+        await saveEntity(payload);
         
-        // Refresh props to get the new segment
-        router.reload({ only: ['media'] });
+        if (window.notifySync) {
+            window.notifySync('تمت إضافة المقطع محلياً: جارٍ الرفع... 🔄', 'info');
+        }
+
+        // Optimistically update the UI locally
+        mediaStore.addSegment({
+            id: payload.id,
+            title: data.title,
+            start: data.start
+        });
+
     } catch (error) {
         console.error('[PlayerClient] Error adding segment:', error);
     }
 };
 
 const handleDeleteSegment = async (segment) => {
+    const { saveEntity } = useResilientSync();
     try {
         const id = segment.id || segment.slug;
-        await axios.delete(route('api.segments.destroy', id), {
-            data: {
-                entity_id: props.media.id,
-                entity_type: props.type
-            }
-        });
-        
-        // Always navigate to full view after deletion to avoid 404 on reload
+        const payload = {
+            id: id,
+            entity_type: props.type, // Validation requires 'entity_type'
+            entity_id: props.media.id,
+            
+            // Sync Meta
+            method: 'DELETE',
+            url: route('api.segments.destroy', id),
+            priority: 'CRITICAL'
+        };
+
+        await saveEntity(payload);
+
+        if (window.notifySync) {
+            window.notifySync('تم جدولة حذف المقطع 🗑️', 'warning');
+        }
+
+        // Redirect to full view if needed
         router.visit(route('studio.show', { type: props.type, slug: props.media.slug }));
     } catch (error) {
         console.error('[PlayerClient] Error deleting segment:', error);
@@ -156,22 +186,26 @@ const handleDeleteSegment = async (segment) => {
 };
 
 const updateSegment = async (segment) => {
+    const { saveEntity } = useResilientSync();
     try {
         const id = segment.id || segment.slug;
         const payload = {
+            id: id,
+            entity_type: props.type, // Validation requires 'entity_type'
             entity_id: props.media.id,
-            entity_type: props.type,
-            title: segment.title
+            title: segment.title,
+            start_time: segment.start,
+            
+            // Sync Meta
+            method: 'PUT',
+            url: route('api.segments.update', id)
         };
         
-        // Include start_time if it exists
-        if (segment.start !== undefined) {
-            payload.start_time = segment.start;
+        await saveEntity(payload);
+        
+        if (window.notifySync) {
+            window.notifySync('تم حفظ التعديلات محلياً 💾', 'success');
         }
-        
-        const response = await axios.put(route('api.segments.update', id), payload);
-        
-        console.log('[PlayerClient] Segment updated:', response.data);
 
         // Update store immediately for instant UI feedback
         mediaStore.updateSegment({
@@ -181,12 +215,8 @@ const updateSegment = async (segment) => {
             label: segment.title,
             start: segment.start
         });
-
-        // Refresh props (Update entity to refresh Toolbar/Sidebar)
-        router.reload({ only: ['entity'] });
     } catch (error) {
          console.error('[PlayerClient] Error updating segment:', error);
-         alert('حدث خطأ أثناء تحديث المقطع');
     }
 };
 

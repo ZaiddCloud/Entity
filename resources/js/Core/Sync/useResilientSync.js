@@ -105,12 +105,18 @@ export function useResilientSync() {
             // Step 2: Queue for server sync
             await db.sync_registry.add({
                 timestamp: new Date().toISOString(),
-                priority: 'HIGH',
-                operation_type: 'UPDATE',
+                priority: entity.priority || 'HIGH',
+                operation_type: entity.operation_type || 'UPDATE',
                 entity_id: entity.id,
                 status: 'pending',
                 retry_count: 0,
-                payload: entity
+                payload: {
+                    ...entity,
+                    _sync_meta: {
+                        method: entity.method || 'PUT',
+                        url: entity.url || `/api/entities/${entity.type}/${entity.id}`
+                    }
+                }
             });
 
             pendingOperations.value++;
@@ -188,6 +194,12 @@ export function useResilientSync() {
 
             for (const operation of pending) {
                 try {
+                    // Check online status before each operation
+                    if (!isOnline.value) {
+                        console.log('📡 Network unavailable, pausing sync queue...');
+                        break;
+                    }
+
                     await syncOperation(operation);
 
                     // Mark as completed
@@ -204,6 +216,14 @@ export function useResilientSync() {
                     pendingOperations.value--;
 
                 } catch (error) {
+                    // Smart Error Handling for Network Issues
+                    if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+                        console.log('📡 Network lost during sync. Pausing queue.');
+                        isOnline.value = false;
+                        break; // Stop processing queue, don't mark as failed, just pending
+                    }
+
+                    // For actual logical errors (422, 500), mark as failed
                     // Mark as failed, will retry later
                     await db.sync_registry.update(operation.id, {
                         status: 'failed',
@@ -215,7 +235,7 @@ export function useResilientSync() {
                 }
             }
 
-            console.log('✅ Sync queue processed');
+            console.log('✅ Sync queue processed (or paused)');
 
         } catch (error) {
             console.error('❌ Queue processing error:', error);
@@ -228,18 +248,29 @@ export function useResilientSync() {
      * Sync single operation to server
      */
     async function syncOperation(operation) {
-        switch (operation.operation_type) {
-            case 'UPDATE':
-                await axios.put(`/api/entities/${operation.payload.type}/${operation.entity_id}`, operation.payload);
+        const meta = operation.payload._sync_meta || {};
+        const method = (meta.method || 'PUT').toLowerCase();
+        const url = meta.url || `/api/entities/${operation.payload.type}/${operation.entity_id}`;
+
+        // Remove internal sync meta before sending
+        const cleanPayload = { ...operation.payload };
+        delete cleanPayload._sync_meta;
+
+        switch (method) {
+            case 'post':
+                await axios.post(url, cleanPayload);
                 break;
-            case 'CREATE':
-                await axios.post('/api/entities', operation.payload);
+            case 'put':
+                await axios.put(url, cleanPayload);
                 break;
-            case 'DELETE':
-                await axios.delete(`/api/entities/${operation.entity_id}`);
+            case 'patch':
+                await axios.patch(url, cleanPayload);
+                break;
+            case 'delete':
+                await axios.delete(url);
                 break;
             default:
-                throw new Error(`Unknown operation type: ${operation.operation_type}`);
+                throw new Error(`Unsupported sync method: ${method}`);
         }
     }
 

@@ -30,9 +30,29 @@ function addNotification(message, type = 'info') {
     }, 5000);
 }
 
-// Expose addNotification to window for global access (or use a registry)
+// Expose addNotification to window for global access
 onMounted(() => {
     window.notifySync = addNotification;
+
+    // Listen for Service Worker events (Touch 5)
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            if (!event.data) return;
+
+            switch (event.data.type) {
+                case 'SYNC_STARTED':
+                    addNotification('جاري مزامنة التغييرات في الخلفية... 🔄', 'info');
+                    break;
+                case 'SYNC_COMPLETED':
+                    if (event.data.status === 'success') {
+                        addNotification('تمت المزامنة بنجاح! جميع بياناتك آمنة ✅', 'success');
+                    } else {
+                        addNotification('فشلت المزامنة التلقائية. سيتم المحاولة لاحقاً ⚠️', 'warning');
+                    }
+                    break;
+            }
+        });
+    }
 });
 </script>
 
