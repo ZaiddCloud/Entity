@@ -48,6 +48,7 @@
                 "@tiptap/suggestion": "^3.15.3",
                 "@tiptap/vue-3": "^3.15.3",
                 "@vitejs/plugin-vue": "^6.0.3",
+                "dexie": "^4.3.0",
                 "lodash": "^4.17.21",
                 "lucide-vue-next": "^0.562.0",
                 "mammoth": "^1.11.0",

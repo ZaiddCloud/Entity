@@ -17,6 +17,7 @@ use App\Http\Controllers\NoteController;
 use App\Http\Controllers\PublisherController;
 use App\Http\Controllers\SeriesController;
 use App\Http\Controllers\ShelfController;
+use App\Http\Controllers\SyncPOCController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\TopicController;
 use App\Http\Controllers\VideoController;
@@ -42,7 +43,7 @@ Route::post('logout', [App\Http\Controllers\Auth\LoginController::class, 'destro
 Route::get('/stream/videos/{path}', [App\Http\Controllers\MediaStreamController::class, 'streamVideo'])
     ->where('path', '.*')
     ->name('stream.video');
-    
+
 Route::get('/stream/audio/{path}', [App\Http\Controllers\MediaStreamController::class, 'streamAudio'])
     ->where('path', '.*')
     ->name('stream.audio');
@@ -50,6 +51,12 @@ Route::get('/stream/audio/{path}', [App\Http\Controllers\MediaStreamController::
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/search', [GlobalSearchController::class, 'index'])->name('search');
+
+    // 🔄 Sync POC Routes (Polymorphic Entity Support)
+    Route::get('/sync-poc', [App\Http\Controllers\SyncPOCController::class, 'index'])->name('sync-poc');
+    Route::get('/api/entities/random/{type}', [App\Http\Controllers\SyncPOCController::class, 'getRandom'])->name('api.entities.random');
+    Route::get('/api/entities/{type}/{id}', [App\Http\Controllers\SyncPOCController::class, 'getEntity'])->name('api.entities.get');
+    Route::put('/api/entities/{type}/{id}', [App\Http\Controllers\SyncPOCController::class, 'updateEntity'])->name('api.entities.update');
 
     // Unified Smart Editor Routes
     // Unified Smart Editor Routes (Entity Studio)
