@@ -87,10 +87,10 @@ The system implements **Optimistic Concurrency Control** (OCC) using a server-si
 |---|---------|-------------------|-----------|--------|
 | 15 | **Compression System** | `7d9b7b3` | `compressionUtils.js` | ✅ Complete |
 | 16 | **Smart Chunking** | `7d9b7b3` | `chunkManager.js` | ✅ Complete |
-| 17 | **Predictive Caching** | `n/a` | `SyncPOC.vue` | ✅ Complete |
-| 18 | **Cache Eviction** | `n/a` | `SyncPOC.vue` | ✅ Complete |
-| 19 | **Local Backup** | `n/a` | `dexieApp.js` | ✅ Complete |
-| 20 | **Sync Diagnostics** | `n/a` | `useResilientSync.js` | ✅ Complete |
+| 17 | **Predictive Caching** | `7d9b7b3` | `SyncPOC.vue` (POC Demo) | ✅ Complete |
+| 18 | **Cache Eviction** | `7d9b7b3` | `SyncPOC.vue` (POC Demo) | ✅ Complete |
+| 19 | **Local Backup** | `a3c7822` | `dataPortability.js` | ✅ Complete |
+| 20 | **Sync Diagnostics** | `7d9b7b3` | `useResilientSync.js` | ✅ Complete |
 
 ### Optimization Performance (Verified)
 - **Compression**: 96%+ reduction for large text entities (e.g., 556KB → 18KB).
@@ -282,42 +282,65 @@ export const useMediaStore = defineStore('media', {
 
 ---
 
-## File Structure
+## Actual File Structure (As Implemented)
+
+> [!NOTE]
+> **Architectural Decision: Pragmatic Consolidation**
+> Instead of 20+ small files, we consolidated related functionality into cohesive modules.
+> This reduces complexity, improves maintainability, and follows Vue 3 Composables best practices.
+> The structure below reflects what is actually implemented and battle-tested.
 
 ```
 resources/js/Core/
 ├── Database/
-│   ├── dexieApp.js                 # Main DB initialization
-│   ├── schemas/
-│   │   ├── entities.js             # Entity metadata schema
-│   │   ├── contentBlocks.js        # Large content schema
-│   │   ├── syncRegistry.js         # Sync queue schema
-│   │   └── ephemeralState.js       # Transient data schema
-│   └── migrations/
-│       ├── v1_to_v2.js             # Schema upgrade scripts
-│       └── migrationRunner.js      # Migration orchestrator
-├── Sync/
-│   ├── useResilientSync.js         # Main sync composable
-│   ├── conflictResolver.js         # Conflict detection & resolution
-│   ├── syncQueue.js                # Priority queue manager
-│   ├── networkMonitor.js           # Online/offline detection
-│   └── syncStrategies/
-│       ├── fetchStrategy.js        # Cache-first fetching
-│       ├── persistStrategy.js      # Optimistic persistence
-│       └── progressiveSync.js      # Phased loading
+│   └── dexieApp.js                 # Main DB initialization with inline schemas
+│                                   # Includes: entities, content_blocks, sync_registry, ephemeral_state
 ├── Storage/
-│   ├── compressionUtils.js         # LZ-String compression
-│   ├── chunkManager.js             # Content chunking
-│   ├── cacheEviction.js            # LRU cleanup
-│   ├── backupManager.js            # Local backups
-│   └── encryptionLayer.js          # Crypto-JS encryption
+│   ├── compressionUtils.js         # LZ-String compression/decompression
+│   └── chunkManager.js             # Smart content chunking (50KB threshold)
+├── Sync/
+│   ├── useResilientSync.js         # Main sync composable (269 lines)
+│   │                               # Includes: fetch/persist strategies, conflict resolution,
+│   │                               # sync queue logic, version tracking, optimistic updates
+│   ├── useNetworkStatus.js         # Network monitoring and online/offline detection
+│   └── dataPortability.js          # Export/Import/Backup engine
+│                                   # Supports: JSON, Markdown, TXT, SRT formats
+│                                   # Includes: database backup/restore with compression
 └── UI/
-    ├── GlobalNetworkObserver.vue   # Network status monitor
-    ├── SyncNotifications.vue       # Toast notifications
-    ├── SyncStatusIcon.vue          # Per-entity sync icons
-    ├── ConflictResolutionCenter.vue # Conflict UI
-    └── SyncProgressBar.vue         # Upload/download progress
+    ├── GlobalSyncObserver.vue      # Global sync feedback system
+    │                               # Includes: toast notifications, network status banner,
+    │                               # offline mode indicator, sync event listeners
+    ├── ConflictResolutionModal.vue # Visual conflict resolution interface
+    │                               # Includes: side-by-side diff, resolution strategies
+    ├── SyncStatusIcon.vue          # Per-entity sync status indicators
+    └── DataPortabilityModal.vue    # Export/Import UI with format selection
 ```
+
+### Consolidation Rationale
+
+**Files Consolidated into `useResilientSync.js`:**
+- ~~`conflictResolver.js`~~ → Integrated as conflict detection logic
+- ~~`syncQueue.js`~~ → Integrated as priority queue management
+- ~~`syncStrategies/fetchStrategy.js`~~ → Integrated as `fetchWithSync()` method
+- ~~`syncStrategies/persistStrategy.js`~~ → Integrated as `saveEntity()` method
+- ~~`syncStrategies/progressiveSync.js`~~ → Planned for Phase 7
+
+**Files Consolidated into `GlobalSyncObserver.vue`:**
+- ~~`SyncNotifications.vue`~~ → Integrated as toast system
+- ~~`SyncProgressBar.vue`~~ → Integrated as progress indicators
+
+**Files Consolidated into `dataPortability.js`:**
+- ~~`backupManager.js`~~ → Integrated as `backupDatabase()` / `restoreDatabase()`
+- ~~`Storage/cacheEviction.js`~~ → Simple logic, doesn't warrant separate file
+
+**Planned for Future Phases:**
+- `encryptionLayer.js` → Phase 7 (Security & Performance)
+- `permissionManager.js` → Phase 7 (Security & Performance)
+- `searchIndex.js` → Phase 7 (Security & Performance)
+- `analytics.js` → Phase 7 (Security & Performance)
+- `Database/migrations/` → When schema versioning is needed
+- `Database/schemas/` → Currently inline in `dexieApp.js`, can be extracted if needed
+
 
 ---
 
