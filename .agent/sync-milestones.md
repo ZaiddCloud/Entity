@@ -256,29 +256,391 @@ export const useMediaStore = defineStore('media', {
 
 ---
 
-## Testing Strategy
+## Testing & Quality Assurance
 
-### Test Categories
+> [!WARNING]
+> **Current Test Coverage: ~5%**
+> The majority of the sync architecture is currently untested. This represents a significant risk for production deployment and future refactoring. Achieving 80%+ coverage is a high priority before merging to master.
 
-1. **Performance Tests:**
-   - Measure read/write speeds with 10,000+ entities
-   - Benchmark compression/decompression overhead
-   - Profile memory usage during large operations
+### Current Test Coverage Status
 
-2. **Conflict Resolution Tests:**
-   - Simulate simultaneous edits by multiple users
-   - Test merge strategies for various content types
-   - Verify audit trail completeness
+| Module | Lines of Code | Tests Written | Coverage | Status |
+|--------|---------------|---------------|----------|--------|
+| `dataPortability.js` | 280 | ✅ Partial (103 lines) | ~40% | 🟡 In Progress |
+| `useResilientSync.js` | 346 | ❌ None | 0% | 🔴 Critical Gap |
+| `useNetworkStatus.js` | 85 | ❌ None | 0% | 🔴 Critical Gap |
+| `compressionUtils.js` | 54 | ❌ None | 0% | 🟡 High Priority |
+| `chunkManager.js` | 83 | ❌ None | 0% | 🟡 High Priority |
+| `dexieApp.js` | 82 | ❌ None | 0% | 🟢 Low Priority |
+| **Total Core Modules** | **930** | **103** | **~11%** | **🔴 Needs Work** |
 
-3. **Network Resilience Tests:**
-   - Simulate intermittent connectivity
-   - Test offline → online transition
-   - Verify queue persistence across browser restarts
+### Existing Tests
 
-4. **Data Integrity Tests:**
-   - Validate compression/decompression accuracy
-   - Test migration scripts with real data
-   - Verify encryption/decryption correctness
+**File**: `resources/js/Core/Sync/dataPortability.test.js` (103 lines)
+
+**Coverage**:
+- ✅ `backupDatabase()` - Basic functionality
+- ✅ `exportEntity()` - Partial (JSON format only)
+- ✅ Object content handling
+- ❌ `restoreDatabase()` - Not tested
+- ❌ `exportToSRT()` - Not tested
+- ❌ Markdown/TXT export formats - Not tested
+- ❌ Error handling - Not tested
+
+---
+
+### Target Test Coverage
+
+| Priority | Module | Target Coverage | Estimated Effort |
+|----------|--------|-----------------|------------------|
+| 🔴 **Critical** | `useResilientSync.js` | 85% | 6-8 hours |
+| 🔴 **Critical** | `dataPortability.js` | 90% | 2-3 hours |
+| 🟡 **High** | `compressionUtils.js` | 95% | 1 hour |
+| 🟡 **High** | `chunkManager.js` | 95% | 1 hour |
+| 🟡 **High** | `useNetworkStatus.js` | 80% | 2 hours |
+| 🟢 **Medium** | E2E Tests | N/A | 6-8 hours |
+| 🟢 **Low** | UI Components | 60% | 4-5 hours |
+
+**Overall Target**: **80%+ coverage** for core sync modules
+
+---
+
+### Test Categories & Implementation Plan
+
+#### 1. **Unit Tests** (Priority: 🔴 Critical)
+
+**Scope**: Test individual functions in isolation.
+
+**Files to Create**:
+```
+resources/js/Core/
+├── Sync/__tests__/
+│   ├── useResilientSync.test.js      (Priority: 🔴 Critical)
+│   ├── dataPortability.test.js       (✅ Exists - needs expansion)
+│   ├── useNetworkStatus.test.js      (Priority: 🟡 High)
+│   └── helpers.test.js               (Priority: 🟢 Low)
+└── Storage/__tests__/
+    ├── compressionUtils.test.js      (Priority: 🟡 High)
+    └── chunkManager.test.js          (Priority: 🟡 High)
+```
+
+**Key Test Cases for `useResilientSync.js`**:
+- ✅ Cache-first strategy (fetch from Dexie before server)
+- ✅ Server fallback when cache is empty
+- ✅ Conflict detection (409 response handling)
+- ✅ Optimistic updates
+- ✅ Compression and chunking integration
+- ✅ Network error handling
+- ✅ Timeout handling
+- ✅ Queue management for offline operations
+
+**Example Test Structure**:
+```javascript
+// resources/js/Core/Sync/__tests__/useResilientSync.test.js
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { useResilientSync } from '../useResilientSync';
+import { db } from '@/Core/Database/dexieApp';
+
+describe('useResilientSync', () => {
+    beforeEach(async () => {
+        await db.delete();
+        await db.open();
+    });
+
+    describe('fetchWithSync', () => {
+        it('should return cached data when available', async () => {
+            // Test implementation
+        });
+
+        it('should fetch from server when cache is empty', async () => {
+            // Test implementation
+        });
+
+        it('should handle 409 conflict correctly', async () => {
+            // Test implementation
+        });
+    });
+
+    describe('saveEntity', () => {
+        it('should compress large content', async () => {
+            // Test implementation
+        });
+
+        it('should chunk content exceeding 50KB', async () => {
+            // Test implementation
+        });
+    });
+});
+```
+
+---
+
+#### 2. **Integration Tests** (Priority: 🟡 High)
+
+**Scope**: Test interactions between multiple modules.
+
+**Key Scenarios**:
+- ✅ Offline → Online transition with pending sync queue
+- ✅ Conflict resolution flow (detection → UI → resolution)
+- ✅ Export → Import roundtrip (data integrity)
+- ✅ Compression → Chunking → Reassembly pipeline
+- ✅ Service Worker background sync
+
+**Example Test**:
+```javascript
+describe('Offline to Online Flow', () => {
+    it('should sync pending changes when coming online', async () => {
+        // 1. Simulate offline
+        window.dispatchEvent(new Event('offline'));
+        
+        // 2. Make changes
+        await saveEntity({ id: 1, title: 'Offline Edit' });
+        
+        // 3. Verify queued
+        const pending = await db.sync_registry.toArray();
+        expect(pending.length).toBe(1);
+        
+        // 4. Simulate online
+        window.dispatchEvent(new Event('online'));
+        
+        // 5. Wait for sync
+        await waitFor(() => db.sync_registry.count() === 0);
+        
+        // 6. Verify synced to server
+        expect(mockFetch).toHaveBeenCalled();
+    });
+});
+```
+
+---
+
+#### 3. **End-to-End (E2E) Tests** (Priority: 🟢 Medium)
+
+**Scope**: Test complete user workflows in a real browser.
+
+**Tool**: Playwright or Cypress
+
+**Key Workflows**:
+- ✅ User edits manuscript → Goes offline → Comes online → Changes sync
+- ✅ Two users edit same entity → Conflict appears → User resolves
+- ✅ User exports data → Downloads file → Imports to new browser → Data intact
+- ✅ User works offline for 1 hour → 50 edits → All sync when online
+
+**Example E2E Test**:
+```javascript
+// tests/e2e/offline-sync.spec.js
+import { test, expect } from '@playwright/test';
+
+test('should sync changes after offline period', async ({ page, context }) => {
+    // 1. Load editor
+    await page.goto('/studio/manuscript/test-manuscript');
+    
+    // 2. Make initial edit
+    await page.fill('[data-testid="editor"]', 'Initial content');
+    await page.waitForSelector('[data-testid="sync-status"][data-status="synced"]');
+    
+    // 3. Go offline
+    await context.setOffline(true);
+    
+    // 4. Make offline edits
+    await page.fill('[data-testid="editor"]', 'Offline edit');
+    await expect(page.locator('[data-testid="offline-banner"]')).toBeVisible();
+    
+    // 5. Go online
+    await context.setOffline(false);
+    
+    // 6. Verify sync
+    await page.waitForSelector('[data-testid="sync-status"][data-status="synced"]');
+    
+    // 7. Reload and verify persistence
+    await page.reload();
+    await expect(page.locator('[data-testid="editor"]')).toHaveValue('Offline edit');
+});
+```
+
+---
+
+#### 4. **Performance Tests** (Priority: 🟢 Low)
+
+**Scope**: Benchmark critical operations.
+
+**Key Metrics**:
+- ✅ Compression speed (target: < 50ms for 100KB)
+- ✅ Chunking speed (target: < 100ms for 1MB)
+- ✅ IndexedDB write speed (target: < 20ms per entity)
+- ✅ Cache retrieval speed (target: < 10ms)
+
+**Example Benchmark**:
+```javascript
+describe('Performance Benchmarks', () => {
+    it('should compress 100KB in under 50ms', async () => {
+        const content = 'x'.repeat(100 * 1024);
+        const start = performance.now();
+        
+        const compressed = compress(content);
+        
+        const duration = performance.now() - start;
+        expect(duration).toBeLessThan(50);
+    });
+});
+```
+
+---
+
+#### 5. **Data Integrity Tests** (Priority: 🟡 High)
+
+**Scope**: Ensure no data loss or corruption.
+
+**Key Tests**:
+- ✅ Compression → Decompression = Original
+- ✅ Chunking → Reassembly = Original
+- ✅ Export → Import = Original
+- ✅ Arabic text preservation
+- ✅ Special characters handling
+- ✅ Large content (> 1MB) handling
+
+**Example Test**:
+```javascript
+describe('Data Integrity', () => {
+    it('should preserve Arabic text through compression', () => {
+        const arabic = 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ';
+        const compressed = compress(arabic);
+        const decompressed = decompress(compressed);
+        
+        expect(decompressed).toBe(arabic);
+    });
+    
+    it('should handle export-import roundtrip without loss', async () => {
+        const entity = { id: 1, title: 'مخطوطة', content: 'محتوى' };
+        
+        // Export
+        const exported = await exportEntity(entity, [entity], 'json');
+        
+        // Import
+        const imported = await importFromJSON(exported);
+        
+        // Verify
+        expect(imported).toEqual(entity);
+    });
+});
+```
+
+---
+
+### Testing Tools & Setup
+
+**Framework**: Vitest (already in `package.json`)
+
+**Additional Dependencies Needed**:
+```json
+{
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",  // For E2E tests
+    "fake-indexeddb": "^5.0.0",     // Mock IndexedDB for unit tests
+    "vitest": "^1.0.0"               // Already installed
+  }
+}
+```
+
+**Test Configuration**:
+```javascript
+// vitest.config.js
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+    test: {
+        globals: true,
+        environment: 'jsdom',
+        setupFiles: ['./tests/setup.js'],
+        coverage: {
+            provider: 'v8',
+            reporter: ['text', 'html', 'lcov'],
+            exclude: [
+                'node_modules/',
+                'tests/',
+                '**/*.test.js'
+            ]
+        }
+    }
+});
+```
+
+---
+
+### Implementation Roadmap
+
+#### **Sprint 1: Critical Unit Tests** (Week 1)
+- [ ] `useResilientSync.test.js` - Core sync logic (6-8 hours)
+- [ ] `compressionUtils.test.js` - Compression (1 hour)
+- [ ] `chunkManager.test.js` - Chunking (1 hour)
+- [ ] Expand `dataPortability.test.js` - Complete coverage (2-3 hours)
+
+**Target**: 60% overall coverage
+
+---
+
+#### **Sprint 2: Integration & E2E** (Week 2)
+- [ ] Offline/Online integration tests (3 hours)
+- [ ] Conflict resolution integration tests (2 hours)
+- [ ] E2E: Offline sync workflow (3 hours)
+- [ ] E2E: Conflict resolution workflow (3 hours)
+
+**Target**: 75% overall coverage + E2E coverage
+
+---
+
+#### **Sprint 3: Polish & Performance** (Week 3)
+- [ ] `useNetworkStatus.test.js` (2 hours)
+- [ ] Performance benchmarks (2 hours)
+- [ ] Data integrity tests (2 hours)
+- [ ] UI component tests (4 hours)
+
+**Target**: 80%+ overall coverage
+
+---
+
+### Continuous Integration
+
+**GitHub Actions Workflow** (Recommended):
+```yaml
+# .github/workflows/test.yml
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - run: npm ci
+      - run: npm run test:coverage
+      - run: npm run test:e2e
+      - uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/lcov.info
+```
+
+---
+
+### Success Criteria
+
+**Before Merge to Master**:
+- ✅ Core modules (useResilientSync, dataPortability) at 85%+ coverage
+- ✅ Storage utilities (compression, chunking) at 95%+ coverage
+- ✅ All E2E workflows passing
+- ✅ No critical bugs in test suite
+- ✅ CI/CD pipeline green
+
+**Long-term Goal**:
+- ✅ 80%+ overall coverage maintained
+- ✅ All new features include tests
+- ✅ Regression tests for all bugs
+- ✅ Performance benchmarks tracked over time
+
 
 ---
 
