@@ -55,7 +55,8 @@ export function reassembleChunks(chunks) {
     let fullString = '';
 
     for (const chunk of sortedChunks) {
-        const part = decompress(chunk.chunk_data);
+        // Decompress RAW string (don't auto-parse JSON yet)
+        const part = decompress(chunk.chunk_data, false);
         if (part) {
             fullString += part;
         }

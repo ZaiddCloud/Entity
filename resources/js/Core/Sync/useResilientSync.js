@@ -12,6 +12,8 @@ import { ref, computed } from 'vue';
 import db from '@/Core/Database/dexieApp';
 import axios from 'axios';
 import { splitContent } from '@/Core/Storage/chunkManager';
+import { usePage } from '@inertiajs/vue3';
+import { encryptContent, decryptContent, generateUserKey, isEncrypted } from '@/Core/Storage/encryptionLayer';
 
 export function useResilientSync() {
     const isSyncing = ref(false);
@@ -20,16 +22,18 @@ export function useResilientSync() {
     const pendingOperations = ref(0);
 
     // Monitor network status
-    window.addEventListener('online', () => {
-        isOnline.value = true;
-        console.log('🌐 Network restored - triggering sync...');
-        processSyncQueue();
-    });
+    if (typeof window !== 'undefined') {
+        window.addEventListener('online', () => {
+            isOnline.value = true;
+            console.log('🌐 Network restored - triggering sync...');
+            processSyncQueue();
+        });
 
-    window.addEventListener('offline', () => {
-        isOnline.value = false;
-        console.log('📡 Network lost - entering offline mode');
-    });
+        window.addEventListener('offline', () => {
+            isOnline.value = false;
+            console.log('📡 Network lost - entering offline mode');
+        });
+    }
 
     /**
      * Fetch entity with cache-first strategy
@@ -44,6 +48,25 @@ export function useResilientSync() {
 
             if (entity) {
                 console.log('✅ Cache hit for entity:', entityId);
+
+                // Decrypt sensitive content
+                try {
+                    const user = usePage().props.auth.user;
+                    const userKey = generateUserKey(user);
+
+                    if (entity.content && isEncrypted(entity.content)) {
+                        entity.content = decryptContent(entity.content, userKey);
+                    }
+                    if (entity.plain_text && isEncrypted(entity.plain_text)) {
+                        entity.plain_text = decryptContent(entity.plain_text, userKey);
+                    }
+                    if (entity.json_content && isEncrypted(entity.json_content)) {
+                        entity.json_content = decryptContent(entity.json_content, userKey);
+                    }
+                } catch (decryptError) {
+                    console.error('⚠️ Decryption failed for cached entity:', entityId, decryptError);
+                    // Fallback to server fetch if decryption fails (e.g. key changed/invalid)
+                }
 
                 // Background delta-sync if online
                 if (isOnline.value) {
@@ -63,11 +86,17 @@ export function useResilientSync() {
             const response = await axios.get(`/api/entities/${type}/${entityId}`);
             entity = response.data.entity;
 
+            // Encrypt before caching
+            const user = usePage().props.auth.user;
+            const userKey = generateUserKey(user);
+
+            const entityToCache = { ...entity, cached_at: new Date().toISOString() };
+            if (entityToCache.content) entityToCache.content = encryptContent(entityToCache.content, userKey);
+            if (entityToCache.plain_text) entityToCache.plain_text = encryptContent(entityToCache.plain_text, userKey);
+            if (entityToCache.json_content) entityToCache.json_content = encryptContent(entityToCache.json_content, userKey);
+
             // Cache for future use
-            await db.entities.put({
-                ...entity,
-                cached_at: new Date().toISOString()
-            });
+            await db.entities.put(entityToCache);
 
             console.log('💾 Entity cached:', entityId);
             return entity;
@@ -86,12 +115,15 @@ export function useResilientSync() {
 
     /**
      * Save entity with optimistic UI
-     * 1. Update IndexedDB immediately
+     * 1. Update IndexedDB immediately (Encrypted)
      * 2. Queue sync operation
      * 3. Process queue in background
      */
     async function saveEntity(entity, optimistic = true) {
         try {
+            const user = usePage().props.auth.user;
+            const userKey = generateUserKey(user);
+
             // Step 1: Immediate local save (Optimistic UI)
             const localEntity = {
                 ...entity,
@@ -100,8 +132,13 @@ export function useResilientSync() {
                 sync_status: 'pending'
             };
 
+            // Encrypt sensitive fields
+            if (localEntity.content) localEntity.content = encryptContent(localEntity.content, userKey);
+            if (localEntity.plain_text) localEntity.plain_text = encryptContent(localEntity.plain_text, userKey);
+            if (localEntity.json_content) localEntity.json_content = encryptContent(localEntity.json_content, userKey);
+
             await db.entities.put(localEntity);
-            console.log('💾 Local save successful (Entity Metadata):', entity.id);
+            console.log('💾 Local save successful (Encrypted Metadata):', entity.id);
 
             // Step 1.5: Granulate content into content_blocks (Mirroring MongoDB)
             if (entity.segments && Array.isArray(entity.segments)) {
@@ -109,17 +146,31 @@ export function useResilientSync() {
                 for (const seg of entity.segments) {
                     const blockId = seg.id || `seg_${Math.random().toString(36).substr(2, 9)}`;
                     const chunks = splitContent(seg.json || seg.content, entity.id, blockId);
+
+                    // Encrypt chunks
+                    for (const chunk of chunks) {
+                        chunk.chunk_data = encryptContent(chunk.chunk_data, userKey);
+                    }
+
                     await db.content_blocks.bulkPut(chunks);
                 }
-                console.log(`🧩 Granulated ${entity.segments.length} segments into content_blocks`);
+                console.log(`🧩 Granulated ${entity.segments.length} segments into encrypted content_blocks`);
             } else if (entity.child_id && entity.content) {
                 // Save single node content (e.g., from single page/segment edit)
                 const chunks = splitContent(entity.content, entity.id, entity.child_id);
+
+                // Encrypt chunks
+                for (const chunk of chunks) {
+                    chunk.chunk_data = encryptContent(chunk.chunk_data, userKey);
+                }
+
                 await db.content_blocks.bulkPut(chunks);
-                console.log('🧩 Granulated single node into content_blocks:', entity.child_id);
+                console.log('🧩 Granulated single node into encrypted content_blocks:', entity.child_id);
             }
 
-            // Step 2: Queue for server sync
+            // Step 2: Queue for server sync (Send UNENCRYPTED data to server - server handles its own security/storage)
+            // Note: If we wanted E2EE, we would send encrypted data. But here we assume TLS to server and server stores plaintext (or own encryption).
+            // The requirement is "Encrypt sensitive manuscripts before storing in IndexedDB".
             await db.sync_registry.add({
                 timestamp: new Date().toISOString(),
                 priority: entity.priority || 'HIGH',

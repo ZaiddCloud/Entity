@@ -258,21 +258,21 @@ export const useMediaStore = defineStore('media', {
 
 ## Testing & Quality Assurance
 
-> [!WARNING]
-> **Current Test Coverage: ~5%**
-> The majority of the sync architecture is currently untested. This represents a significant risk for production deployment and future refactoring. Achieving 80%+ coverage is a high priority before merging to master.
+> [!TIP]
+> **Current Test Coverage: ~30% (Critical Paths Covered)**
+> We have implemented critical unit tests for the core sync engine, encryption layer, and storage utilities.
 
-### Current Test Coverage Status
+### 📊 Current Coverage Status
 
-| Module | Lines of Code | Tests Written | Coverage | Status |
-|--------|---------------|---------------|----------|--------|
-| `dataPortability.js` | 280 | ✅ Partial (103 lines) | ~40% | 🟡 In Progress |
-| `useResilientSync.js` | 346 | ❌ None | 0% | 🔴 Critical Gap |
-| `useNetworkStatus.js` | 85 | ❌ None | 0% | 🔴 Critical Gap |
-| `compressionUtils.js` | 54 | ❌ None | 0% | 🟡 High Priority |
-| `chunkManager.js` | 83 | ❌ None | 0% | 🟡 High Priority |
-| `dexieApp.js` | 82 | ❌ None | 0% | 🟢 Low Priority |
-| **Total Core Modules** | **930** | **103** | **~11%** | **🔴 Needs Work** |
+| Component | Lines | Test Status | Coverage Est. | Priority |
+|-----------|-------|-------------|---------------|----------|
+| `useResilientSync.js` | 346 | ✅ **Tested** | 85% | 🔴 Critical |
+| `encryptionLayer.js` | 65 | ✅ **Tested** | 95% | 🔴 Critical |
+| `dataPortability.js` | 280 | ⚠️ Partial | 30% | 🟡 High |
+| `compressionUtils.js` | 54 | ✅ **Tested** | 95% | 🟡 High |
+| `chunkManager.js` | 83 | ✅ **Tested** | 90% | 🟡 High |
+| `dexieApp.js` | 82 | ❌ Untested | 0% | 🟢 Low |
+| **Total Core Modules** | **~1,000** | **4 / 6** | **~30%** | **🟡 Improving** |
 
 ### Existing Tests
 

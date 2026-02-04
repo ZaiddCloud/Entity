@@ -8,14 +8,20 @@
 import db from '../Database/dexieApp.js';
 import LZString from 'lz-string';
 import { reassembleChunks } from '../Storage/chunkManager.js';
+import { usePage } from '@inertiajs/vue3';
+import { encryptContent, decryptContent, generateUserKey, isEncrypted } from '@/Core/Storage/encryptionLayer';
 
 /**
  * Full Database Backup
  * Exports all Dexie tables into a single compressed JSON file.
+ * NOTE: Exports are UNENCRYPTED (Plain Text) so users can own their data.
  */
 export async function backupDatabase() {
     try {
         console.log('📦 Starting database backup...');
+
+        const user = usePage().props.auth.user;
+        const userKey = generateUserKey(user);
 
         const backupData = {
             version: 1,
@@ -26,7 +32,24 @@ export async function backupDatabase() {
         // Collect data from all tables
         const tableNames = db.tables.map(table => table.name);
         for (const tableName of tableNames) {
-            backupData.tables[tableName] = await db.table(tableName).toArray();
+            const tempRows = await db.table(tableName).toArray();
+
+            // Decrypt sensitive data before export
+            if (tableName === 'entities') {
+                backupData.tables[tableName] = tempRows.map(row => ({
+                    ...row,
+                    content: row.content && isEncrypted(row.content) ? decryptContent(row.content, userKey) : row.content,
+                    plain_text: row.plain_text && isEncrypted(row.plain_text) ? decryptContent(row.plain_text, userKey) : row.plain_text,
+                    json_content: row.json_content && isEncrypted(row.json_content) ? decryptContent(row.json_content, userKey) : row.json_content
+                }));
+            } else if (tableName === 'content_blocks') {
+                backupData.tables[tableName] = tempRows.map(row => ({
+                    ...row,
+                    chunk_data: row.chunk_data && isEncrypted(row.chunk_data) ? decryptContent(row.chunk_data, userKey) : row.chunk_data
+                }));
+            } else {
+                backupData.tables[tableName] = tempRows;
+            }
         }
 
         const jsonString = JSON.stringify(backupData);
@@ -56,6 +79,7 @@ export async function backupDatabase() {
 /**
  * Restore Database from Backup
  * Imports data from a .entbak file.
+ * Automatically ENCRYPTS data before storing in IndexedDB.
  */
 export async function restoreDatabase(file) {
     return new Promise((resolve, reject) => {
@@ -78,17 +102,36 @@ export async function restoreDatabase(file) {
                     throw new Error('Invalid backup format');
                 }
 
-                // Confirm with user (handled by UI, but here we perform the wipe)
+                const user = usePage().props.auth.user;
+                const userKey = generateUserKey(user);
+
                 // Transactional clear and refill
                 await db.transaction('rw', db.tables, async () => {
                     for (const tableName in backupData.tables) {
                         const table = db.table(tableName);
+                        let rows = backupData.tables[tableName];
+
+                        // Encrypt sensitive data before restoring
+                        if (tableName === 'entities') {
+                            rows = rows.map(row => ({
+                                ...row,
+                                content: row.content ? encryptContent(row.content, userKey) : null,
+                                plain_text: row.plain_text ? encryptContent(row.plain_text, userKey) : null,
+                                json_content: row.json_content ? encryptContent(row.json_content, userKey) : null,
+                            }));
+                        } else if (tableName === 'content_blocks') {
+                            rows = rows.map(row => ({
+                                ...row,
+                                chunk_data: row.chunk_data ? encryptContent(row.chunk_data, userKey) : null
+                            }));
+                        }
+
                         await table.clear();
-                        await table.bulkAdd(backupData.tables[tableName]);
+                        await table.bulkAdd(rows);
                     }
                 });
 
-                console.log('✅ Restore completed successfully');
+                console.log('✅ Restore completed successfully (Encrypted)');
                 resolve(true);
             } catch (error) {
                 console.error('❌ Restore failed:', error);
@@ -105,6 +148,17 @@ export async function exportEntity(entity, blocks, format = 'markdown') {
     try {
         if (!entity) throw new Error('Entity is missing');
 
+        const user = usePage().props.auth.user;
+        const userKey = generateUserKey(user);
+
+        // Ensure entity fields are decrypted
+        const safeEntity = { ...entity };
+        if (safeEntity.content && isEncrypted(safeEntity.content)) safeEntity.content = decryptContent(safeEntity.content, userKey);
+        if (safeEntity.plain_text && isEncrypted(safeEntity.plain_text)) safeEntity.plain_text = decryptContent(safeEntity.plain_text, userKey);
+        // JSON Export might need json_content but usually uses blocks logic below
+        if (safeEntity.json_content && isEncrypted(safeEntity.json_content)) safeEntity.json_content = decryptContent(safeEntity.json_content, userKey);
+
+
         let safeBlocks = [...(blocks || [])];
 
         if (safeBlocks.length === 0) {
@@ -115,6 +169,16 @@ export async function exportEntity(entity, blocks, format = 'markdown') {
             }
         }
 
+        // Decrypt blocks
+        safeBlocks = safeBlocks.map(block => ({
+            ...block,
+            content: block.content && isEncrypted(block.content) ? decryptContent(block.content, userKey) : block.content,
+            plain_text: block.plain_text && isEncrypted(block.plain_text) ? decryptContent(block.plain_text, userKey) : block.plain_text
+            // chunk_data is usually internal, but if exported, decrypt it?
+            // Export usually needs readable content.
+        }));
+
+
         console.log(`📤 Exporting entity (${entity.type || 'unknown'}): ${entity.slug || 'no-slug'} as ${format} (${safeBlocks.length} blocks)...`);
 
         let output = '';
@@ -124,15 +188,15 @@ export async function exportEntity(entity, blocks, format = 'markdown') {
         let fileName = `${safeSlug}_${date}.${extension}`;
 
         if (format === 'json') {
-            output = JSON.stringify({ entity, blocks: safeBlocks }, null, 2);
+            output = JSON.stringify({ entity: safeEntity, blocks: safeBlocks }, null, 2);
         }
         else if (format === 'markdown' || format === 'text') {
             // Header
-            output = `# ${entity.title || 'بدون عنوان'}\n`;
-            if (entity.author) output += `**المؤلف:** ${entity.author}\n`;
+            output = `# ${safeEntity.title || 'بدون عنوان'}\n`;
+            if (safeEntity.author) output += `**المؤلف:** ${safeEntity.author}\n`;
             output += `**التاريخ:** ${new Date().toLocaleDateString('ar-EG')}\n`;
             output += `\n---\n\n`;
-            const entityId = entity.id || entity.slug;
+            const entityId = safeEntity.id || safeEntity.slug;
 
             for (let i = 0; i < safeBlocks.length; i++) {
                 const block = safeBlocks[i];
@@ -150,7 +214,15 @@ export async function exportEntity(entity, blocks, format = 'markdown') {
                             .toArray();
 
                         if (chunks.length > 0) {
-                            const reassembled = reassembleChunks(chunks);
+                            // Verify chunks are encrypted and decrypt them
+                            // reassembleChunks expects compressed data chunks.
+                            // If they are encrypted, we must decrypt them first.
+                            const decryptedChunks = chunks.map(c => ({
+                                ...c,
+                                chunk_data: c.chunk_data && isEncrypted(c.chunk_data) ? decryptContent(c.chunk_data, userKey) : c.chunk_data
+                            }));
+
+                            const reassembled = reassembleChunks(decryptedChunks);
                             content = ensureString(reassembled);
                         }
                     }

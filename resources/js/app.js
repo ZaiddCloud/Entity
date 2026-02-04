@@ -61,3 +61,23 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
+
+import { router } from '@inertiajs/vue3';
+import db from './Core/Database/dexieApp';
+
+/**
+ * Security Layer: Clear Data on Logout
+ * Protects shared devices by wiping IndexedDB when user logs out.
+ */
+router.on('navigate', async (event) => {
+    if (event.detail.page.url.includes('logout')) {
+        console.log('🔒 Logout detected - clearing sensitive data...');
+        try {
+            await db.delete();
+            await db.open(); // Re-open for next login/session
+            console.log('✅ Local database wiped successfully');
+        } catch (e) {
+            console.error('❌ Failed to wipe local database:', e);
+        }
+    }
+});

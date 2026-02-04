@@ -19,13 +19,16 @@ export function compress(data) {
 /**
  * Decompress data string
  * @param {string} compressed - Compressed string (UTF16)
- * @returns {string|object} Decompressed data (auto-parsed if JSON)
+ * @param {boolean} parseJSON - Whether to attempt JSON parsing (default: true)
+ * @returns {string|object} Decompressed data (auto-parsed if JSON and parseJSON is true)
  */
-export function decompress(compressed) {
+export function decompress(compressed, parseJSON = true) {
     if (!compressed) return null;
     const decompressed = LZString.decompressFromUTF16(compressed);
 
     if (!decompressed) return null;
+
+    if (!parseJSON) return decompressed;
 
     // Try parsing JSON, return string if fails
     try {
