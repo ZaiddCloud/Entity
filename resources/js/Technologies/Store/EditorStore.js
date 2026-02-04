@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useResilientSync } from '@/Core/Sync/useResilientSync'
+import { registerAccess } from '@/Core/Storage/quotaManager';
+import { predictNextMoves } from '@/Core/Sync/cachingStrategy';
+import { usePage } from '@inertiajs/vue3'; // For user ID
 
 export const useEditorStore = defineStore('editor', () => {
     // State
@@ -36,6 +39,30 @@ export const useEditorStore = defineStore('editor', () => {
         hierarchy.value = hierarchyData
         navigation.value = navigationData
         contentVersion.value = 0
+
+        // --- PRODUCTION INTEGRATION (TOUCH 8) ---
+        // 1. Register Access for LRU
+        try {
+            const user = usePage().props.auth.user;
+            if (user && entity.id) {
+                registerAccess(entity.id, user.id);
+            }
+        } catch (e) { console.warn('LRU registration skipped', e); }
+
+        // 2. Predictive Caching (Pre-fetch next chapter/page)
+        if (entity) {
+            predictNextMoves({
+                ...entity,
+                editorMode: editorMode.value,
+                order: contentNode?.order,
+                parent_id: entity.parent_id || entity.id,
+                navigation: navigationData
+            }).then(predictions => {
+                if (predictions.length > 0) {
+                    prefetchEntities(predictions);
+                }
+            });
+        }
     }
 
     const updateContent = (newContent) => {
