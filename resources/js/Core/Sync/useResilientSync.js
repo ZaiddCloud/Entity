@@ -11,6 +11,7 @@
 import { ref, computed } from 'vue';
 import db from '@/Core/Database/dexieApp';
 import axios from 'axios';
+import { splitContent } from '@/Core/Storage/chunkManager';
 
 export function useResilientSync() {
     const isSyncing = ref(false);
@@ -100,7 +101,23 @@ export function useResilientSync() {
             };
 
             await db.entities.put(localEntity);
-            console.log('💾 Local save successful:', entity.id);
+            console.log('💾 Local save successful (Entity Metadata):', entity.id);
+
+            // Step 1.5: Granulate content into content_blocks (Mirroring MongoDB)
+            if (entity.segments && Array.isArray(entity.segments)) {
+                // Bulk save segments (e.g., from full view)
+                for (const seg of entity.segments) {
+                    const blockId = seg.id || `seg_${Math.random().toString(36).substr(2, 9)}`;
+                    const chunks = splitContent(seg.json || seg.content, entity.id, blockId);
+                    await db.content_blocks.bulkPut(chunks);
+                }
+                console.log(`🧩 Granulated ${entity.segments.length} segments into content_blocks`);
+            } else if (entity.child_id && entity.content) {
+                // Save single node content (e.g., from single page/segment edit)
+                const chunks = splitContent(entity.content, entity.id, entity.child_id);
+                await db.content_blocks.bulkPut(chunks);
+                console.log('🧩 Granulated single node into content_blocks:', entity.child_id);
+            }
 
             // Step 2: Queue for server sync
             await db.sync_registry.add({
@@ -290,6 +307,28 @@ export function useResilientSync() {
         };
     }
 
+    /**
+     * Force Synchronization
+     * Resets failed operations to pending and triggers queue processing.
+     */
+    async function forceSync() {
+        if (!isOnline.value) {
+            console.warn('📡 Cannot force sync while offline');
+            return false;
+        }
+
+        console.log('🔄 Forced sync initiated...');
+
+        // Reset failed operations to pending
+        await db.sync_registry
+            .where('status')
+            .equals('failed')
+            .modify({ status: 'pending', retry_count: 0 });
+
+        await processSyncQueue();
+        return true;
+    }
+
     return {
         // State
         isSyncing,
@@ -301,6 +340,7 @@ export function useResilientSync() {
         fetchEntity,
         saveEntity,
         processSyncQueue,
+        forceSync,
         getSyncStatus
     };
 }

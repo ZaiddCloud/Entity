@@ -13,6 +13,7 @@ import BlockGroup from './Groups/BlockGroup.vue'
 import InsertGroup from './Groups/InsertGroup.vue'
 import HeritageGroup from './Groups/HeritageGroup.vue'
 import ScientificGroup from './Groups/ScientificGroup.vue'
+import PortabilityGroup from './Groups/PortabilityGroup.vue'
 
 import ToolbarDivider from './Components/ToolbarDivider.vue'
 
@@ -86,6 +87,9 @@ const closeWindow = () => {
             
       <HeritageGroup />
             
+      <div class="h-6 w-px bg-gray-200 mx-1" />
+      
+      <PortabilityGroup />
     </div>
         
     <!-- Legacy Toolbar (disabled to prevent crashes during refactoring) -->

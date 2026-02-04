@@ -1,10 +1,12 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue';
 import { useNetworkStatus } from '@/Core/Sync/useNetworkStatus';
+import DataPortabilityModal from './DataPortabilityModal.vue';
 
 const { isOnline, connectionQuality } = useNetworkStatus();
 const notifications = ref([]);
 const showOfflineBanner = ref(false);
+const showPortabilityModal = ref(false);
 
 // Watch for network changes
 watch(isOnline, (online) => {
@@ -57,7 +59,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="fixed inset-x-0 top-0 z-[100] pointer-events-none">
+    <div class="fixed inset-0 z-[100] pointer-events-none">
         <!-- Offline Banner -->
         <transition
             enter-active-class="transform transition ease-out duration-500"
@@ -103,6 +105,28 @@ onMounted(() => {
                 </div>
             </transition-group>
         </div>
+
+        <!-- Portability Trigger & Modal -->
+        <div class="fixed bottom-6 left-6 pointer-events-auto">
+            <button 
+                @click="showPortabilityModal = true"
+                class="group flex items-center gap-2 p-2 bg-slate-800/80 hover:bg-slate-700 backdrop-blur-md border border-slate-700 rounded-full shadow-lg transition-all"
+                title="إدارة البيانات وسيادتها"
+            >
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center text-white shadow-inner">
+                    <span class="text-xl">🛡️</span>
+                </div>
+                <span class="max-w-0 overflow-hidden group-hover:max-w-xs group-hover:pr-4 transition-all duration-500 whitespace-nowrap text-xs font-bold text-white uppercase tracking-widest">
+                    Data Sovereignty
+                </span>
+            </button>
+        </div>
+
+        <DataPortabilityModal 
+            :is-open="showPortabilityModal" 
+            class="pointer-events-auto"
+            @close="showPortabilityModal = false" 
+        />
     </div>
 </template>
 
