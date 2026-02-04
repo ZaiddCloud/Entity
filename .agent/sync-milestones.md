@@ -45,7 +45,7 @@ ephemeral_state: 'user_id, entity_id, last_position, player_settings'
 | 7 | **Fetch Strategy** | `4333541` | `syncStrategies/fetchStrategy.js` | ✅ Complete |
 | 8 | **Persist Strategy** | `4333541` | `syncStrategies/persistStrategy.js` | ✅ Complete |
 | 9 | **Network Monitor** | `4333541` | `networkMonitor.js` | ✅ Complete |
-| 10 | **Priority Queue** | `7d9b7b3` | `syncQueue.js` | ✅ In Progress |
+| 10 | **Priority Queue** | `7d9b7b3` | `useResilientSync.js` | ✅ Complete |
 
 ### Sync Logic Flow
 ```
