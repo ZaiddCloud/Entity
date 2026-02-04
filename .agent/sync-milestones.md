@@ -148,10 +148,10 @@ export const decompressContent = (compressed) => {
 | 28 | **Service Worker** | `5a135b4` | `sw.js`, `app.js` | ✅ Complete |
 | 29 | **Offline PWA** | `5a135b4` | `/offline`, `offline.blade.php` | ✅ Complete |
 | 30 | **JSON Persistence Fix** | `5a135b4` | `sw.js`, `BookChild.php` | ✅ Complete |
-| 31 | **Collections Separation** | `HEAD` | `ManuscriptPage.php`, `AudioSegment.php` | ✅ Complete |
-| 32 | **Unified Observer** | `HEAD` | `EntityContentObserver.php` | ✅ Complete |
-| 33 | **Mongo Indexing** | `HEAD` | `MongoIndexSeeder.php` | ✅ Complete |
-| 34 | **Export/Import Engine** | `Touch #7` | `dataPortability.js` | ✅ Complete |
+| 31 | **Collections Separation** | `66c9d1a` | `ManuscriptPage.php`, `AudioSegment.php` | ✅ Complete |
+| 32 | **Unified Observer** | `66c9d1a` | `EntityContentObserver.php` | ✅ Complete |
+| 33 | **Mongo Indexing** | `66c9d1a` | `MongoIndexSeeder.php` | ✅ Complete |
+| 34 | **Export/Import Engine** | `a3c7822` | `dataPortability.js` | ✅ Complete |
 
 ### Touch #6: Collections Separation (Phase 10)
 - **Structural Integrity**: Segregated content types into `manuscript_pages`, `audio_segments`, and `video_segments` to prevent collection bloating.
