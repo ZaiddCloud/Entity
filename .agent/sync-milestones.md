@@ -216,6 +216,37 @@ The goal is to provide a "Native-First" feel where the browser UI disappears, an
 
 ---
 
+## Phase 15: Explicit Work Assignments (The Shepherd) ✅
+
+| # | Component | Primary Commit ID | Key Files | Status |
+|---|-----------|-------------------|-----------|--------|
+| 40 | **Assignment Admin UI** | `ad18cb0` | `Assignments/Index.vue` | ✅ Complete |
+| 41 | **Scoped Sync (Assigned)** | `ad18cb0` | `SyncController.php` | ✅ Complete |
+| 42 | **Entity Relation Logic** | `ad18cb0` | `EntityRelationService.php` | ✅ Complete |
+
+### Workflow & Permissions
+- **Admin Control**: Centralized interface for assigning entities to specific users with notes and due dates.
+- **Scoped Sync**: Users can opt to download only their assigned tasks for focused offline work.
+- **Audit Trail**: Every assignment change is logged via the polymorphic activity system.
+
+---
+
+## Phase 16: Real-Time Presence & Locking (The Council) ✅
+
+| # | Component | Primary Commit ID | Key Files | Status |
+|---|-----------|-------------------|-----------|--------|
+| 43 | **Presence Registry** | `ad18cb0` | `PresenceController.php` | ✅ Complete |
+| 44 | **User Awareness UI** | `ad18cb0` | `PresenceBar.vue` | ✅ Complete |
+| 45 | **Soft Locking System** | `ad18cb0` | `useSoftLock.js` | ✅ Complete |
+| 46 | **Conflict Warnings** | `ad18cb0` | `SoftLockWarning.vue` | ✅ Complete |
+
+### Collaborative Awareness
+- **Heartbeat System**: Clients send a signal every 10 seconds to indicate activity, with a 30-second TTL on the server.
+- **Section Granularity**: Presence is tracked down to specific sections (chapters/segments) to provide precise collision warnings.
+- **Soft Locking**: Rather than blocking the UI, the system provides "Soft Locks" (warnings) when another user is editing the same section.
+
+---
+
 ## Technical Implementation Notes
 
 ### Reusable Patterns
@@ -740,12 +771,16 @@ resources/js/Core/
 - [x] Build conflict detection logic
 - [x] Create ConflictResolutionCenter UI
 - [x] Test multi-user scenarios
+- [x] Implement real-time presence awareness (Phase 16)
+- [x] Deploy soft-locking mechanism (Phase 16)
 
 ### Sprint 4: Optimizations (Weeks 7-8)
 - [x] Implement compression system
 - [x] Add smart chunking
 - [x] Build predictive caching (Basic)
 - [x] Optimize cache eviction (Basic)
+- [x] Integrated work assignments (Phase 15)
+- [x] Developed assignment management UI (Phase 15)
 
 ### Sprint 5: UX & Integration (Weeks 9-10)
 - [x] Create all UI components
