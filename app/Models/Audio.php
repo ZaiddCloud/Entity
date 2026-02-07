@@ -81,6 +81,15 @@ class Audio extends Entity
     /**
      * العلاقة مع المقاطع الصوتية في MongoDB
      */
+    /**
+     * العلاقة مع المقاطع الصوتية في MongoDB
+     * (Alias for children for polymorphic compatibility)
+     */
+    public function segments()
+    {
+        return $this->children();
+    }
+
     public function children()
     {
         return $this->hasMany(AudioSegment::class, 'audio_id', 'id');

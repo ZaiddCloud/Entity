@@ -15,15 +15,15 @@ const props = defineProps({
 const config = computed(() => {
     switch (props.status) {
         case 'synced':
-            return { icon: '✅', color: 'text-emerald-500', label: 'Synced', bg: 'bg-emerald-500/10' };
+            return { icon: '⚡', color: 'text-blue-400', label: 'Synced', bg: 'bg-blue-500/10' };
         case 'pending':
-            return { icon: '🔄', color: 'text-orange-400', label: 'Pending Sync', bg: 'bg-orange-500/10' };
+            return { icon: '🔄', color: 'text-orange-400', label: 'Syncing...', bg: 'bg-orange-500/10' };
         case 'offline':
             return { icon: '📡', color: 'text-slate-400', label: 'Offline', bg: 'bg-slate-500/10' };
         case 'error':
-            return { icon: '❌', color: 'text-red-500', label: 'Sync Error', bg: 'bg-red-500/10' };
+            return { icon: '❌', color: 'text-red-400', label: 'Error', bg: 'bg-red-500/10' };
         case 'conflict':
-            return { icon: '🛡️', color: 'text-blue-400', label: 'Conflict', bg: 'bg-blue-500/10' };
+            return { icon: '🛡️', color: 'text-orange-500', label: 'Conflict', bg: 'bg-orange-500/10' };
         default:
             return { icon: '❓', color: 'text-slate-500', label: 'Unknown', bg: 'bg-slate-500/10' };
     }

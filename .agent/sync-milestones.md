@@ -194,16 +194,25 @@ export const useMediaStore = defineStore('media', {
 | 34 | **Logout Cleanup** | `c5f0439` | `app.js` | ✅ Complete |
 | 35 | **Migration Script** | `c5f0439` | `encryptExistingData.js` | ✅ Complete |
 
-### Security Implementation Details
-- **Encryption Algo**: AES-256 (via `crypto-js`) using user-session derived keys.
-- **Scope**: HTML content, JSON structures, plain text, and compressed chunks.
-- **Data Sovereignty**: Exports are automatically decrypted to Plain Text.
-- **Logout Safety**: Instant `db.delete()` trigger on logout navigation.
+---
 
-### Migration Strategy (Verified)
-- **Lazy Migration**: New writes are encrypted immediately.
-- **Batch Migration**: `encryptExistingData.js` runs on boot to secure legacy data.
-- **Dual-State Support**: Readers handle both encrypted and unencrypted content seamlessly.
+## Phase 13: Full Offline PWA Mastery (The Sanctum) 🏗️
+
+| # | Component | Primary Commit ID | Key Files | Status |
+|---|-----------|-------------------|-----------|--------|
+| 36 | **Web Manifest** | *Pending* | `manifest.json` | ✅ Complete |
+| 37 | **Offline Sanctum** | *Pending* | `OfflineSanctum.vue` | ✅ Complete |
+| 38 | **App Shell Caching** | *Pending* | `sw.js` | ✅ Complete |
+| 39 | **Install UX** | *Pending* | `GlobalSyncObserver.vue` | ✅ Complete |
+
+### PWA Vision
+The goal is to provide a "Native-First" feel where the browser UI disappears, and the system remains fully functional in a dedicated offline environment called **The Sanctum**.
+
+### Implementation Achievements (Verified)
+- **Manifest Integration**: Full standalone manifest configuration with `display: standalone` and adaptive icons.
+- **Offline Sanctum**: A dedicated offline interface (`OfflineSanctum.vue`) automatically served when network is unreachable.
+- **Service Worker Strategy**: "Network First, Cache Fallback" strategy for API calls, with "Cache First" for assets.
+- **Installability**: Smart "Install App" prompt appears only when beneficial, respecting browser constraints.
 
 ---
 

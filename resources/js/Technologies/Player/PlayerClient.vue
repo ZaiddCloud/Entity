@@ -108,21 +108,37 @@ const handleSegmentChange = (segment) => {
 };
 
 // --- Store Sync (Metadata) ---
-watch(() => props.type, (newType) => {
-    mediaStore.type = newType || 'video';
-}, { immediate: true });
-
-watch(segments, (newSegments) => {
-    mediaStore.segments = newSegments;
-}, { immediate: true });
-
-watch(() => props.media, (newMedia) => {
-    mediaStore.currentMedia = newMedia;
+// --- Store Sync (Metadata) ---
+// Unified Watcher to trigger loadMedia (which handles Local-First logic)
+watch([() => props.media, () => props.type, segments], ([newMedia, newType, newSegments]) => {
+    if (newMedia) {
+        mediaStore.loadMedia(newMedia, newType || 'video', newSegments);
+    }
 }, { immediate: true });
 
 
 // Handle closing the player
 // --- Persistence Actions ---
+// Helper to sync local cache
+const syncCache = async () => {
+   const { updateLocalEntity } = useResilientSync();
+   // Construct updated entity from store state
+   const updatedEntity = { 
+       ...mediaStore.currentMedia,
+       children: mediaStore.segments.map(seg => ({
+           id: seg.id,
+           slug: seg.slug || seg.id, // Fallback
+           title: seg.title,
+           start_time: seg.start,
+           end_time: seg.end,
+           file_path: seg.file_path,
+           // Preserve or default others
+           type: 'segment' 
+       }))
+   };
+   await updateLocalEntity(updatedEntity);
+};
+
 const handleAddSegment = async (data) => {
     const { saveEntity } = useResilientSync();
     try {
@@ -151,6 +167,9 @@ const handleAddSegment = async (data) => {
             title: data.title,
             start: data.start
         });
+        
+        // Update Local Cache (Parent Entity)
+        await syncCache();
 
     } catch (error) {
         console.error('[PlayerClient] Error adding segment:', error);
@@ -180,6 +199,10 @@ const handleDeleteSegment = async (segment) => {
 
         // Redirect to full view if needed
         router.visit(route('studio.show', { type: props.type, slug: props.media.slug }));
+        
+        // Note: For DELETE, we usually reload or redirect. 
+        // If we stayed, we would remove it from store and call syncCache().
+        
     } catch (error) {
         console.error('[PlayerClient] Error deleting segment:', error);
     }
@@ -215,6 +238,10 @@ const updateSegment = async (segment) => {
             label: segment.title,
             start: segment.start
         });
+        
+        // Update Local Cache
+        await syncCache();
+
     } catch (error) {
          console.error('[PlayerClient] Error updating segment:', error);
     }

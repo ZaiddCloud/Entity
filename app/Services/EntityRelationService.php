@@ -281,4 +281,54 @@ class EntityRelationService
             cache()->forget($cacheKey);
         }
     }
+    /**
+     * إسناد مستخدم لـ Entity (Assignment)
+     */
+    public function assignUser(Entity $entity, \App\Models\User $user, ?\App\Models\User $assigner = null, ?string $notes = null): \App\Models\Assignment
+    {
+        return DB::transaction(function () use ($entity, $user, $assigner, $notes) {
+            $assignment = \App\Models\Assignment::firstOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'entity_type' => get_class($entity),
+                    'entity_id' => $entity->id,
+                ],
+                [
+                    'assigned_by' => $assigner?->id,
+                    'status' => 'pending',
+                    'notes' => $notes,
+                    'due_at' => now()->addDays(7), // Default due date
+                ]
+            );
+
+            if ($assignment->wasRecentlyCreated) {
+                $this->logRelationChange($entity, 'user_assigned', [
+                    'assigned_user_id' => $user->id,
+                    'assigned_by_id' => $assigner?->id,
+                    'notes' => $notes
+                ]);
+            }
+
+            return $assignment;
+        });
+    }
+
+    /**
+     * إلغاء إسناد مستخدم
+     */
+    public function revokeAssignment(Entity $entity, \App\Models\User $user): void
+    {
+        DB::transaction(function () use ($entity, $user) {
+            $deleted = \App\Models\Assignment::where('user_id', $user->id)
+                ->where('entity_type', get_class($entity))
+                ->where('entity_id', $entity->id)
+                ->delete();
+
+            if ($deleted) {
+                $this->logRelationChange($entity, 'assignment_revoked', [
+                    'revoked_user_id' => $user->id
+                ]);
+            }
+        });
+    }
 }

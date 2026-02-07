@@ -83,6 +83,14 @@ trait HasPolymorphicRelations
         return $this->morphMany(Deletion::class, 'entity');
     }
 
+    /**
+     * العلاقة مع التكليفات (Assignments - Polymorphic)
+     */
+    public function assignments()
+    {
+        return $this->morphMany(\App\Models\Assignment::class, 'entity');
+    }
+
     /*
     public function searchTerms()
     {

@@ -65,7 +65,7 @@ export const useManuscriptStore = defineStore('manuscript', {
     },
 
     actions: {
-        setResource(manuscript, siblings = [], initialSlug = null) {
+        async setResource(manuscript, siblings = [], initialSlug = null) {
             this.manuscript = manuscript;
             this.siblings = siblings;
             this.activeSlug = initialSlug;
@@ -80,6 +80,32 @@ export const useManuscriptStore = defineStore('manuscript', {
                 const pageIndex = this.allVersions[0].pages.findIndex(p => p.slug === initialSlug);
                 if (pageIndex !== -1) {
                     this.shotNumber = pageIndex + 1;
+                }
+            }
+
+            // --- LOCAL-FIRST OVERRIDE (Phase 13) ---
+            if (manuscript) {
+                try {
+                    const { useResilientSync } = await import('@/Core/Sync/useResilientSync');
+                    const { loadEntity } = useResilientSync();
+
+                    const entityId = manuscript.id || manuscript.slug;
+                    const localVersion = await loadEntity(entityId, 'manuscript'); // type might differ
+
+                    if (localVersion) {
+                        console.log('[ManuscriptStore] 📜 Found local override for manuscript:', entityId);
+
+                        // Merge Metadata
+                        if (localVersion.title) this.manuscript.title = localVersion.title;
+
+                        // Override Children (Pages) if changed locally
+                        if (localVersion.children && Array.isArray(localVersion.children)) {
+                            console.log('[ManuscriptStore] 📄 Loaded local pages:', localVersion.children.length);
+                            this.manuscript.children = localVersion.children;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('[ManuscriptStore] Local load check failed:', e);
                 }
             }
         },

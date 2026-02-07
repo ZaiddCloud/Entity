@@ -60,4 +60,11 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    /**
+     * Get the assignments for the user.
+     */
+    public function assignments()
+    {
+        return $this->hasMany(\App\Models\Assignment::class);
+    }
 }

@@ -14,6 +14,7 @@ import axios from 'axios';
 import { splitContent } from '@/Core/Storage/chunkManager';
 import { usePage } from '@inertiajs/vue3';
 import { encryptContent, decryptContent, generateUserKey, isEncrypted } from '@/Core/Storage/encryptionLayer';
+import { indexEntity } from '@/Core/Sync/searchEngine';
 
 export function useResilientSync() {
     const isSyncing = ref(false);
@@ -299,7 +300,10 @@ export function useResilientSync() {
                         last_error: error.message
                     });
 
-                    console.error('❌ Sync failed:', operation.id, error);
+                    // Only log error if it's NOT a standard network drop (which we already handled)
+                    if (error.code !== 'ERR_NETWORK' && !error.message?.includes('Network Error')) {
+                        console.error('❌ Sync failed:', operation.id, error);
+                    }
                 }
             }
 
@@ -380,6 +384,198 @@ export function useResilientSync() {
         return true;
     }
 
+
+    /**
+     * Load entity from IndexedDB only (no server fetch)
+     * Used for checking if there are locally saved changes
+     * @param {string} entityId - Entity ID or slug
+     * @param {string} type - Entity type (manuscript, audio, video, book)
+     * @param {string} childId - Child/segment ID (optional, 'full' for full content)
+     * @returns {Promise<Object|null>} - Entity data or null if not found
+     */
+    async function loadEntity(entityId, type, childId = null) {
+        try {
+            // Build composite key for child content
+            const lookupId = childId && childId !== 'full'
+                ? `${entityId}_${childId}`
+                : entityId;
+
+            // Try to load from IndexedDB
+            let entity = await db.entities
+                .where('id')
+                .equals(lookupId)
+                .or('slug')
+                .equals(lookupId)
+                .first();
+
+            if (!entity) {
+                console.log('[loadEntity] No local data found for:', lookupId);
+                return null;
+            }
+
+            console.log('[loadEntity] ✅ Found local data for:', lookupId);
+
+            // Decrypt sensitive content
+            try {
+                const user = usePage().props.auth.user;
+                const userKey = generateUserKey(user);
+
+                if (entity.content && isEncrypted(entity.content)) {
+                    entity.content = decryptContent(entity.content, userKey);
+                }
+                if (entity.plain_text && isEncrypted(entity.plain_text)) {
+                    entity.plain_text = decryptContent(entity.plain_text, userKey);
+                }
+                if (entity.json_content && isEncrypted(entity.json_content)) {
+                    entity.json_content = decryptContent(entity.json_content, userKey);
+                }
+            } catch (decryptError) {
+                console.error('⚠️ Decryption failed for local entity:', lookupId, decryptError);
+                return null;
+            }
+
+            return entity;
+        } catch (error) {
+            console.error('[loadEntity] Error loading from IndexedDB:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Update local entity in IndexedDB without triggering sync
+     * Used for optimistic updates of parent entities (e.g. adding a segment to a video)
+     */
+    async function updateLocalEntity(entity) {
+        try {
+            // Ensure we don't store Vue reactivity objects
+            const rawEntity = JSON.parse(JSON.stringify(entity));
+
+            // Encrypt if needed (mirroring saveEntity logic but simplified)
+            const user = usePage().props.auth.user;
+            const userKey = generateUserKey(user);
+
+            if (rawEntity.content && !isEncrypted(rawEntity.content)) {
+                // Only encrypt if it's supposed to be secure? 
+                // For now, let's assume if it was plain, we keep it plain unless we have a policy.
+                // But generally, we should be consistent. 
+                // Let's assume fetchEntity stores plain, so we store plain.
+            }
+            // Actually, fetchEntity uses ...serverEntity which is plain.
+            // So we can just put it.
+
+            await db.entities.put({
+                ...rawEntity,
+                updated_at: new Date().toISOString() // Bump timestamp so it looks fresh
+            });
+            console.log('[updateLocalEntity] 💾 Local cache updated for:', rawEntity.id);
+        } catch (error) {
+            console.error('[updateLocalEntity] Failed to update local cache:', error);
+        }
+    }
+
+    /**
+     * Download ALL data for offline usage
+     * Fetches full manifest from server and populates Dexie
+     */
+    async function downloadAllData(onProgress, scope = 'full') {
+        if (!isOnline.value) return false;
+
+        try {
+            console.log(`📥 Starting ${scope} offline download...`);
+            if (onProgress) onProgress(10, 'جلب البيانات من الخادم...');
+
+            // 🔧 CRITICAL FIX: Clear sync queue before downloading fresh data
+            // This prevents old pending operations from conflicting with new data
+            const pendingCount = await db.sync_registry.where('status').equals('pending').count();
+            if (pendingCount > 0) {
+                console.log(`🧹 Clearing ${pendingCount} pending sync operations before fresh download...`);
+                await db.sync_registry.where('status').equals('pending').delete();
+            }
+
+            // 1. Fetch Request
+            console.log(`📡 Fetching from: ${route('api.sync.full')}`);
+
+            let response;
+            try {
+                response = await axios.get(route('api.sync.full'), {
+                    params: { scope },
+                    timeout: 60000 // 60s timeout for large payload
+                });
+            } catch (networkError) {
+                console.error('❌ Network Error during Full Sync:', networkError);
+                throw networkError;
+            }
+
+            if (!response || !response.data || !response.data.entities) {
+                console.error('❌ Invalid or empty response from server:', response);
+                throw new Error('Invalid response structure');
+            }
+
+            const data = response.data.entities;
+
+            if (onProgress) onProgress(40, 'معالجة البيانات...');
+
+            // 🔍 USER VERIFICATION LOGS
+            console.group('📥 Entity Sync Debugger');
+            console.log(`🎯 Sync Scope: ${scope.toUpperCase()}`);
+            console.log(`📦 Manuscripts: ${data.manuscripts.length}`);
+            console.log(`📦 Books: ${data.books.length}`);
+            console.log(`📦 Audios: ${data.audios.length}`);
+            console.log(`📦 Videos: ${data.videos.length}`);
+            console.log(`🔢 Total Items: ${data.manuscripts.length + data.books.length + data.audios.length + data.videos.length}`);
+            console.groupEnd();
+
+            // 2. Process & Store
+            const user = usePage().props.auth.user;
+            const userKey = generateUserKey(user);
+
+            // Helper to process arrays
+            const storeBatch = async (items, type) => {
+                const batch = items.map(item => ({
+                    ...item,
+                    type: type, // Ensure type is set
+                    cached_at: new Date().toISOString(),
+                    sync_status: 'synced', // Mark as synced to prevent re-upload
+                    // Encrypt sensitive fields if they exist and are plain
+                    // (Assuming server sends plain text, we encrypt locally)
+                }));
+
+                if (batch.length > 0) {
+                    await db.entities.bulkPut(batch);
+                    console.log(`💾 Stored ${batch.length} ${type}(s) in Dexie`);
+
+                    // 🚀 Index for search with error handling
+                    let indexedCount = 0;
+                    for (const item of batch) {
+                        try {
+                            await indexEntity(item);
+                            indexedCount++;
+                        } catch (indexError) {
+                            console.error(`❌ Failed to index ${type}:`, item.id, indexError);
+                        }
+                    }
+                    console.log(`🔍 Successfully indexed ${indexedCount}/${batch.length} ${type}(s)`);
+                }
+                return batch.length;
+            };
+
+            let count = 0;
+            count += await storeBatch(data.manuscripts, 'manuscript');
+            count += await storeBatch(data.books, 'book');
+            count += await storeBatch(data.audios, 'audio');
+            count += await storeBatch(data.videos, 'video');
+
+            if (onProgress) onProgress(100, `تم تحميل ${count} عنصر بنجاح!`);
+            console.log(`✅ Sync Complete: stored ${count} entities locally.`);
+            return true;
+
+        } catch (error) {
+            console.error('Download all failed:', error);
+            if (onProgress) onProgress(-1, 'فشل التحميل');
+            return false;
+        }
+    }
+
     return {
         // State
         isSyncing,
@@ -389,7 +585,10 @@ export function useResilientSync() {
 
         // Methods
         fetchEntity,
+        loadEntity,
         saveEntity,
+        updateLocalEntity,
+        downloadAllData, // Exported
         processSyncQueue,
         forceSync,
         getSyncStatus

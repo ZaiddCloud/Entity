@@ -28,7 +28,7 @@ Route::get('/', function () {
 });
 
 Route::get('/offline', function () {
-    return view('offline');
+    return view('pwa.offline');
 })->name('offline');
 
 Route::middleware('guest')->group(function () {

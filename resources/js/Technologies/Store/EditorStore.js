@@ -32,13 +32,37 @@ export const useEditorStore = defineStore('editor', () => {
         editor.value = editorInstance
     }
 
-    const loadDocument = (entity, contentNode, hierarchyData = [], navigationData = {}) => {
+    const loadDocument = async (entity, contentNode, hierarchyData = [], navigationData = {}) => {
         currentEntity.value = entity
         currentContentNode.value = contentNode
-        content.value = contentNode.content || ''
         hierarchy.value = hierarchyData
         navigation.value = navigationData
         contentVersion.value = 0
+
+        // --- LOCAL-FIRST LOADING (Phase 13 Enhancement) ---
+        // Check IndexedDB first for unsaved changes
+        const { loadEntity } = useResilientSync()
+        let localVersion = null
+
+        try {
+            const entityId = entity.id || entity.slug
+            const childId = contentNode.id === 'full' ? 'full' : (contentNode._id || contentNode.id)
+
+            localVersion = await loadEntity(entityId, editorMode.value, childId)
+
+            if (localVersion && localVersion.content) {
+                // Use local version if it exists (may have unsaved changes)
+                content.value = localVersion.content
+                console.log('[EditorStore] 📦 Loaded from IndexedDB (local-first)')
+            } else {
+                // Fallback to server data
+                content.value = contentNode.content || ''
+                console.log('[EditorStore] 🌐 Loaded from server')
+            }
+        } catch (e) {
+            console.warn('[EditorStore] Local load failed, using server data:', e)
+            content.value = contentNode.content || ''
+        }
 
         // --- PRODUCTION INTEGRATION (TOUCH 8) ---
         // 1. Register Access for LRU

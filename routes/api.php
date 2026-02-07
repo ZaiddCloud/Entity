@@ -43,4 +43,7 @@ Route::middleware(['auth:sanctum'])->name('api.')->group(function () {
     // Export Engine
     Route::get('books/{book}/export/{format}', [App\Http\Controllers\Api\BookExportController::class, 'exportBook'])->name('books.export');
     Route::get('book-children/{child}/export/{format}', [App\Http\Controllers\Api\BookExportController::class, 'exportChild'])->name('book-children.export');
+
+    // Full Offline Sync
+    Route::get('/sync/full', [\App\Http\Controllers\Api\SyncController::class, 'index'])->name('sync.full');
 });

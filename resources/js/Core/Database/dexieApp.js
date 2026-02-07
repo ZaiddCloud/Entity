@@ -37,9 +37,56 @@ db.version(2).stores({
     content_blocks: '[node_id+segment_order], entity_id, chunk_hash, is_loaded'
 });
 
+// Version 3: Search Index for Offline Discovery
+db.version(3).stores({
+    // Full-text search index (Word-to-Entity mapping)
+    // Primary key: auto-increment, Indexes: word, entity_id
+    search_index: '++id, word, entity_id, type, [word+entity_id]'
+});
+
 // Database lifecycle hooks
-db.on('ready', () => {
+db.on('ready', async () => {
     console.log('✅ EntityLocalDB initialized successfully');
+
+    // Verify search_index table exists
+    try {
+        const tableExists = db.tables.some(table => table.name === 'search_index');
+        if (!tableExists) {
+            console.warn('⚠️ search_index table missing! Database needs upgrade.');
+            console.log('🔄 Please clear IndexedDB and reload, or increment version.');
+            return;
+        }
+
+        const indexCount = await db.search_index.count();
+        const entityCount = await db.entities.count();
+
+        console.log(`🔍 Search index contains ${indexCount} entries`);
+        console.log(`📦 Entities table contains ${entityCount} items`);
+
+        // 🔧 AUTO-REINDEX: If we have entities but no search index, rebuild it
+        if (entityCount > 0 && indexCount === 0) {
+            console.warn('⚠️ Search index is empty but entities exist. Auto-reindexing...');
+
+            // Import indexEntity dynamically to avoid circular dependency
+            const { indexEntity } = await import('../Sync/searchEngine.js');
+
+            const allEntities = await db.entities.toArray();
+            let indexed = 0;
+
+            for (const entity of allEntities) {
+                try {
+                    await indexEntity(entity);
+                    indexed++;
+                } catch (error) {
+                    console.error(`Failed to index ${entity.type}:`, entity.id, error);
+                }
+            }
+
+            console.log(`✅ Auto-reindexed ${indexed}/${allEntities.length} entities`);
+        }
+    } catch (error) {
+        console.error('❌ Error checking search_index:', error);
+    }
 });
 
 db.on('populate', () => {
@@ -78,5 +125,6 @@ export async function clearAllData() {
     await db.content_blocks.clear();
     await db.sync_registry.clear();
     await db.ephemeral_state.clear();
+    await db.search_index.clear();
     console.log('🗑️ All local data cleared');
 }

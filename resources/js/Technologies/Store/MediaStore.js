@@ -57,7 +57,8 @@ export const useMediaStore = defineStore('media-global', () => {
     };
 
     // --- Actions: Media ---
-    const loadMedia = (mediaData, mediaType = 'video', segmentData = []) => {
+    const loadMedia = async (mediaData, mediaType = 'video', segmentData = []) => {
+        // Default to server data first (instant render)
         currentMedia.value = mediaData;
         type.value = mediaType;
         segments.value = segmentData;
@@ -67,6 +68,45 @@ export const useMediaStore = defineStore('media-global', () => {
             dimensions.value.height = 240;
         } else {
             dimensions.value.height = 480;
+        }
+
+        // --- LOCAL-FIRST OVERRIDE (Phase 13) ---
+        // Check if we have a newer version in IndexedDB
+        // We do this AFTER setting server data to ensure UI appears immediately, 
+        // then snaps to local version if available (Optimistic)
+        const { loadEntity } = await import('@/Core/Sync/useResilientSync');
+        // Note: Dynamic import to avoid circular dependency if any, 
+        // though useResilientSync is a composable so standard import is better if possible.
+        // Let's use standard import at top of file, but for now dynamic is safe.
+        // Actually, Pinia stores are pure JS, so standard useResilientSync import checks.
+        // But let's stick to the pattern used in EditorStore if possible.
+        // EditorStore imports it inside the action? No, let's check EditorStore again.
+        // EditorStore imports it inside action: const { loadEntity } = useResilientSync()
+        // But EditorStore imports useResilientSync at top? No.
+
+        try {
+            const { useResilientSync } = await import('@/Core/Sync/useResilientSync');
+            const { loadEntity } = useResilientSync();
+
+            const entityId = mediaData.id || mediaData.slug;
+            const localVersion = await loadEntity(entityId, mediaType);
+
+            if (localVersion) {
+                console.log('[MediaStore] 📦 Found local override for media:', entityId);
+
+                // Merge/Override Media Metadata
+                if (localVersion.title) currentMedia.value.title = localVersion.title;
+                if (localVersion.description) currentMedia.value.description = localVersion.description;
+
+                // Override Segments if available
+                const loadedSegments = localVersion.children || localVersion.segments;
+                if (loadedSegments && Array.isArray(loadedSegments)) {
+                    console.log('[MediaStore] 📼 Loaded local segments:', loadedSegments.length);
+                    segments.value = loadedSegments;
+                }
+            }
+        } catch (e) {
+            console.warn('[MediaStore] Local load check failed:', e);
         }
     };
 
