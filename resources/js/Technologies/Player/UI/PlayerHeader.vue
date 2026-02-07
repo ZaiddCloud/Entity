@@ -99,7 +99,7 @@ const toggleMenu = () => isMenuOpen.value = !isMenuOpen.value;
                 @show-shortcuts="() => { /* Implement shortcuts overlay later */ isMenuOpen = false; }"
             />
 
-            <span class="file-info text-yellow-500 opacity-80 text-[11px] mx-2 font-bold">MP3</span>
+            <span class="file-info text-yellow-500 opacity-80 text-[11px] mx-2 font-bold select-none">MP3</span>
         </div>
     </div>
 </template>

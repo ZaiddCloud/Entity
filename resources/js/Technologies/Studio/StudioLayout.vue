@@ -7,6 +7,7 @@ import { useEditorStore } from '../Store/EditorStore'
 import { useMediaStore } from '../Store/MediaStore'
 import { Play } from 'lucide-vue-next'
 import { onMounted, onUnmounted, computed, watch, ref, provide, nextTick } from 'vue'
+import PresenceBar from '../Common/UI/PresenceBar.vue'
 
 const props = defineProps({
     type: { type: String, required: true }, // 'manuscript' | 'audio' | 'video'
@@ -279,6 +280,12 @@ const specificNodeTitle = computed(() => {
 
       <!-- Actions -->
       <div class="flex items-center gap-3">
+        <PresenceBar 
+            variant="dark"
+            :entity-type="props.type"
+            :entity-slug="props.entity.slug"
+        />
+
         <!-- Dual View Toggle -->
         <div class="hidden md:flex items-center bg-gray-800 rounded-lg p-1 gap-1 border border-gray-700">
             <!-- Full View Button -->

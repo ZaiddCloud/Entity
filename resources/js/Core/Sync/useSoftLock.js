@@ -13,10 +13,13 @@ export function useSoftLock() {
      * Check if a section is locked by another user
      */
     const checkSectionLock = async (entityType, entitySlug, sectionId) => {
+        if (!entityType || !entitySlug || !sectionId) return { locked: false, lockedBy: null, isCurrentUser: false };
         try {
-            const response = await axios.get(`/api/presence/${entityType}/${entitySlug}/section-lock`, {
-                params: { section_id: sectionId }
-            });
+            const response = await axios.get(route('api.presence.section-lock', {
+                type: entityType,
+                slug: entitySlug,
+                section_id: sectionId
+            }));
 
             const lockInfo = {
                 locked: response.data.locked,

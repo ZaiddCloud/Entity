@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, watch, onUnmounted } from 'vue'
 import { useManuscriptStore } from '@/Technologies/Store/ManuscriptStore'
+import SoftLockWarning from '@/Technologies/Common/UI/SoftLockWarning.vue'
 
 // Modular Components
 import ManuscriptHeader from './UI/ManuscriptHeader.vue'
@@ -85,6 +86,13 @@ watch(() => store.viewMode, (newMode) => {
                 <SingleView v-else />
             </div>
 
+            <!-- Soft Lock Warning -->
+            <SoftLockWarning 
+                v-if="store.activeSlug"
+                :section-id="store.activeSlug"
+                :soft-lock="store._softLock"
+                class="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none"
+            />
         </main>
 
         <!-- Overlays -->

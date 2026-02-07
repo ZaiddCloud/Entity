@@ -3,7 +3,8 @@ import { onMounted, watch, ref } from 'vue'
 import TiptapEditor from './Core/TiptapEditor.vue'
 import EditorToolbar from './UI/Toolbar/EditorToolbar.vue'
 import FootnoteEditor from './Extensions/Footnotes/FootnoteEditor.vue'
-import ReferencePane from '../Studio/Panes/ReferencePane.vue' // Added ReferencePane
+import SoftLockWarning from '@/Technologies/Common/UI/SoftLockWarning.vue'
+import ReferencePane from '../Studio/Panes/ReferencePane.vue'
 import { useEditorStore } from '@/Technologies/Store/EditorStore'
 import { useMediaStore } from '@/Technologies/Store/MediaStore'
 
@@ -52,12 +53,23 @@ const handleTitleClick = () => {
 
 <template>
   <div class="flex-1 flex flex-col bg-white overflow-hidden relative h-full w-full">
-    <!-- Toolbar -->
-    <EditorToolbar @command="handleCommand" />
+    <!-- Toolbar Container -->
+    <div class="flex items-center border-b border-gray-100 bg-white h-12">
+        <div class="flex-1 min-w-0">
+            <EditorToolbar @command="handleCommand" class="!border-none !w-auto" />
+        </div>
+    </div>
           
     <!-- Editor Core -->
     <div class="flex-1 overflow-y-auto bg-white custom-scrollbar">
       <div class="w-full min-h-full p-8 md:p-12 relative">
+        <!-- Soft Lock Warning -->
+        <SoftLockWarning 
+            v-if="store.currentContentNode"
+            :section-id="store.currentContentNode.id"
+            :soft-lock="store.softLock"
+        />
+
         
         <!-- Segment Title Input (Only for specific segments) -->
          <div v-if="store.currentContentNode && store.currentContentNode.id !== 'full'" class="mb-6 border-b border-gray-100 pb-4">
