@@ -46,4 +46,8 @@ Route::middleware(['auth:sanctum'])->name('api.')->group(function () {
 
     // Full Offline Sync
     Route::get('/sync/full', [\App\Http\Controllers\Api\SyncController::class, 'index'])->name('sync.full');
+
+    // Real-Time Presence
+    Route::post('presence/{type}/{slug}/heartbeat', [\App\Http\Controllers\Api\PresenceController::class, 'heartbeat'])->name('presence.heartbeat');
+    Route::get('presence/{type}/{slug}/section-lock', [\App\Http\Controllers\Api\PresenceController::class, 'getSectionLock'])->name('presence.section-lock');
 });

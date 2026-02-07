@@ -1,4 +1,6 @@
 import { defineStore } from 'pinia'
+import { usePresence } from '@/Core/Sync/usePresence';
+import { useSoftLock } from '@/Core/Sync/useSoftLock';
 
 export const useManuscriptStore = defineStore('manuscript', {
     state: () => ({
@@ -21,7 +23,11 @@ export const useManuscriptStore = defineStore('manuscript', {
         isPanning: false,
 
         // Responsive
-        windowWidth: 1024
+        windowWidth: 1024,
+
+        // Presence & Soft Locking (initialized in actions)
+        _presence: null,
+        _softLock: null
     }),
 
     getters: {
@@ -69,6 +75,17 @@ export const useManuscriptStore = defineStore('manuscript', {
             this.manuscript = manuscript;
             this.siblings = siblings;
             this.activeSlug = initialSlug;
+
+            // Initialize presence composables if not already done
+            if (!this._presence) {
+                this._presence = usePresence();
+                this._softLock = useSoftLock();
+            }
+
+            // Join presence for this manuscript
+            if (manuscript && manuscript.slug) {
+                this._presence.join('manuscript', manuscript.slug);
+            }
 
             // Initialize selection (Default to Main)
             if (this.selectedVersionIds.length === 0 && manuscript) {
@@ -150,6 +167,15 @@ export const useManuscriptStore = defineStore('manuscript', {
                 this.selectedVersionIds = [toKeep];
             } else {
                 this.distributeWidths();
+            }
+        },
+
+        cleanup() {
+            if (this._presence) {
+                this._presence.leave();
+            }
+            if (this._softLock) {
+                this._softLock.stopMonitoring();
             }
         }
     }

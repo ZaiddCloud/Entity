@@ -157,4 +157,20 @@ class EntityQueryService
             default => throw new \InvalidArgumentException("نوع غير معروف: {$type}")
         };
     }
+
+    /**
+     * الحصول على IDs الـ Entities المسندة لمستخدم معين
+     * 
+     * @param \App\Models\User $user المستخدم
+     * @param string $entityClass نوع الـ Entity (Book::class, Manuscript::class, etc.)
+     * @return array مصفوفة من الـ IDs
+     */
+    public function getAssignedEntityIds(\App\Models\User $user, string $entityClass): array
+    {
+        return \App\Models\Assignment::where('user_id', $user->id)
+            ->where('entity_type', $entityClass)
+            ->active()
+            ->pluck('entity_id')
+            ->toArray();
+    }
 }

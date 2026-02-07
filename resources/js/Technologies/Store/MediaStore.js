@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
+import { usePresence } from '@/Core/Sync/usePresence';
+import { useSoftLock } from '@/Core/Sync/useSoftLock';
 
 export const useMediaStore = defineStore('media-global', () => {
     // --- Window State ---
@@ -21,6 +23,10 @@ export const useMediaStore = defineStore('media-global', () => {
     const activeSegmentSlug = ref(null);
     const type = ref('video'); // 'audio' | 'video'
     const seekRequest = ref({ time: 0, showGuide: false }); // Added seekRequest
+
+    // Presence & Soft Locking
+    const presence = usePresence()
+    const softLock = useSoftLock()
 
     // --- Actions: Window ---
     const setDockMode = (docked, integrated) => {
@@ -62,6 +68,11 @@ export const useMediaStore = defineStore('media-global', () => {
         currentMedia.value = mediaData;
         type.value = mediaType;
         segments.value = segmentData;
+
+        // Join presence for this media
+        if (mediaData && mediaData.slug) {
+            presence.join(mediaType, mediaData.slug)
+        }
 
         // Auto-sizing logic
         if (mediaType === 'audio') {
@@ -284,6 +295,11 @@ export const useMediaStore = defineStore('media-global', () => {
     // Computed
     const isFloating = computed(() => !isDocked.value && !isIntegrated.value);
 
+    const cleanup = () => {
+        presence.leave()
+        softLock.stopMonitoring()
+    }
+
     return {
         // State
         isDocked,
@@ -322,6 +338,7 @@ export const useMediaStore = defineStore('media-global', () => {
         resetLayout,
         requestSeek,
         addSegment,
-        updateSegment
+        updateSegment,
+        presence, softLock, cleanup
     };
 });

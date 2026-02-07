@@ -149,6 +149,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('notes', NoteController::class);
     Route::resource('deletions', DeletionController::class)->only(['index', 'show']);
 
+    // Assignments Management
+    Route::resource('assignments', App\Http\Controllers\AssignmentController::class);
+
 });
 
 // 🧪 SANDBOX ROUTES (Temporary for Development)

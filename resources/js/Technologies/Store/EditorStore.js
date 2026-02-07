@@ -4,6 +4,8 @@ import { useResilientSync } from '@/Core/Sync/useResilientSync'
 import { registerAccess } from '@/Core/Storage/quotaManager';
 import { predictNextMoves } from '@/Core/Sync/cachingStrategy';
 import { usePage } from '@inertiajs/vue3'; // For user ID
+import { usePresence } from '@/Core/Sync/usePresence';
+import { useSoftLock } from '@/Core/Sync/useSoftLock';
 
 export const useEditorStore = defineStore('editor', () => {
     // State
@@ -19,6 +21,10 @@ export const useEditorStore = defineStore('editor', () => {
     const hierarchy = ref([])
     const navigation = ref({ prev: null, next: null })
     const contentVersion = ref(0)
+
+    // Presence & Soft Locking
+    const presence = usePresence()
+    const softLock = useSoftLock()
 
     // Getters
     const documentTitle = computed(() => currentContentNode.value?.title || 'مستند جديد')
@@ -38,6 +44,11 @@ export const useEditorStore = defineStore('editor', () => {
         hierarchy.value = hierarchyData
         navigation.value = navigationData
         contentVersion.value = 0
+
+        // Join presence for this entity
+        if (entity && entity.slug) {
+            presence.join(editorMode.value, entity.slug)
+        }
 
         // --- LOCAL-FIRST LOADING (Phase 13 Enhancement) ---
         // Check IndexedDB first for unsaved changes
@@ -268,6 +279,11 @@ export const useEditorStore = defineStore('editor', () => {
         }
     }
 
+    const cleanup = () => {
+        presence.leave()
+        softLock.stopMonitoring()
+    }
+
     return {
         currentEntity, currentContentNode, content, isToolbarPinned,
         editorMode, resourceData, isSaving, lastSaved, editor,
@@ -278,6 +294,7 @@ export const useEditorStore = defineStore('editor', () => {
         setEditorMode, setResourceData, setTitle,
         addMediaNode, removeMediaNode,
         save,
-        contentVersion
+        contentVersion,
+        presence, softLock, cleanup
     }
 })

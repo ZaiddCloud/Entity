@@ -7,10 +7,15 @@ use App\Models\Audio;
 use App\Models\Book;
 use App\Models\Manuscript;
 use App\Models\Video;
+use App\Services\EntityQueryService;
 use Illuminate\Http\Request;
 
 class SyncController extends Controller
 {
+    public function __construct(
+        protected EntityQueryService $queryService
+    ) {}
+
     /**
      * Download all user entities for offline usage.
      * Returns a lightweight manifest of all content.
@@ -22,28 +27,11 @@ class SyncController extends Controller
         ini_set('max_execution_time', 300);
 
         $scope = $request->query('scope', 'full'); // full, assigned
-        $userId = $request->user()->id;
-
-        // Helper to filter by assignment if needed
-        $applyScope = function ($query) use ($scope, $userId) {
-            if ($scope === 'assigned') {
-                $query->whereHas('assignments', function ($q) use ($userId) {
-                    $q->where('user_id', $userId)
-                      ->whereIn('status', ['pending', 'in_progress']);
-                });
-            }
-        };
-
-        // Helper to get assigned IDs for manual filtering (if whereHas is too slow or complex)
-        // Alternatively, use polymorphic relationship on Assignment model
-        // usage: Assignment::where('user_id', $user->id)->where('entity_type', Book::class)->pluck('entity_id')
+        $user = $request->user();
 
         $manuscripts = Manuscript::query()
-            ->when($scope === 'assigned', function($q) use ($userId) {
-                $ids = \App\Models\Assignment::where('user_id', $userId)
-                    ->where('entity_type', Manuscript::class)
-                    ->active()
-                    ->pluck('entity_id');
+            ->when($scope === 'assigned', function($q) use ($user) {
+                $ids = $this->queryService->getAssignedEntityIds($user, Manuscript::class);
                 $q->whereIn('id', $ids);
             })
             ->with(['children' => function($q) {
@@ -52,34 +40,24 @@ class SyncController extends Controller
             ->get();
 
         $books = Book::query()
-            ->when($scope === 'assigned', function($q) use ($userId) {
-                 $ids = \App\Models\Assignment::where('user_id', $userId)
-                    ->where('entity_type', Book::class)
-                    ->active()
-                    ->pluck('entity_id');
+            ->when($scope === 'assigned', function($q) use ($user) {
+                $ids = $this->queryService->getAssignedEntityIds($user, Book::class);
                 $q->whereIn('id', $ids);
             })
-            // Fixed: author is a string, not author_id relation in schema
             ->select('id', 'title', 'slug', 'cover_path', 'author', 'description', 'created_at', 'updated_at')
             ->get();
             
         $audios = Audio::query()
-            ->when($scope === 'assigned', function($q) use ($userId) {
-                 $ids = \App\Models\Assignment::where('user_id', $userId)
-                    ->where('entity_type', Audio::class)
-                    ->active()
-                    ->pluck('entity_id');
+            ->when($scope === 'assigned', function($q) use ($user) {
+                $ids = $this->queryService->getAssignedEntityIds($user, Audio::class);
                 $q->whereIn('id', $ids);
             })
             ->with('children')
             ->get();
 
         $videos = Video::query()
-            ->when($scope === 'assigned', function($q) use ($userId) {
-                 $ids = \App\Models\Assignment::where('user_id', $userId)
-                    ->where('entity_type', Video::class)
-                    ->active()
-                    ->pluck('entity_id');
+            ->when($scope === 'assigned', function($q) use ($user) {
+                $ids = $this->queryService->getAssignedEntityIds($user, Video::class);
                 $q->whereIn('id', $ids);
             })
             ->with('children')
