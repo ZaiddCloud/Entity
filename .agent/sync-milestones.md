@@ -200,10 +200,10 @@ export const useMediaStore = defineStore('media', {
 
 | # | Component | Primary Commit ID | Key Files | Status |
 |---|-----------|-------------------|-----------|--------|
-| 36 | **Web Manifest** | *Pending* | `manifest.json` | ✅ Complete |
-| 37 | **Offline Sanctum** | *Pending* | `OfflineSanctum.vue` | ✅ Complete |
-| 38 | **App Shell Caching** | *Pending* | `sw.js` | ✅ Complete |
-| 39 | **Install UX** | *Pending* | `GlobalSyncObserver.vue` | ✅ Complete |
+| 36 | **Web Manifest** | `78ed7f0` | `manifest.json` | ✅ Complete |
+| 37 | **Offline Sanctum** | `78ed7f0` | `OfflineSanctum.vue` | ✅ Complete |
+| 38 | **App Shell Caching** | `78ed7f0` | `sw.js` | ✅ Complete |
+| 39 | **Install UX** | `78ed7f0` | `GlobalSyncObserver.vue` | ✅ Complete |
 
 ### PWA Vision
 The goal is to provide a "Native-First" feel where the browser UI disappears, and the system remains fully functional in a dedicated offline environment called **The Sanctum**.
