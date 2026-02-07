@@ -220,9 +220,9 @@ The goal is to provide a "Native-First" feel where the browser UI disappears, an
 
 | # | Component | Primary Commit ID | Key Files | Status |
 |---|-----------|-------------------|-----------|--------|
-| 40 | **Assignment Admin UI** | `ad18cb0` | `Assignments/Index.vue` | ✅ Complete |
-| 41 | **Scoped Sync (Assigned)** | `ad18cb0` | `SyncController.php` | ✅ Complete |
-| 42 | **Entity Relation Logic** | `ad18cb0` | `EntityRelationService.php` | ✅ Complete |
+| 40 | **Assignment Admin UI** | `2665fd9` | `Assignments/Index.vue` | ✅ Complete |
+| 41 | **Scoped Sync (Assigned)** | `2665fd9` | `SyncController.php` | ✅ Complete |
+| 42 | **Entity Relation Logic** | `2665fd9` | `EntityRelationService.php` | ✅ Complete |
 
 ### Workflow & Permissions
 - **Admin Control**: Centralized interface for assigning entities to specific users with notes and due dates.
@@ -235,10 +235,10 @@ The goal is to provide a "Native-First" feel where the browser UI disappears, an
 
 | # | Component | Primary Commit ID | Key Files | Status |
 |---|-----------|-------------------|-----------|--------|
-| 43 | **Presence Registry** | `ad18cb0` | `PresenceController.php` | ✅ Complete |
-| 44 | **User Awareness UI** | `ad18cb0` | `PresenceBar.vue` | ✅ Complete |
-| 45 | **Soft Locking System** | `ad18cb0` | `useSoftLock.js` | ✅ Complete |
-| 46 | **Conflict Warnings** | `ad18cb0` | `SoftLockWarning.vue` | ✅ Complete |
+| 43 | **Presence Registry** | `2665fd9` | `PresenceController.php` | ✅ Complete |
+| 44 | **User Awareness UI** | `2665fd9` | `PresenceBar.vue` (Global Header) | ✅ Complete |
+| 45 | **Soft Locking System** | `2665fd9` | `useSoftLock.js` | ✅ Complete |
+| 46 | **Conflict Warnings** | `2665fd9` | `SoftLockWarning.vue` | ✅ Complete |
 
 ### Collaborative Awareness
 - **Heartbeat System**: Clients send a signal every 10 seconds to indicate activity, with a 30-second TTL on the server.
