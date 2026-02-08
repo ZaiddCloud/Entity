@@ -27,6 +27,7 @@ const {
 
 const isUserMenuOpen = ref(false);
 const isDataHubOpen = ref(false);
+const isPwaInstallable = ref(false);
 const navbarSearch = ref('');
 const user = usePage().props.auth.user;
 const dataHubFileInput = ref(null);
@@ -45,8 +46,28 @@ const triggerRestore = (event) => {
     event.target.value = '';
 };
 
+const installPwa = async () => {
+    if (window.pwaInstallPrompt) {
+        window.pwaInstallPrompt.prompt();
+        const { outcome } = await window.pwaInstallPrompt.userChoice;
+        if (outcome === 'accepted') {
+            isPwaInstallable.value = false;
+        }
+    }
+};
+
 onMounted(() => {
     updateStorageStats();
+
+    // Catch PWA event from GlobalSyncObserver
+    window.addEventListener('pwa-can-install', (e) => {
+        isPwaInstallable.value = e.detail;
+    });
+
+    // Check if prompt is already available
+    if (window.pwaInstallPrompt) {
+        isPwaInstallable.value = true;
+    }
 });
 </script>
 
@@ -244,6 +265,21 @@ onMounted(() => {
                 <span class="flex flex-col text-right">
                     <span class="text-xs font-black text-gray-800 dark:text-gray-200">تحميل كامل (Full)</span>
                     <span class="text-[9px] text-gray-500">تنزيل كل البيانات للأوفلاين</span>
+                </span>
+            </button>
+
+            <!-- PWA Install Button -->
+            <button 
+                v-if="isPwaInstallable"
+                @click="installPwa" 
+                class="flex items-center gap-3 p-2.5 rounded-2xl bg-indigo-500/10 hover:bg-indigo-500/20 transition-all w-full text-right active:scale-[0.98] border border-indigo-500/20 mt-2"
+            >
+                <span class="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-indigo-500 text-white shadow-lg shadow-indigo-500/20">
+                    <i class="ri-app-store-line text-lg"></i>
+                </span>
+                <span class="flex flex-col text-right">
+                    <span class="text-xs font-black text-indigo-600 dark:text-indigo-400">تثبيت التطبيق (Install)</span>
+                    <span class="text-[9px] text-indigo-500/70">استخدم الكيان كبرنامج مستقل</span>
                 </span>
             </button>
           </div>

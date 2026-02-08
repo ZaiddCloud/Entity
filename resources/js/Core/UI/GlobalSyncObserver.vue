@@ -1,16 +1,9 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useNetworkStatus } from '@/Core/Sync/useNetworkStatus';
-import { checkQuota, enforceEvictionPolicy } from '@/Core/Storage/quotaManager';
-import { backupDatabase, restoreDatabase } from '@/Core/Sync/dataPortability';
-import { useResilientSync } from '@/Core/Sync/useResilientSync';
-
 const { 
     isOnline, 
-    isSyncing, 
-    storageStats, 
-    updateStorageStats, 
-    handleDownloadAll 
+    // storageStats / updateStorageStats removed as they are handled in Navbar/Composables
 } = useResilientSync();
 
 const notifications = ref([]);
@@ -30,8 +23,6 @@ function addNotification(message, type = 'info') {
     }, 5000);
 }
 
-// Click outside removed (UI moving to Navbar)
-
 // Watchers and Lifecycle
 watch(isOnline, (online) => {
     if (!online) {
@@ -40,19 +31,21 @@ watch(isOnline, (online) => {
     } else {
         showOfflineBanner.value = false;
         addNotification('عاد الاتصال: جاري المزامنة... 🌐', 'success');
-        updateStorageStats();
+        // updateStorageStats removed to avoid duplicate calls
     }
 });
 
 onMounted(() => {
     window.notifySync = addNotification;
-    updateStorageStats();
-    setInterval(updateStorageStats, 30000);
 
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt.value = e;
         isInstallable.value = true;
+        
+        // Expose to window for Navbar to detect
+        window.pwaInstallPrompt = e;
+        window.dispatchEvent(new CustomEvent('pwa-can-install', { detail: true }));
     });
 
     window.addEventListener('appinstalled', () => {

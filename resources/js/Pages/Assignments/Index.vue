@@ -116,32 +116,31 @@ const getStatusLabel = (status) => {
     <div class="min-h-screen bg-gray-50 p-6">
         <div class="max-w-7xl mx-auto">
             <!-- Header -->
-            <div class="flex justify-between items-center mb-6">
-                <div class="flex items-center gap-6">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-6 mb-8 border-b border-gray-100 dark:border-white/5 pb-8">
+                <div class="flex items-start gap-5">
                     <Link 
                         :href="route('dashboard')" 
-                        class="w-12 h-12 rounded-2xl bg-white dark:bg-[#0a0a0a] border border-gray-100 dark:border-white/5 flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:border-indigo-100 dark:hover:border-indigo-500/20 transition-all shadow-sm hover:shadow-lg group/back"
+                        class="mt-1 w-10 h-10 rounded-xl bg-white dark:bg-[#0a0a0a] border border-gray-100 dark:border-white/5 flex items-center justify-center text-gray-400 hover:text-indigo-600 hover:border-indigo-100 dark:hover:border-indigo-500/20 transition-all shadow-sm hover:shadow-md group/back"
+                        title="العودة للرئيسية"
                     >
-                        <i class="ri-arrow-right-line text-xl group-hover/back:translate-x-1 transition-transform"></i>
+                        <i class="ri-arrow-right-line text-lg group-hover/back:translate-x-1 transition-transform"></i>
                     </Link>
                     <div>
-                        <h1 class="text-3xl font-black text-gray-900 dark:text-white flex items-center gap-3">
-                            إدارة المهام
-                            <span class="text-xs bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 px-3 py-1 rounded-full border border-indigo-100 dark:border-indigo-500/20 font-black uppercase tracking-widest flex items-center gap-2">
+                        <div class="flex items-center gap-3 mb-1">
+                            <h1 class="text-4xl font-black text-gray-900 dark:text-white tracking-tight">إدارة المهام</h1>
+                            <span class="text-[9px] bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 px-3 py-1 rounded-full border border-indigo-100 dark:border-indigo-500/20 font-black uppercase tracking-[0.2em] flex items-center gap-2">
                                 <i class="ri-wifi-line animate-pulse"></i>
-                                وضعية الأوفلاين
+                                Offline Mode
                             </span>
-                        </h1>
-                        <p class="text-gray-600 dark:text-gray-400 mt-1 font-bold">إسناد وتتبع المهام للمستخدمين</p>
+                        </div>
+                        <p class="text-gray-500 dark:text-gray-400 font-medium text-sm">تخصيص وتتبع الأذونات المتقدمة للأوفلاين</p>
                     </div>
                 </div>
                 <button 
                     @click="showAssignModal = true" 
-                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl font-black transition-all flex items-center gap-2 shadow-lg shadow-indigo-500/20 active:scale-95"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3.5 rounded-2xl font-black transition-all flex items-center gap-2 shadow-xl shadow-indigo-500/20 active:scale-95 text-sm"
                 >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
+                    <i class="ri-add-line text-lg"></i>
                     إسناد مهمة جديدة
                 </button>
             </div>

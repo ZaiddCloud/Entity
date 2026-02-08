@@ -177,9 +177,8 @@ export function useResilientSync() {
                 console.log('🧩 Granulated single node into encrypted content_blocks:', entity.child_id);
             }
 
-            // Step 2: Queue for server sync (Send UNENCRYPTED data to server - server handles its own security/storage)
-            // Note: If we wanted E2EE, we would send encrypted data. But here we assume TLS to server and server stores plaintext (or own encryption).
-            // The requirement is "Encrypt sensitive manuscripts before storing in IndexedDB".
+            // Step 2: Queue for server sync (Send plaintext data to server)
+            // Note: The requirement is "Encrypt sensitive manuscripts before storing in IndexedDB".
             await db.sync_registry.add({
                 timestamp: new Date().toISOString(),
                 priority: entity.priority || 'HIGH',
