@@ -21,8 +21,9 @@ const emit = defineEmits(['navigate', 'navigate-full'])
 const store = useManuscriptStore()
 
 // Initialize Store
-onMounted(() => {
+onMounted(async () => {
     store.setResource(props.manuscript, props.siblings, props.activeChildId)
+    await store.initSync()
 })
 
 // Watch props to update store if parent changes them

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { usePresence } from '@/Core/Sync/usePresence';
 import { useSoftLock } from '@/Core/Sync/useSoftLock';
+import { useResilientSync } from '@/Core/Sync/useResilientSync';
 
 export const useManuscriptStore = defineStore('manuscript', {
     state: () => ({
@@ -76,17 +77,6 @@ export const useManuscriptStore = defineStore('manuscript', {
             this.siblings = siblings;
             this.activeSlug = initialSlug;
 
-            // Initialize presence composables if not already done
-            if (!this._presence) {
-                this._presence = usePresence();
-                this._softLock = useSoftLock();
-            }
-
-            // Join presence for this manuscript
-            if (manuscript && manuscript.slug) {
-                this._presence.join('manuscript', manuscript.slug);
-            }
-
             // Initialize selection (Default to Main)
             if (this.selectedVersionIds.length === 0 && manuscript) {
                 this.selectedVersionIds = [manuscript.id];
@@ -99,31 +89,54 @@ export const useManuscriptStore = defineStore('manuscript', {
                     this.shotNumber = pageIndex + 1;
                 }
             }
+        },
 
-            // --- LOCAL-FIRST OVERRIDE (Phase 13) ---
-            if (manuscript) {
-                try {
-                    const { useResilientSync } = await import('@/Core/Sync/useResilientSync');
-                    const { loadEntity } = useResilientSync();
+        /**
+         * Lazy Initialization of Sync, Presence and Soft-Locking
+         */
+        async initSync() {
+            if (!this.manuscript) return;
 
-                    const entityId = manuscript.id || manuscript.slug;
-                    const localVersion = await loadEntity(entityId, 'manuscript'); // type might differ
+            // Initialize presence composables if not already done
+            if (!this._presence) {
+                this._presence = usePresence();
+                this._softLock = useSoftLock();
+            }
 
-                    if (localVersion) {
-                        console.log('[ManuscriptStore] 📜 Found local override for manuscript:', entityId);
+            const manuscript = this.manuscript;
 
-                        // Merge Metadata
-                        if (localVersion.title) this.manuscript.title = localVersion.title;
+            // 1. Join presence for this manuscript
+            if (manuscript && manuscript.slug) {
+                await this._presence.join('manuscript', manuscript.slug);
+            }
 
-                        // Override Children (Pages) if changed locally
-                        if (localVersion.children && Array.isArray(localVersion.children)) {
-                            console.log('[ManuscriptStore] 📄 Loaded local pages:', localVersion.children.length);
-                            this.manuscript.children = localVersion.children;
-                        }
+            // 2. Start soft-lock monitoring for current version pages
+            const pages = manuscript.children || []
+            if (pages.length > 0) {
+                const pageIds = pages.map(p => p.id || p.slug);
+                this._softLock.startMonitoring('manuscript', manuscript.slug, pageIds);
+            }
+
+            // 3. --- LOCAL-FIRST OVERRIDE (Phase 13) ---
+            const { loadEntity } = useResilientSync();
+            try {
+                const entityId = manuscript.id || manuscript.slug;
+                const localVersion = await loadEntity(entityId, 'manuscript');
+
+                if (localVersion) {
+                    console.log('[ManuscriptStore] 📜 Found local override for manuscript:', entityId);
+
+                    // Merge Metadata
+                    if (localVersion.title) this.manuscript.title = localVersion.title;
+
+                    // Override Children (Pages) if changed locally
+                    if (localVersion.children && Array.isArray(localVersion.children)) {
+                        console.log('[ManuscriptStore] 📄 Loaded local pages:', localVersion.children.length);
+                        this.manuscript.children = localVersion.children;
                     }
-                } catch (e) {
-                    console.warn('[ManuscriptStore] Local load check failed:', e);
                 }
+            } catch (e) {
+                console.warn('[ManuscriptStore] Local load check failed:', e);
             }
         },
 
