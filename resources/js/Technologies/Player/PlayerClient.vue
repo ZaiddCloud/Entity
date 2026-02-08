@@ -119,142 +119,237 @@ watch([() => props.media, () => props.type, segments], ([newMedia, newType, newS
 
 // Handle closing the player
 // --- Persistence Actions ---
-// Helper to sync local cache
-const syncCache = async () => {
-   const { updateLocalEntity } = useResilientSync();
-   // Construct updated entity from store state
-   const updatedEntity = { 
-       ...mediaStore.currentMedia,
-       children: mediaStore.segments.map(seg => ({
-           id: seg.id,
-           slug: seg.slug || seg.id, // Fallback
-           title: seg.title,
-           start_time: seg.start,
-           end_time: seg.end,
-           file_path: seg.file_path,
-           // Preserve or default others
-           type: 'segment' 
-       }))
-   };
-   await updateLocalEntity(updatedEntity);
-};
 
 const handleAddSegment = async (data) => {
-    const { saveEntity } = useResilientSync();
     try {
-        const payload = {
-            id: `new-${Date.now()}`, // Temporary local ID
-            entity_type: props.type, // Validation requires 'entity_type'
-            entity_id: props.media.id,
-            title: data.title,
-            start_time: data.start,
-            file_path: null, // Optional but good to be explicit
+        // Hybrid Approach: Direct API when online, sync queue when offline
+        if (navigator.onLine) {
+            // Direct API call for immediate response
+            await axios.post(route('api.segments.store'), {
+                entity_id: props.media.id,
+                entity_type: props.type,
+                title: data.title,
+                start_time: data.start
+            });
             
-            // Sync Meta
-            method: 'POST',
-            url: route('api.segments.store')
-        };
+            // Refresh props to get the new segment from server
+            router.reload({ only: ['media'] });
+        } else {
+            // Offline: Queue for sync
+            const { saveEntity } = useResilientSync();
+            const payload = {
+                id: `new-${Date.now()}`,
+                entity_type: props.type,
+                entity_id: props.media.id,
+                title: data.title,
+                start_time: data.start,
+                file_path: null,
+                method: 'POST',
+                url: route('api.segments.store')
+            };
 
-        await saveEntity(payload);
-        
-        if (window.notifySync) {
-            window.notifySync(`✅ تم إضافة "${data.title}" محلياً: سيتم المزامنة تلقائياً.`, 'success');
+            await saveEntity(payload);
+            
+            if (window.notifySync) {
+                window.notifySync(`✅ تم إضافة "${data.title}" محلياً (وضع عدم الاتصال)`, 'success');
+            }
+
+            // Optimistically update UI
+            mediaStore.addSegment({
+                id: payload.id,
+                title: data.title,
+                start: data.start
+            });
         }
-
-        // Optimistically update the UI locally
-        mediaStore.addSegment({
-            id: payload.id,
-            title: data.title,
-            start: data.start
-        });
-        
-        // Update Local Cache (Parent Entity)
-        await syncCache();
-
-        // Refresh props to sync Header/Sidebar/Toolbar with the new state
-        router.reload({ only: ['entity'] });
-
     } catch (error) {
         console.error('[PlayerClient] Error adding segment:', error);
-        window.notifySync?.('❌ فشل إضافة المقطع محلياً', 'error');
+        
+        // Fallback to sync queue if API fails
+        try {
+            const { saveEntity } = useResilientSync();
+            const payload = {
+                id: `new-${Date.now()}`,
+                entity_type: props.type,
+                entity_id: props.media.id,
+                title: data.title,
+                start_time: data.start,
+                file_path: null,
+                method: 'POST',
+                url: route('api.segments.store')
+            };
+
+            await saveEntity(payload);
+            window.notifySync?.('⚠️ تم حفظ المقطع محلياً (سيتم المزامنة لاحقاً)', 'warning');
+        } catch (fallbackError) {
+            console.error('[PlayerClient] Fallback also failed:', fallbackError);
+            window.notifySync?.('❌ فشل إضافة المقطع', 'error');
+        }
     }
 };
 
 const handleDeleteSegment = async (segment) => {
-    const { saveEntity } = useResilientSync();
     try {
         const id = segment.id || segment.slug;
-        const payload = {
-            id: id,
-            entity_type: props.type, // Validation requires 'entity_type'
-            entity_id: props.media.id,
-            
-            // Sync Meta
-            method: 'DELETE',
-            url: route('api.segments.destroy', id),
-            priority: 'CRITICAL'
-        };
-
-        await saveEntity(payload);
-
-        if (window.notifySync) {
-            window.notifySync(`🗑️ تم جدولة حذف "${segment.title || segment.label}"`, 'warning');
-        }
-
-        // Redirect to full view or reload to reflect deletion in parent
-        router.visit(route('studio.show', { type: props.type, slug: props.media.slug }), {
-            only: ['entity'],
-            onSuccess: () => {
-                 window.notifySync?.('✅ تم تحديث الواجهة بعد الحذف', 'info');
-            }
-        });
         
+        // Hybrid Approach: Direct API when online, sync queue when offline
+        if (navigator.onLine) {
+            // Direct API call for immediate deletion
+            await axios.delete(route('api.segments.destroy', id), {
+                data: {
+                    entity_id: props.media.id,
+                    entity_type: props.type
+                }
+            });
+            
+            // Navigate to full view after deletion
+            router.visit(route('studio.show', { type: props.type, slug: props.media.slug }));
+        } else {
+            // Offline: Queue for sync
+            const { saveEntity } = useResilientSync();
+            const payload = {
+                id: id,
+                entity_type: props.type,
+                entity_id: props.media.id,
+                method: 'DELETE',
+                url: route('api.segments.destroy', id),
+                priority: 'CRITICAL'
+            };
+
+            await saveEntity(payload);
+
+            if (window.notifySync) {
+                window.notifySync(`🗑️ تم جدولة حذف "${segment.title || segment.label}" (وضع عدم الاتصال)`, 'warning');
+            }
+
+            // Redirect to full view
+            router.visit(route('studio.show', { type: props.type, slug: props.media.slug }), {
+                only: ['entity'],
+                onSuccess: () => {
+                     window.notifySync?.('✅ تم تحديث الواجهة', 'info');
+                }
+            });
+        }
     } catch (error) {
         console.error('[PlayerClient] Error deleting segment:', error);
-        window.notifySync?.('❌ فشل طلب حذف المقطع', 'error');
+        
+        // Fallback to sync queue if API fails
+        try {
+            const { saveEntity } = useResilientSync();
+            const id = segment.id || segment.slug;
+            const payload = {
+                id: id,
+                entity_type: props.type,
+                entity_id: props.media.id,
+                method: 'DELETE',
+                url: route('api.segments.destroy', id),
+                priority: 'CRITICAL'
+            };
+
+            await saveEntity(payload);
+            window.notifySync?.('⚠️ تم جدولة الحذف محلياً (سيتم المزامنة لاحقاً)', 'warning');
+            
+            // Still navigate away
+            router.visit(route('studio.show', { type: props.type, slug: props.media.slug }));
+        } catch (fallbackError) {
+            console.error('[PlayerClient] Fallback also failed:', fallbackError);
+            window.notifySync?.('❌ فشل حذف المقطع', 'error');
+        }
     }
 };
 
 const updateSegment = async (segment) => {
-    const { saveEntity } = useResilientSync();
     try {
         const id = segment.id || segment.slug;
-        const payload = {
-            id: id,
-            entity_type: props.type, // Validation requires 'entity_type'
-            entity_id: props.media.id,
-            title: segment.title,
-            start_time: segment.start,
+        
+        // Hybrid Approach: Direct API when online, sync queue when offline
+        if (navigator.onLine) {
+            // Direct API call for immediate update
+            const payload = {
+                entity_id: props.media.id,
+                entity_type: props.type,
+                title: segment.title
+            };
             
-            // Sync Meta
-            method: 'PUT',
-            url: route('api.segments.update', id)
-        };
-        
-        await saveEntity(payload);
-        
-        if (window.notifySync) {
-            window.notifySync(`💾 تم حفظ "${segment.title}" محلياً: المزاينة قيد الانتظار.`, 'success');
+            // Include start_time if it exists
+            if (segment.start !== undefined) {
+                payload.start_time = segment.start;
+            }
+            
+            const response = await axios.put(route('api.segments.update', id), payload);
+            
+            console.log('[PlayerClient] Segment updated:', response.data);
+
+            // Update store immediately for instant UI feedback
+            mediaStore.updateSegment({
+                id: segment.id,
+                slug: segment.slug,
+                title: segment.title,
+                label: segment.title,
+                start: segment.start
+            });
+
+            // Refresh props (Update entity to refresh Toolbar/Sidebar)
+            router.reload({ only: ['entity'] });
+        } else {
+            // Offline: Queue for sync
+            const { saveEntity } = useResilientSync();
+            const payload = {
+                id: id,
+                entity_type: props.type,
+                entity_id: props.media.id,
+                title: segment.title,
+                start_time: segment.start,
+                method: 'PUT',
+                url: route('api.segments.update', id)
+            };
+            
+            await saveEntity(payload);
+            
+            if (window.notifySync) {
+                window.notifySync(`💾 تم حفظ "${segment.title}" محلياً (وضع عدم الاتصال)`, 'success');
+            }
+
+            // Update store immediately for instant UI feedback
+            mediaStore.updateSegment({
+                id: segment.id,
+                slug: segment.slug,
+                title: segment.title,
+                label: segment.title,
+                start: segment.start
+            });
         }
-
-        // Update store immediately for instant UI feedback
-        mediaStore.updateSegment({
-            id: segment.id,
-            slug: segment.slug,
-            title: segment.title,
-            label: segment.title,
-            start: segment.start
-        });
-        
-        // Update Local Cache
-        await syncCache();
-
-        // Sync metadata back from server if possible
-        router.reload({ only: ['entity'] });
-
     } catch (error) {
          console.error('[PlayerClient] Error updating segment:', error);
-         window.notifySync?.('❌ فشل حفظ التعديلات محلياً', 'error');
+         
+         // Fallback to sync queue if API fails
+         try {
+             const { saveEntity } = useResilientSync();
+             const id = segment.id || segment.slug;
+             const payload = {
+                 id: id,
+                 entity_type: props.type,
+                 entity_id: props.media.id,
+                 title: segment.title,
+                 start_time: segment.start,
+                 method: 'PUT',
+                 url: route('api.segments.update', id)
+             };
+             
+             await saveEntity(payload);
+             window.notifySync?.('⚠️ تم حفظ التعديلات محلياً (سيتم المزامنة لاحقاً)', 'warning');
+             
+             // Update store for UI feedback
+             mediaStore.updateSegment({
+                 id: segment.id,
+                 slug: segment.slug,
+                 title: segment.title,
+                 label: segment.title,
+                 start: segment.start
+             });
+         } catch (fallbackError) {
+             console.error('[PlayerClient] Fallback also failed:', fallbackError);
+             window.notifySync?.('❌ فشل حفظ التعديلات', 'error');
+         }
     }
 };
 
