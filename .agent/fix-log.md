@@ -11,8 +11,8 @@
 | الإحصائية | القيمة |
 |-----------|--------|
 | **إجمالي الكسور** | 20 |
-| **تم الإصلاح بنجاح** | 3 ✅ |
-| **قيد العمل / متبقي** | 17 |
+| **تم الإصلاح بنجاح** | 4 ✅ |
+| **قيد العمل / متبقي** | 16 |
 | **الحالة الحالية** | المرحلة 1 (الكسور الحرجة) |
 
 ---
@@ -32,7 +32,7 @@
 | 1 | **PlayerClient Hybrid API** | `24b4f7f` | `PlayerClient.vue` | ✅ Complete |
 | 2 | **Secure Logout Detection** | `e8551cf` | `app.js` | ✅ Complete |
 | 3 | **EditorStore Async Sync** | `4a9a5d0` | `EditorStore.js` | ✅ Complete |
-| 4 | **MediaStore Async Cleanup** | `pending` | `MediaStore.js` | ❌ Pending |
+| 4 | **MediaStore Async Cleanup** | `c5f6b56` | `MediaStore.js` | ✅ Complete |
 | 5 | **ManuscriptStore Lazy Init** | `pending` | `ManuscriptStore.js` | ❌ Pending |
 | 18| **getAssignedEntityIds Fix** | `pending` | `EntityQueryService.php` | ❌ Pending |
 
@@ -73,8 +73,20 @@
 - **شواهد الاختبار**: تم التحقق ببروتوكول القاعدة 12 (تسجيل الدخول الصارم) والتنقل بين أقسام "مقدمة ابن خلدون" دون أخطاء في الـ Console.
 
 
-### ملاحظات تقنية عامة:
-1. **Ziggy Generate**: تم تفعيله في `npm run dev` لضمان تزامن المسارات.
+### Touch #4: MediaStore Async Cleanup ✅
+- **التشخيص**: 
+  - استدعاء `presence.join()` بدون `await`.
+  - نقص في مراقبة الـ Soft Lock لمقاطع الميديا.
+  - تكرار عمليات الاستيراد الديناميكي (Dynamic Imports) مما يسبب تأخراً في التحميل.
+- **الحل**:
+  - توحيد استيراد `useResilientSync` في أعلى الملف.
+  - إضافة `await` لـ `presence.join`.
+  - تفعيل `softLock.startMonitoring()` لجميع مقاطع الميديا عند التحميل.
+- **الملفات**: `MediaStore.js`.
+- **النتيجة**: استقرار تام لمشغل الميديا (Audio/Video) في الاستوديو، مع تفعيل فوري لنظام التواجد وتأمين المقاطع ضد التعديل المتزامن.
+- **شواهد الاختبار**: تم التحقق ببروتوكول القاعدة 12 في **الاستوديو** (Edit in Studio) لملف "Audio Test". ظهر مؤشر "أنت فقط" وتفعل الـ Heartbeat بنجاح.
+- **لقطات**:
+  - ![Media Studio State](file:///home/z/.gemini/antigravity/brain/2cc23956-f3f5-4c68-a1df-f8e3f8ff8d5e/audio_studio_state_1770582125278.png)
 2. **Commit Policy**: كمت واحد لكل إصلاح يتضمن الكود والتوثيق.
 
 ---
