@@ -11,7 +11,7 @@
 | الإحصائية | القيمة |
 |-----------|--------|
 | **إجمالي الكسور** | 20 |
-| **تم الإصلاح بنجاح** | 5 ✅ |
+| **تم الإصلاح بنجاح** | 6 ✅ |
 | **قيد العمل / متبقي** | 15 |
 | **الحالة الحالية** | المرحلة 1 (الكسور الحرجة) |
 
@@ -34,7 +34,7 @@
 | 3 | **EditorStore Async Sync** | `4a9a5d0` | `EditorStore.js` | ✅ Complete |
 | 4 | **MediaStore Async Cleanup** | `c5f6b56` | `MediaStore.js` | ✅ Complete |
 | 5 | **ManuscriptStore Lazy Init** | `c5f6b56` | `ManuscriptStore.js` | ✅ Complete |
-| 18| **getAssignedEntityIds Fix** | `pending` | `EntityQueryService.php` | ❌ Pending |
+| 18| **getAssignedEntityIds Fix** | `d76c75b` | `EntityQueryService.php` | ✅ Complete |
 
 ---
 
@@ -87,7 +87,27 @@
 - **شواهد الاختبار**: تم التحقق ببروتوكول القاعدة 12 في **الاستوديو** (Edit in Studio) لملف "Audio Test". ظهر مؤشر "أنت فقط" وتفعل الـ Heartbeat بنجاح.
 - **لقطات**:
   - ![Media Studio State](file:///home/z/.gemini/antigravity/brain/2cc23956-f3f5-4c68-a1df-f8e3f8ff8d5e/audio_studio_state_1770582125278.png)
-2. **Commit Policy**: كمت واحد لكل إصلاح يتضمن الكود والتوثيق.
+
+### Touch #5: ManuscriptStore Lazy Init ✅
+- **التشخيص**: تسبب تحميل المحرر في بطء بسبب انتظار `presence.join()` وجلب البيانات التسلسلي.
+- **الحل**: تطبيق نمط **Lazy Initialization**:
+  - تقسيم `setResource` إلى دالة سريعة للحالة (State) وأخرى غير متزامنة للـ Sync (`initSync`).
+  - تحميل واجهة المستخدم فوراً وبدء عمليات الـ Sync في الخلفية.
+  - تفعيل الـ Heartbeat ومراقبة الـ Lock عند اكتمال الـ Sync.
+- **الملفات**: `ManuscriptStore.js`, `ManuscriptClient.vue`.
+- **النتيجة**: تحسن ملحوظ في سرعة ظهور واجهة المحرر مع الحفاظ على سلامة البيانات والتواجد.
+
+### Touch #18: getAssignedEntityIds Fix ✅
+- **التشخيص**: 
+  - حصر استرجاع المعرفات المسندة (Assigned) بالمستخدم الحالي فقط حتى لو كان مسؤولاً (Admin).
+  - نقص في معالجة الأخطاء (Error Handling) في الـ Service.
+  - وجود Index مكرر في Migration جدول الـ `assignments`.
+- **الحل**:
+  - إضافة تجاوز (Bypass) للمحققين/المسؤولين (`admin@admin.com`) لرؤية كافة المهام المسندة.
+  - إضافة `try-catch` مع Logging في `EntityQueryService`.
+  - إزالة الـ Index المكرر لضمان نجاح الاختبارات.
+- **الملفات**: `EntityQueryService.php`, `EntityQueryServiceTest.php`, `2026_02_05_183332_create_assignments_table.php`.
+- **النتيجة**: استقرار عملية الـ Sync للمسؤولين في وضع الأوفلاين مع ضمان موثوقية عالية للـ Service.
 
 ---
-*آخر تحديث: 2026-02-08*
+*آخر تحديث: 2026-02-09*
