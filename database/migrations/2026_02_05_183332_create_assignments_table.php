@@ -35,7 +35,6 @@ return new class extends Migration
             
             // Indexes for performance
             $table->index(['user_id', 'status']);
-            $table->index(['entity_type', 'entity_id']);
         });
     }
 

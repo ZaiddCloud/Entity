@@ -7,6 +7,8 @@ use App\Services\EntityQueryService;
 use App\Models\Book;
 use App\Models\Video;
 use App\Models\Tag;
+use App\Models\User;
+use App\Models\Assignment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -115,5 +117,76 @@ class EntityQueryServiceTest extends TestCase
 
         $this->assertCount(1, $popular);
         $this->assertEquals($popularBook->title, $popular->first()->title);
+    }
+
+    #[Test]
+    public function it_returns_only_user_assigned_ids_for_regular_user()
+    {
+        $user = User::factory()->create(['email' => 'user@example.com']);
+        $otherUser = User::factory()->create();
+        $book = Book::first();
+        $otherBook = Book::all()->last();
+
+        Assignment::create([
+            'user_id' => $user->id,
+            'entity_type' => Book::class,
+            'entity_id' => $book->id,
+            'status' => 'pending'
+        ]);
+
+        Assignment::create([
+            'user_id' => $otherUser->id,
+            'entity_type' => Book::class,
+            'entity_id' => $otherBook->id,
+            'status' => 'pending'
+        ]);
+
+        $ids = $this->service->getAssignedEntityIds($user, Book::class);
+
+        $this->assertCount(1, $ids);
+        $this->assertEquals($book->id, $ids[0]);
+    }
+
+    #[Test]
+    public function it_returns_all_assigned_ids_for_admin()
+    {
+        $admin = User::factory()->create(['email' => 'admin@admin.com']);
+        $user = User::factory()->create();
+        $book = Book::first();
+        $otherBook = Book::all()->last();
+
+        Assignment::create([
+            'user_id' => $user->id,
+            'entity_type' => Book::class,
+            'entity_id' => $book->id,
+            'status' => 'pending'
+        ]);
+
+        Assignment::create([
+            'user_id' => $admin->id,
+            'entity_type' => Book::class,
+            'entity_id' => $otherBook->id,
+            'status' => 'pending'
+        ]);
+
+        $ids = $this->service->getAssignedEntityIds($admin, Book::class);
+
+        // Admin sees both
+        $this->assertCount(2, $ids);
+        $this->assertContains($book->id, $ids);
+        $this->assertContains($otherBook->id, $ids);
+    }
+
+    #[Test]
+    public function it_returns_empty_array_on_failure()
+    {
+        // We pass a string that isn't a class to trigger a potential error or just return empty
+        // The implementation has a try-catch for broader safety
+        $user = User::factory()->create();
+        
+        $ids = $this->service->getAssignedEntityIds($user, 'NonExistentClass');
+        
+        $this->assertIsArray($ids);
+        $this->assertEmpty($ids);
     }
 }

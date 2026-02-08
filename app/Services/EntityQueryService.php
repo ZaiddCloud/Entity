@@ -167,10 +167,25 @@ class EntityQueryService
      */
     public function getAssignedEntityIds(\App\Models\User $user, string $entityClass): array
     {
-        return \App\Models\Assignment::where('user_id', $user->id)
-            ->where('entity_type', $entityClass)
-            ->active()
-            ->pluck('entity_id')
-            ->toArray();
+        try {
+            $query = \App\Models\Assignment::query()
+                ->where('entity_type', $entityClass)
+                ->active();
+
+            // Admin bypass: Admins see all assigned entities globally
+            // Regular users only see their own assignments
+            if ($user->email !== 'admin@admin.com') {
+                $query->where('user_id', $user->id);
+            }
+
+            return $query->pluck('entity_id')->toArray();
+        } catch (\Exception $e) {
+            \Log::error('[EntityQueryService] Failed to get assigned entity IDs', [
+                'user_id' => $user->id,
+                'entity_class' => $entityClass,
+                'error' => $e->getMessage()
+            ]);
+            return [];
+        }
     }
 }
