@@ -158,7 +158,7 @@ const handleAddSegment = async (data) => {
         await saveEntity(payload);
         
         if (window.notifySync) {
-            window.notifySync('تمت إضافة المقطع محلياً: جارٍ الرفع... 🔄', 'info');
+            window.notifySync(`✅ تم إضافة "${data.title}" محلياً: سيتم المزامنة تلقائياً.`, 'success');
         }
 
         // Optimistically update the UI locally
@@ -171,8 +171,12 @@ const handleAddSegment = async (data) => {
         // Update Local Cache (Parent Entity)
         await syncCache();
 
+        // Refresh props to sync Header/Sidebar/Toolbar with the new state
+        router.reload({ only: ['entity'] });
+
     } catch (error) {
         console.error('[PlayerClient] Error adding segment:', error);
+        window.notifySync?.('❌ فشل إضافة المقطع محلياً', 'error');
     }
 };
 
@@ -194,17 +198,20 @@ const handleDeleteSegment = async (segment) => {
         await saveEntity(payload);
 
         if (window.notifySync) {
-            window.notifySync('تم جدولة حذف المقطع 🗑️', 'warning');
+            window.notifySync(`🗑️ تم جدولة حذف "${segment.title || segment.label}"`, 'warning');
         }
 
-        // Redirect to full view if needed
-        router.visit(route('studio.show', { type: props.type, slug: props.media.slug }));
-        
-        // Note: For DELETE, we usually reload or redirect. 
-        // If we stayed, we would remove it from store and call syncCache().
+        // Redirect to full view or reload to reflect deletion in parent
+        router.visit(route('studio.show', { type: props.type, slug: props.media.slug }), {
+            only: ['entity'],
+            onSuccess: () => {
+                 window.notifySync?.('✅ تم تحديث الواجهة بعد الحذف', 'info');
+            }
+        });
         
     } catch (error) {
         console.error('[PlayerClient] Error deleting segment:', error);
+        window.notifySync?.('❌ فشل طلب حذف المقطع', 'error');
     }
 };
 
@@ -227,7 +234,7 @@ const updateSegment = async (segment) => {
         await saveEntity(payload);
         
         if (window.notifySync) {
-            window.notifySync('تم حفظ التعديلات محلياً 💾', 'success');
+            window.notifySync(`💾 تم حفظ "${segment.title}" محلياً: المزاينة قيد الانتظار.`, 'success');
         }
 
         // Update store immediately for instant UI feedback
@@ -242,8 +249,12 @@ const updateSegment = async (segment) => {
         // Update Local Cache
         await syncCache();
 
+        // Sync metadata back from server if possible
+        router.reload({ only: ['entity'] });
+
     } catch (error) {
          console.error('[PlayerClient] Error updating segment:', error);
+         window.notifySync?.('❌ فشل حفظ التعديلات محلياً', 'error');
     }
 };
 

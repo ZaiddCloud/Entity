@@ -269,10 +269,15 @@ export const useEditorStore = defineStore('editor', () => {
             console.log('[EditorStore] Content queued for sync successfully')
 
             if (window.notifySync) {
-                window.notifySync('حفظ ذكي: سيتم المزامنة في الخلفية ✅', 'success')
+                window.notifySync(`✅ تم حفظ "${documentTitle.value}" محلياً: سيتم المزامنة تلقائياً`, 'success')
             }
+
+            // Sync with server to refresh meta components (presence, header, etc)
+            router.reload({ only: ['entity'] })
+
         } catch (error) {
             console.error('[EditorStore] Save failed:', error)
+            window.notifySync?.('❌ فشل الحفظ المحلي: تأكد من مساحة التخزين', 'error')
             throw error
         } finally {
             isSaving.value = false
