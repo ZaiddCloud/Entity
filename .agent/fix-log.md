@@ -11,8 +11,8 @@
 | الإحصائية | القيمة |
 |-----------|--------|
 | **إجمالي الكسور** | 20 |
-| **تم الإصلاح بنجاح** | 2 ✅ |
-| **قيد العمل / متبقي** | 18 |
+| **تم الإصلاح بنجاح** | 3 ✅ |
+| **قيد العمل / متبقي** | 17 |
 | **الحالة الحالية** | المرحلة 1 (الكسور الحرجة) |
 
 ---
@@ -31,7 +31,7 @@
 |---|---------------|-------------------|-----------|--------|
 | 1 | **PlayerClient Hybrid API** | `24b4f7f` | `PlayerClient.vue` | ✅ Complete |
 | 2 | **Secure Logout Detection** | `e8551cf` | `app.js` | ✅ Complete |
-| 3 | **EditorStore Async Sync** | `pending` | `EditorStore.js` | ❌ Pending |
+| 3 | **EditorStore Async Sync** | `4a9a5d0` | `EditorStore.js` | ✅ Complete |
 | 4 | **MediaStore Async Cleanup** | `pending` | `MediaStore.js` | ❌ Pending |
 | 5 | **ManuscriptStore Lazy Init** | `pending` | `ManuscriptStore.js` | ❌ Pending |
 | 18| **getAssignedEntityIds Fix** | `pending` | `EntityQueryService.php` | ❌ Pending |
@@ -59,17 +59,18 @@
 - **النتيجة**: استعادة سرعة الاستجابة مع الحفاظ على قدرة العمل Offline. تم التحقق من عمل الواجهة وسلاسة التنقل.
 
 
-### Touch #2: Logout Detection (Dangerous Case) ✅
-- **التشخيص**: استخدام `url.includes('logout')` يسبب مسح البيانات عند زيارة أي رابط يحتوي الكلمة.
-- **الحل**: تطبيق فحص متعدد العوامل (Multi-factor):
-  - مطابقة اسم المسار `route('logout')`.
-  - مطابقة المكون `Auth/Logout`.
-  - التحقق من انتهاء الرابط بـ `/logout` بدقة.
-- **الملفات**: `app.js`.
-- **النتيجة**: منع مسح البيانات العشوائي (False Positives) مع ضمان التنظيف عند الخروج الحقيقي فقط. تم التحقق ببروتوكول القاعدة 12.
-- **شواهد الاختبار**:
-  - ![Login Screenshot](file:///home/z/.gemini/antigravity/brain/2cc23956-f3f5-4c68-a1df-f8e3f8ff8d5e/.system_generated/click_feedback/click_feedback_1770579654478.png)
-  - ![Logout UI Screenshot](file:///home/z/.gemini/antigravity/brain/2cc23956-f3f5-4c68-a1df-f8e3f8ff8d5e/.system_generated/click_feedback/click_feedback_1770579874235.png)
+### Touch #3: EditorStore Async Sync ✅
+- **التشخيص**: 
+  - استدعاء `prefetchEntities` بدون استيراد (Uncaught ReferenceError).
+  - عدم استخدام `await` مع `presence.join()` مما يسبب مشاكل في تزامن التواجد.
+  - نقص في مراقبة الـ Soft Lock للفقرات المنتقاة.
+- **الحل**:
+  - إضافة الاستيراد المفقود من `cachingStrategy`.
+  - تحويل استدعاءات الانضمام للـ Presence والمراقبة إلى `async/await`.
+  - تفعيل `softLock.startMonitoring()` عند تحميل كل مستند.
+- **الملفات**: `EditorStore.js`.
+- **النتيجة**: استقرار كامل للمحرر عند التنقل بين الفصول والتحقق من التواجد والنسخ الاحتياطي التنبئي دون أخطاء.
+- **شواهد الاختبار**: تم التحقق ببروتوكول القاعدة 12 (تسجيل الدخول الصارم) والتنقل بين أقسام "مقدمة ابن خلدون" دون أخطاء في الـ Console.
 
 
 ### ملاحظات تقنية عامة:
