@@ -50,9 +50,9 @@ onMounted(() => {
     // Load document state
     if (props.isFullView) {
         // Pseudo-node for full view to satisfy store if needed
-        store.loadDocument(props.entity, { id: 'full', title: 'كامل المحتوى', content: props.editorContent }, availableNodes.value, {})
+        store.loadDocument(props.entity, { id: 'full', title: 'كامل المحتوى', content: props.editorContent }, hierarchyMetadata.value, {})
     } else if (props._legacy?.contentNode) {
-        store.loadDocument(props.entity, props._legacy.contentNode, availableNodes.value, {})
+        store.loadDocument(props.entity, props._legacy.contentNode, hierarchyMetadata.value, {})
         
         // Seek player if node has start time
         if (props._legacy.contentNode.start_time !== undefined) {
@@ -67,9 +67,9 @@ onMounted(() => {
 watch(() => props.activeChildId, (newId, oldId) => {
     if (newId !== oldId) {
         if (props.isFullView) {
-             store.loadDocument(props.entity, { id: 'full', title: 'كامل المحتوى', content: props.editorContent }, availableNodes.value, {})
+             store.loadDocument(props.entity, { id: 'full', title: 'كامل المحتوى', content: props.editorContent }, hierarchyMetadata.value, {})
         } else if (props._legacy?.contentNode) {
-             store.loadDocument(props.entity, props._legacy.contentNode, availableNodes.value, {})
+             store.loadDocument(props.entity, props._legacy.contentNode, hierarchyMetadata.value, {})
              
              // Seek player if node has start time
              if (props._legacy.contentNode.start_time !== undefined) {
@@ -107,7 +107,7 @@ const navigateToFull = () => {
     console.log('[StudioLayout] Client-side switch to Full View');
 
     // 1. Load Full Document from the stable source
-    store.loadDocument(props.entity, { id: 'full', title: 'كامل المحتوى', content: props.fullContent }, availableNodes.value, {});
+    store.loadDocument(props.entity, { id: 'full', title: 'كامل المحتوى', content: props.fullContent }, hierarchyMetadata.value, {});
     
     // 2. Clear Active Segment
     mediaStore.setActiveSegment(null);
@@ -191,6 +191,22 @@ const availableNodes = computed(() => {
     );
 })
 
+/**
+ * OPTIMIZATION (Fix #10): Lightweight hierarchy for the store.
+ * We pass only titles/IDs/Slugs to build the Sidebar/Dropdown tree.
+ * Large 'content' fields belong ONLY to the primary node being edited.
+ */
+const hierarchyMetadata = computed(() => {
+    return availableNodes.value.map(node => ({
+        id: node.id,
+        slug: node.slug,
+        title: node.title,
+        start: node.start,
+        order: node.order,
+        isEphemeral: node.isEphemeral
+    }));
+});
+
 const searchQuery = ref('');
 
 const navigateToChild = (id) => {
@@ -220,7 +236,7 @@ const navigateToNode = (node) => {
             title: node.title, 
             content: content, 
             start_time: node.start
-        }, availableNodes.value, {});
+        }, hierarchyMetadata.value, {});
 
         // 2. Seek Player (if has start time)
         if (node.start !== undefined || node.start_time !== undefined) {
