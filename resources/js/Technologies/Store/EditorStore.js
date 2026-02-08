@@ -6,6 +6,7 @@ import { predictNextMoves } from '@/Core/Sync/cachingStrategy';
 import { usePage } from '@inertiajs/vue3'; // For user ID
 import { usePresence } from '@/Core/Sync/usePresence';
 import { useSoftLock } from '@/Core/Sync/useSoftLock';
+import { prefetchEntities } from '@/Core/Sync/cachingStrategy';
 
 export const useEditorStore = defineStore('editor', () => {
     // State
@@ -47,7 +48,12 @@ export const useEditorStore = defineStore('editor', () => {
 
         // Join presence for this entity
         if (entity && entity.slug) {
-            presence.join(editorMode.value, entity.slug)
+            await presence.join(editorMode.value, entity.slug)
+
+            // Start soft-lock monitoring for this segment
+            if (contentNode && contentNode.id) {
+                softLock.startMonitoring(editorMode.value, entity.slug, [contentNode.id]);
+            }
         }
 
         // --- LOCAL-FIRST LOADING (Phase 13 Enhancement) ---
@@ -86,17 +92,21 @@ export const useEditorStore = defineStore('editor', () => {
 
         // 2. Predictive Caching (Pre-fetch next chapter/page)
         if (entity) {
-            predictNextMoves({
-                ...entity,
-                editorMode: editorMode.value,
-                order: contentNode?.order,
-                parent_id: entity.parent_id || entity.id,
-                navigation: navigationData
-            }).then(predictions => {
-                if (predictions.length > 0) {
+            try {
+                const predictions = await predictNextMoves({
+                    ...entity,
+                    editorMode: editorMode.value,
+                    order: contentNode?.order,
+                    parent_id: entity.parent_id || entity.id,
+                    navigation: navigationData
+                });
+
+                if (predictions && predictions.length > 0) {
                     prefetchEntities(predictions);
                 }
-            });
+            } catch (e) {
+                console.warn('[EditorStore] Predictive caching failed', e);
+            }
         }
     }
 
