@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { usePresence } from '@/Core/Sync/usePresence';
 import { useSoftLock } from '@/Core/Sync/useSoftLock';
+import { useResilientSync } from '@/Core/Sync/useResilientSync';
 
 export const useMediaStore = defineStore('media-global', () => {
     // --- Window State ---
@@ -27,6 +28,7 @@ export const useMediaStore = defineStore('media-global', () => {
     // Presence & Soft Locking
     const presence = usePresence()
     const softLock = useSoftLock()
+    const { loadEntity } = useResilientSync()
 
     // --- Actions: Window ---
     const setDockMode = (docked, integrated) => {
@@ -71,7 +73,13 @@ export const useMediaStore = defineStore('media-global', () => {
 
         // Join presence for this media
         if (mediaData && mediaData.slug) {
-            presence.join(mediaType, mediaData.slug)
+            await presence.join(mediaType, mediaData.slug)
+
+            // Start soft-lock monitoring for the media segments
+            if (segmentData && segmentData.length > 0) {
+                const segmentIds = segmentData.map(s => s.id || s.slug);
+                softLock.startMonitoring(mediaType, mediaData.slug, segmentIds);
+            }
         }
 
         // Auto-sizing logic
