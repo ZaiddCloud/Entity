@@ -70,7 +70,13 @@ import db from './Core/Database/dexieApp';
  * Protects shared devices by wiping IndexedDB when user logs out.
  */
 router.on('navigate', async (event) => {
-    if (event.detail.page.url.includes('logout')) {
+    // Precise logout detection: check if route name matches, component name matches, 
+    // or URL is exactly '/logout' (standard Laravel)
+    const isLogout = event.detail.page.url === route('logout') ||
+        event.detail.page.component === 'Auth/Logout' ||
+        (event.detail.page.url.endsWith('/logout') && !event.detail.page.url.includes('?'));
+
+    if (isLogout) {
         console.log('🔒 Logout detected - clearing sensitive data...');
         try {
             await db.delete();
