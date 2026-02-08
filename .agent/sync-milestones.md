@@ -220,11 +220,14 @@ export const useMediaStore = defineStore('media', {
 | 52 | **Logic Consolidation** | `bc79e12` | `useResilientSync.js` | ✅ Complete |
 | 53 | **Studio Sync Integration** | `bc79e12` | `StudioLayout.vue` | ✅ Complete |
 | 54 | **UX Refinement** | `bc79e12` | `GlobalSyncObserver.vue` | ✅ Complete |
+| 55 | **Regression Healing** | `5b68682` | `Navbar.vue`, `Index.vue` | ✅ Complete |
 
 ### Hub Achievements
 - **Seamless Integration**: Relocated complex data management (backup, restore, storage stats) to a central, accessible Navbar dropdown.
-- **Studio Efficiency**: Editors can now trigger manual syncs via a dedicated "Flash" button in the Studio toolbar, reducing data loss risk.
-- **Navigation Clarity**: Added context-aware "Back" button to Assignments page for a faster return to Dashboard.
+- **Studio Efficiency**: Editors can now trigger manual syncs via a dedicated "Flash" button in the Studio toolbar.
+- **Navigation Clarity**: Refined the Assignments page header with a discrete, integrated "Back" button.
+- **PWA Restoration**: Restored the "Install App" capability within the Global Data Hub after the UI relocation.
+- **Logic Purity**: Deduplicated background storage checks and cleared dead imports for optimal performance.
 
 ---
 
