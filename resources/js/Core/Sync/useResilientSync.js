@@ -15,6 +15,14 @@ import { splitContent } from '@/Core/Storage/chunkManager';
 import { usePage } from '@inertiajs/vue3';
 import { encryptContent, decryptContent, generateUserKey, isEncrypted } from '@/Core/Storage/encryptionLayer';
 import { indexEntity } from '@/Core/Sync/searchEngine';
+import { checkQuota, enforceEvictionPolicy } from '@/Core/Storage/quotaManager';
+import { backupDatabase, restoreDatabase } from '@/Core/Sync/dataPortability';
+
+// Singleton State to share across components
+const storageStats = ref({ percent: 0, usedMB: 0, quotaMB: 0 });
+const isExporting = ref(false);
+const isRestoring = ref(false);
+const isDownloading = ref(false);
 
 export function useResilientSync() {
     const isSyncing = ref(false);
@@ -576,21 +584,125 @@ export function useResilientSync() {
         }
     }
 
+    /**
+     * Update storage metrics (Quota/Used)
+     */
+    async function updateStorageStats() {
+        try {
+            const stats = await checkQuota();
+            storageStats.value = stats;
+
+            if (stats.percent > 0.8) {
+                const result = await enforceEvictionPolicy();
+                if (result.evicted > 0) {
+                    window.notifySync?.(`تطهير تلقائي: تم تحرير ${result.freedBytes} بايت`, 'info');
+                    updateStorageStats();
+                }
+            }
+        } catch (e) {
+            console.error('Core: Failed to check storage', e);
+        }
+    }
+
+    /**
+     * Backup Database
+     */
+    async function handleBackup() {
+        isExporting.value = true;
+        try {
+            await backupDatabase();
+            window.notifySync?.('✅ تم تحميل النسخة الاحتياطية بنجاح', 'success');
+        } catch (error) {
+            window.notifySync?.('❌ فشل التصدير: ' + error.message, 'error');
+        } finally {
+            isExporting.value = false;
+        }
+    }
+
+    /**
+     * Restore Database
+     */
+    async function handleRestore(file) {
+        if (!file) return;
+        isRestoring.value = true;
+        try {
+            await restoreDatabase(file);
+            window.notifySync?.('✅ تم استعادة البيانات بنجاح!', 'success');
+            window.location.reload();
+        } catch (error) {
+            window.notifySync?.('❌ فشل الاستعادة: ' + error.message, 'error');
+        } finally {
+            isRestoring.value = false;
+        }
+    }
+
+    /**
+     * Force Synchronization (UI Wrapper)
+     */
+    async function handleForceSync() {
+        try {
+            const success = await forceSync();
+            if (success) {
+                window.notifySync?.('🔄 جاري بدء المزامنة القسرية...', 'info');
+            }
+        } catch (error) {
+            window.notifySync?.('❌ فشلت المزامنة: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Download All Data (UI Wrapper)
+     */
+    async function handleDownloadAll(scope = 'full') {
+        const message = scope === 'assigned'
+            ? 'سيتم تحميل المهام المسندة إليك فقط. المتابعة؟'
+            : 'سيتم تحميل كافة البيانات (بدون الوسائط الثقيلة) للاستخدام أوفلاين. المتابعة؟';
+
+        if (!confirm(message)) return;
+
+        isDownloading.value = true;
+        try {
+            const success = await downloadAllData((percent, msg) => {
+                if (percent % 20 === 0) window.notifySync?.(msg, 'info');
+            }, scope);
+
+            if (success) {
+                window.notifySync?.('✅ تم تحميل البيانات بنجاح! جاهز للأوفلاين.', 'success');
+                updateStorageStats();
+            } else {
+                window.notifySync?.('⚠️ لم يكتمل التحميل بشكل كامل.', 'warning');
+            }
+        } catch (error) {
+            window.notifySync?.('❌ خطأ في التحميل: ' + error.message, 'error');
+        } finally {
+            isDownloading.value = false;
+        }
+    }
+
     return {
         // State
         isSyncing,
         isOnline,
         syncErrors,
         pendingOperations,
+        storageStats,
+        isExporting,
+        isRestoring,
+        isDownloading,
 
         // Methods
         fetchEntity,
         loadEntity,
         saveEntity,
         updateLocalEntity,
-        downloadAllData, // Exported
+        downloadAllData,
         processSyncQueue,
         forceSync,
-        getSyncStatus
+        handleForceSync,
+        getSyncStatus,
+        updateStorageStats,
+        handleBackup,
+        handleRestore,
+        handleDownloadAll
     };
 }

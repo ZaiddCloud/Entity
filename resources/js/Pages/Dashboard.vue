@@ -441,6 +441,7 @@ section {
     display: -webkit-box;
     -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
+    line-clamp: 1;
     overflow: hidden;
 }
 </style>

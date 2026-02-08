@@ -797,6 +797,22 @@ resources/js/Core/
 ---
 
 > [!NOTE]
+## Phase 17: PWA Extreme Resilience (The Survivalist) ✅
+
+| # | Component | Primary Commit ID | Key Files | Status |
+|---|-----------|-------------------|-----------|--------|
+| 47 | **CacheFirst Asset Strategy** | `Uncommitted` | `sw.js` | ✅ Complete |
+| 48 | **Network-Aware Presence** | `Uncommitted` | `usePresence.js` | ✅ Complete |
+| 49 | **Cross-Port Session Support**| `Uncommitted` | `app.php`, `cors.php` | ✅ Complete |
+| 50 | **Build Automation (Hacked)** | `Uncommitted` | `package.json` | ⚠️ Cleanup Pending |
+
+### Survival Achievements
+- **Deterministic Loading**: Verified `dexie.js` and App Shell load from cache even when the physical server is terminated (`pkill`).
+- **Quiet Failover**: Heartbeat system now intelligently pauses during offline mode, reducing client-side noise.
+- **Development Flexibility**: Fixed `401 Unauthorized` / `Inertia JSON` errors by enabling stateful requests across ports (8001 -> 8000).
+
+---
+
 > **Migration Strategy:**
 > Existing data will be gradually migrated to IndexedDB:
 > 1. New edits are saved to both systems (dual-write)
@@ -806,9 +822,9 @@ resources/js/Core/
 
 ---
 
-*Created on: 2026-02-03*
-*Status: Planning Phase*
-*Next Review: After Foundation Sprint*
+*Last Updated: 2026-02-08*
+*Status: Architecture Cleanup & Calibration*
+*Next Review: After Build Pipeline Refactoring*
 
 ---
 

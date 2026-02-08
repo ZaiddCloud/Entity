@@ -1,12 +1,29 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { Head } from '@inertiajs/vue3';
+import db from '@/Core/Database/dexieApp';
+import Card from '@/Components/Card.vue';
+import { Link } from '@inertiajs/vue3';
 
 const props = defineProps({
     assignments: Object,
     users: Array,
     entities: Array
+});
+
+const localAssignments = ref([]);
+
+onMounted(async () => {
+    try {
+        const allLocal = await db.entities.toArray();
+        localAssignments.value = allLocal.sort((a, b) => 
+            new Date(b.cached_at || b.updated_at) - new Date(a.cached_at || a.updated_at)
+        );
+        console.log('📡 Assignments: Loaded local entities from Dexie', localAssignments.value.length);
+    } catch (e) {
+        console.error('Failed to load local entities', e);
+    }
 });
 
 const showAssignModal = ref(false);
@@ -100,13 +117,27 @@ const getStatusLabel = (status) => {
         <div class="max-w-7xl mx-auto">
             <!-- Header -->
             <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-900">إدارة المهام</h1>
-                    <p class="text-gray-600 mt-1">إسناد وتتبع المهام للمستخدمين</p>
+                <div class="flex items-center gap-6">
+                    <Link 
+                        :href="route('dashboard')" 
+                        class="w-12 h-12 rounded-2xl bg-white dark:bg-[#0a0a0a] border border-gray-100 dark:border-white/5 flex items-center justify-center text-gray-500 hover:text-indigo-600 hover:border-indigo-100 dark:hover:border-indigo-500/20 transition-all shadow-sm hover:shadow-lg group/back"
+                    >
+                        <i class="ri-arrow-right-line text-xl group-hover/back:translate-x-1 transition-transform"></i>
+                    </Link>
+                    <div>
+                        <h1 class="text-3xl font-black text-gray-900 dark:text-white flex items-center gap-3">
+                            إدارة المهام
+                            <span class="text-xs bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 px-3 py-1 rounded-full border border-indigo-100 dark:border-indigo-500/20 font-black uppercase tracking-widest flex items-center gap-2">
+                                <i class="ri-wifi-line animate-pulse"></i>
+                                وضعية الأوفلاين
+                            </span>
+                        </h1>
+                        <p class="text-gray-600 dark:text-gray-400 mt-1 font-bold">إسناد وتتبع المهام للمستخدمين</p>
+                    </div>
                 </div>
                 <button 
                     @click="showAssignModal = true" 
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl font-black transition-all flex items-center gap-2 shadow-lg shadow-indigo-500/20 active:scale-95"
                 >
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -114,6 +145,51 @@ const getStatusLabel = (status) => {
                     إسناد مهمة جديدة
                 </button>
             </div>
+
+            <!-- Offline Tasks Section (The Local Vault) -->
+            <transition 
+                enter-active-class="transform transition ease-out duration-500"
+                enter-from-class="translate-y-4 opacity-0"
+                enter-to-class="translate-y-0 opacity-100"
+            >
+                <div v-if="localAssignments.length > 0" class="mb-10">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-2 h-6 bg-lime-400 rounded-full" />
+                        <h2 class="text-xl font-black text-gray-900 dark:text-white">مهامي المحملة (Offline Vault)</h2>
+                        <span class="text-[10px] bg-lime-400/10 text-lime-600 px-2 py-0.5 rounded-lg font-black uppercase tracking-widest border border-lime-400/20">
+                            جاهزة للعمل 📡
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <Link
+                            v-for="item in localAssignments"
+                            :key="item.id"
+                            :href="item.slug ? route('reader.show', { type: item.type, slug: item.slug }) : '#'"
+                            class="group bg-white dark:bg-[#0a0a0a] border border-gray-100 dark:border-white/5 p-5 rounded-[2rem] shadow-sm hover:shadow-2xl transition-all duration-500 hover:border-indigo-400"
+                        >
+                            <div class="flex items-start gap-4">
+                                <div class="w-14 h-14 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center justify-center text-2xl group-hover:rotate-6 transition-transform">
+                                    {{ item.type === 'book' ? '📚' : item.type === 'audio' ? '🎵' : item.type === 'video' ? '🎬' : '📜' }}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-black text-sm text-gray-900 dark:text-white truncate group-hover:text-indigo-500 transition-colors">
+                                        {{ item.title }}
+                                    </h4>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span class="text-[9px] font-black uppercase text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded-lg">
+                                            {{ item.type }}
+                                        </span>
+                                        <span v-if="item.sync_status === 'synced'" class="text-[9px] font-black text-green-500 flex items-center gap-1">
+                                            <i class="ri-checkbox-circle-fill"></i> محدث
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </Link>
+                    </div>
+                </div>
+            </transition>
 
             <!-- Assignments Table -->
             <div class="bg-white rounded-lg shadow overflow-hidden">

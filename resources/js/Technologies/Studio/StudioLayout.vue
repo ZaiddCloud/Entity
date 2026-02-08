@@ -8,6 +8,9 @@ import { useMediaStore } from '../Store/MediaStore'
 import { Play } from 'lucide-vue-next'
 import { onMounted, onUnmounted, computed, watch, ref, provide, nextTick } from 'vue'
 import PresenceBar from '../Common/UI/PresenceBar.vue'
+import { useResilientSync } from '@/Core/Sync/useResilientSync'
+
+const { isOnline, isSyncing, handleForceSync } = useResilientSync()
 
 const props = defineProps({
     type: { type: String, required: true }, // 'manuscript' | 'audio' | 'video'
@@ -402,6 +405,19 @@ const specificNodeTitle = computed(() => {
           <Play class="w-4 h-4 fill-current" />
         </button>
         
+        <!-- Manual Sync Button -->
+        <button 
+            v-tooltip="'مزامنة يدوية مع السيرفر ⚡'"
+            class="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-800 border border-gray-700 text-orange-400 hover:bg-gray-700 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed group/sync"
+            :disabled="!isOnline || isSyncing"
+            @click="handleForceSync"
+        >
+            <i :class="[
+                'ri-flashlight-line text-lg',
+                isSyncing ? 'animate-pulse scale-110' : 'group-hover/sync:scale-110'
+            ]"></i>
+        </button>
+
         <button 
             class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-4 py-1.5 rounded font-bold transition-colors shadow-lg shadow-blue-900/20"
             @click="store.save"

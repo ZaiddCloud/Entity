@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
+import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
 export default defineConfig({
@@ -16,6 +17,22 @@ export default defineConfig({
                     base: null,
                     includeAbsolute: false,
                 },
+            },
+        }),
+        VitePWA({
+            strategies: 'injectManifest',
+            srcDir: 'resources/js',
+            filename: 'sw.js',
+            registerType: 'autoUpdate',
+            injectRegister: false, // Disable auto-injection as we handle it manually in app.js
+            injectManifest: {
+                modifyURLPrefix: {
+                    '': 'build/', // Fix for sw.js being moved to root: prepend 'build/' to all asset paths
+                },
+            },
+            devOptions: {
+                enabled: true,
+                type: 'module',
             },
         }),
         tailwindcss(),
