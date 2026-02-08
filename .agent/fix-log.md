@@ -11,8 +11,8 @@
 | الإحصائية | القيمة |
 |-----------|--------|
 | **إجمالي الكسور** | 20 |
-| **تم الإصلاح بنجاح** | 4 ✅ |
-| **قيد العمل / متبقي** | 16 |
+| **تم الإصلاح بنجاح** | 5 ✅ |
+| **قيد العمل / متبقي** | 15 |
 | **الحالة الحالية** | المرحلة 1 (الكسور الحرجة) |
 
 ---
@@ -33,7 +33,7 @@
 | 2 | **Secure Logout Detection** | `e8551cf` | `app.js` | ✅ Complete |
 | 3 | **EditorStore Async Sync** | `4a9a5d0` | `EditorStore.js` | ✅ Complete |
 | 4 | **MediaStore Async Cleanup** | `c5f6b56` | `MediaStore.js` | ✅ Complete |
-| 5 | **ManuscriptStore Lazy Init** | `pending` | `ManuscriptStore.js` | ❌ Pending |
+| 5 | **ManuscriptStore Lazy Init** | `c5f6b56` | `ManuscriptStore.js` | ✅ Complete |
 | 18| **getAssignedEntityIds Fix** | `pending` | `EntityQueryService.php` | ❌ Pending |
 
 ---
