@@ -4,7 +4,7 @@
         "type": "module",
         "scripts": {
                 "build": "php artisan ziggy:generate resources/js/ziggy.js && vite build && node scripts/pwa-post-build.js",
-                "dev": "vite",
+                "dev": "php artisan ziggy:generate resources/js/ziggy.js && vite",
                 "test": "vitest",
                 "test:run": "vitest run"
         },
