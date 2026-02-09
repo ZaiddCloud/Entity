@@ -1,6 +1,8 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useNetworkStatus } from '@/Core/Sync/useNetworkStatus';
+import { useResilientSync } from '@/Core/Sync/useResilientSync';
+
 const { 
     isOnline, 
     // storageStats / updateStorageStats removed as they are handled in Navbar/Composables
