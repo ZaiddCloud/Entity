@@ -66,61 +66,52 @@ export const useMediaStore = defineStore('media-global', () => {
 
     // --- Actions: Media ---
     const loadMedia = async (mediaData, mediaType = 'video', segmentData = []) => {
-        // Default to server data first (instant render)
+        // ✅ 1. Immediate loading of core data (no flicker)
         currentMedia.value = mediaData;
         type.value = mediaType;
         segments.value = segmentData;
 
-        // Join presence for this media
-        if (mediaData && mediaData.slug) {
-            await presence.join(mediaType, mediaData.slug)
-
-            // Start soft-lock monitoring for the media segments
-            if (segmentData && segmentData.length > 0) {
-                const segmentIds = segmentData.map(s => s.id || s.slug);
-                softLock.startMonitoring(mediaType, mediaData.slug, segmentIds);
-            }
-        }
-
-        // Auto-sizing logic
+        // ✅ 2. Auto-sizing immediately (no delay)
         if (mediaType === 'audio') {
             dimensions.value.height = 240;
         } else {
             dimensions.value.height = 480;
         }
 
-        // --- LOCAL-FIRST OVERRIDE (Phase 13) ---
-        // Check if we have a newer version in IndexedDB
-        // We do this AFTER setting server data to ensure UI appears immediately, 
-        // then snaps to local version if available (Optimistic)
-        const { loadEntity } = await import('@/Core/Sync/useResilientSync');
-        // Note: Dynamic import to avoid circular dependency if any, 
-        // though useResilientSync is a composable so standard import is better if possible.
-        // Let's use standard import at top of file, but for now dynamic is safe.
-        // Actually, Pinia stores are pure JS, so standard useResilientSync import checks.
-        // But let's stick to the pattern used in EditorStore if possible.
-        // EditorStore imports it inside the action? No, let's check EditorStore again.
-        // EditorStore imports it inside action: const { loadEntity } = useResilientSync()
-        // But EditorStore imports useResilientSync at top? No.
+        // ✅ 3. Presence in background (non-blocking)
+        if (mediaData && mediaData.slug) {
+            presence.join(mediaType, mediaData.slug).catch(e => {
+                console.warn('[MediaStore] Presence join failed:', e)
+            })
+
+            // Soft Lock monitoring in background
+            if (segmentData && segmentData.length > 0) {
+                const segmentIds = segmentData.map(s => s.id || s.slug);
+                softLock.startMonitoring(mediaType, mediaData.slug, segmentIds);
+            }
+        }
+
+        // ✅ 4. IndexedDB check in background (non-blocking)
+        const { loadEntity } = useResilientSync();
 
         try {
-            const { useResilientSync } = await import('@/Core/Sync/useResilientSync');
-            const { loadEntity } = useResilientSync();
-
             const entityId = mediaData.id || mediaData.slug;
             const localVersion = await loadEntity(entityId, mediaType);
 
             if (localVersion) {
                 console.log('[MediaStore] 📦 Found local override for media:', entityId);
 
-                // Merge/Override Media Metadata
-                if (localVersion.title) currentMedia.value.title = localVersion.title;
-                if (localVersion.description) currentMedia.value.description = localVersion.description;
+                // ✅ Use object spread for reactivity (no partial mutation)
+                currentMedia.value = {
+                    ...currentMedia.value,
+                    ...(localVersion.title && { title: localVersion.title }),
+                    ...(localVersion.description && { description: localVersion.description })
+                };
 
-                // Override Segments if available
+                // ✅ Update segments only if local version exists
                 const loadedSegments = localVersion.children || localVersion.segments;
                 if (loadedSegments && Array.isArray(loadedSegments)) {
-                    console.log('[MediaStore] 📼 Loaded local segments:', loadedSegments.length);
+                    console.log('[MediaStore] 📼 Updated local segments:', loadedSegments.length);
                     segments.value = loadedSegments;
                 }
             }
