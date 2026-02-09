@@ -40,57 +40,55 @@ export const useEditorStore = defineStore('editor', () => {
     }
 
     const loadDocument = async (entity, contentNode, hierarchyData = [], navigationData = {}) => {
+        // ✅ 1. Immediate loading of core data (no flicker)
         currentEntity.value = entity
         currentContentNode.value = contentNode
+        content.value = contentNode.content || ''  // ✅ Load immediately!
         hierarchy.value = hierarchyData
         navigation.value = navigationData
         contentVersion.value = 0
 
-        // Join presence for this entity
+        // ✅ 2. Presence in background (non-blocking)
         if (entity && entity.slug) {
-            await presence.join(editorMode.value, entity.slug)
+            presence.join(editorMode.value, entity.slug).catch(e => {
+                console.warn('[EditorStore] Presence join failed:', e)
+            })
 
-            // Start soft-lock monitoring for this segment
+            // Soft Lock monitoring in background
             if (contentNode && contentNode.id) {
                 softLock.startMonitoring(editorMode.value, entity.slug, [contentNode.id]);
             }
         }
 
-        // --- LOCAL-FIRST LOADING (Phase 13 Enhancement) ---
-        // Check IndexedDB first for unsaved changes
+        // ✅ 3. IndexedDB check in background (non-blocking)
         const { loadEntity } = useResilientSync()
-        let localVersion = null
 
         try {
             const entityId = entity.id || entity.slug
             const childId = contentNode.id === 'full' ? 'full' : (contentNode._id || contentNode.id)
 
-            localVersion = await loadEntity(entityId, editorMode.value, childId)
+            const localVersion = await loadEntity(entityId, editorMode.value, childId)
 
             if (localVersion && localVersion.content) {
-                // Use local version if it exists (may have unsaved changes)
+                // ✅ Update only if local version exists
                 content.value = localVersion.content
-                console.log('[EditorStore] 📦 Loaded from IndexedDB (local-first)')
-            } else {
-                // Fallback to server data
-                content.value = contentNode.content || ''
-                console.log('[EditorStore] 🌐 Loaded from server')
+                console.log('[EditorStore] 📦 Updated from IndexedDB')
             }
         } catch (e) {
-            console.warn('[EditorStore] Local load failed, using server data:', e)
-            content.value = contentNode.content || ''
+            console.warn('[EditorStore] Local load check failed:', e)
         }
 
-        // --- PRODUCTION INTEGRATION (TOUCH 8) ---
-        // 1. Register Access for LRU
+        // ✅ 4. Production features in background
         try {
             const user = usePage().props.auth.user;
             if (user && entity.id) {
                 registerAccess(entity.id, user.id);
             }
-        } catch (e) { console.warn('LRU registration skipped', e); }
+        } catch (e) {
+            console.warn('LRU registration skipped', e);
+        }
 
-        // 2. Predictive Caching (Pre-fetch next chapter/page)
+        // ✅ 5. Predictive caching in background
         if (entity) {
             try {
                 const predictions = await predictNextMoves({
