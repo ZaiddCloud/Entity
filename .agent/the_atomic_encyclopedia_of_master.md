@@ -182,12 +182,11 @@
 ---
 
 ## 🛠️ V. Implementation Standards & Constraints (معايير التنفيذ والقيود)
-هذا القسم يمثل "قواعد الاشتباك الصارمة" (Strict Rules of Engagement) لضمان عدم انحراف الكود عن معايير الجودة والنزاهة.
+هذا القسم يمثل "قواعد الاشتباك الصارمة" (Strict Rules of Engagement) لضمان عدم انحراف الكود عن معايير الجودة والنزاهة بناءً على الواقع الحالي للكود.
 
 ### 1. Transaction & ACID Protocol (بروتوكول المعاملات والنزاهة)
-لضمان سلامة البيانات الهجينة، يجب اتباع القواعد الآتية:
-- **Atomic Writes:** أي عملية تلمس جدول الكيانات (`entities`) وجدول فرعي (مثل `books`) يجب أن تُغلف بـ `DB::transaction`.
-- **Service Orchestration:** إذا استدعى الكنترولر أكثر من خدمة (مثل `ManagerService` و `RelationService`) لتعديل البيانات، يجب استخدام Transaction لضمان تراجع الكل في حال فشل جزئي.
+لضمان سلامة البيانات الهجينة، يتم اتباع القواعد الآتية:
+- **Service Orchestration:** عند قيام خدمة (مثل `MediaManagerService`) بتعديل أكثر من جدول أو علاقة (مثل الكيان والمؤلفين والإصدارات)، يجب تغليف العملية بـ `DB::transaction`.
 - **Observer Awareness:** ممنوع توليد الـ Slugs أو الـ UUIDs يدوياً؛ الاعتماد كلياً على `EntityLifecycleObserver`.
 
 ### 2. Frontend Construction Rules (قواعد بناء الواجهة)
@@ -200,8 +199,7 @@
 
 ### 3. Localization & Arabic Standards (المعايير العربية والتعريب)
 - **Strict MSA:** استخدام اللغة العربية الفصحى في كافة نصوص الواجهة.
-- **RTL-First:** أولوية دعم الاتجاه من اليمين لليسار في التصميم؛ الالتزام بمحاذاة النصوص والاتجاهات البصرية بما يتناسب مع المستخدم العربي.
-- **Hijri Support:** أولوية عرض التواريخ بالتنسيق الهجري عبر المساعدات البرمجية الخاصة بالنظام.
+- **RTL-First:** أولوية دعم الاتجاه من اليمين لليسار في التصميم والالتزام بالهوية البصرية العربية.
 
 ### 4. Negative Constraints (القيود والمحظورات الصارمة)
 - **NO Logic at Controller:** يُمنع منعاً باتاً إضافة أي منطق برمجي في `EntityController` أو `UnifiedEditorController`.
@@ -211,9 +209,8 @@
 - **NO Direct Storage Access:** يُمنع استخدام `Storage` مباشرة؛ الاستخدام حصراً عبر `MediaManagerService`.
 
 ### 5. Quality & Safety Protocol (بروتوكول الجودة والأمان)
-- **Green-Build Rule:** لا تعتبر المهمة منتهية (Done) ما لم تمر كافة الاختبارات (Unit, Feature, Browser).
-- **Recursion Guard:** عند التعامل مع الأبناء في MongoDB، يجب وضع صمام أمان لمنع الحلقات اللانهائية.
 - **Git Safety:** قبل البدء بأي تجربة، يجب التأكد من حالة المستودع (`git status`) والاعتماد على Git للتراجع الفوري في حال حدوث خطأ.
+- **Single Responsibility:** كل خدمة مسؤولة عن نطاقها الوظيفي فقط (مثلاً الحذف عبر `EntityManagerService`).
 
 ---
 
