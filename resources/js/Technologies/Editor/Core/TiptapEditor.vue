@@ -198,10 +198,48 @@ onBeforeUnmount(() => {
         editor.value.destroy()
     }
 })
+
+// Auto-Scroll & Highlight Logic
+watch(() => useEditorStore().currentTime, (time) => {
+    if (!editor.value || !time) return
+
+    let targetPos = null
+    
+    editor.value.state.doc.descendants((node, pos) => {
+        if (targetPos) return false // Found
+        
+        // Check for timestamp attributes (if they exist)
+        // We check both camelCase (Tiptap default) and data-attributes (HTML parsing)
+        const start = parseFloat(node.attrs.startTime || node.attrs['data-start'] || node.attrs['data-start-time'] || -1)
+        const end = parseFloat(node.attrs.endTime || node.attrs['data-end'] || -1)
+        
+        // Logic: active if current time is >= start. 
+        // If end exists, must also be <= end.
+        if (start >= 0 && time >= start && (end === -1 || time <= end)) {
+            targetPos = pos
+            return false
+        }
+    })
+
+    if (targetPos !== null) {
+        const dom = editor.value.view.nodeDOM(targetPos)
+        if (dom instanceof HTMLElement) {
+            // Remove previous highlights
+            const prev = document.querySelectorAll('.active-transcript-line')
+            prev.forEach(el => el.classList.remove('active-transcript-line'))
+
+            // Add new highlight
+            dom.classList.add('active-transcript-line')
+            
+            // Smooth Scroll
+            dom.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+    }
+})
 </script>
 
 <template>
-  <div class="tiptap-editor">
+  <div class="tiptap-editor" dusk="tiptap-editor">
     <EditorContent :editor="editor" />
   </div>
 </template>
@@ -335,4 +373,14 @@ onBeforeUnmount(() => {
 
 
 
+</style>
+
+<style scoped>
+.active-transcript-line {
+    background-color: rgba(59, 130, 246, 0.1); /* blue-500/10 */
+    border-right: 3px solid #3b82f6;
+    padding-right: 0.5em; /* Compensate for border */
+    transition: all 0.3s ease;
+    border-radius: 4px;
+}
 </style>

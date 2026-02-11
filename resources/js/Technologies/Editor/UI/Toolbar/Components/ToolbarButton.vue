@@ -44,6 +44,7 @@ defineEmits(['click'])
     ]"
     @click="$emit('click')"
     @mousedown.prevent
+    :dusk="$attrs.dusk"
   >
     <i
       v-if="icon"

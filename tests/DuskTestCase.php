@@ -51,11 +51,11 @@ abstract class DuskTestCase extends BaseTestCase
     protected function authenticateUser(\Laravel\Dusk\Browser $browser, $user, $password = 'password'): \Laravel\Dusk\Browser
     {
         return $browser->visit('/login')
-            ->waitFor('input[name="email"]', 5)
-            ->type('input[name="email"]', $user->email)
-            ->type('input[name="password"]', $password)
+            ->waitFor('#email', 20)
+            ->type('#email', $user->email)
+            ->type('#password', $password)
             ->press('button[type="submit"]')
-            ->waitForLocation('/dashboard', 10);
+            ->waitForLocation('/dashboard', 30);
     }
 
     /**

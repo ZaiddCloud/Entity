@@ -162,9 +162,10 @@ onUnmounted(() => {
             <div 
                 v-for="seg in (segments || [])" 
                 :key="seg.slug"
-                class="absolute h-1.5 w-[2px] bg-white/40 z-10 top-1/2 -translate-y-1/2 group-hover:h-3 group-hover:bg-yellow-500/80 transition-all pointer-events-none"
+                class="timeline-marker absolute h-1.5 w-[2px] bg-white/40 z-10 top-1/2 -translate-y-1/2 group-hover:h-3 group-hover:bg-yellow-500/80 transition-all pointer-events-none"
                 :style="{ left: `${duration > 0 ? (seg.start / duration) * 100 : 0}%` }"
                 :title="seg.label || seg.title"
+                :dusk="'segment-marker-' + seg.slug"
             ></div>
             
             <!-- Golden Gradient Progress with Glow -->
@@ -185,7 +186,7 @@ onUnmounted(() => {
         <div class="grid grid-cols-3 items-center h-9 px-3 text-[#888]">
             <!-- LEFT: Time & Volume -->
             <div class="flex items-center gap-4 justify-start">
-                 <div class="text-[10px] font-mono text-gray-400">
+                 <div class="text-[10px] font-mono text-gray-400" dusk="current-time-display">
                      {{ formatTime(currentTime) }} / {{ formatTime(duration) }}
                  </div>
 
@@ -238,7 +239,7 @@ onUnmounted(() => {
                  <button class="hover:text-white transition-transform active:scale-90" title="Previous 10s" @click="$emit('seek', currentTime - 10)">
                     <SkipBack class="w-2.5 h-2.5" />
                 </button>
-                <button class="hover:text-white p-1 transition-transform active:scale-95" title="Play/Pause" @click="$emit('toggle-play')">
+                <button class="hover:text-white p-1 transition-transform active:scale-95" title="Play/Pause" @click="$emit('toggle-play')" dusk="toggle-play-button">
                      <component :is="isPlaying ? Pause : Play" class="w-3 h-3 fill-current text-gray-200" />
                 </button>
                 <button class="hover:text-white transition-transform active:scale-90" title="Next 10s" @click="$emit('seek', currentTime + 10)">

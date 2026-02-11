@@ -65,31 +65,44 @@ const closeWindow = () => {
     class="glass-editor-header flex flex-col border-b border-gray-200"
   >
     <!-- New Modular Toolbar Row (Sandbox Mode) -->
-    <div class="flex items-center h-12 px-4 gap-2 border-b border-gray-100 bg-white overflow-visible z-50">
-      <HistoryGroup />
+    <div class="flex items-center h-12 px-4 gap-2 border-b border-b-gray-100 bg-white overflow-visible z-50">
+      <HistoryGroup dusk="history-group" />
       <ToolbarDivider />
-      <StructureGroup />
+      <StructureGroup dusk="structure-group" />
       <ToolbarDivider />
-      <FormattingGroup />
+      <FormattingGroup dusk="formatting-group" />
       <ToolbarDivider />
-      <ListGroup />
+      <ListGroup dusk="list-group" />
       <ToolbarDivider />
-      <BlockGroup />
+      <BlockGroup dusk="block-group" />
       <ToolbarDivider />
-      <InsertGroup />
+      <InsertGroup dusk="insert-group" />
       <ToolbarDivider />
-      <TextAlignGroup />
+      <TextAlignGroup dusk="text-align-group" />
       <ToolbarDivider />
       
-      <ScientificGroup />
+      <ScientificGroup dusk="scientific-group" />
             
       <div class="w-px h-6 bg-gray-200 mx-2" />
             
-      <HeritageGroup />
+      <HeritageGroup dusk="heritage-group" />
             
       <div class="h-6 w-px bg-gray-200 mx-1" />
       
-      <PortabilityGroup />
+      <PortabilityGroup dusk="portability-group" />
+
+      <div class="flex-1" />
+      
+      <ToolbarButton
+        icon="ri-save-line"
+        title="حفظ التغييرات (Ctrl+S)"
+        :class="{'text-emerald-600': saveState === 'saved'}"
+        @click="handleSave"
+        dusk="save-button"
+      >
+        <span v-if="saveState === 'saved'" class="text-[10px] ml-1">تم الحفظ</span>
+        <span v-else-if="saveState === 'saving'" class="text-[10px] ml-1 italic opacity-50">جاري الحفظ...</span>
+      </ToolbarButton>
     </div>
         
     <!-- Legacy Toolbar (disabled to prevent crashes during refactoring) -->

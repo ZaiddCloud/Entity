@@ -16,6 +16,7 @@ const insertFootnote = () => {
         title="إضافة حاشية علمية"
         :is-active="store.isActive('scientificFootnote')"
         @click="insertFootnote"
+        dusk="insert-scientific-footnote-button"
     >
         <span class="text-xs font-bold font-serif opacity-70">1</span>
         <sup class="text-[8px] -mt-2">ح</sup>

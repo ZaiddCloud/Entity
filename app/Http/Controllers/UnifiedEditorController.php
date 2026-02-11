@@ -34,6 +34,7 @@ class UnifiedEditorController extends Controller
      */
     public function show(string $type, string $slug, ?string $childId = null)
     {
+        \Log::info('UnifiedEditorController@show', ['type' => $type, 'slug' => $slug, 'user' => auth()->id()]);
         $entityType = EntityType::tryFrom($type);
         if (!$entityType)
             abort(404, 'Invalid entity type');

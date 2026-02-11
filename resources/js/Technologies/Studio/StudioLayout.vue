@@ -40,26 +40,30 @@ const showSplitLayout = computed(() => {
 })
 
 onMounted(() => {
-    store.setEditorMode(props.type)
-    if (props._legacy?.resource_data) {
-        store.setResourceData(props._legacy.resource_data)
-    } else if (props._legacy?.entity) {
-        store.setResourceData(props._legacy.entity)
-    }
-    
-    // Load document state
-    if (props.isFullView) {
-        // Pseudo-node for full view to satisfy store if needed
-        store.loadDocument(props.entity, { id: 'full', title: 'كامل المحتوى', content: props.editorContent }, hierarchyMetadata.value, {})
-    } else if (props._legacy?.contentNode) {
-        store.loadDocument(props.entity, props._legacy.contentNode, hierarchyMetadata.value, {})
-        
-        // Seek player if node has start time
-        if (props._legacy.contentNode.start_time !== undefined) {
-            setTimeout(() => {
-                 mediaStore.requestSeek(props._legacy.contentNode.start_time);
-            }, 500);
+    try {
+        store.setEditorMode(props.type)
+        if (props._legacy?.resource_data) {
+            store.setResourceData(props._legacy.resource_data)
+        } else if (props._legacy?.entity) {
+            store.setResourceData(props._legacy.entity)
         }
+        
+        // Load document state
+        if (props.isFullView) {
+            // Pseudo-node for full view to satisfy store if needed
+            store.loadDocument(props.entity, { id: 'full', title: 'كامل المحتوى', content: props.editorContent }, hierarchyMetadata.value, {})
+        } else if (props._legacy?.contentNode) {
+            store.loadDocument(props.entity, props._legacy.contentNode, hierarchyMetadata.value, {})
+            
+            // Seek player if node has start time
+            if (props._legacy.contentNode.start_time !== undefined) {
+                setTimeout(() => {
+                     mediaStore.requestSeek(props._legacy.contentNode.start_time);
+                }, 500);
+            }
+        }
+    } catch (e) {
+        console.error('Error in StudioLayout onMounted:', e);
     }
 })
 

@@ -31,6 +31,7 @@ const toggleMenu = () => isMenuOpen.value = !isMenuOpen.value;
                 class="win-btn close w-7 h-full flex items-center justify-center hover:bg-[#d00] hover:text-white cursor-pointer group" 
                 @click.stop="$emit('close')" 
                 title="Close"
+                dusk="close-player-button"
             >
                 <X class="w-3 h-3 text-[#aaaaaa] group-hover:text-white" />
             </div>
@@ -40,6 +41,7 @@ const toggleMenu = () => isMenuOpen.value = !isMenuOpen.value;
                 class="win-btn w-7 h-full flex items-center justify-center hover:bg-[#333] cursor-pointer" 
                 :title="sizeMode === 'mini' ? 'الحجم الصغير' : (sizeMode === 'standard' ? 'الحجم القياسي' : (sizeMode === 'theater' ? 'حجم المسرح' : 'الملء الكامل'))"
                 @click.stop="$emit('cycle-size')"
+                dusk="cycle-size-button"
             >
                 <component 
                     :is="sizeMode === 'mini' ? Minimize2 : (sizeMode === 'standard' ? Square : (sizeMode === 'theater' ? StretchHorizontal : Maximize2))" 
@@ -53,6 +55,7 @@ const toggleMenu = () => isMenuOpen.value = !isMenuOpen.value;
                 class="win-btn w-7 h-full flex items-center justify-center hover:bg-[#333] cursor-pointer" 
                 :title="isCollapsed ? 'توسيع' : 'تصغير'"
                 @click.stop="$emit('toggle-collapse')"
+                dusk="toggle-collapse-button"
             >
                 <Minus class="w-3 h-3 text-[#aaaaaa]" />
             </div>
@@ -62,6 +65,7 @@ const toggleMenu = () => isMenuOpen.value = !isMenuOpen.value;
                 class="win-btn w-7 h-full flex items-center justify-center hover:bg-[#333] cursor-pointer transition-colors" 
                 :title="(isDocked || isIntegrated) ? 'إلغاء التثبيت (تعويم)' : 'تثبيت'" 
                 @click.stop="$emit('toggle-dock')"
+                dusk="toggle-dock-button"
             >
                 <PinOff 
                     v-if="!isDocked && !isIntegrated"

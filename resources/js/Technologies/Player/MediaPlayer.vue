@@ -226,6 +226,7 @@ defineExpose({
         ref="windowRef"
         dir="ltr"
         class="pot-window-v2"
+        dusk="media-player"
         :class="{
             'maximized fixed inset-0 !top-[48px] z-[999999]': store.sizeMode === 'full',
             'fixed z-[90] rounded-2xl border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.5)]': store.isFloating && store.sizeMode !== 'full',
