@@ -35,6 +35,7 @@ const showSplitLayout = computed(() => {
    return props.type === 'manuscript' || isPlayerDocked.value
 })
 
+// --- REFACTORED MOUNT & SYNC ---
 onMounted(() => {
     store.setEditorMode(props.type)
     if (props._legacy?.resource_data) {
@@ -45,46 +46,35 @@ onMounted(() => {
     
     // Load document state
     if (props.isFullView) {
-        // Pseudo-node for full view to satisfy store if needed
         store.loadDocument(props.entity, { id: 'full', title: 'كامل المحتوى', content: props.editorContent }, [], {})
     } else if (props._legacy?.contentNode) {
         store.loadDocument(props.entity, props._legacy.contentNode, [], {})
         
-        // Seek player if node has start time
+        // Seek player (removed setTimeout for stability)
         if (props._legacy.contentNode.start_time !== undefined) {
-            setTimeout(() => {
-                 mediaStore.requestSeek(props._legacy.contentNode.start_time);
-            }, 500);
+            mediaStore.requestSeek(props._legacy.contentNode.start_time);
         }
     }
 })
 
 // Watch for content node changes (when navigating between segments/pages)
 watch(() => props.activeChildId, (newId, oldId) => {
-    if (newId !== oldId) {
-        if (props.isFullView) {
-             store.loadDocument(props.entity, { id: 'full', title: 'كامل المحتوى', content: props.editorContent }, [], {})
-        } else if (props._legacy?.contentNode) {
-             store.loadDocument(props.entity, props._legacy.contentNode, [], {})
-             
-             // Seek player if node has start time
-             if (props._legacy.contentNode.start_time !== undefined) {
-                 mediaStore.requestSeek(props._legacy.contentNode.start_time);
-             }
+    if (newId !== oldId && !props.isFullView && props._legacy?.contentNode) {
+        store.loadDocument(props.entity, props._legacy.contentNode, [], {})
+        
+        if (props._legacy.contentNode.start_time !== undefined) {
+            mediaStore.requestSeek(props._legacy.contentNode.start_time);
         }
     }
 })
 
-// SYNC: Watch for deep changes in contentNode (e.g. Title update from Player)
-watch(() => props._legacy?.contentNode, (newNode) => {
-    if (newNode && store.currentContentNode?.id === newNode.id) {
-        // Update local store if props updated via router.reload()
-        if (store.currentContentNode.title !== newNode.title) {
-            console.log('[StudioLayout] Syncing title from props:', newNode.title);
-            store.currentContentNode.title = newNode.title;
-        }
+// SYNC: Watch for deep changes in contentNode (Selective Sync)
+watch(() => props._legacy?.contentNode?.title, (newTitle) => {
+    if (newTitle && store.currentContentNode && store.currentContentNode.title !== newTitle) {
+        console.log('[StudioLayout] Syncing title from props:', newTitle);
+        store.currentContentNode.title = newTitle;
     }
-}, { deep: true });
+});
 
 // Auto-save is now handled by the Page/Composable, not the layout
 const saveStatusColor = computed(() => {
@@ -233,11 +223,15 @@ const navigateToNode = (node) => {
 }
 
 const specificNodeTitle = computed(() => {
-    if (store.currentContentNode?.id === 'full' || !mediaStore.activeSegmentSlug) return 'عرض مقطع محدد';
+    if (store.currentContentNode?.id === 'full') return 'عرض مقطع محدد';
     
-    // Check if activeSlug matches any of our unified nodes
-    const active = availableNodes.value.find(n => n.slug === mediaStore.activeSegmentSlug || n.id === props.activeChildId);
-    return active?.title || props._legacy?.contentNode?.title || 'المقطع الحالي';
+    // Check if activeSlug or activeChildId matches any of our unified nodes
+    const active = availableNodes.value.find(n => 
+        (mediaStore.activeSegmentSlug && n.slug === mediaStore.activeSegmentSlug) || 
+        (props.activeChildId && (n.id === props.activeChildId || n.slug === props.activeChildId))
+    );
+    
+    return active?.title || store.currentContentNode?.title || props._legacy?.contentNode?.title || 'المقطع الحالي';
 })
 </script>
 
@@ -279,6 +273,7 @@ const specificNodeTitle = computed(() => {
         <div class="hidden md:flex items-center bg-gray-800 rounded-lg p-1 gap-1 border border-gray-700">
             <!-- Full View Button -->
             <button 
+                id="studio-full-view-btn"
                 @click="navigateToFull"
                 :class="[
                     'flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded transition-all',
@@ -304,6 +299,7 @@ const specificNodeTitle = computed(() => {
             <!-- Specific View Group (Button + Dropdown) -->
             <div class="relative flex items-center">
                 <button 
+                    id="studio-dropdown-btn"
                     @click="toggleDropdown"
                     :class="[
                         'flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-r transition-all',
@@ -392,6 +388,7 @@ const specificNodeTitle = computed(() => {
         </button>
         
         <button 
+            id="studio-save-btn"
             class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-4 py-1.5 rounded font-bold transition-colors shadow-lg shadow-blue-900/20"
             @click="store.save"
         >

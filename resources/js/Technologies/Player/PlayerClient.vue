@@ -210,7 +210,6 @@ defineExpose({
         This container should not have visible dimensions that block the UI.
     -->
     <DraggableMediaPlayer
-        v-show="mediaStore.isOpen"
         ref="playerRef"
         :src="currentSource"
         :title="media?.title || 'Unknown Media'"

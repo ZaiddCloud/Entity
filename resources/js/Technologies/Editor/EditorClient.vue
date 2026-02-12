@@ -91,7 +91,6 @@ const handleTitleClick = () => {
         </div>
 
         <TiptapEditor
-          :key="store.contentVersion"
           v-model="store.content"
           @set-editor="store.setEditor"
           @navigate="(id) => $emit('navigate', id)"

@@ -50,7 +50,7 @@ class UnifiedEditorController extends Controller
         $fullContent = $this->contentService->aggregateFullContent($parentEntity);
         $isFullView = false;
 
-        if ($childId) {
+        if ($childId && $childId !== 'full') {
             $modelClass = $this->getContentModelClass($entityType);
             $node = $modelClass::find($childId);
 
