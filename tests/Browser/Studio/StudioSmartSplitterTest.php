@@ -16,49 +16,41 @@ class StudioSmartSplitterTest extends DuskTestCase
      */
     public function test_smart_splitter_ui_loads()
     {
-        $user = User::factory()->create();
+        $uniqueId = uniqid();
+        $user = User::factory()->create(['email' => 'splitter_test_' . $uniqueId . '@example.com']);
         
-        // Ensure Audio exists
-        $audio = Audio::firstOrCreate(
-            ['slug' => 'شرح-ألفية-ابن-مالك'],
-            [
-                'title' => 'شرح ألفية ابن مالك',
-                'duration' => 3600,
-                'format' => 'mp3',
-                'description' => 'شرح وافي للألفية',
-            ]
-        );
+        // Ensure Audio exists with unique slug
+        $audio = Audio::create([
+            'slug' => 'sharah-alfiyya-' . $uniqueId,
+            'title' => 'شرح ألفية ابن مالك ' . $uniqueId,
+            'duration' => 3600,
+            'format' => 'mp3',
+            'description' => 'شرح وافي للألفية',
+        ]);
         
-        // Ensure at least 2 segments exist for Full View
-        if ($audio->children()->count() < 2) {
-             \App\Models\AudioSegment::firstOrCreate(
-                ['slug' => 'segment-1-sharah'],
-                [
-                    'audio_id' => $audio->id,
-                    'title' => 'المقطع الأول',
-                    'order' => 1,
-                    'start_time' => 0,
-                    'content' => '<p>محتوى المقطع الأول</p>'
-                ]
-            );
-            
-            \App\Models\AudioSegment::firstOrCreate(
-                ['slug' => 'segment-2-sharah'],
-                [
-                    'audio_id' => $audio->id,
-                    'title' => 'المقطع الثاني',
-                    'order' => 2,
-                    'start_time' => 300,
-                    'content' => '<p>محتوى افتراضي للمقطع الثاني.</p>'
-                ]
-            );
-            $audio->refresh();
-        }
+        // Create 2 segments directly
+        \App\Models\AudioSegment::create([
+            'audio_id' => $audio->id,
+            'title' => 'المقطع الأول',
+            'slug' => 'segment-1-' . $uniqueId,
+            'order' => 1,
+            'start_time' => 0,
+            'content' => '<p>محتوى المقطع الأول</p>'
+        ]);
+        
+        \App\Models\AudioSegment::create([
+            'audio_id' => $audio->id,
+            'title' => 'المقطع الثاني',
+            'slug' => 'segment-2-' . $uniqueId,
+            'order' => 2,
+            'start_time' => 300,
+            'content' => '<p>محتوى افتراضي للمقطع الثاني.</p>'
+        ]);
         
         $this->browse(function (Browser $browser) use ($user, $audio) {
             $browser->loginAs($user)
                     ->visit(route('studio.show', ['type' => 'audio', 'slug' => $audio->slug, 'childId' => 'full']))
-                    ->waitForText('شرح ألفية ابن مالك')
+                    ->waitForText($audio->title)
                     ->assertSee('كامل المحتوى') // Full View Indicator
                     ->waitFor('.ProseMirror') // Editor loaded
                     ->assertSee('المقطع الأول') // Content loaded

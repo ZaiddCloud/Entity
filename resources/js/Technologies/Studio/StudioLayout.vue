@@ -307,8 +307,9 @@ const handleInsertNode = ({ type, title, time }) => {
             </h1>
 
             <!-- Step 3: Studio Add Button (Correct Location) -->
+            <!-- Allow button to appear even if not explicitly 'full', relying on store/props consistency -->
             <StudioAddButton 
-                v-if="store.currentContentNode?.id === 'full'"
+                v-if="props.isFullView || store.currentContentNode?.id === 'full'"
                 :visual-map="visual_map"
                 :type="type"
                 :slug="entity.slug"

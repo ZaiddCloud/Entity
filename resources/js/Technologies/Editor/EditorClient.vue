@@ -48,8 +48,6 @@ const onInsertNode = (event) => {
     const visualMap = store.resourceData?.visual_map || {}
     const config = visualMap[type] || { tag: 'h4', behavior: 'container' }
     
-    console.log('[EditorClient] Received insert-node event:', type, title)
-
     if (config.behavior === 'container') {
         const level = parseInt(config.tag?.replace('h', '')) || 4
         store.editor?.commands.insertStructureNode(type, title, level)
