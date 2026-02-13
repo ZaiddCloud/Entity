@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\EntityType;
+use App\Enums\ContentNodeType;
 use App\Models\Book;
 use App\Models\Audio;
 use App\Models\Video;
@@ -137,6 +138,7 @@ class UnifiedEditorController extends Controller
             'isFullView' => $isFullView,
             'activeChildId' => $isFullView ? null : ($node->_id ?? $node->id),
             'title' => $entity->title . ' | Entity Studio',
+            'visual_map' => ContentNodeType::getVisualMap($entityType),
             // Pass legacy data if needed by EditorClient internally via provide/inject or initial config
             '_legacy' => $data
         ];

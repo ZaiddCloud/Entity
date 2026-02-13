@@ -20,7 +20,7 @@ class EntityContentService
      */
     protected array $allowedTypes = [
         'book' => ['sub-book', 'part', 'bab', 'chapter', 'masalah', 'page', 'section'],
-        'manuscript' => ['page', 'folio', 'section'],
+        'manuscript' => ['sub-book', 'part', 'bab', 'chapter', 'masalah', 'page', 'section', 'folio'],
         'audio' => ['segment', 'track', 'marker'],
         'video' => ['segment', 'scene', 'shot'],
     ];
@@ -51,6 +51,29 @@ class EntityContentService
             'Video' => 'video_id',
             default => 'entity_id',
         };
+    }
+
+    /**
+     * إضافة عقدة جديدة (Add Node Wrapper)
+     * تقوم بتجهيز البيانات (Slug, Order) ثم استدعاء createNode
+     */
+    public function addNode(Entity $entity, string $type, string $title, $time = null): Model
+    {
+        $maxOrder = $this->getMaxOrder($entity);
+        
+        $data = [
+            'type' => $type,
+            'title' => $title,
+            'order' => $maxOrder + 1,
+            'slug' => \Illuminate\Support\Str::slug($title) . '-' . uniqid(), // Ensure uniqueness
+        ];
+        
+        if ($time !== null && in_array(class_basename($entity), ['Audio', 'Video'])) {
+            $data['start_time'] = (float) $time;
+            $data['end_time'] = (float) $time + 10; // Default duration 10s
+        }
+        
+        return $this->createNode($entity, $data);
     }
 
     /**

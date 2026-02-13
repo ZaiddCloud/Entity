@@ -61,31 +61,40 @@ enum ContentNodeType: string
                 self::MARKER,
             ],
             EntityType::VIDEO => [
-                self::SEGMENT,
                 self::SCENE,
                 self::SHOT,
+                self::SEGMENT,
             ],
         };
     }
 
     /**
-     * Get the visual mapping for this content type
+     * Get the visual mapping for all allowed content types for a given entity type
      *
-     * @return array{tag: string, behavior: string}
+     * @return array<string, array{tag: string, behavior: string}>
      */
-    public function visualMap(): array
+    public static function getVisualMap(EntityType $entityType): array
     {
-        return match($this) {
-            self::SUB_BOOK => ['tag' => 'h1', 'behavior' => 'container'],
-            self::PART => ['tag' => 'h2', 'behavior' => 'container'],
-            self::BAB => ['tag' => 'h3', 'behavior' => 'container'],
-            self::CHAPTER => ['tag' => 'h4', 'behavior' => 'container'],
-            self::MASALAH => ['tag' => 'h5', 'behavior' => 'container'],
-            self::SECTION => ['tag' => 'h6', 'behavior' => 'container'],
-            
-            self::FOLIO, self::PAGE, self::SEGMENT, self::TRACK, self::SCENE => ['tag' => 'h4', 'behavior' => 'marker'],
-            self::MARKER, self::SHOT => ['tag' => 'h5', 'behavior' => 'marker'],
-        };
+        $allowed = self::allowedFor($entityType);
+        $map = [];
+        
+        foreach ($allowed as $type) {
+            $config = match($type) {
+                self::SUB_BOOK => ['tag' => 'h1', 'behavior' => 'container'],
+                self::PART => ['tag' => 'h2', 'behavior' => 'container'],
+                self::BAB => ['tag' => 'h3', 'behavior' => 'container'],
+                self::CHAPTER => ['tag' => 'h4', 'behavior' => 'container'],
+                self::MASALAH => ['tag' => 'h5', 'behavior' => 'container'],
+                self::SECTION => ['tag' => 'h6', 'behavior' => 'container'],
+                
+                self::FOLIO, self::PAGE, self::SEGMENT, self::TRACK, self::SCENE => ['tag' => 'h4', 'behavior' => 'marker'],
+                self::MARKER, self::SHOT => ['tag' => 'h5', 'behavior' => 'marker'],
+            };
+
+            $map[$type->value] = array_merge($config, ['label' => $type->label()]);
+        }
+        
+        return $map;
     }
 
     /**

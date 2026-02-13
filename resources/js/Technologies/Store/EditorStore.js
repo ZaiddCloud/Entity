@@ -10,6 +10,7 @@ export const useEditorStore = defineStore('editor', () => {
     const editorMode = ref('book')
     const isSaving = ref(false)
     const lastSaved = ref(null)
+    const lastSaveMessage = ref(null) // NEW: Capture backend message
     const editor = ref(null)
     const resourceData = ref(null)
     const hierarchy = ref([])
@@ -183,7 +184,8 @@ export const useEditorStore = defineStore('editor', () => {
             )
 
             lastSaved.value = new Date()
-            console.log('[EditorStore] Content saved successfully')
+            lastSaveMessage.value = response.data.message || 'تم الحفظ بنجاح'
+            console.log('[EditorStore] Content saved successfully:', lastSaveMessage.value)
         } catch (error) {
             console.error('[EditorStore] Save failed:', error)
             throw error
@@ -192,15 +194,36 @@ export const useEditorStore = defineStore('editor', () => {
         }
     }
 
+    const insertNode = (type, title, metadata = {}) => {
+        if (!editor.value) return
+
+        const visualMap = resourceData.value?.visual_map || {}
+        const config = visualMap[type] || { tag: 'h4', behavior: 'container' }
+        const tag = config.tag || 'h4'
+        const level = parseInt(tag.replace('h', '')) || 4
+
+        if (config.behavior === 'container') {
+            // 1. Container Behavior (Standard Heading)
+            editor.value.commands.insertStructureNode(type, title, level)
+        } else {
+            // 2. Marker Behavior (Heading with Metadata)
+            editor.value.commands.insertMarkerNode(type, title, {
+                ...metadata,
+                level
+            })
+        }
+    }
+
     return {
         currentEntity, currentContentNode, content, isToolbarPinned,
-        editorMode, resourceData, isSaving, lastSaved, editor,
+        editorMode, resourceData, isSaving, lastSaved, lastSaveMessage, editor,
         hierarchy, navigation,
         documentTitle, hasUnsavedChanges,
         setEditor, loadDocument, updateContent, togglePin,
         executeCommand, isActive,
         setEditorMode, setResourceData, setTitle,
         addMediaNode, removeMediaNode,
+        insertNode,
         save,
         contentVersion
     }

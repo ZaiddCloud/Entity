@@ -132,7 +132,7 @@
 ### 1. The Smart Splitter & Aggregator (المفصّل والمجمّع الذكي)
 يعتمد الاستوديو على آلية "التنفس الصناعي" للبيانات؛ حيث يتم تجميع الأجزاء للعرض، وتفكيكها للحفظ:
 - **Aggregation Logic:** يتم تجميع كافة المقاطع في نص واحد مع حقن "بصمات رقمية" (Markers) لكل مقطع:
-    - **Header Signature:** `<h4 class="structure-marker" data-segment-link="true" data-id="ID" data-start-time="TIME" data-folio="FOLIO" data-page="PAGE">TITLE:</h4>`
+    - **Header Signature:** <h4 class="structure-marker" data-segment-link="true" data-id="ID" data-start-time="TIME" data-folio="FOLIO" data-page="PAGE">TITLE:</h4>`
 - **Surgical Splitting (Save Phase):** عند الحفظ، يستخدم النظام محرك Regex لتقسيم النص الكامل وإعادة كل جزء لمكانه الأصلي في MongoDB:
     - **Regex Pattern:** `/<h4 class="structure-marker".*?>.*?<\/h4>/`
     - **Cleaning:** يتم تنظيف كل جزء من الفقرات الفارغة `<p><br/></p>` الناتجة عن عملية التقسيم لضمان نقاء المحتوى.

@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, watch, ref } from 'vue'
+import { onMounted, onBeforeUnmount, watch, ref } from 'vue'
 import TiptapEditor from './Core/TiptapEditor.vue'
 import EditorToolbar from './UI/Toolbar/EditorToolbar.vue'
 import FootnoteEditor from './Extensions/Footnotes/FootnoteEditor.vue'
@@ -13,7 +13,7 @@ const props = defineProps({
     type: { type: String, default: 'manuscript' } // NEW
 })
 
-const emit = defineEmits(['navigate', 'navigate-full']);
+const emit = defineEmits(['navigate', 'navigate-full', 'add-node']);
 
 import { useEditorSave } from './Composables/useEditorSave'
 
@@ -41,6 +41,31 @@ const handleCommand = ({ command, value }) => {
         store.executeCommand(command, value)
     }
 }
+
+// --- STEP 4: ORCHESTRATOR LISTENER ---
+const onInsertNode = (event) => {
+    const { type, title, time } = event.detail
+    const visualMap = store.resourceData?.visual_map || {}
+    const config = visualMap[type] || { tag: 'h4', behavior: 'container' }
+    
+    console.log('[EditorClient] Received insert-node event:', type, title)
+
+    if (config.behavior === 'container') {
+        const level = parseInt(config.tag?.replace('h', '')) || 4
+        store.editor?.commands.insertStructureNode(type, title, level)
+    } else {
+        const level = parseInt(config.tag?.replace('h', '')) || 4
+        store.editor?.commands.insertMarkerNode(type, title, { time, level })
+    }
+}
+
+onMounted(() => {
+    window.addEventListener('studio:insert-node', onInsertNode)
+})
+
+onBeforeUnmount(() => {
+    window.removeEventListener('studio:insert-node', onInsertNode)
+})
 
 // Seek player when clicking segment title
 const handleTitleClick = () => {
@@ -87,6 +112,7 @@ const handleTitleClick = () => {
              @toggle-dock="toggleDock"
              @navigate="(id) => $emit('navigate', id)"
              @navigate-full="$emit('navigate-full')"
+             @add-node="(data) => $emit('add-node', data)"
            />
         </div>
 

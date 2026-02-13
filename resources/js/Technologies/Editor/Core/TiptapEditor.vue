@@ -37,6 +37,116 @@ import { DragHandleExtension } from '../Extensions/DragHandle/DragHandleExtensio
 // Interactive Segments
 import { SegmentLink } from '../Extensions/SegmentLink'
 import { useMediaStore } from '@/Technologies/Store/MediaStore'
+import { Extension } from '@tiptap/core'
+
+import Heading from '@tiptap/extension-heading'
+
+/**
+ * Step 4: Content Node Commands Extension
+ * Extended to support the "Signature" required by the Smart Splitter (Encyclopedia III.1)
+ */
+const CustomHeading = Heading.extend({
+    addAttributes() {
+        return {
+            ...this.parent?.(),
+            class: {
+                default: null,
+                parseHTML: element => element.getAttribute('class'),
+                renderHTML: attributes => {
+                    if (!attributes.class) return {}
+                    return { class: attributes.class }
+                }
+            },
+            'data-segment-link': {
+                default: null,
+                parseHTML: element => element.hasAttribute('data-segment-link'),
+                renderHTML: attributes => {
+                    if (attributes['data-segment-link'] === null) return {}
+                    return { 'data-segment-link': attributes['data-segment-link'] }
+                }
+            },
+            'data-id': {
+                default: null,
+                parseHTML: element => element.getAttribute('data-id'),
+                renderHTML: attributes => {
+                    if (!attributes['data-id']) return {}
+                    return { 'data-id': attributes['data-id'] }
+                }
+            },
+            'data-type': {
+                default: null,
+                parseHTML: element => element.getAttribute('data-type'),
+                renderHTML: attributes => {
+                    if (!attributes['data-type']) return {}
+                    return { 'data-type': attributes['data-type'] }
+                }
+            },
+            'data-start-time': {
+                default: null,
+                parseHTML: element => element.getAttribute('data-start-time'),
+                renderHTML: attributes => {
+                    if (attributes['data-start-time'] === null) return {}
+                    return { 'data-start-time': attributes['data-start-time'] }
+                }
+            },
+            'data-folio': {
+                default: null,
+                parseHTML: element => element.getAttribute('data-folio'),
+                renderHTML: attributes => {
+                    if (!attributes['data-folio']) return {}
+                    return { 'data-folio': attributes['data-folio'] }
+                }
+            },
+            'data-page': {
+                default: null,
+                parseHTML: element => element.getAttribute('data-page'),
+                renderHTML: attributes => {
+                    if (!attributes['data-page']) return {}
+                    return { 'data-page': attributes['data-page'] }
+                }
+            }
+        }
+    }
+})
+
+const ContentNodeCommands = Extension.create({
+    name: 'contentNodeCommands',
+    addCommands() {
+        return {
+            insertStructureNode: (type, title, level) => ({ commands }) => {
+                return commands.insertContent([
+                        {
+                            type: 'heading',
+                            attrs: { level },
+                            content: [{ type: 'text', text: title }]
+                        },
+                        { type: 'paragraph' }
+                    ])
+            },
+            insertMarkerNode: (type, title, metadata = {}) => ({ commands }) => {
+                // Header Signature: <h4 class="structure-marker" data-segment-link="true" ...>TITLE:</h4>
+                return commands.insertContent([
+                        {
+                            type: 'heading',
+                            attrs: { 
+                                level: metadata.level || 4,
+                                class: 'structure-marker',
+                                'data-segment-link': 'true',
+                                'data-type': type,
+                                'data-start-time': metadata?.time || 0,
+                                'data-folio': metadata?.folio || null,
+                                'data-page': metadata?.page || null
+                            },
+                            content: [
+                                { type: 'text', text: title + ':' }
+                            ]
+                        },
+                        { type: 'paragraph' }
+                    ])
+            }
+        }
+    }
+})
 
 // UI Components will be added in the next step
 // import EditorBubbleMenu from '../UI/EditorBubbleMenu.vue'
@@ -60,9 +170,10 @@ const editor = useEditor({
     editable: props.editable,
     extensions: [
         StarterKit.configure({
-            heading: {
-                levels: [1, 2, 3, 4, 5, 6]
-            }
+            heading: false // Disable default heading
+        }),
+        CustomHeading.configure({
+            levels: [1, 2, 3, 4, 5, 6]
         }),
         // Underline, // Potentially duplicated
         TextAlign.configure({
@@ -98,6 +209,7 @@ const editor = useEditor({
         }),
         DragHandleExtension,
         SegmentLink,
+        ContentNodeCommands,
     ],
     editorProps: {
         attributes: {

@@ -3,6 +3,8 @@ import { Head, router } from '@inertiajs/vue3'
 import SplitPane from './Layouts/SplitPane.vue'
 import ReferencePane from './Panes/ReferencePane.vue'
 import EditorPane from './Panes/EditorPane.vue'
+import StudioAddButton from './Components/StudioAddButton.vue'
+import { useStudioContentProcess } from './Composables/useStudioContentProcess'
 import { useEditorStore } from '../Store/EditorStore'
 import { useMediaStore } from '../Store/MediaStore'
 import { Play } from 'lucide-vue-next'
@@ -16,6 +18,8 @@ const props = defineProps({
     isFullView: { type: Boolean, default: false },
     activeChildId: { type: String, default: null },
     title: { type: String, default: 'Entity Studio' },
+    visual_map: { type: Object, default: () => ({}) },
+    contentNode: { type: Object, default: null }, // Critical: Added missing prop
     _legacy: { type: Object, default: () => ({}) }
 })
 
@@ -35,22 +39,28 @@ const showSplitLayout = computed(() => {
    return props.type === 'manuscript' || isPlayerDocked.value
 })
 
-// --- REFACTORED MOUNT & SYNC ---
+// Load document state
 onMounted(() => {
     store.setEditorMode(props.type)
-    if (props._legacy?.resource_data) {
-        store.setResourceData(props._legacy.resource_data)
-    } else if (props._legacy?.entity) {
-        store.setResourceData(props._legacy.entity)
+    
+    // Step 1: Ensure visual_map is available for node insertion behavior
+    if (props.visual_map) {
+        store.setResourceData({ visual_map: props.visual_map })
     }
     
-    // Load document state
+    // Step 2: Load document state (Rule: Prefer top-level props over _legacy)
     if (props.isFullView) {
         store.loadDocument(props.entity, { id: 'full', title: 'كامل المحتوى', content: props.editorContent }, [], {})
-    } else if (props._legacy?.contentNode) {
-        store.loadDocument(props.entity, props._legacy.contentNode, [], {})
+    } else if (props.contentNode) {
+        store.loadDocument(props.entity, props.contentNode, [], {})
         
-        // Seek player (removed setTimeout for stability)
+        // Seek player if applicable
+        if (props.contentNode.start_time !== undefined) {
+            mediaStore.requestSeek(props.contentNode.start_time);
+        }
+    } else if (props._legacy?.contentNode) {
+        // Fallback for safety during transition
+        store.loadDocument(props.entity, props._legacy.contentNode, [], {})
         if (props._legacy.contentNode.start_time !== undefined) {
             mediaStore.requestSeek(props._legacy.contentNode.start_time);
         }
@@ -59,11 +69,14 @@ onMounted(() => {
 
 // Watch for content node changes (when navigating between segments/pages)
 watch(() => props.activeChildId, (newId, oldId) => {
-    if (newId !== oldId && !props.isFullView && props._legacy?.contentNode) {
-        store.loadDocument(props.entity, props._legacy.contentNode, [], {})
-        
-        if (props._legacy.contentNode.start_time !== undefined) {
-            mediaStore.requestSeek(props._legacy.contentNode.start_time);
+    if (newId !== oldId && !props.isFullView) {
+        const nodeToLoad = props.contentNode || props._legacy?.contentNode;
+        if (nodeToLoad) {
+            store.loadDocument(props.entity, nodeToLoad, [], {})
+            
+            if (nodeToLoad.start_time !== undefined) {
+                mediaStore.requestSeek(nodeToLoad.start_time);
+            }
         }
     }
 })
@@ -84,7 +97,7 @@ const saveStatusColor = computed(() => {
 
 const saveStatusText = computed(() => {
     if (store.isSaving) return 'جاري الحفظ...'
-    return 'محفوظ'
+    return store.lastSaveMessage || 'محفوظ'
 })
 
 const navigateToFull = () => {
@@ -233,6 +246,34 @@ const specificNodeTitle = computed(() => {
     
     return active?.title || store.currentContentNode?.title || props._legacy?.contentNode?.title || 'المقطع الحالي';
 })
+
+// --- STEP 3 RE-ALIGNMENT: Context Data ---
+const contextData = computed(() => {
+    // 1. Current Time (from MediaStore)
+    const currentTime = mediaStore.currentTime;
+
+    // 2. Current Folio (for manuscripts)
+    let currentFolio = 0;
+    if (props.type === 'manuscript') {
+        const folios = availableNodes.value
+            .filter(n => n.title && (n.title.includes('ورقة') || n.title.includes('لوحة')))
+            .map(n => {
+                const match = n.title.match(/\d+/);
+                return match ? parseInt(match[0]) : 0;
+            });
+        currentFolio = folios.length > 0 ? Math.max(...folios) : 0;
+    }
+
+    // 3. Last Marker
+    const lastMarker = availableNodes.value.length;
+
+    return { currentTime, currentFolio, lastMarker };
+});
+// --- STEP 3: STUDIO ADD BUTTON HANDLER ---
+const { insertNode } = useStudioContentProcess()
+const handleInsertNode = ({ type, title, time }) => {
+    insertNode(type, title, time)
+}
 </script>
 
 <template>
@@ -264,6 +305,16 @@ const specificNodeTitle = computed(() => {
             <h1 class="text-sm font-medium text-white truncate max-w-[200px] md:max-w-md">
                 {{ props.entity.title || props.entity.original_title || 'بدون عنوان' }}
             </h1>
+
+            <!-- Step 3: Studio Add Button (Correct Location) -->
+            <StudioAddButton 
+                v-if="store.currentContentNode?.id === 'full'"
+                :visual-map="visual_map"
+                :type="type"
+                :slug="entity.slug"
+                :context-data="contextData"
+                @insert-node="handleInsertNode"
+            />
         </div>
       </div>
 
@@ -377,16 +428,7 @@ const specificNodeTitle = computed(() => {
             {{ saveStatusText }}
         </span>
 
-        <!-- Open Player Button (Touch #2) -->
-        <button 
-          v-if="props.type !== 'manuscript' && !mediaStore.isOpen"
-          @click="mediaStore.setOpen(true)"
-          class="flex items-center justify-center w-8 h-8 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-95"
-          title="فتح المشغل"
-        >
-          <Play class="w-4 h-4 fill-current" />
-        </button>
-        
+
         <button 
             id="studio-save-btn"
             class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-4 py-1.5 rounded font-bold transition-colors shadow-lg shadow-blue-900/20"
@@ -428,6 +470,7 @@ const specificNodeTitle = computed(() => {
             :active-child-id="props.activeChildId"
             @navigate="(id) => router.visit(route('studio.show', { type: props.type, slug: props.entity.slug, childId: id }))"
             @navigate-full="() => router.visit(route('studio.show', { type: props.type, slug: props.entity.slug }))"
+            @add-node="handleInsertNode"
           />
         </template>
       </SplitPane>
@@ -440,6 +483,7 @@ const specificNodeTitle = computed(() => {
             :type="props.type"
             @navigate="navigateToChild"
             @navigate-full="navigateToFull"
+            @add-node="handleInsertNode"
           />
       </div>
 

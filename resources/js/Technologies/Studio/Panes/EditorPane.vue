@@ -7,7 +7,7 @@ const props = defineProps({
     type: { type: String, default: 'manuscript' } // NEW
 })
 
-const emit = defineEmits(['navigate', 'navigate-full']);
+const emit = defineEmits(['navigate', 'navigate-full', 'add-node']);
 </script>
 
 <template>
@@ -18,6 +18,7 @@ const emit = defineEmits(['navigate', 'navigate-full']);
         :type="props.type"
         @navigate="(id) => $emit('navigate', id)"
         @navigate-full="$emit('navigate-full')"
+        @add-node="(data) => $emit('add-node', data)"
     />
   </div>
 </template>

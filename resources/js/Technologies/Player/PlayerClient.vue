@@ -13,7 +13,7 @@ const props = defineProps({
     isStudioContext: { type: Boolean, default: false }
 });
 
-const emit = defineEmits(['timeupdate', 'segment-change', 'seek', 'toggle-dock', 'navigate', 'navigate-full']);
+const emit = defineEmits(['timeupdate', 'segment-change', 'seek', 'toggle-dock', 'navigate', 'navigate-full', 'add-node']);
 
 const mediaStore = useMediaStore();
 const isPlayerDocked = inject('isPlayerDocked', { value: false });
@@ -122,20 +122,13 @@ watch(() => props.media, (newMedia) => {
 
 // Handle closing the player
 // --- Persistence Actions ---
-const handleAddSegment = async (data) => {
-    try {
-        await axios.post(route('api.segments.store'), {
-            entity_id: props.media.id,
-            entity_type: props.type,
-            title: data.title,
-            start_time: data.start
-        });
-        
-        // Refresh props to get the new segment
-        router.reload({ only: ['media'] });
-    } catch (error) {
-        console.error('[PlayerClient] Error adding segment:', error);
-    }
+const handleAddSegment = (data) => {
+    // Stage 6 Compliance: Emit add-node instead of direct axios
+    emit('add-node', {
+        type: props.type === 'video' ? 'scene' : 'segment', // Determine default type
+        title: data.title,
+        time: data.start
+    })
 };
 
 const handleDeleteSegment = async (segment) => {

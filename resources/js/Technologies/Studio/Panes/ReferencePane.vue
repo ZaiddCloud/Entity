@@ -12,6 +12,8 @@ const props = defineProps({
     isStudioContext: { type: Boolean, default: false } // NEW: Indicates Studio environment
 })
 
+const emit = defineEmits(['navigate', 'navigate-full', 'toggle-dock', 'add-node'])
+
 const isPlayerDocked = inject('isPlayerDocked', { value: false }) // Inject with default
 
 // Normalize type for internal switching logic
@@ -51,6 +53,7 @@ const normalizedType = computed(() => {
       @toggle-dock="$emit('toggle-dock')"
       @navigate="(id) => $emit('navigate', id)"
       @navigate-full="() => $emit('navigate-full')"
+      @add-node="(data) => $emit('add-node', data)"
     />
 
     <!-- Fallback -->
