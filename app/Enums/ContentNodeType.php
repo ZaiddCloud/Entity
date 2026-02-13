@@ -42,13 +42,18 @@ enum ContentNodeType: string
                 self::BAB,
                 self::CHAPTER,
                 self::MASALAH,
-                self::PAGE,
                 self::SECTION,
+                self::PAGE,
             ],
             EntityType::MANUSCRIPT => [
+                self::SUB_BOOK,
+                self::PART,
+                self::BAB,
+                self::CHAPTER,
+                self::MASALAH,
+                self::SECTION,
                 self::PAGE,
                 self::FOLIO,
-                self::SECTION,
             ],
             EntityType::AUDIO => [
                 self::SEGMENT,
@@ -60,6 +65,26 @@ enum ContentNodeType: string
                 self::SCENE,
                 self::SHOT,
             ],
+        };
+    }
+
+    /**
+     * Get the visual mapping for this content type
+     *
+     * @return array{tag: string, behavior: string}
+     */
+    public function visualMap(): array
+    {
+        return match($this) {
+            self::SUB_BOOK => ['tag' => 'h1', 'behavior' => 'container'],
+            self::PART => ['tag' => 'h2', 'behavior' => 'container'],
+            self::BAB => ['tag' => 'h3', 'behavior' => 'container'],
+            self::CHAPTER => ['tag' => 'h4', 'behavior' => 'container'],
+            self::MASALAH => ['tag' => 'h5', 'behavior' => 'container'],
+            self::SECTION => ['tag' => 'h6', 'behavior' => 'container'],
+            
+            self::FOLIO, self::PAGE, self::SEGMENT, self::TRACK, self::SCENE => ['tag' => 'h4', 'behavior' => 'marker'],
+            self::MARKER, self::SHOT => ['tag' => 'h5', 'behavior' => 'marker'],
         };
     }
 
