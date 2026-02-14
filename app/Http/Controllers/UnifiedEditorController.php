@@ -96,9 +96,13 @@ class UnifiedEditorController extends Controller
 
             if ($childrenModel) {
                 $foreignKey = $this->getForeignKey($entityType);
-                $children = $childrenModel::where($foreignKey, $entity->id)
-                    ->orderBy('order', 'asc')
-                    ->get();
+                $query = $childrenModel::where($foreignKey, $entity->id);
+                if (in_array($entityType, [EntityType::AUDIO, EntityType::VIDEO])) {
+                    $query->orderBy('start_time', 'asc')->orderBy('order', 'asc');
+                } else {
+                    $query->orderBy('order', 'asc');
+                }
+                $children = $query->get();
 
                 $entity->setRelation('children', $children);
             }
@@ -256,9 +260,13 @@ class UnifiedEditorController extends Controller
         $modelClass = $this->getContentModelClass($type);
         $foreignKey = $this->getForeignKey($type);
 
-        $children = $modelClass::where($foreignKey, $parent->id)
-            ->orderBy('order')
-            ->get();
+        $query = $modelClass::where($foreignKey, $parent->id);
+        if (in_array($type, [EntityType::AUDIO, EntityType::VIDEO])) {
+            $query->orderBy('start_time', 'asc')->orderBy('order', 'asc');
+        } else {
+            $query->orderBy('order', 'asc');
+        }
+        $children = $query->get();
 
         if ($children->isEmpty()) {
             return response()->json(['message' => 'No segments found to update'], 200);
@@ -373,9 +381,9 @@ class UnifiedEditorController extends Controller
         }
         // For Book (if BookChild is Mongo), we should also load manually or check if it works via standard relation
         elseif ($type === EntityType::BOOK) {
-            $children = BookChild::where('book_id', $entity->id)
-                ->orderBy('order', 'asc')
-                ->get();
+            $query = BookChild::where('book_id', $entity->id)
+                ->orderBy('order', 'asc');
+            $children = $query->get();
             $entity->setRelation('children', $children);
         } else {
             // Fallback for standard SQL-SQL

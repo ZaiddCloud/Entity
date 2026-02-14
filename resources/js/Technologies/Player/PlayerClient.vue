@@ -215,7 +215,7 @@ defineExpose({
         @close="closePlayer"
         @toggle-dock="() => { toggleDock(); $emit('toggle-dock'); }"
         @segment-change="(seg) => { emit('segment-change', seg); handleSegmentChange(seg); }"
-        @timeupdate="(time) => emit('timeupdate', time)"
+        @timeupdate="(data) => { emit('timeupdate', data); mediaStore.setCurrentTime(data); }"
         @add-segment="handleAddSegment"
         @delete-segment="handleDeleteSegment"
         @update-segment="updateSegment"

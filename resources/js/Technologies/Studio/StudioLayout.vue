@@ -6,7 +6,7 @@ import EditorPane from './Panes/EditorPane.vue'
 import StudioAddButton from './Components/StudioAddButton.vue'
 import { useStudioContentProcess } from './Composables/useStudioContentProcess'
 import { useEditorStore } from '../Store/EditorStore'
-import { useMediaStore } from '../Store/MediaStore'
+import { useMediaStore } from '@/Technologies/Store/MediaStore'
 import { Play } from 'lucide-vue-next'
 import { onMounted, onUnmounted, computed, watch, ref, provide, nextTick } from 'vue'
 
@@ -64,6 +64,13 @@ onMounted(() => {
         if (props._legacy.contentNode.start_time !== undefined) {
             mediaStore.requestSeek(props._legacy.contentNode.start_time);
         }
+    }
+    // TEST HELPER: Allow Dusk to set time
+    if (window.Cypress || window.laravel_dusk_test_mode) {
+        window.addEventListener('test:set-time', (e) => {
+            console.log('[StudioLayout] Test Set Time:', e.detail);
+            mediaStore.setCurrentTime(e.detail);
+        });
     }
 })
 
@@ -306,10 +313,8 @@ const handleInsertNode = ({ type, title, time }) => {
                 {{ props.entity.title || props.entity.original_title || 'بدون عنوان' }}
             </h1>
 
-            <!-- Step 3: Studio Add Button (Correct Location) -->
-            <!-- Allow button to appear even if not explicitly 'full', relying on store/props consistency -->
+            <!-- Step 3: Studio Add Button (Always Visible in Studio) -->
             <StudioAddButton 
-                v-if="props.isFullView || store.currentContentNode?.id === 'full'"
                 :visual-map="visual_map"
                 :type="type"
                 :slug="entity.slug"
@@ -394,6 +399,7 @@ const handleInsertNode = ({ type, title, time }) => {
                         <button 
                             v-for="node in availableNodes" 
                             :key="node.slug || node.id"
+                            :dusk="'node-item-' + (node.slug || node.id)"
                             @click="navigateToNode(node)"
                             class="w-full text-right px-3 py-2.5 text-xs rounded-lg hover:bg-white/5 flex items-center justify-between gap-3 transition-all group/item border border-transparent"
                             :class="(node.slug === mediaStore.activeSegmentSlug || node.id === props.activeChildId) ? 'bg-amber-500/10 text-amber-500 border-amber-500/20 font-bold' : 'text-gray-300 hover:border-white/5'"

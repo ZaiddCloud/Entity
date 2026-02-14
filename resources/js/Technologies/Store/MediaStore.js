@@ -20,6 +20,8 @@ export const useMediaStore = defineStore('media-global', () => {
     const segments = ref([]);
     const activeSegmentSlug = ref(null);
     const type = ref('video'); // 'audio' | 'video'
+    const currentTime = ref(0); // Added for Time Capture
+    const mediaDuration = ref(0); // Added for Live Validation
     const seekRequest = ref({ time: 0, showGuide: false }); // Added seekRequest
 
     // --- Actions: Window ---
@@ -76,6 +78,35 @@ export const useMediaStore = defineStore('media-global', () => {
 
     const setActiveSegment = (slug) => {
         activeSegmentSlug.value = slug;
+    };
+
+    const setCurrentTime = (data) => {
+        // Robust handling: Can accept a number (compatibility) or object (sync)
+        if (typeof data === 'object' && data !== null) {
+            currentTime.value = Number(data.currentTime) || 0;
+            if (data.duration && Number(data.duration) > 0) {
+                // Trust the live duration as the source of truth.
+                mediaDuration.value = Number(data.duration);
+                if (currentMedia.value) {
+                    currentMedia.value.duration = mediaDuration.value;
+                }
+            }
+        } else {
+            currentTime.value = Number(data) || 0;
+        }
+    };
+
+    const setDuration = (seconds) => {
+        const val = Number(seconds);
+        if (isNaN(val) || val <= 0) return;
+
+        // Trust the live player duration as the source of truth.
+        mediaDuration.value = val;
+
+        if (currentMedia.value) {
+            // Use spread to ensure Vue reactivity triggers
+            currentMedia.value = { ...currentMedia.value, duration: val };
+        }
     };
 
     // --- Actions: Window Interactions ---
@@ -214,7 +245,24 @@ export const useMediaStore = defineStore('media-global', () => {
         return `${mm}:${ss}`;
     };
 
-    const addSegment = (segData) => {
+    const parseTime = (timeStr) => {
+        if (!timeStr || typeof timeStr !== 'string') return 0;
+        const parts = timeStr.split(':').map(Number);
+
+        if (parts.length === 3) {
+            // HH:MM:SS
+            return (parts[0] * 3600) + (parts[1] * 60) + parts[2];
+        } else if (parts.length === 2) {
+            // MM:SS
+            return (parts[0] * 60) + parts[1];
+        } else if (parts.length === 1) {
+            // Raw seconds as fallback
+            return parts[0];
+        }
+        return 0;
+    };
+
+    const addSegment = (segData, options = { setActive: true }) => {
         const newSeg = {
             ...segData,
             slug: segData.slug || `seg-${Date.now()}`
@@ -224,7 +272,9 @@ export const useMediaStore = defineStore('media-global', () => {
         newSegments.sort((a, b) => (Number(a.start) || 0) - (Number(b.start) || 0));
         segments.value = newSegments;
 
-        activeSegmentSlug.value = newSeg.slug;
+        if (options.setActive) {
+            activeSegmentSlug.value = newSeg.slug;
+        }
     };
 
     const updateSegment = (updatedSeg) => {
@@ -282,6 +332,11 @@ export const useMediaStore = defineStore('media-global', () => {
         resetLayout,
         requestSeek,
         addSegment,
-        updateSegment
+        updateSegment,
+        currentTime,
+        mediaDuration,
+        setCurrentTime,
+        setDuration,
+        parseTime
     };
 });

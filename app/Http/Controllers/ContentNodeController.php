@@ -39,6 +39,17 @@ class ContentNodeController extends Controller
 
         if (!$entity) abort(404, 'Parent entity not found');
 
+        // Step 13: Media Duration Validation ⏳
+        if ($request->filled('time') && ($entityType === EntityType::AUDIO || $entityType === EntityType::VIDEO)) {
+            $duration = $entity->duration ?? 0;
+            if ($request->input('time') > $duration) {
+                return response()->json([
+                    'message' => 'تعذر الإضافة: الوقت المدخل يتجاوز مدة ملف الميديا (' . $duration . ' ثانية)',
+                    'errors' => ['time' => ['الوقت المدخل يتجاوز مدة الملف']]
+                ], 422);
+            }
+        }
+
         $node = $this->contentService->addNode(
             $entity,
             $request->input('type'),

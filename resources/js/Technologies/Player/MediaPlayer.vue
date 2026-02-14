@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted, ref, watch, computed, nextTick } from 'vue';
+import { onMounted, onUnmounted, ref, watch, watchEffect, computed, nextTick } from 'vue';
 import { Check, X } from 'lucide-vue-next';
 import { useMediaStore } from '@/Technologies/Store/MediaStore';
 import { useEditorStore } from '@/Technologies/Store/EditorStore';
@@ -59,6 +59,13 @@ const {
     toggleLoopPoint,
     formatTime
 } = useMedia(computed(() => videoScreenRef.value?.mediaRef), emit);
+
+// Sync live duration to global store as soon as it's known
+watchEffect(() => {
+    if (duration.value > 0) {
+        store.setDuration(duration.value);
+    }
+});
 
 // --- Window State & Drag ---
 const windowRef = ref(null);

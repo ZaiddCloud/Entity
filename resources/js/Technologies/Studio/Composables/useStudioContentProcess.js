@@ -1,6 +1,6 @@
 import { useEditorStore } from '../../Store/EditorStore'
-import { useMediaStore } from '../../Store/MediaStore'
-import axios from 'axios'
+import { useMediaStore } from '@/Technologies/Store/MediaStore'
+import { router } from '@inertiajs/vue3'
 
 /**
  * Step 2: useStudioContentProcess (The Orchestrator) 🎼
@@ -22,10 +22,11 @@ export function useStudioContentProcess() {
 
             // 2. Media Store Update (Step 2 Requirement)
             if (time !== null && (editorStore.editorMode === 'audio' || editorStore.editorMode === 'video')) {
+                // Feature Refinement: Do NOT activate segment automatically when adding structural nodes
                 mediaStore.addSegment && mediaStore.addSegment({
                     title: title,
                     start: time
-                })
+                }, { setActive: false })
             }
 
             // 3. Persistence (Step 5 Requirement)
@@ -39,11 +40,9 @@ export function useStudioContentProcess() {
 
             console.log('[useStudioContentProcess] Persistence successful:', response.data.message)
 
-            // Step 5 Result: Ensure redirect on success
-            if (response.data.redirect) {
-                // Use router.visit to maintain Inertia state if possible, or window.location for full reload
-                window.location.href = response.data.redirect
-            }
+            // Step 15 Refinement: Stay on Full Content!
+            // Instead of redirecting to the new node, we just reload the data to refresh the Sidebar/Player list.
+            router.reload({ only: ['entity'] })
 
         } catch (error) {
             console.error('[useStudioContentProcess] Integration failed:', error)
@@ -52,6 +51,8 @@ export function useStudioContentProcess() {
     }
 
     return {
+        editorStore,
+        mediaStore,
         insertNode
     }
 }

@@ -163,8 +163,13 @@ class EntityContentService
 
         $query = $model::query()
             ->where($idField, $entity->id)
-            ->orderBy('order')
-            ->select(['_id', 'title', 'slug', 'type', 'order', 'parent_id']);
+            ->select(['_id', 'title', 'slug', 'type', 'order', 'parent_id', 'start_time']);
+
+        if (in_array(class_basename($entity), ['Audio', 'Video'])) {
+            $query->orderBy('start_time', 'asc')->orderBy('order', 'asc');
+        } else {
+            $query->orderBy('order', 'asc');
+        }
 
         if ($limit) {
             $query->limit($limit);
@@ -288,13 +293,16 @@ class EntityContentService
         $model = $this->getContentModel($entity);
         $idField = $this->getEntityIdField($entity);
 
-        /** @var Model|null $firstChild */
-        $firstChild = $model::query()
-            ->where($idField, $entity->id)
-            ->orderBy('order')
-            ->first();
+        $query = $model::query()
+            ->where($idField, $entity->id);
 
-        return $firstChild;
+        if (in_array(class_basename($entity), ['Audio', 'Video'])) {
+            $query->orderBy('start_time', 'asc')->orderBy('order', 'asc');
+        } else {
+            $query->orderBy('order', 'asc');
+        }
+
+        return $query->first();
     }
 
     /**
@@ -324,9 +332,15 @@ class EntityContentService
         $modelClass = $this->getContentModel($entity);
         $foreignKey = $this->getEntityIdField($entity);
 
-        $fullChildren = $modelClass::where($foreignKey, $entity->id)
-            ->orderBy('order')
-            ->get();
+        $query = $modelClass::where($foreignKey, $entity->id);
+
+        if (in_array(class_basename($entity), ['Audio', 'Video'])) {
+            $query->orderBy('start_time', 'asc')->orderBy('order', 'asc');
+        } else {
+            $query->orderBy('order', 'asc');
+        }
+
+        $fullChildren = $query->get();
 
         $fullTranscript = '';
         $type = strtolower(class_basename($entity));

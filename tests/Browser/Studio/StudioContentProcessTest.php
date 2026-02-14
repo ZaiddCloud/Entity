@@ -161,4 +161,214 @@ class StudioContentProcessTest extends DuskTestCase
                 ->pause(0);
         });
     }
+
+    /**
+     * @test
+     */
+    public function it_allows_manual_time_entry_for_media()
+    {
+        $this->browse(function (Browser $browser) {
+            $user = User::factory()->create(["email" => "time_test_" . uniqid() . "@example.com"]);
+            $audio = \App\Models\Audio::factory()->create();
+            
+            $browser->loginAs($user)
+                ->visit(route('studio.show', ['type' => 'audio', 'slug' => $audio->slug]))
+                ->waitFor('.tiptap-editor', 20);
+
+            // 1. Simulate Player Time (via JS)
+            $browser->script("window.dispatchEvent(new CustomEvent('test:set-time', { detail: 65 }));");
+            // Note: Since we can't easily access the store directly from outside without exposing it, 
+            // we might rely on the fact that existing logic pulls from store. 
+            // BUT, for this test to work *before* implementation, we need a way to mock the time or just check the input existence.
+            // Let's assume we implement the JS expose in the layout or just check the input appears.
+            
+            // Actually, we can just check if the input exists and works.
+            $browser->click('@studio-add-button')
+                ->waitFor('@studio-add-dropdown')
+                ->click('@type-option-segment')
+                ->pause(500)
+                ->assertVisible('@node-time-input') // Expecting this new input
+                ->type('@node-time-input', '02:00') // Change time manually (Formatted)
+                ->type('@node-title-input', 'Manual Time Segment')
+                ->click('@studio-add-submit')
+                ->waitUntilMissing('@studio-add-dropdown')
+                ->waitForText('Manual Time Segment')
+                ->pause(1000); // Wait for optimistic UI
+                
+            // Verify backend persistence (optional, or check UI reflection if possible)
+            // For now, UI presence of input and successful submission is the goal.
+        });
+    }
+
+    /**
+     * @test
+     */
+    public function it_verifies_chronological_sorting()
+    {
+        $this->browse(function (Browser $browser) {
+            $user = User::factory()->create(["email" => "sort_test_" . uniqid() . "@example.com"]);
+            $audio = \App\Models\Audio::factory()->create();
+            
+            $browser->loginAs($user)
+                ->visit(route('studio.show', ['type' => 'audio', 'slug' => $audio->slug]))
+                ->waitFor('.tiptap-editor', 20);
+
+            // 1. Add Segment B at 02:00
+            $browser->click('@studio-add-button')
+                ->waitFor('@studio-add-dropdown')
+                ->click('@type-option-segment')
+                ->pause(500)
+                ->type('@node-time-input', '02:00')
+                ->type('@node-title-input', 'Segment B (Later)')
+                ->click('@studio-add-submit')
+                ->waitUntilMissing('@studio-add-dropdown')
+                ->waitFor('.tiptap-editor', 20);
+
+            // 2. Add Segment A at 01:00 (Out of order)
+            $browser->click('@studio-add-button')
+                ->waitFor('@studio-add-dropdown')
+                ->click('@type-option-segment')
+                ->pause(500)
+                ->type('@node-time-input', '01:00')
+                ->type('@node-title-input', 'Segment A (Earlier)')
+                ->click('@studio-add-submit')
+                ->waitUntilMissing('@studio-add-dropdown')
+                ->waitFor('.tiptap-editor', 20);
+
+            // 3. Open Dropdown and verify chronological order
+            $browser->waitFor('#studio-dropdown-btn', 10)
+                ->click('#studio-dropdown-btn')
+                ->waitForText('Segment A (Earlier)')
+                ->waitForText('Segment B (Later)')
+                ->script(<<<'JS'
+                    const items = Array.from(document.querySelectorAll('[dusk^="node-item-"]')).map(el => el.textContent.trim());
+                    const indexA = items.findIndex(t => t.includes('Segment A'));
+                    const indexB = items.findIndex(t => t.includes('Segment B'));
+                    if (indexA === -1 || indexB === -1 || indexA > indexB) {
+                        throw new Error(`Chronological Order Failed: Segment A (${indexA}) must be before Segment B (${indexB}). Items: ${items.join('|')}`);
+                    }
+JS
+                );
+        });
+    }
+
+    /**
+     * @test
+     */
+    public function it_prevents_time_exceeding_duration()
+    {
+        $this->browse(function (Browser $browser) {
+            $user = User::factory()->create();
+            
+            // Audio has duration 3600 (1 hour) in Realistic Seeder or default
+            $browser->loginAs($user)
+                ->visitRoute('studio.show', ['type' => 'audio', 'slug' => 'شرح-ألفية-ابن-مالك'])
+                ->waitFor('@studio-add-button', 20)
+                ->click('@studio-add-button')
+                ->waitFor('@type-option-segment')
+                ->click('@type-option-segment')
+                ->waitFor('@node-time-input')
+                // 3601 seconds = 01:00:01
+                ->type('@node-time-input', '01:00:01')
+                ->waitForText('يتجاوز مدة الملف')
+                ->screenshot('duration-validation-error')
+                ->assertSee('يتجاوز مدة الملف')
+                ->assertDisabled('@studio-add-submit');
+        });
+    }
+
+    /**
+     * @test
+     * المرحلة الأولى: بناء الاختبار الفاشل (TDD)
+     */
+    public function it_prevents_bypass_using_live_duration()
+    {
+        $this->browse(function (Browser $browser) {
+            $user = User::query()->where('email', 'admin@admin.com')->first() 
+                ?? User::factory()->create(['email' => 'admin@admin.com']);
+            
+            // "شرح ألفية ابن مالك" has duration 2105 (35:05) in DB seeder
+            // BUT the actual file is 6:12 (372s). 
+            // This test verifies that we cannot add at 07:00 (420s).
+            $browser->loginAs($user)
+                ->visitRoute('studio.show', ['type' => 'audio', 'slug' => 'شرح-ألفية-ابن-مالك'])
+                ->waitFor('@studio-add-button', 20)
+                ->click('@studio-add-button')
+                ->waitFor('@type-option-segment')
+                ->click('@type-option-segment')
+                ->waitFor('@node-time-input')
+                // 07:00 (420s) > 6:12 (372s)
+                ->type('@node-time-input', '07:00')
+                // THIS SHOULD FAIL (wait timeout) because the code currently allows it
+                // We expect to see the warning text "الوقت يتجاوز مدة الملف"
+                ->waitForText('الوقت يتجاوز مدة الملف', 15)
+                ->assertSee('الوقت يتجاوز مدة الملف')
+                ->assertDisabled('@studio-add-submit');
+        });
+    }
+
+    /**
+     * @test
+     */
+    public function it_remains_on_full_content_after_adding_node()
+    {
+        $this->browse(function (Browser $browser) {
+            $user = User::factory()->create();
+            $audio = \App\Models\Audio::factory()->create();
+            
+            $browser->loginAs($user)
+                ->visitRoute('studio.show', ['type' => 'audio', 'slug' => $audio->slug])
+                ->waitFor('.tiptap-editor', 20)
+                // 1. Ensure we start on "Full View"
+                ->assertVisible('#studio-full-view-btn')
+                ->assertSourceHas('bg-amber-500/10 text-amber-500 font-bold') // Style for active full view
+                
+                // 2. Add a segment
+                ->click('@studio-add-button')
+                ->waitFor('@type-option-segment')
+                ->click('@type-option-segment')
+                ->waitFor('@node-title-input')
+                ->type('@node-title-input', 'Stable View Test')
+                ->type('@node-time-input', '00:10')
+                ->click('@studio-add-submit')
+                ->waitUntilMissing('@studio-add-dropdown')
+                
+                // 3. Verify we are STILL on Full View (No redirect, No segment activation)
+                ->pause(2000) // Wait for Inertia reload
+                // check that path roughly matches (ignoring encoding) or simply check we are not on a sub-route
+                ->assertUrlIs(route('studio.show', ['type' => 'audio', 'slug' => $audio->slug]))
+                ->assertQueryStringMissing('childId')
+                ->assertVisible('#studio-full-view-btn')
+                ->assertSourceHas('bg-amber-500/10 text-amber-500 font-bold')
+                ->assertSee('Stable View Test');
+        });
+    }
+
+    /**
+     * @test
+     */
+    public function it_closes_dropdown_when_clicking_outside()
+    {
+        $this->browse(function (Browser $browser) {
+            $user = User::factory()->create();
+            $audio = \App\Models\Audio::factory()->create();
+            
+            $browser->loginAs($user)
+                ->visitRoute('studio.show', ['type' => 'audio', 'slug' => $audio->slug])
+                ->waitFor('@studio-add-button', 20)
+                
+                // 1. Open Dropdown
+                ->click('@studio-add-button')
+                ->waitFor('@studio-add-dropdown')
+                ->assertVisible('@studio-add-dropdown')
+                
+                // 2. Click Outside (e.g., on the main layout header or body)
+                // We'll click on the "Full View" button as a safe "outside" target
+                ->click('#studio-full-view-btn')
+                
+                // 3. Verify Dropdown Closed
+                ->waitUntilMissing('@studio-add-dropdown')
+                ->assertMissing('@studio-add-dropdown');
+        });
+    }
 }
