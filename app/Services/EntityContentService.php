@@ -352,9 +352,23 @@ class EntityContentService
         foreach ($fullChildren as $index => $child) {
             $title = $child->title ?: "قسم " . ($index + 1);
 
-            // Add header for each node with a machine-readable marker
+            // Header Signature: <h4 class="structure-marker" data-segment-link="true" data-id="ID" data-start-time="TIME" data-folio="FOLIO" data-page="PAGE">TITLE:</h4>
             $startTime = $child->start_time ?? 0;
-            $fullTranscript .= "<p><strong><span data-segment-link=\"true\" data-id=\"{$child->id}\" data-start-time=\"{$startTime}\">{$title}:</span></strong></p>";
+            $folio = $child->folio ?? null;
+            $page = $child->page ?? null;
+            
+            $marker = "<h4 class=\"structure-marker\" ";
+            $marker .= "data-segment-link=\"true\" ";
+            $marker .= "data-id=\"{$child->id}\" ";
+            $marker .= "data-type=\"{$child->type}\" ";
+            $marker .= "data-start-time=\"{$startTime}\" ";
+            if ($folio) $marker .= "data-folio=\"{$folio}\" ";
+            if ($page) $marker .= "data-page=\"{$page}\" ";
+            $marker .= ">{$title}</h4>";
+            
+            \Illuminate\Support\Facades\Log::debug('[EntityContentService] Generated Marker', ['html' => $marker]);
+
+            $fullTranscript .= $marker;
 
             $content = $child->content ?: '';
 

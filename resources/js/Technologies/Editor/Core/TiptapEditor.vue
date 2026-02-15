@@ -46,12 +46,20 @@ import Heading from '@tiptap/extension-heading'
  * Extended to support the "Signature" required by the Smart Splitter (Encyclopedia III.1)
  */
 const CustomHeading = Heading.extend({
+    name: 'heading', // Use the same name to override
+
     addAttributes() {
         return {
-            ...this.parent?.(),
+            level: {
+                default: 1,
+            },
             class: {
                 default: null,
-                parseHTML: element => element.getAttribute('class'),
+                parseHTML: element => {
+                    const val = element.getAttribute('class')
+                    if (val?.includes('structure-marker')) console.log('[Tiptap] Parsed structure-marker class:', val)
+                    return val
+                },
                 renderHTML: attributes => {
                     if (!attributes.class) return {}
                     return { class: attributes.class }
@@ -59,9 +67,13 @@ const CustomHeading = Heading.extend({
             },
             'data-segment-link': {
                 default: null,
-                parseHTML: element => element.hasAttribute('data-segment-link'),
+                parseHTML: element => {
+                    const val = element.getAttribute('data-segment-link') || (element.hasAttribute('data-segment-link') ? 'true' : null)
+                    if (val) console.log('[Tiptap] Parsed data-segment-link:', val)
+                    return val
+                },
                 renderHTML: attributes => {
-                    if (attributes['data-segment-link'] === null) return {}
+                    if (!attributes['data-segment-link']) return {}
                     return { 'data-segment-link': attributes['data-segment-link'] }
                 }
             },
@@ -106,6 +118,40 @@ const CustomHeading = Heading.extend({
                 }
             }
         }
+    },
+
+    parseHTML() {
+        return [
+            {
+                tag: 'h1',
+                getAttrs: element => ({ level: 1 }),
+            },
+            {
+                tag: 'h2',
+                getAttrs: element => ({ level: 2 }),
+            },
+            {
+                tag: 'h3',
+                getAttrs: element => ({ level: 3 }),
+            },
+            {
+                tag: 'h4',
+                getAttrs: element => ({ 
+                    level: 4,
+                    class: element.getAttribute('class'),
+                    'data-segment-link': element.hasAttribute('data-segment-link') ? 'true' : null
+                }),
+                priority: 1500, // Very high priority
+            },
+            {
+                tag: 'h5',
+                getAttrs: element => ({ level: 5 }),
+            },
+            {
+                tag: 'h6',
+                getAttrs: element => ({ level: 6 }),
+            },
+        ]
     }
 })
 
@@ -285,9 +331,11 @@ const editor = useEditor({
         }
     },
     onUpdate: ({ editor }) => {
+        window.editor = editor
         emit('update:modelValue', editor.getHTML())
     },
     onCreate: ({ editor }) => {
+        window.editor = editor
         emit('setEditor', editor)
         tiptapStore.setEditor(editor)
     }
@@ -354,7 +402,8 @@ onBeforeUnmount(() => {
 
 .ProseMirror h1,
 .ProseMirror h2,
-.ProseMirror h3 {
+.ProseMirror h3,
+.ProseMirror h4 {
     font-weight: 700;
     margin-top: 1.5em;
     margin-bottom: 0.5em;
@@ -364,6 +413,7 @@ onBeforeUnmount(() => {
 .ProseMirror h1,
 .ProseMirror h2,
 .ProseMirror h3,
+.ProseMirror h4,
 .ProseMirror strong {
     cursor: pointer;
     transition: color 0.2s ease;
@@ -372,8 +422,22 @@ onBeforeUnmount(() => {
 .ProseMirror h1:hover,
 .ProseMirror h2:hover,
 .ProseMirror h3:hover,
+.ProseMirror h4:hover,
 .ProseMirror strong:hover {
     color: #2563eb; /* Blue-600 */
+}
+
+/* Constitutional Structural Markers */
+.ProseMirror h4.structure-marker {
+    color: #2563eb; /* Blue-600 */
+    border-bottom: 1px dotted rgba(37, 99, 235, 0.2);
+    display: block;
+    width: 100%;
+}
+
+.ProseMirror h4.structure-marker:hover {
+    color: #1d4ed8; /* Blue-700 */
+    border-bottom: 1px solid #2563eb;
 }
 
 .ProseMirror h1 {

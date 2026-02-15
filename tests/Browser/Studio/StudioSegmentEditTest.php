@@ -92,7 +92,7 @@ class StudioSegmentEditTest extends DuskTestCase
             // We mimic the exact marker format producing an updated title
             $newTitle = "Manually Edited Title";
             $startTime = 0;
-            $headerHtml = "<p><strong><span data-segment-link=\"true\" data-id=\"{$node->id}\" data-start-time=\"{$startTime}\">{$newTitle}:</span></strong></p>";
+            $headerHtml = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$node->id}\" data-type=\"segment\" data-start-time=\"{$startTime}\">{$newTitle}</h4>";
             $contentHtml = "<p>New segment content</p>";
             
             $fullHtml = $headerHtml . $contentHtml;
@@ -140,8 +140,8 @@ class StudioSegmentEditTest extends DuskTestCase
             $newTitleB = "Updated Beta";
             $newContentB = "<p>Content for Beta</p>";
 
-            $htmlB = "<p><strong><span data-segment-link=\"true\" data-id=\"{$nodeB->id}\" data-start-time=\"10\">{$newTitleB}:</span></strong></p>" . $newContentB;
-            $htmlA = "<p><strong><span data-segment-link=\"true\" data-id=\"{$nodeA->id}\" data-start-time=\"0\">{$newTitleA}:</span></strong></p>" . $newContentA;
+            $htmlB = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$nodeB->id}\" data-type=\"segment\" data-start-time=\"10\">{$newTitleB}</h4>" . $newContentB;
+            $htmlA = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$nodeA->id}\" data-type=\"segment\" data-start-time=\"0\">{$newTitleA}</h4>" . $newContentA;
             
             // Reversed order in HTML mass
             $fullHtml = $htmlB . "<p><br/></p>" . $htmlA;
@@ -189,7 +189,7 @@ class StudioSegmentEditTest extends DuskTestCase
             $newTitle = "Title Checked After Reload";
             $newContent = "Content that should survive reload";
             $startTime = 0;
-            $headerHtml = "<p><strong><span data-segment-link=\"true\" data-id=\"{$node->id}\" data-start-time=\"{$startTime}\">{$newTitle}:</span></strong></p>";
+            $headerHtml = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$node->id}\" data-type=\"segment\" data-start-time=\"{$startTime}\">{$newTitle}</h4>";
             $contentHtml = "<p>{$newContent}</p>";
             
             $browser->script("window.EditorStore.updateContent('{$headerHtml}{$contentHtml}')");
@@ -282,7 +282,7 @@ class StudioSegmentEditTest extends DuskTestCase
             $newContent = "محتوى عربي محفوظ في قاعدة البيانات";
             
             // Reconstruct full HTML with Arabic
-            $html = "<p><strong><span data-segment-link=\"true\" data-id=\"{$node->id}\" data-start-time=\"0\">{$newTitle}:</span></strong></p><p>{$newContent}</p>";
+            $html = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$node->id}\" data-type=\"segment\" data-start-time=\"0\">{$newTitle}</h4><p>{$newContent}</p>";
             
             $browser->script("window.EditorStore.updateContent('{$html}')");
             $browser->pause(1000);

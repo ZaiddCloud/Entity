@@ -62,6 +62,27 @@ const setParagraph = () => {
       >
         عنوان صغير 3
       </button>
+      <button
+        class="px-3 py-2 text-right hover:bg-gray-50 text-xs font-bold w-full"
+        :class="{'bg-blue-50 text-blue-600': store.isActive('heading', { level: 4 })}"
+        @click="setHeading(4)"
+      >
+        عنوان مقطع 4 (دستوري)
+      </button>
+      <button
+        class="px-3 py-2 text-right hover:bg-gray-50 text-xs font-bold w-full"
+        :class="{'bg-blue-50 text-blue-600': store.isActive('heading', { level: 5 })}"
+        @click="setHeading(5)"
+      >
+        عنوان فرعي 5
+      </button>
+      <button
+        class="px-3 py-2 text-right hover:bg-gray-50 text-xs font-bold w-full"
+        :class="{'bg-blue-50 text-blue-600': store.isActive('heading', { level: 6 })}"
+        @click="setHeading(6)"
+      >
+        عنوان فرعي 6
+      </button>
     </div>
         
     <!-- Backdrop to close -->

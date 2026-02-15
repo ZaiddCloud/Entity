@@ -8,6 +8,19 @@ const store = useTiptapStore()
 <template>
   <div class="flex items-center gap-0.5">
     <ToolbarButton 
+      icon="ri-h-1" 
+      title="عنوان 1" 
+      :active="store.isActive('heading', { level: 1 })" 
+      @click="store.executeCommand('heading', 1)" 
+    />
+    <ToolbarButton 
+      icon="ri-h-4" 
+      title="عنوان 4 (دستوري)" 
+      :active="store.isActive('heading', { level: 4 })" 
+      @click="store.executeCommand('heading', 4)" 
+    />
+    <div class="w-px h-4 bg-gray-200 mx-1" />
+    <ToolbarButton 
       icon="ri-bold" 
       title="عريض (Ctrl+B)" 
       :active="store.isActive('bold')" 

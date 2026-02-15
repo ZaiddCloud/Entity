@@ -421,27 +421,37 @@ class SeedRealisticData extends Command
                         ]);
                     }
                 } elseif (EntityType::tryFrom($type) === EntityType::AUDIO) {
-                    // Create a dummy "Segment" for Audio
-                    $contentService->createNode($entity, [
-                        'type' => ContentNodeType::SEGMENT->value,
-                        'title' => 'المقطع الأول',
-                        'slug' => 'segment-1-' . mb_substr($entity->slug, 0, 4),
-                        'content' => '<p>تفريغ نصي للمقطع الأول...</p>',
-                        'json_content' => $this->generateJsonContent('<p>تفريغ نصي للمقطع الأول...</p>'),
-                        'plain_text' => 'تفريغ نصي للمقطع الأول...',
-                        'order' => 1,
-                    ]);
+                    // Create 5 "Segments" for Audio to test Playlist
+                    for ($s = 1; $s <= 5; $s++) {
+                        $startTime = ($s - 1) * 60; // 0, 60, 120...
+                        $contentService->createNode($entity, [
+                            'type' => ContentNodeType::SEGMENT->value,
+                            'title' => 'المقطع ' . $s . ' ' . ($s === 1 ? '(المقدمة)' : '(شرح)'),
+                            'slug' => 'segment-' . $s . '-' . mb_substr($entity->slug, 0, 4),
+                            'content' => "<p>تفريغ نصي للمقطع رقم {$s} يبدأ عند الدقيقة " . ($s-1) . "...</p>",
+                            'json_content' => $this->generateJsonContent("<p>تفريغ نصي للمقطع رقم {$s} يبدأ عند الدقيقة " . ($s-1) . "...</p>"),
+                            'plain_text' => "تفريغ نصي للمقطع رقم {$s}...",
+                            'order' => $s,
+                            'start_time' => (float) $startTime,
+                            'end_time' => (float) ($startTime + 50), // 50s duration
+                        ]);
+                    }
                 } elseif (EntityType::tryFrom($type) === EntityType::VIDEO) {
-                    // Create a dummy "Scene" for Video
-                    $contentService->createNode($entity, [
-                        'type' => ContentNodeType::SCENE->value,
-                        'title' => 'المشهد الأول',
-                        'slug' => 'scene-1-' . mb_substr($entity->slug, 0, 4),
-                        'content' => '<p>وصف ومحتوى المشهد الأول...</p>',
-                        'json_content' => $this->generateJsonContent('<p>وصف ومحتوى المشهد الأول...</p>'),
-                        'plain_text' => 'وصف ومحتوى المشهد الأول...',
-                        'order' => 1,
-                    ]);
+                    // Create 3 "Scenes" for Video
+                    for ($s = 1; $s <= 3; $s++) {
+                        $startTime = ($s - 1) * 120; // 0, 120, 240...
+                        $contentService->createNode($entity, [
+                            'type' => ContentNodeType::SCENE->value,
+                            'title' => 'المشهد ' . $s,
+                            'slug' => 'scene-' . $s . '-' . mb_substr($entity->slug, 0, 4),
+                            'content' => "<p>وصف تفصيلي للمشهد رقم {$s}...</p>",
+                            'json_content' => $this->generateJsonContent("<p>وصف تفصيلي للمشهد رقم {$s}...</p>"),
+                            'plain_text' => "وصف تفصيلي للمشهد رقم {$s}...",
+                            'order' => $s,
+                            'start_time' => (float) $startTime,
+                            'end_time' => (float) ($startTime + 100),
+                        ]);
+                    }
                 }
                 // --- END MongoDB Seeding ---
 

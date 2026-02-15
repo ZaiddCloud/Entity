@@ -284,7 +284,8 @@ class UnifiedEditorController extends Controller
         }
 
         // Robust Split & ID Mapping: Extract positions of all headers
-        $markerRegex = '/<p[^>]*>\s*<strong[^>]*>\s*(<span[^>]*data-segment-link[^>]*>.*?<\/span>)\s*<\/strong>\s*<\/p>/siu';
+        // Header Signature: <h4 class="structure-marker" data-segment-link="true" data-id="ID" ...>TITLE:</h4>
+        $markerRegex = '/<h4[^>]*class="[^"]*structure-marker[^"]*"[^>]*>.*?<\/h4>/siu';
         \Illuminate\Support\Facades\Log::info('[UnifiedEditor@handleFullViewSave] Starting save', [
             'entity_id' => $parent->id,
             'html_length' => strlen($html),
@@ -301,9 +302,10 @@ class UnifiedEditorController extends Controller
             $headerStart = $matches[0][$i][1];
             $headerEnd = $headerStart + strlen($headerHtml);
             
-            // Extract ID and Title from the span inside the header
+            // Extract ID and Title from the h4 marker
             preg_match('/data-id="(?P<id>[^"]+)"/i', $headerHtml, $idMatch);
-            preg_match('/<span[^>]*>(?P<title>.*?)<\/span>/si', $headerHtml, $titleMatch);
+            // Title is the content of the h4
+            preg_match('/<h4[^>]*>(?P<title>.*?)<\/h4>/siu', $headerHtml, $titleMatch);
             
             $id = $idMatch['id'] ?? null;
             $title = $titleMatch['title'] ?? null;
@@ -312,10 +314,6 @@ class UnifiedEditorController extends Controller
                 \Illuminate\Support\Facades\Log::warning('[UnifiedEditor@handleFullViewSave] Header missing data-id', ['header' => $headerHtml]);
                 continue;
             }
-
-            // Extract Title with better regex
-            preg_match('/<span[^>]*>(?P<title>.*?)<\/span>/siu', $headerHtml, $titleMatch);
-            $title = $titleMatch['title'] ?? null;
 
             // Content is between this header and the next header
             $nextHeaderStart = ($i + 1 < $headerCount) ? $matches[0][$i + 1][1] : strlen($html);

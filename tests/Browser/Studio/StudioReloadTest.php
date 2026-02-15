@@ -37,9 +37,9 @@ class StudioReloadTest extends DuskTestCase
             $newContentB = "محتوى مقطع ب المعدل";
             
             // REORDER B before A in the editor
-            $markerB = "<p><strong><span data-segment-link=\"true\" data-id=\"{$nodeB->id}\" data-start-time=\"10\">{$newTitleB}:</span></strong></p>";
+            $markerB = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$nodeB->id}\" data-type=\"segment\" data-start-time=\"10\">{$newTitleB}</h4>";
             $contentB = "<p>{$newContentB}</p>";
-            $markerA = "<p><strong><span data-segment-link=\"true\" data-id=\"{$nodeA->id}\" data-start-time=\"0\">{$newTitleA}:</span></strong></p>";
+            $markerA = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$nodeA->id}\" data-type=\"segment\" data-start-time=\"0\">{$newTitleA}</h4>";
             $contentA = "<p>{$newContentA}</p>";
             
             $fullHtml = $markerB . $contentB . $markerA . $contentA;

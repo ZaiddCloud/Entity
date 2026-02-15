@@ -15,10 +15,8 @@ export function useStudioContentProcess() {
         if (!editorStore.currentEntity) return
 
         try {
-            // 1. Optimistic UI: Emit Event (Step 4 Requirement)
-            window.dispatchEvent(new CustomEvent('studio:insert-node', {
-                detail: { type, title, time }
-            }))
+            // 1. Optimistic UI: REMOVED (Step 29 Requirement)
+            // Relying exclusively on server-side reload as Source of Truth.
 
             // 2. Media Store Update (Step 2 Requirement)
             if (time !== null && (editorStore.editorMode === 'audio' || editorStore.editorMode === 'video')) {
@@ -41,8 +39,13 @@ export function useStudioContentProcess() {
             console.log('[useStudioContentProcess] Persistence successful:', response.data.message)
 
             // Step 15 Refinement: Stay on Full Content!
-            // Instead of redirecting to the new node, we just reload the data to refresh the Sidebar/Player list.
-            router.reload({ only: ['entity'] })
+            // Instead of redirecting to the new node, we just reload the data to refresh everything.
+            router.reload({
+                only: ['entity', 'editorContent', 'fullContent', 'hierarchy'],
+                onSuccess: () => {
+                    console.log('[useStudioContentProcess] Navigation Success (Reloaded Data)')
+                }
+            })
 
         } catch (error) {
             console.error('[useStudioContentProcess] Integration failed:', error)

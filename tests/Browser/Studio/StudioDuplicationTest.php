@@ -35,7 +35,7 @@ class StudioDuplicationTest extends DuskTestCase
                 ->waitFor('#studio-save-btn')
                 // We should be in Full View by default if no childId
                 ->assertSee('كامل المحتوى')
-                ->assertSee('المقطع الأول:')
+                ->assertSee('المقطع الأول')
                 
                 // SAVE 1
                 ->click('#studio-save-btn')

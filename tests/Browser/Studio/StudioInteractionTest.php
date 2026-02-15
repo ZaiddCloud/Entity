@@ -29,34 +29,40 @@ class StudioInteractionTest extends DuskTestCase
 
         // Ensure Segments exist
         if ($audio->children()->count() === 0) {
+            $s1Id = \Illuminate\Support\Str::uuid();
             \App\Models\AudioSegment::create([
+                'id' => $s1Id,
                 'audio_id' => $audio->id,
                 'title' => 'المقطع الأول',
                 'slug' => 'segment-1',
                 'order' => 1,
                 'start_time' => 0,
                 'duration' => 300,
-                'content' => '<p>محتوى المقطع الأول</p>'
+                'content' => "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$s1Id}\" data-type=\"segment\" data-start-time=\"0\">المقطع الأول</h4><p>محتوى المقطع الأول</p>"
             ]);
             
+            $s2Id = \Illuminate\Support\Str::uuid();
             \App\Models\AudioSegment::create([
+                'id' => $s2Id,
                 'audio_id' => $audio->id,
                 'title' => 'المقطع الثاني',
                 'slug' => 'segment-2',
                 'order' => 2,
                 'start_time' => 300,
                 'duration' => 300,
-                'content' => '<p>محتوى المقطع الثاني</p>'
+                'content' => "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$s2Id}\" data-type=\"segment\" data-start-time=\"300\">المقطع الثاني</h4><p>محتوى المقطع الثاني</p>"
             ]);
             
+            $s3Id = \Illuminate\Support\Str::uuid();
             \App\Models\AudioSegment::create([
+                'id' => $s3Id,
                 'audio_id' => $audio->id,
                 'title' => 'المقطع الثالث',
                 'slug' => 'segment-3',
                 'order' => 3,
                 'start_time' => 600,
                 'duration' => 300,
-                'content' => '<p>محتوى المقطع الثالث</p>'
+                'content' => "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$s3Id}\" data-type=\"segment\" data-start-time=\"600\">المقطع الثالث</h4><p>محتوى المقطع الثالث</p>"
             ]);
             
             $audio->refresh(); 
@@ -141,14 +147,16 @@ class StudioInteractionTest extends DuskTestCase
         
         // Ensure Segments exist
         if ($audio->children()->count() === 0) {
+            $s1Id = \Illuminate\Support\Str::uuid();
             \App\Models\AudioSegment::create([
+                'id' => $s1Id,
                 'audio_id' => $audio->id,
                 'title' => 'المقطع الأول',
                 'slug' => 'segment-1',
                 'order' => 1,
                 'start_time' => 0,
                 'duration' => 300,
-                'content' => '<p>محتوى المقطع الأول</p>'
+                'content' => "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$s1Id}\" data-type=\"segment\" data-start-time=\"0\">المقطع الأول</h4><p>محتوى المقطع الأول</p>"
             ]);
             $audio->refresh();
         }

@@ -250,20 +250,32 @@ class SyncManuscriptPages extends Command
                 continue;
             }
 
-            $htmlContent = nl2br(trim($page['content']));
-            $plainText = trim(strip_tags($page['content']));
-            $jsonContent = $this->generateJsonContent($page['content']);
-
-            // Create Node
-            $this->contentService->createNode($manuscript, [
+            // Create Node (get ID first)
+            $node = $this->contentService->createNode($manuscript, [
                 'type' => $nodeType,
                 'title' => "صفحة {$page['number']}",
                 'slug' => "page-{$page['number']}-" . Str::random(6),
-                'content' => $htmlContent,
-                'json_content' => $jsonContent,
-                'plain_text' => $plainText,
+                'content' => '',
+                'json_content' => [],
+                'plain_text' => trim(strip_tags($page['content'])),
                 'page_number' => $page['number'],
                 'order' => $startOrder + $index
+            ]);
+
+            // Construct Constitutional HTML
+            $nodeId = $node->id;
+            $title = "صفحة {$page['number']}";
+            
+            $headerHtml = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$nodeId}\" data-type=\"{$nodeType}\">{$title}</h4>";
+            $contentHtml = "<p>" . trim($page['content']) . "</p>";
+            
+            $fullHtml = $headerHtml . $contentHtml;
+            $jsonContent = $this->generateJsonContent($title, $page['content'], $nodeId, $nodeType);
+
+            // Update Node
+            $node->update([
+                'content' => $fullHtml,
+                'json_content' => $jsonContent
             ]);
 
             $this->line("      <fg=green>✓</> Created: Page {$page['number']}");
@@ -280,13 +292,43 @@ class SyncManuscriptPages extends Command
     }
 
     /**
-     * Generate a basic Tiptap JSON structure
+     * Generate Tiptap JSON with Structure Marker
      */
-    protected function generateJsonContent($rawContent)
+    protected function generateJsonContent($title, $rawContent, $nodeId, $nodeType = 'page')
     {
         $contentNodes = [];
 
-        // Add Content paragraphs
+        // 1. Add Heading Marker
+        $contentNodes[] = [
+            'type' => 'heading',
+            'attrs' => [
+                'level' => 4,
+                'textAlign' => 'right',
+                'class' => 'structure-marker',
+                'id' => null,
+                // Add data attributes for extension hydration
+                'data-segment-link' => 'true',
+                'data-id' => (string) $nodeId,
+                'data-type' => $nodeType
+            ],
+            'content' => [
+                 [
+                    'type' => 'text',
+                    'marks' => [
+                        [
+                            'type' => 'segmentLink',
+                            'attrs' => [
+                                'link' => 'true',
+                                'json' => (string) $nodeId
+                            ]
+                        ]
+                    ],
+                    'text' => $title
+                 ]
+            ]
+        ];
+
+        // 2. Add Content paragraphs
         $lines = explode("\n", trim($rawContent));
         foreach ($lines as $line) {
             $line = trim($line);

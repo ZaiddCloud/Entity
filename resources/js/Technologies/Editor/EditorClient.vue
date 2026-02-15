@@ -42,28 +42,8 @@ const handleCommand = ({ command, value }) => {
     }
 }
 
-// --- STEP 4: ORCHESTRATOR LISTENER ---
-const onInsertNode = (event) => {
-    const { type, title, time } = event.detail
-    const visualMap = store.resourceData?.visual_map || {}
-    const config = visualMap[type] || { tag: 'h4', behavior: 'container' }
-    
-    if (config.behavior === 'container') {
-        const level = parseInt(config.tag?.replace('h', '')) || 4
-        store.editor?.commands.insertStructureNode(type, title, level)
-    } else {
-        const level = parseInt(config.tag?.replace('h', '')) || 4
-        store.editor?.commands.insertMarkerNode(type, title, { time, level })
-    }
-}
-
-onMounted(() => {
-    window.addEventListener('studio:insert-node', onInsertNode)
-})
-
-onBeforeUnmount(() => {
-    window.removeEventListener('studio:insert-node', onInsertNode)
-})
+// --- STEP 4: ORCHESTRATOR LISTENER REMOVED ---
+// Relying exclusively on "Save & Reload" pattern for consistency.
 
 // Seek player when clicking segment title
 const handleTitleClick = () => {
