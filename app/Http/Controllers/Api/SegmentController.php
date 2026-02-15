@@ -109,17 +109,27 @@ class SegmentController extends Controller
             'start_time' => 'nullable|numeric|min:0',
         ]);
 
+        \Illuminate\Support\Facades\Log::debug('[SegmentController@update]', [
+            'id' => $id,
+            'payload' => $request->all()
+        ]);
+
         $modelClass = match ($request->entity_type) {
             'audio' => \App\Models\Audio::class,
             'video' => \App\Models\Video::class,
         };
 
-        $entity = $modelClass::findOrFail($request->entity_id);
+        try {
+            $entity = $modelClass::findOrFail($request->entity_id);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('[SegmentController@update] Entity not found', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Parent not found'], 404);
+        }
 
         $segment = $this->contentService->getNode($entity, $id);
 
-        // Handle case where ID might be passed as slug or ID
         if (!$segment) {
+            \Illuminate\Support\Facades\Log::error('[SegmentController@update] Segment not found', ['entity_id' => $entity->id, 'identifier' => $id]);
             return response()->json(['error' => 'Segment not found'], 404);
         }
 
@@ -181,6 +191,9 @@ class SegmentController extends Controller
         }
 
         $segment->update($updateData);
+        
+        // Refresh the model to ensure changes are immediately visible
+        $segment->refresh();
 
         return response()->json([
             'message' => 'تم تحديث المقطع بنجاح',

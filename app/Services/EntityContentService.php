@@ -341,6 +341,10 @@ class EntityContentService
         }
 
         $fullChildren = $query->get();
+        \Illuminate\Support\Facades\Log::debug('[EntityContentService] Aggregating content', [
+            'count' => $fullChildren->count(),
+            'titles' => $fullChildren->pluck('title')->toArray()
+        ]);
 
         $fullTranscript = '';
         $type = strtolower(class_basename($entity));

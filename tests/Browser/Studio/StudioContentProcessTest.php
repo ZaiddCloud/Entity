@@ -260,9 +260,14 @@ JS
         $this->browse(function (Browser $browser) {
             $user = User::factory()->create();
             
-            // Audio has duration 3600 (1 hour) in Realistic Seeder or default
+            // Create audio for test
+            $audio = \App\Models\Audio::factory()->create([
+                'title' => 'Duration Test Audio',
+                'duration' => 3600 // 1 hour
+            ]);
+
             $browser->loginAs($user)
-                ->visitRoute('studio.show', ['type' => 'audio', 'slug' => 'شرح-ألفية-ابن-مالك'])
+                ->visitRoute('studio.show', ['type' => 'audio', 'slug' => $audio->slug])
                 ->waitFor('@studio-add-button', 20)
                 ->click('@studio-add-button')
                 ->waitFor('@type-option-segment')
@@ -287,11 +292,20 @@ JS
             $user = User::query()->where('email', 'admin@admin.com')->first() 
                 ?? User::factory()->create(['email' => 'admin@admin.com']);
             
+            // Create Audio with Mismatch: DB says 2105s, File is shorter (sample-1.mp3)
+            $slug = 'bypass-test-audio-' . uniqid();
+            $audio = \App\Models\Audio::factory()->create([
+                'slug' => $slug,
+                'title' => 'Bypass Test',
+                'duration' => 2105,
+                'file_path' => 'audio/sample-1.mp3'
+            ]);
+            
             // "شرح ألفية ابن مالك" has duration 2105 (35:05) in DB seeder
             // BUT the actual file is 6:12 (372s). 
             // This test verifies that we cannot add at 07:00 (420s).
             $browser->loginAs($user)
-                ->visitRoute('studio.show', ['type' => 'audio', 'slug' => 'شرح-ألفية-ابن-مالك'])
+                ->visitRoute('studio.show', ['type' => 'audio', 'slug' => $audio->slug])
                 ->waitFor('@studio-add-button', 20)
                 ->click('@studio-add-button')
                 ->waitFor('@type-option-segment')

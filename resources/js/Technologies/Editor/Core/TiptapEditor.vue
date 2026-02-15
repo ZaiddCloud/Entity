@@ -295,6 +295,10 @@ const editor = useEditor({
 
 watch(() => props.modelValue, (value) => {
     if (editor.value && value !== editor.value.getHTML()) {
+        console.log('[TiptapEditor] Updating content from props. Length:', value?.length);
+        if (value && value.includes('Title from Player')) {
+            console.log('[TiptapEditor] NEW TITLE DETECTED IN PROPS');
+        }
         editor.value.commands.setContent(value, false)
     }
 })

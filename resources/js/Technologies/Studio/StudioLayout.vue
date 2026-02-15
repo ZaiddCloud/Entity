@@ -65,13 +65,13 @@ onMounted(() => {
             mediaStore.requestSeek(props._legacy.contentNode.start_time);
         }
     }
-    // TEST HELPER: Allow Dusk to set time
-    if (window.Cypress || window.laravel_dusk_test_mode) {
-        window.addEventListener('test:set-time', (e) => {
-            console.log('[StudioLayout] Test Set Time:', e.detail);
-            mediaStore.setCurrentTime(e.detail);
-        });
-    }
+    // TEST HELPER: Global visibility for Dusk (Expose always for now to avoid timing issues)
+    window.MediaStore = mediaStore;
+    window.EditorStore = store;
+    window.addEventListener('test:set-time', (e) => {
+        console.log('[StudioLayout] Test Set Time:', e.detail);
+        mediaStore.setCurrentTime(e.detail);
+    });
 })
 
 // Watch for content node changes (when navigating between segments/pages)
@@ -93,6 +93,13 @@ watch(() => props._legacy?.contentNode?.title, (newTitle) => {
     if (newTitle && store.currentContentNode && store.currentContentNode.title !== newTitle) {
         console.log('[StudioLayout] Syncing title from props:', newTitle);
         store.currentContentNode.title = newTitle;
+    }
+});
+
+watch(() => props.editorContent, (newContent) => {
+    if (newContent && store.content !== newContent) {
+        console.log('[StudioLayout] Syncing content from props (Server Update)');
+        store.updateContent(newContent);
     }
 });
 
@@ -430,10 +437,25 @@ const handleInsertNode = ({ type, title, time }) => {
         </div>
 
         <!-- Save Status -->
-        <span class="text-[10px] flex items-center gap-1.5 border-r border-gray-800 pr-3 mr-1" :class="saveStatusColor">
+        <span 
+          id="studio-save-status"
+          class="text-[10px] flex items-center gap-1.5 border-r border-gray-800 pr-3 mr-1" 
+          :class="saveStatusColor"
+        >
             <div class="w-1 h-1 rounded-full bg-current" :class="store.isSaving ? 'animate-pulse' : ''"></div>
             {{ saveStatusText }}
         </span>
+
+        <!-- Open Player Button (Restored) -->
+        <button 
+          v-if="props.type !== 'manuscript' && !mediaStore.isOpen"
+          id="studio-open-player-btn"
+          @click="mediaStore.setOpen(true)"
+          class="flex items-center justify-center w-8 h-8 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-95 ml-2"
+          title="فتح المشغل"
+        >
+          <Play class="w-4 h-4 fill-current" />
+        </button>
 
 
         <button 

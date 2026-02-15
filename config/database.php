@@ -122,6 +122,10 @@ return [
             'password' => env('DB_PASSWORD_MONGO', ''),
             'options' => [
                 'database' => env('DB_AUTHENTICATION_DATABASE_MONGO', 'admin'),
+                // Ensure writes are acknowledged before returning
+                'w' => 'majority',
+                // Always read from primary to ensure read-after-write consistency
+                'readPreference' => 'primary',
             ],
         ],
 

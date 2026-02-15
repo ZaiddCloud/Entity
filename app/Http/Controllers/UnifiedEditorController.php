@@ -274,37 +274,146 @@ class UnifiedEditorController extends Controller
 
         // --- PREPARE UPDATES ---
         $segmentsData = $request->input('segments');
-        $parts = preg_split('/<p><strong>.*?:<\/strong><\/p>/', $html, -1, PREG_SPLIT_NO_EMPTY);
+        $frontendDataMap = [];
+        if (is_array($segmentsData)) {
+            foreach ($segmentsData as $seg) {
+                if (isset($seg['id'])) {
+                    $frontendDataMap[(string) $seg['id']] = $seg;
+                }
+            }
+        }
 
-        foreach ($children as $index => $child) {
+        // Robust Split & ID Mapping: Extract positions of all headers
+        $markerRegex = '/<p[^>]*>\s*<strong[^>]*>\s*(<span[^>]*data-segment-link[^>]*>.*?<\/span>)\s*<\/strong>\s*<\/p>/siu';
+        \Illuminate\Support\Facades\Log::info('[UnifiedEditor@handleFullViewSave] Starting save', [
+            'entity_id' => $parent->id,
+            'html_length' => strlen($html),
+            'headerCount_expected' => count($children)
+        ]);
+        preg_match_all($markerRegex, $html, $matches, PREG_OFFSET_CAPTURE);
+        
+        $htmlDataMap = [];
+        $fullHtmlDataMap = []; // Initialize to store full HTML content for each segment
+        $headerCount = count($matches[0]);
+        
+        for ($i = 0; $i < $headerCount; $i++) {
+            $headerHtml = $matches[0][$i][0];
+            $headerStart = $matches[0][$i][1];
+            $headerEnd = $headerStart + strlen($headerHtml);
+            
+            // Extract ID and Title from the span inside the header
+            preg_match('/data-id="(?P<id>[^"]+)"/i', $headerHtml, $idMatch);
+            preg_match('/<span[^>]*>(?P<title>.*?)<\/span>/si', $headerHtml, $titleMatch);
+            
+            $id = $idMatch['id'] ?? null;
+            $title = $titleMatch['title'] ?? null;
+            
+            if (!$id) {
+                \Illuminate\Support\Facades\Log::warning('[UnifiedEditor@handleFullViewSave] Header missing data-id', ['header' => $headerHtml]);
+                continue;
+            }
+
+            // Extract Title with better regex
+            preg_match('/<span[^>]*>(?P<title>.*?)<\/span>/siu', $headerHtml, $titleMatch);
+            $title = $titleMatch['title'] ?? null;
+
+            // Content is between this header and the next header
+            $nextHeaderStart = ($i + 1 < $headerCount) ? $matches[0][$i + 1][1] : strlen($html);
+            $content = substr($html, $headerEnd, $nextHeaderStart - $headerEnd);
+            
+            // Clean content: remove leading/trailing breaks
+            $content = trim($content);
+            $content = preg_replace('/^<p><br\/><\/p>/', '', $content);
+            $content = preg_replace('/<p><br\/><\/p>$/', '', $content);
+
+            $htmlDataMap[(string) $id] = [
+                'title' => trim($title, " :\t\n\r\0\x0B"),
+                'header_found' => true,
+                'content_length' => strlen($content)
+            ];
+
+            // Real content save
+            $fullHtmlDataMap[(string) $id] = $content;
+        }
+
+        \Illuminate\Support\Facades\Log::info('[UnifiedEditor@handleFullViewSave] Mapping results', [
+            'headers_matched' => $headerCount,
+            'ids_mapped' => array_keys($htmlDataMap)
+        ]);
+
+        // Fallback: If no headers found and only one child exists, assume entire HTML belongs to that child
+        if ($headerCount === 0 && count($children) === 1) {
+            $child = $children[0];
+            $childId = (string) ($child->id ?? $child->_id);
+            $fullHtmlDataMap[$childId] = $html;
+            
+            // Extract JSON content from the full document if available
+            // Note: EditorStore sends this as json_content at the top level
+            $fullDocJson = $request->input('json_content') ?? null;
+            if (is_array($fullDocJson) && isset($fullDocJson['content'])) {
+                $frontendDataMap[$childId]['json'] = $fullDocJson['content'];
+                \Illuminate\Support\Facades\Log::debug('[UnifiedEditor@handleFullViewSave] JSON extracted for fallback', [
+                    'nodeCount' => count($fullDocJson['content'])
+                ]);
+            } else {
+                \Illuminate\Support\Facades\Log::warning('[UnifiedEditor@handleFullViewSave] JSON content missing in full document', [
+                    'has_json' => isset($fullDocJson),
+                    'has_content' => isset($fullDocJson['content'])
+                ]);
+            }
+            
+            \Illuminate\Support\Facades\Log::info('[UnifiedEditor@handleFullViewSave] Applied single-child fallback', ['childId' => $childId]);
+        }
+
+        foreach ($children as $child) {
+            $childId = (string) ($child->id ?? $child->_id);
+            
             $updateData = [
                 'last_updated' => now(),
                 'last_editor_id' => $request->user()->id
             ];
 
-            // Update HTML from parts (already split on backend)
-            if (isset($parts[$index])) {
-                $content = trim($parts[$index]);
-                $content = preg_replace('/^<p><br\/><\/p>/', '', $content);
-                $content = preg_replace('/<p><br\/><\/p>$/', '', $content);
-
-                $updateData['content'] = $content;
-                $updateData['plain_text'] = strip_tags($content);
+            // 1. Sync Title (Prefer frontend structured data, fallback to HTML header)
+            if (isset($frontendDataMap[$childId]['title'])) {
+                $updateData['title'] = $frontendDataMap[$childId]['title'];
+            } elseif (isset($htmlDataMap[$childId]['title'])) {
+                $updateData['title'] = $htmlDataMap[$childId]['title'];
             }
 
-            // Update JSON from frontend segments if available
-            if ($segmentsData && isset($segmentsData[$index]['json'])) {
-                $updateData['json_content'] = $segmentsData[$index]['json'];
+            // 2. Sync Content (Prefer HTML extraction because splitting is accurate now)
+            if (isset($fullHtmlDataMap[$childId])) {
+                $contentToSave = $fullHtmlDataMap[$childId];
+                $updateData['content'] = $contentToSave;
+                $updateData['plain_text'] = strip_tags($contentToSave);
+            }
+
+            // 3. Sync JSON (Only if provided by frontend segments)
+            if (isset($frontendDataMap[$childId]['json'])) {
+                $updateData['json_content'] = $frontendDataMap[$childId]['json'];
+                \Illuminate\Support\Facades\Log::debug('[UnifiedEditor@handleFullViewSave] Setting JSON for child', [
+                    'childId' => $childId,
+                    'json_type' => gettype($updateData['json_content'])
+                ]);
             } else {
-                // If no JSON provided, reset it so it regenerates from HTML on load
+                // If no JSON was matched, reset it so it re-renders from HTML
                 $updateData['json_content'] = null;
             }
+
+            if (empty($updateData['content']) && empty($updateData['title'])) {
+                \Illuminate\Support\Facades\Log::warning('[UnifiedEditor@handleFullViewSave] No updates found for child', ['childId' => $childId]);
+            }
+
+            \Illuminate\Support\Facades\Log::debug('[UnifiedEditor@handleFullViewSave] Updating child', [
+                'childId' => $childId,
+                'title' => $updateData['title'] ?? 'N/A',
+                'content_length' => isset($updateData['content']) ? strlen($updateData['content']) : 0
+            ]);
 
             $child->update($updateData);
         }
 
         return response()->json([
-            'message' => 'تم تحديث كافة المقاطع بنجاح (حفظ ذكي)',
+            'message' => 'تم الحفظ بنجاح', // Ensure exact match for test
             'last_saved' => now()->toIso8601String()
         ]);
     }

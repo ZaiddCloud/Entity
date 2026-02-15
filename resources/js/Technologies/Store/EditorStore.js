@@ -152,12 +152,20 @@ export const useEditorStore = defineStore('editor', () => {
                 let currentSegment = null
 
                 doc.forEach((node, offset, index) => {
-                    // Precision Detection: Top-level paragraph containing a segmentLink mark
-                    const isHeader = node.type.name === 'paragraph' &&
-                        (node.firstChild?.marks?.some(m => m.type.name === 'segmentLink') || false)
+                    // Precision Detection: Top-level paragraph containing a segmentLink mark anywhere in its children
+                    let segmentMark = null
+                    node.content?.forEach(child => {
+                        if (child.marks?.some(m => m.type.name === 'segmentLink')) {
+                            segmentMark = child.marks.find(m => m.type.name === 'segmentLink')
+                        }
+                    })
+
+                    const isHeader = node.type.name === 'paragraph' && segmentMark !== null
 
                     if (isHeader) {
+                        console.log('[EditorStore] Found segment header:', node.textContent, 'marks detected');
                         currentSegment = {
+                            id: segmentMark.attrs.segmentId || segmentMark.attrs.id,
                             title: node.textContent.trim().replace(/:$/, ''),
                             nodes: []
                         }
@@ -168,6 +176,7 @@ export const useEditorStore = defineStore('editor', () => {
                 })
 
                 payload.segments = segments.map(seg => ({
+                    id: seg.id,
                     title: seg.title,
                     // Send as a proper Tiptap/ProseMirror content array
                     json: seg.nodes.map(node => node.toJSON())

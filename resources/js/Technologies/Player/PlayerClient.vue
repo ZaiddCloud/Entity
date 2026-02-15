@@ -3,6 +3,7 @@ import { ref, computed, watch, inject, onMounted } from 'vue';
 import DraggableMediaPlayer from './MediaPlayer.vue';
 import { router } from '@inertiajs/vue3';
 import { useMediaStore } from '@/Technologies/Store/MediaStore';
+import { useEditorStore } from '@/Technologies/Store/EditorStore';
 
 const props = defineProps({
     media: Object,
@@ -40,7 +41,7 @@ const toggleDock = inject('toggleDock', () => {});
 const segments = computed(() => {
     if (props.media?.children?.length) {
         return props.media.children.map(child => ({
-            id: child.id,
+            id: child.id || child._id,
             slug: child.slug,
             label: child.title, // Map 'title' to 'label' for DraggableMediaPlayer
             title: child.title,
@@ -136,7 +137,7 @@ const handleDeleteSegment = async (segment) => {
         const id = segment.id || segment.slug;
         await axios.delete(route('api.segments.destroy', id), {
             data: {
-                entity_id: props.media.id,
+                entity_id: props.media.id || props.media._id,
                 entity_type: props.type
             }
         });
@@ -150,9 +151,9 @@ const handleDeleteSegment = async (segment) => {
 
 const updateSegment = async (segment) => {
     try {
-        const id = segment.id || segment.slug;
+        const id = segment.id || segment._id || segment.slug;
         const payload = {
-            entity_id: props.media.id,
+            entity_id: props.media.id || props.media._id,
             entity_type: props.type,
             title: segment.title
         };
@@ -162,11 +163,12 @@ const updateSegment = async (segment) => {
             payload.start_time = segment.start;
         }
         
+        console.log('[PlayerClient] Updating segment with payload:', payload);
         const response = await axios.put(route('api.segments.update', id), payload);
         
         console.log('[PlayerClient] Segment updated:', response.data);
 
-        // Update store immediately for instant UI feedback
+        // Update stores immediately for instant UI feedback
         mediaStore.updateSegment({
             id: segment.id,
             slug: segment.slug,
@@ -175,8 +177,20 @@ const updateSegment = async (segment) => {
             start: segment.start
         });
 
-        // Refresh props (Update entity to refresh Toolbar/Sidebar)
-        router.reload({ only: ['entity'] });
+        // Sync to EditorStore for UI status bar feedback
+        const editorStore = useEditorStore();
+        editorStore.lastSaveMessage = response.data.message || 'تم تحديث المقطع بنجاح';
+        editorStore.lastSaved = new Date();
+
+        // Wait briefly to ensure MongoDB write is visible to subsequent reads
+        // This prevents race conditions where the reload query runs before the write is committed
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Force a complete page reload to get fresh aggregated content
+        router.visit(window.location.href, { 
+            preserveState: false,
+            preserveScroll: true 
+        });
     } catch (error) {
          console.error('[PlayerClient] Error updating segment:', error);
          alert('حدث خطأ أثناء تحديث المقطع');

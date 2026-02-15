@@ -186,6 +186,13 @@ const handleToggleDock = () => {
     emit('toggle-dock');
 };
 
+const handleClose = () => {
+    // Parity: Stop playback when closing explicitly
+    console.log('[MediaPlayer] Closing player. Pausing playback.');
+    pause();
+    emit('close');
+};
+
 // --- Keyboard Shortcuts ---
 const handleKeyDown = (e) => {
     // Ignore if typing in an input or contenteditable (Tiptap)
@@ -280,7 +287,7 @@ defineExpose({
                     @toggle-dock="handleToggleDock"
                     @cycle-size="store.cycleSize((props.isStudioContext || props.isIntegrated) ? ['mini', 'standard'] : ['mini', 'standard', 'theater', 'full'])"
                     @toggle-collapse="store.toggleCollapse"
-                    @close="emit('close')"
+                    @close="handleClose"
                 />
 
                 <!-- Integrated Content Area (Touch #25) -->
