@@ -24,23 +24,10 @@ class VideoSegment extends Model
     protected $connection = 'mongodb';
     protected $collection = 'video_segments';
 
-    protected $fillable = [
-        'video_id',
-        'slug',
-        'type',
-        'title',
-        'order',
-        'content_blocks',
-        'metadata',
-        'start_time',
-        'start_time',
-        'end_time',
-        'duration',
-        'file_path',
-        'content',
-        'json_content',
-        'plain_text',
-    ];
+    protected $primaryKey = '_id';
+    protected $keyType = 'string';
+    public $incrementing = false;
+    protected $guarded = [];
 
     public function video()
     {

@@ -68,7 +68,11 @@ class UnifiedEditorController extends Controller
                 abort(404, 'Specific content node not found');
             }
 
-            $currentEditorContent = $node->content ?? '';
+            if (in_array($entityType, [EntityType::BOOK, EntityType::MANUSCRIPT])) {
+                $currentEditorContent = $this->contentService->getBranchContent($parentEntity, $childId);
+            } else {
+                $currentEditorContent = $node->content ?? '';
+            }
         } else {
             // Default: Load FULL CONTENT
             $currentEditorContent = $fullContent;

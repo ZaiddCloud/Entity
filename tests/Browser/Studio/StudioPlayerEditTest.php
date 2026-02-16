@@ -6,9 +6,13 @@ use App\Models\User;
 use App\Models\Audio;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
+use App\Models\AudioSegment;
+use Illuminate\Support\Str;
 
 class StudioPlayerEditTest extends DuskTestCase
 {
+    use DatabaseTruncation;
     /**
      * @test
      */
@@ -19,10 +23,19 @@ class StudioPlayerEditTest extends DuskTestCase
             'slug' => 'player-sync-' . uniqid()
         ]);
 
-        $service = app(\App\Services\EntityContentService::class);
-        $node = $service->addNode($audio, 'segment', 'Original Title', 0);
+        $nodeId = (string) Str::uuid();
+        $nodeSlug = 'original-title-'.uniqid();
+        $node = new AudioSegment();
+        $node->_id = $nodeId;
+        $node->audio_id = $audio->id;
+        $node->type = 'segment';
+        $node->title = 'Original Title';
+        $node->order = 1;
+        $node->slug = $nodeSlug;
+        $node->start_time = 0;
+        $node->save();
 
-        $this->browse(function (Browser $browser) use ($service, $audio, $node) {
+        $this->browse(function (Browser $browser) use ($audio, $nodeId, $nodeSlug) {
             $user = User::query()->where('email', 'test-editor@example.com')->first() 
                 ?? User::factory()->create(['email' => 'test-editor@example.com']);
 
@@ -34,7 +47,7 @@ class StudioPlayerEditTest extends DuskTestCase
                 // 1. Open Player Playlist
                 $browser->script("window.MediaStore.setOpen(true)");
                 $browser->script("window.MediaStore.isPlaylistOpen = true");
-                $browser->script("window.MediaStore.activeSegmentSlug = '{$node->slug}'");
+                $browser->script("window.MediaStore.activeSegmentSlug = '{$nodeSlug}'");
                 $browser->waitFor('.playlist', 10);
                 
                 // 2. Edit title in Player
@@ -78,7 +91,8 @@ class StudioPlayerEditTest extends DuskTestCase
                     ->waitForTextIn('#studio-save-status', 'تم الحفظ بنجاح', 10);
                 
                 // 5. Final verification in DB
-                $updatedNode = $service->getNode($audio, (string)$node->id);
+                $service = app(\App\Services\EntityContentService::class);
+                $updatedNode = $service->getNode($audio, $nodeId);
                 $this->assertEquals($newTitle, $updatedNode->title, "Player title was overwritten by stale editor content.");
 
             } finally {

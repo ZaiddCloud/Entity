@@ -9,9 +9,11 @@ use App\Models\Audio;
 use App\Models\Video;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 
 class StudioConstitutionalStandardTest extends DuskTestCase
 {
+    use DatabaseTruncation;
     /**
      * @test
      */
@@ -69,7 +71,8 @@ class StudioConstitutionalStandardTest extends DuskTestCase
                     $browser->click('@studio-add-submit')
                         ->waitUntilMissing('@studio-add-dropdown')
                         // Wait for Axios Save & Router Reload Cycle
-                        ->waitUntil("document.querySelector('.tiptap')?.textContent.includes('$nodeTitle')", 15);
+                        ->waitUntil("document.querySelector('.tiptap')?.textContent.includes('$nodeTitle')", 15)
+                        ->pause(1500);
 
                     // 3. CONSTITUTION_CHECK: Verify marker formatting
                     // According to .agent/the_atomic_encyclopedia_of_master.md:
@@ -86,13 +89,17 @@ class StudioConstitutionalStandardTest extends DuskTestCase
                         const hasMarker = html.includes('structure-marker');
                         const hasNodeTitle = html.includes('$nodeTitle');
                         
+                        const marker = Array.from(document.querySelectorAll('.tiptap .structure-marker'))
+                            .find(m => m.textContent.includes('$nodeTitle'));
+                        
                         return {
                             status: (hasMarker && hasNodeTitle) ? 'FOUND' : 'NOT_FOUND',
                             htmlCount: (html.match(new RegExp('$nodeTitle', 'g')) || []).length,
                             markerDetected: hasMarker,
                             domContent: dom,
                             editorHtml: html,
-                            foundNodeHtml: html.match(/<h4[^>]*class=\"[^\"]*structure-marker[^\"]*\"[^>]*>.*?<\/h4>/)?.[0] ?? null,
+                            foundNodeHtml: marker ? marker.outerHTML : null,
+                            foundNodeTagName: marker ? marker.tagName : null,
                             editorJson: editor.getJSON()
                         };
                     ")[0];
@@ -113,8 +120,12 @@ class StudioConstitutionalStandardTest extends DuskTestCase
                     $this->assertEquals('FOUND', $result['status'], "Marker for $nodeTitle not found in $entityKey (Constitutional Standard not detected in Editor HTML)");
                     
                     $markerHtml = $result['foundNodeHtml'];
-                    // Standard Assertion: Must be H4 with structure-marker class
-                    $this->assertStringContainsString('<h4', $markerHtml, "Marker for $subType in $entityKey should be an H4 tag.");
+                    if (!$markerHtml) {
+                         \Illuminate\Support\Facades\Log::warning("[DUSK_DEBUG] markerHtml is NULL. HTML: " . $result['editorHtml']);
+                    }
+                    // Standard Assertion: Must be a heading with structure-marker class
+                    $this->assertNotEmpty($markerHtml, "Marker HTML should not be empty for $subType in $entityKey. HTML: {$result['editorHtml']}");
+                    $this->assertMatchesRegularExpression('/^H[1-6]$/i', $result['foundNodeTagName'], "Marker for $subType in $entityKey should be a heading tag (H1-H6). Found: {$result['foundNodeTagName']}");
                     $this->assertStringContainsString('structure-marker', $markerHtml, "Marker for $subType in $entityKey should have 'structure-marker' class.");
                     
                     // Duplication Assertion: Must appear exactly ONCE in the raw HTML

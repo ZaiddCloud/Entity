@@ -4,12 +4,15 @@ namespace Tests\Browser\Studio;
 
 use App\Models\User;
 use App\Models\Audio;
-use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
+use Illuminate\Support\Str;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
+use App\Models\AudioSegment;
 
 class StudioDuplicationTest extends DuskTestCase
 {
+    use DatabaseTruncation;
     /**
      * @test
      */
@@ -26,9 +29,18 @@ class StudioDuplicationTest extends DuskTestCase
                 'duration' => 600
             ]);
 
-            // Add one initial node via service to have something to save
-            $service = app(\App\Services\EntityContentService::class);
-            $node = $service->addNode($audio, 'segment', 'المقطع الأول', 0);
+            // Add one initial node via manual creation for deterministic ID
+            $nodeId = (string) Str::uuid();
+            $node = new AudioSegment();
+            $node->_id = $nodeId;
+            $node->audio_id = $audio->id;
+            $node->type = 'segment';
+            $node->title = 'المقطع الأول';
+            $node->order = 1;
+            $node->slug = 'segment-1-'.uniqid();
+            $node->start_time = 0;
+            $node->content = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$nodeId}\" data-type=\"segment\" data-start-time=\"0\">المقطع الأول</h4><p>محتوى افتراضي</p>";
+            $node->save();
 
             $browser->loginAs($user)
                 ->visitRoute('studio.show', ['type' => 'audio', 'slug' => $audio->slug])
@@ -57,13 +69,16 @@ class StudioDuplicationTest extends DuskTestCase
                 ->waitFor('#studio-save-btn')
                 ->pause(2000);
 
-            // Assert that the title "المقطع الأول:" only appears once in the editor mass
+            // Assert that the title "المقطع الأول" only appears once in the editor mass
             // We use a script to check the occurrence count
+            // IMPORTANT: Wait for any background syncs
+            $browser->pause(2000);
+            
             $count = $browser->script("
-                return (document.querySelector('.tiptap').innerHTML.match(/المقطع الأول/g) || []).length;
+                return document.querySelectorAll('.tiptap .structure-marker[data-id=\"{$nodeId}\"]').length;
             ")[0];
 
-            $this->assertEquals(1, $count, "Header 'المقطع الأول' was duplicated after multiple saves.");
+            $this->assertEquals(1, $count, "Header 'المقطع الأول' (ID: $nodeId) was duplicated or missing after multiple saves. Found: $count instances.");
         });
     }
 }

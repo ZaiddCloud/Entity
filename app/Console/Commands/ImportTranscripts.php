@@ -260,7 +260,7 @@ class ImportTranscripts extends Command
                 $currentSegment = [
                     'title' => $title,
                     'start' => $seconds,
-                    'content' => "<strong>$title</strong>\n" // Keep title at start, bolded
+                    'content' => "" // Clean start, title is handled by Studio markers
                 ];
 
                 // If there was text in the same line after removing time, add it to content?
@@ -313,33 +313,21 @@ class ImportTranscripts extends Command
                 continue;
             }
 
+            $htmlContent = nl2br(trim($seg['content']));
+            $plainText = trim(strip_tags($seg['content']));
+            $jsonContent = $this->generateJsonContent($seg['title'], $seg['content']);
+
             // Create Node
-            $node = $this->contentService->createNode($media, [
+            $this->contentService->createNode($media, [
                 'type' => $nodeType,
                 'title' => $seg['title'],
                 'slug' => Str::slug($seg['title']) . '-' . Str::random(6),
-                'content' => '', // Will update after getting ID
+                'content' => $htmlContent,
+                'json_content' => $jsonContent,
+                'plain_text' => $plainText,
                 'start_time' => $seg['start'],
-                'end_time' => $endTime,
-                'order' => $startOrder + $index,
-                'plain_text' => trim(strip_tags($seg['content']))
-            ]);
-
-            // Construct Constitutional HTML (Requires Node ID)
-            $startTime = $seg['start'];
-            $title = $seg['title'];
-            $nodeId = $node->id;
-            
-            $headerHtml = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$nodeId}\" data-type=\"{$nodeType}\" data-start-time=\"{$startTime}\">{$title}</h4>";
-            $contentHtml = "<p>" . trim(str_replace("<strong>$title</strong>", "", $seg['content'])) . "</p>";
-            
-            $fullHtml = $headerHtml . $contentHtml;
-            $jsonContent = $this->generateJsonContent($title, $seg['content'], $nodeId, $startTime, $nodeType);
-
-            // Update with full content
-            $node->update([
-                'content' => $fullHtml,
-                'json_content' => $jsonContent
+                'end_time' => $endTime, // Calculate duration based on next segment
+                'order' => $startOrder + $index
             ]);
 
             $this->line("      <fg=green>✓</> Created: [{$this->secondsToTime($seg['start'])}] {$seg['title']}");
@@ -356,63 +344,17 @@ class ImportTranscripts extends Command
     }
 
     /**
-     * Generate Tiptap JSON with Structure Marker
+     * Generate a basic Tiptap JSON structure
      */
-    protected function generateJsonContent($title, $rawContent, $nodeId, $startTime, $nodeType = 'segment')
+    protected function generateJsonContent($title, $rawContent)
     {
         $contentNodes = [];
 
-        // 1. Add Heading Marker
-        $contentNodes[] = [
-            'type' => 'heading',
-            'attrs' => [
-                'level' => 4,
-                'textAlign' => 'right',
-                'class' => 'structure-marker',
-                'id' => null
-            ],
-            'content' => [ // The content inside the H4
-                 [
-                    'type' => 'text',
-                    'marks' => [
-                        [
-                            'type' => 'segmentLink',
-                            'attrs' => [
-                                'link' => 'true',
-                                'json' => (string) $nodeId, // Legacy attr name in extension? Checking TiptapEditor... 
-                                // Actually TiptapEditor.vue maps attributes:
-                                // link: element.getAttribute('data-segment-link'),
-                                // json: element.getAttribute('data-segment-link-json') -> This looks like specific JSON data
-                                // Let's look at CustomHeading extension in TiptapEditor again.
-                                // It parses `data-id`, `data-start-time`. 
-                                // The JSON structure for extensions often differs from HTML attributes.
-                                // For simplicity/safety, we will Generate TEXT node matching the HTML structure:
-                                // Heading (level 4, class=structure-marker) -> Text ("Title:")
-                                // We don't necessarily need the custom mark in JSON if the extension relies on parsing HTML.
-                                // BUT, if we load JSON directly, we need it.
-                                
-                                // Correct Approach: The Editor re-parses HTML on load usually.
-                                // But let's try to match the "Heading" node spec.
-                                // We'll stick to a simple Heading node for now, as the Tiptap extension will likely Hydrate it from HTML mostly.
-                            ]
-                        ]
-                    ],
-                    'text' => $title
-                 ]
-            ]
-        ];
-        
-        // Wait, the CustomHeading extension uses `addAttributes` to map HTML attributes to Node Attributes.
-        // So we should pass them as `attrs`.
-        $contentNodes[0]['attrs'] = array_merge($contentNodes[0]['attrs'], [
-            'data-segment-link' => 'true',
-            'data-id' => (string) $nodeId,
-            'data-type' => $nodeType,
-            'data-start-time' => (string) $startTime
-        ]);
+        // Note: Title/Marker is added dynamically by Studio on load.
+        // We only store the transcript text here.
 
-        // 2. Add Content paragraphs
-        $lines = explode("\n", trim(str_replace("<strong>$title</strong>", "", $rawContent)));
+        // Add Content paragraphs
+        $lines = explode("\n", trim($rawContent));
         foreach ($lines as $line) {
             $line = trim($line);
             if (empty($line)) continue;

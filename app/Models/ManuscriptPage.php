@@ -18,6 +18,9 @@ use MongoDB\Laravel\Eloquent\Model;
  * @property string|null $image_url
  * @property string|null $transcription_status
  * @property string|null $content
+ * @property bool|null $is_manually_edited
+ * @property string|null $resource_url
+ * @property string|null $parent_id
  * @property array|null $versions
  * @property-read \App\Models\Manuscript $manuscript
  * @mixin \Illuminate\Database\Eloquent\Builder
@@ -26,27 +29,25 @@ class ManuscriptPage extends Model
 {
     protected $connection = 'mongodb';
     protected $collection = 'manuscript_pages';
+    protected $primaryKey = '_id';
+    protected $keyType = 'string';
+    public $incrementing = false;
 
-    protected $fillable = [
-        'manuscript_id',
-        'slug',
-        'type',
-        'title',
-        'order',
-        'content_blocks',
-        'metadata',
-        'last_updated',
-        'folio_number',
-        'image_url',
-        'transcription_status',
-        'content',
-        'json_content',
-        'plain_text',
-    ];
+    protected $guarded = [];
 
     public function manuscript()
     {
         return $this->belongsTo(Manuscript::class, 'manuscript_id', 'id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(ManuscriptPage::class, 'parent_id', '_id');
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(ManuscriptPage::class, 'parent_id', '_id');
     }
 
     public function createVersion($description = 'Manual Edit')

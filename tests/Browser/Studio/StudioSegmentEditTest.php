@@ -6,9 +6,13 @@ use App\Models\User;
 use App\Models\Audio;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
+use Illuminate\Support\Str;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
+use App\Models\AudioSegment;
 
 class StudioSegmentEditTest extends DuskTestCase
 {
+    use DatabaseTruncation;
     /**
      * @test
      */
@@ -25,8 +29,16 @@ class StudioSegmentEditTest extends DuskTestCase
             ]);
 
             // Add an initial node
-            $service = app(\App\Services\EntityContentService::class);
-            $node = $service->addNode($audio, 'segment', 'Initial Title', 0);
+            $nodeId = (string) Str::uuid();
+            $node = new AudioSegment();
+            $node->_id = $nodeId;
+            $node->audio_id = $audio->id;
+            $node->type = 'segment';
+            $node->title = 'Initial Title';
+            $node->order = 1;
+            $node->slug = 'initial-title-'.uniqid();
+            $node->start_time = 0;
+            $node->save();
 
             $browser->loginAs($user)
                 ->visitRoute('studio.show', ['type' => 'audio', 'slug' => $audio->slug])
@@ -61,7 +73,8 @@ class StudioSegmentEditTest extends DuskTestCase
                 ->pause(4000);
 
             // Verify in Database
-            $updatedNode = $service->getNode($audio, $node->_id ?? $node->id);
+            $service = app(\App\Services\EntityContentService::class);
+            $updatedNode = $service->getNode($audio, $nodeId);
             $this->assertEquals('Updated Segment Title', $updatedNode->title, "Segment title was not updated in database.");
         });
     }
@@ -81,8 +94,16 @@ class StudioSegmentEditTest extends DuskTestCase
                 'duration' => 600
             ]);
 
-            $service = app(\App\Services\EntityContentService::class);
-            $node = $service->addNode($audio, 'segment', 'Original Editor Title', 0);
+            $nodeId = (string) Str::uuid();
+            $node = new AudioSegment();
+            $node->_id = $nodeId;
+            $node->audio_id = $audio->id;
+            $node->type = 'segment';
+            $node->title = 'Original Editor Title';
+            $node->order = 1;
+            $node->slug = 'original-editor-title-'.uniqid();
+            $node->start_time = 0;
+            $node->save();
 
             $browser->loginAs($user)
                 ->visitRoute('studio.show', ['type' => 'audio', 'slug' => $audio->slug])
@@ -92,19 +113,20 @@ class StudioSegmentEditTest extends DuskTestCase
             // We mimic the exact marker format producing an updated title
             $newTitle = "Manually Edited Title";
             $startTime = 0;
-            $headerHtml = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$node->id}\" data-type=\"segment\" data-start-time=\"{$startTime}\">{$newTitle}</h4>";
+            $headerHtml = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$nodeId}\" data-type=\"segment\" data-start-time=\"{$startTime}\">{$newTitle}</h4>";
             $contentHtml = "<p>New segment content</p>";
             
             $fullHtml = $headerHtml . $contentHtml;
             
             $browser->script("window.EditorStore.updateContent('{$fullHtml}')");
-            $browser->pause(1000); // Wait for Tiptap to catch up
+            $browser->pause(1000);
             
             $browser->click('#studio-save-btn')
                 ->waitForText('تم الحفظ بنجاح', 10);
 
             // Verify in Database
-            $updatedNode = $service->getNode($audio, $node->_id ?? $node->id);
+            $service = app(\App\Services\EntityContentService::class);
+            $updatedNode = $service->getNode($audio, $nodeId);
             $this->assertEquals($newTitle, $updatedNode->title, "Segment title edited in editor was not updated in database.");
         });
     }
@@ -124,10 +146,28 @@ class StudioSegmentEditTest extends DuskTestCase
                 'duration' => 600
             ]);
 
-            $service = app(\App\Services\EntityContentService::class);
             // Create two segments
-            $nodeA = $service->addNode($audio, 'segment', 'Segment A', 0);
-            $nodeB = $service->addNode($audio, 'segment', 'Segment B', 10);
+            $nodeAId = (string) Str::uuid();
+            $nodeA = new AudioSegment();
+            $nodeA->_id = $nodeAId;
+            $nodeA->audio_id = $audio->id;
+            $nodeA->type = 'segment';
+            $nodeA->title = 'Segment A';
+            $nodeA->order = 1;
+            $nodeA->slug = 'segment-a-'.uniqid();
+            $nodeA->start_time = 0;
+            $nodeA->save();
+
+            $nodeBId = (string) Str::uuid();
+            $nodeB = new AudioSegment();
+            $nodeB->_id = $nodeBId;
+            $nodeB->audio_id = $audio->id;
+            $nodeB->type = 'segment';
+            $nodeB->title = 'Segment B';
+            $nodeB->order = 2;
+            $nodeB->slug = 'segment-b-'.uniqid();
+            $nodeB->start_time = 10;
+            $nodeB->save();
 
             $browser->loginAs($user)
                 ->visitRoute('studio.show', ['type' => 'audio', 'slug' => $audio->slug])
@@ -140,8 +180,8 @@ class StudioSegmentEditTest extends DuskTestCase
             $newTitleB = "Updated Beta";
             $newContentB = "<p>Content for Beta</p>";
 
-            $htmlB = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$nodeB->id}\" data-type=\"segment\" data-start-time=\"10\">{$newTitleB}</h4>" . $newContentB;
-            $htmlA = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$nodeA->id}\" data-type=\"segment\" data-start-time=\"0\">{$newTitleA}</h4>" . $newContentA;
+            $htmlB = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$nodeBId}\" data-type=\"segment\" data-start-time=\"10\">{$newTitleB}</h4>" . $newContentB;
+            $htmlA = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$nodeAId}\" data-type=\"segment\" data-start-time=\"0\">{$newTitleA}</h4>" . $newContentA;
             
             // Reversed order in HTML mass
             $fullHtml = $htmlB . "<p><br/></p>" . $htmlA;
@@ -153,12 +193,13 @@ class StudioSegmentEditTest extends DuskTestCase
                 ->waitForText('تم الحفظ بنجاح', 10);
 
             // Verify Segment A correctly mapped its content despite being second in HTML
-            $updatedA = $service->getNode($audio, (string)$nodeA->id);
+            $service = app(\App\Services\EntityContentService::class);
+            $updatedA = $service->getNode($audio, $nodeAId);
             $this->assertEquals($newTitleA, $updatedA->title, "Segment A title mapping failed in reversed order.");
             $this->assertStringContainsString("Content for Alpha", $updatedA->content, "Segment A content mapping failed in reversed order.");
 
             // Verify Segment B correctly mapped its content despite being first in HTML
-            $updatedB = $service->getNode($audio, (string)$nodeB->id);
+            $updatedB = $service->getNode($audio, $nodeBId);
             $this->assertEquals($newTitleB, $updatedB->title, "Segment B title mapping failed in reversed order.");
             $this->assertStringContainsString("Content for Beta", $updatedB->content, "Segment B content mapping failed in reversed order.");
         });
@@ -179,8 +220,16 @@ class StudioSegmentEditTest extends DuskTestCase
                 'duration' => 600
             ]);
 
-            $service = app(\App\Services\EntityContentService::class);
-            $node = $service->addNode($audio, 'segment', 'Initial Title', 0);
+            $nodeId = (string) Str::uuid();
+            $node = new AudioSegment();
+            $node->_id = $nodeId;
+            $node->audio_id = $audio->id;
+            $node->type = 'segment';
+            $node->title = 'Initial Title';
+            $node->order = 1;
+            $node->slug = 'initial-title-'.uniqid();
+            $node->start_time = 0;
+            $node->save();
 
             $browser->loginAs($user)
                 ->visitRoute('studio.show', ['type' => 'audio', 'slug' => $audio->slug])
@@ -189,7 +238,7 @@ class StudioSegmentEditTest extends DuskTestCase
             $newTitle = "Title Checked After Reload";
             $newContent = "Content that should survive reload";
             $startTime = 0;
-            $headerHtml = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$node->id}\" data-type=\"segment\" data-start-time=\"{$startTime}\">{$newTitle}</h4>";
+            $headerHtml = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$nodeId}\" data-type=\"segment\" data-start-time=\"{$startTime}\">{$newTitle}</h4>";
             $contentHtml = "<p>{$newContent}</p>";
             
             $browser->script("window.EditorStore.updateContent('{$headerHtml}{$contentHtml}')");
@@ -207,7 +256,8 @@ class StudioSegmentEditTest extends DuskTestCase
             $browser->assertSee($newTitle)
                 ->assertSee($newContent);
 
-            $updatedNode = $service->getNode($audio, (string)$node->id);
+            $service = app(\App\Services\EntityContentService::class);
+            $updatedNode = $service->getNode($audio, $nodeId);
             $this->assertEquals($newTitle, $updatedNode->title, "Title did not persist after reload.");
             $this->assertStringContainsString($newContent, $updatedNode->content, "Content did not persist after reload.");
         });
@@ -227,8 +277,16 @@ class StudioSegmentEditTest extends DuskTestCase
                 'slug' => 'format-test-' . uniqid()
             ]);
 
-            $service = app(\App\Services\EntityContentService::class);
-            $node = $service->addNode($audio, 'segment', 'Initial', 0);
+            $nodeId = (string) Str::uuid();
+            $node = new AudioSegment();
+            $node->_id = $nodeId;
+            $node->audio_id = $audio->id;
+            $node->type = 'segment';
+            $node->title = 'Initial';
+            $node->order = 1;
+            $node->slug = 'initial-'.uniqid();
+            $node->start_time = 0;
+            $node->save();
 
             $browser->loginAs($user)
                 ->visitRoute('studio.show', ['type' => 'audio', 'slug' => $audio->slug])
@@ -245,7 +303,8 @@ class StudioSegmentEditTest extends DuskTestCase
                 ->waitForText('تم الحفظ بنجاح', 10);
 
             // Fetch from DB directly
-            $updatedNode = $service->getNode($audio, (string)$node->id);
+            $service = app(\App\Services\EntityContentService::class);
+            $updatedNode = $service->getNode($audio, $nodeId);
             
             $this->assertNotNull($updatedNode->content, "HTML content is null in DB.");
             $this->assertNotNull($updatedNode->json_content, "JSON content is null in DB.");
@@ -271,8 +330,16 @@ class StudioSegmentEditTest extends DuskTestCase
                 'slug' => 'arabic-test-' . uniqid()
             ]);
 
-            $service = app(\App\Services\EntityContentService::class);
-            $node = $service->addNode($audio, 'segment', 'عنوان قديم', 0);
+            $nodeId = (string) Str::uuid();
+            $node = new AudioSegment();
+            $node->_id = $nodeId;
+            $node->audio_id = $audio->id;
+            $node->type = 'segment';
+            $node->title = 'عنوان قديم';
+            $node->order = 1;
+            $node->slug = 'old-arabic-title-'.uniqid();
+            $node->start_time = 0;
+            $node->save();
 
             $browser->loginAs($user)
                 ->visitRoute('studio.show', ['type' => 'audio', 'slug' => $audio->slug])
@@ -282,7 +349,7 @@ class StudioSegmentEditTest extends DuskTestCase
             $newContent = "محتوى عربي محفوظ في قاعدة البيانات";
             
             // Reconstruct full HTML with Arabic
-            $html = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$node->id}\" data-type=\"segment\" data-start-time=\"0\">{$newTitle}</h4><p>{$newContent}</p>";
+            $html = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$nodeId}\" data-type=\"segment\" data-start-time=\"0\">{$newTitle}</h4><p>{$newContent}</p>";
             
             $browser->script("window.EditorStore.updateContent('{$html}')");
             $browser->pause(1000);
@@ -297,7 +364,8 @@ class StudioSegmentEditTest extends DuskTestCase
                 ->assertSee($newTitle)
                 ->assertSee($newContent);
 
-            $updatedNode = $service->getNode($audio, (string)$node->id);
+            $service = app(\App\Services\EntityContentService::class);
+            $updatedNode = $service->getNode($audio, $nodeId);
             $this->assertEquals($newTitle, $updatedNode->title);
             $this->assertStringContainsString($newContent, $updatedNode->content);
         });

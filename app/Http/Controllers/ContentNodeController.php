@@ -28,7 +28,8 @@ class ContentNodeController extends Controller
         $request->validate([
             'type' => 'required|string',
             'title' => 'required|string',
-            'time' => 'nullable|numeric'
+            'time' => 'nullable|numeric',
+            'parent_id' => 'nullable|string'
         ]);
 
         $entityType = EntityType::tryFrom($type);
@@ -54,7 +55,8 @@ class ContentNodeController extends Controller
             $entity,
             $request->input('type'),
             $request->input('title'),
-            $request->input('time')
+            $request->input('time'),
+            $request->input('parent_id')
         );
 
         return response()->json([

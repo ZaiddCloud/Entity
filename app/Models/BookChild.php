@@ -27,25 +27,10 @@ class BookChild extends Model
 {
     protected $connection = 'mongodb';
     protected $collection = 'book_children';
-
-    protected $fillable = [
-        'book_id',
-        'parent_id',
-        'slug',
-        'type',
-        'title',
-        'order',
-        'language',
-        'version',
-        'content_blocks',
-        'metadata',
-        'last_updated',
-        'is_manually_edited',
-        'versions',
-        'content',
-        'json_content',
-        'plain_text',
-    ];
+    protected $primaryKey = '_id';
+    protected $keyType = 'string';
+    public $incrementing = false;
+    protected $guarded = [];
 
     /**
      * Create a snapshot of current content blocks.
@@ -68,5 +53,15 @@ class BookChild extends Model
     public function book()
     {
         return $this->belongsTo(Book::class, 'book_id', 'id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(BookChild::class, 'parent_id', '_id');
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(BookChild::class, 'parent_id', '_id');
     }
 }

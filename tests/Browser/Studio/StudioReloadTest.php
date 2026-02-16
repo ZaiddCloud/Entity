@@ -6,9 +6,13 @@ use App\Models\User;
 use App\Models\Audio;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
+use App\Models\AudioSegment;
+use Illuminate\Support\Str;
 
 class StudioReloadTest extends DuskTestCase
 {
+    use DatabaseTruncation;
     /**
      * @test
      */
@@ -23,9 +27,27 @@ class StudioReloadTest extends DuskTestCase
                 'slug' => 'p-stress-' . uniqid()
             ]);
 
-            $service = app(\App\Services\EntityContentService::class);
-            $nodeA = $service->addNode($audio, 'segment', 'المقطع الأول', 0);
-            $nodeB = $service->addNode($audio, 'segment', 'المقطع الثاني', 10);
+            $nodeAId = (string) Str::uuid();
+            $nodeA = new AudioSegment();
+            $nodeA->_id = $nodeAId;
+            $nodeA->audio_id = $audio->id;
+            $nodeA->type = 'segment';
+            $nodeA->title = 'المقطع الأول';
+            $nodeA->order = 1;
+            $nodeA->slug = 'segment-1-'.uniqid();
+            $nodeA->start_time = 0;
+            $nodeA->save();
+
+            $nodeBId = (string) Str::uuid();
+            $nodeB = new AudioSegment();
+            $nodeB->_id = $nodeBId;
+            $nodeB->audio_id = $audio->id;
+            $nodeB->type = 'segment';
+            $nodeB->title = 'المقطع الثاني';
+            $nodeB->order = 2;
+            $nodeB->slug = 'segment-2-'.uniqid();
+            $nodeB->start_time = 10;
+            $nodeB->save();
 
             $browser->loginAs($user)
                 ->visitRoute('studio.show', ['type' => 'audio', 'slug' => $audio->slug])
@@ -37,9 +59,9 @@ class StudioReloadTest extends DuskTestCase
             $newContentB = "محتوى مقطع ب المعدل";
             
             // REORDER B before A in the editor
-            $markerB = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$nodeB->id}\" data-type=\"segment\" data-start-time=\"10\">{$newTitleB}</h4>";
+            $markerB = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$nodeBId}\" data-type=\"segment\" data-start-time=\"10\">{$newTitleB}</h4>";
             $contentB = "<p>{$newContentB}</p>";
-            $markerA = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$nodeA->id}\" data-type=\"segment\" data-start-time=\"0\">{$newTitleA}</h4>";
+            $markerA = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$nodeAId}\" data-type=\"segment\" data-start-time=\"0\">{$newTitleA}</h4>";
             $contentA = "<p>{$newContentA}</p>";
             
             $fullHtml = $markerB . $contentB . $markerA . $contentA;
@@ -63,8 +85,9 @@ class StudioReloadTest extends DuskTestCase
                 ->assertSee($newContentA);
             
             // Assert Database State
-            $freshA = $service->getNode($audio, (string)$nodeA->id);
-            $freshB = $service->getNode($audio, (string)$nodeB->id);
+            $service = app(\App\Services\EntityContentService::class);
+            $freshA = $service->getNode($audio, $nodeAId);
+            $freshB = $service->getNode($audio, $nodeBId);
             
             $this->assertEquals($newTitleA, $freshA->title, "Segment A title mismatch.");
             $this->assertEquals($newTitleB, $freshB->title, "Segment B title mismatch.");

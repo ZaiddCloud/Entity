@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, onBeforeUnmount } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
+import { Extension } from '@tiptap/core'
 import { useEditorStore } from '@/Technologies/Store/EditorStore'
 import { useTiptapStore } from './TiptapStore'
 import StarterKit from '@tiptap/starter-kit'
@@ -37,44 +38,19 @@ import { DragHandleExtension } from '../Extensions/DragHandle/DragHandleExtensio
 // Interactive Segments
 import { SegmentLink } from '../Extensions/SegmentLink'
 import { useMediaStore } from '@/Technologies/Store/MediaStore'
-import { Extension } from '@tiptap/core'
-
 import Heading from '@tiptap/extension-heading'
 
-/**
- * Step 4: Content Node Commands Extension
- * Extended to support the "Signature" required by the Smart Splitter (Encyclopedia III.1)
- */
 const CustomHeading = Heading.extend({
-    name: 'heading', // Use the same name to override
-
+    name: 'heading',
     addAttributes() {
         return {
-            level: {
-                default: 1,
-            },
+            ...this.parent?.(),
             class: {
                 default: null,
-                parseHTML: element => {
-                    const val = element.getAttribute('class')
-                    if (val?.includes('structure-marker')) console.log('[Tiptap] Parsed structure-marker class:', val)
-                    return val
-                },
+                parseHTML: element => element.getAttribute('class'),
                 renderHTML: attributes => {
                     if (!attributes.class) return {}
                     return { class: attributes.class }
-                }
-            },
-            'data-segment-link': {
-                default: null,
-                parseHTML: element => {
-                    const val = element.getAttribute('data-segment-link') || (element.hasAttribute('data-segment-link') ? 'true' : null)
-                    if (val) console.log('[Tiptap] Parsed data-segment-link:', val)
-                    return val
-                },
-                renderHTML: attributes => {
-                    if (!attributes['data-segment-link']) return {}
-                    return { 'data-segment-link': attributes['data-segment-link'] }
                 }
             },
             'data-id': {
@@ -92,65 +68,69 @@ const CustomHeading = Heading.extend({
                     if (!attributes['data-type']) return {}
                     return { 'data-type': attributes['data-type'] }
                 }
-            },
-            'data-start-time': {
+            }
+        }
+    },
+    parseHTML() {
+        return [
+            {
+                tag: 'h1, h2, h3, h4, h5, h6',
+                getAttrs: element => ({ 
+                    level: parseInt(element.tagName.substring(1)),
+                    class: element.getAttribute('class'),
+                    'data-id': element.getAttribute('data-id'),
+                    'data-type': element.getAttribute('data-type')
+                }),
+                priority: 2000,
+            }
+        ]
+    }
+})
+
+import Paragraph from '@tiptap/extension-paragraph'
+
+const CustomParagraph = Paragraph.extend({
+    name: 'paragraph',
+    addAttributes() {
+        return {
+            ...this.parent?.(),
+            class: {
                 default: null,
-                parseHTML: element => element.getAttribute('data-start-time'),
+                parseHTML: element => element.getAttribute('class'),
                 renderHTML: attributes => {
-                    if (attributes['data-start-time'] === null) return {}
-                    return { 'data-start-time': attributes['data-start-time'] }
+                    if (!attributes.class) return {}
+                    return { class: attributes.class }
                 }
             },
-            'data-folio': {
+            'data-id': {
                 default: null,
-                parseHTML: element => element.getAttribute('data-folio'),
+                parseHTML: element => element.getAttribute('data-id'),
                 renderHTML: attributes => {
-                    if (!attributes['data-folio']) return {}
-                    return { 'data-folio': attributes['data-folio'] }
+                    if (!attributes['data-id']) return {}
+                    return { 'data-id': attributes['data-id'] }
                 }
             },
-            'data-page': {
+            'data-type': {
                 default: null,
-                parseHTML: element => element.getAttribute('data-page'),
+                parseHTML: element => element.getAttribute('data-type'),
                 renderHTML: attributes => {
-                    if (!attributes['data-page']) return {}
-                    return { 'data-page': attributes['data-page'] }
+                    if (!attributes['data-type']) return {}
+                    return { 'data-type': attributes['data-type'] }
                 }
             }
         }
     },
-
     parseHTML() {
         return [
             {
-                tag: 'h1',
-                getAttrs: element => ({ level: 1 }),
-            },
-            {
-                tag: 'h2',
-                getAttrs: element => ({ level: 2 }),
-            },
-            {
-                tag: 'h3',
-                getAttrs: element => ({ level: 3 }),
-            },
-            {
-                tag: 'h4',
-                getAttrs: element => ({ 
-                    level: 4,
+                tag: 'p',
+                getAttrs: element => ({
                     class: element.getAttribute('class'),
-                    'data-segment-link': element.hasAttribute('data-segment-link') ? 'true' : null
+                    'data-id': element.getAttribute('data-id'),
+                    'data-type': element.getAttribute('data-type')
                 }),
-                priority: 1500, // Very high priority
-            },
-            {
-                tag: 'h5',
-                getAttrs: element => ({ level: 5 }),
-            },
-            {
-                tag: 'h6',
-                getAttrs: element => ({ level: 6 }),
-            },
+                priority: 1000,
+            }
         ]
     }
 })
@@ -216,11 +196,13 @@ const editor = useEditor({
     editable: props.editable,
     extensions: [
         StarterKit.configure({
-            heading: false // Disable default heading
+            heading: false,
+            paragraph: false
         }),
         CustomHeading.configure({
             levels: [1, 2, 3, 4, 5, 6]
         }),
+        CustomParagraph,
         // Underline, // Potentially duplicated
         TextAlign.configure({
             types: ['heading', 'paragraph'],

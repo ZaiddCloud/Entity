@@ -7,9 +7,12 @@ use App\Models\Audio;
 use App\Models\AudioSegment;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
+use Illuminate\Support\Str;
 
 class StudioSmartSplitterTest extends DuskTestCase
 {
+    use DatabaseTruncation;
     /**
      * Test that the Full View UI loads correctly (Smoke Test).
      * Detailed logic is tested in Feature/Studio/SmartSplitterTest.php
@@ -29,23 +32,27 @@ class StudioSmartSplitterTest extends DuskTestCase
         ]);
         
         // Create 2 segments directly
-        \App\Models\AudioSegment::create([
-            'audio_id' => $audio->id,
-            'title' => 'المقطع الأول',
-            'slug' => 'segment-1-' . $uniqueId,
-            'order' => 1,
-            'start_time' => 0,
-            'content' => '<p>محتوى المقطع الأول</p>'
-        ]);
+        $s1Id = (string) Str::uuid();
+        $s1 = new AudioSegment();
+        $s1->_id = $s1Id;
+        $s1->audio_id = $audio->id;
+        $s1->title = 'المقطع الأول';
+        $s1->slug = 'segment-1-' . $uniqueId;
+        $s1->order = 1;
+        $s1->start_time = 0;
+        $s1->content = '<p>محتوى المقطع الأول</p>';
+        $s1->save();
         
-        \App\Models\AudioSegment::create([
-            'audio_id' => $audio->id,
-            'title' => 'المقطع الثاني',
-            'slug' => 'segment-2-' . $uniqueId,
-            'order' => 2,
-            'start_time' => 300,
-            'content' => '<p>محتوى افتراضي للمقطع الثاني.</p>'
-        ]);
+        $s2Id = (string) Str::uuid();
+        $s2 = new AudioSegment();
+        $s2->_id = $s2Id;
+        $s2->audio_id = $audio->id;
+        $s2->title = 'المقطع الثاني';
+        $s2->slug = 'segment-2-' . $uniqueId;
+        $s2->order = 2;
+        $s2->start_time = 300;
+        $s2->content = '<p>محتوى افتراضي للمقطع الثاني.</p>';
+        $s2->save();
         
         $this->browse(function (Browser $browser) use ($user, $audio) {
             $browser->loginAs($user)

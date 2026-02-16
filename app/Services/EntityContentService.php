@@ -57,7 +57,7 @@ class EntityContentService
      * إضافة عقدة جديدة (Add Node Wrapper)
      * تقوم بتجهيز البيانات (Slug, Order) ثم استدعاء createNode
      */
-    public function addNode(Entity $entity, string $type, string $title, $time = null): Model
+    public function addNode(Entity $entity, string $type, string $title, $time = null, ?string $parentId = null): Model
     {
         $maxOrder = $this->getMaxOrder($entity);
         
@@ -66,6 +66,7 @@ class EntityContentService
             'title' => $title,
             'order' => $maxOrder + 1,
             'slug' => \Illuminate\Support\Str::slug($title) . '-' . uniqid(), // Ensure uniqueness
+            'parent_id' => $parentId,
         ];
         
         if ($time !== null && in_array(class_basename($entity), ['Audio', 'Video'])) {
@@ -331,57 +332,86 @@ class EntityContentService
         // Load full data for children (since getHierarchy might be light)
         $modelClass = $this->getContentModel($entity);
         $foreignKey = $this->getEntityIdField($entity);
+        
+        // Check if this model supports hierarchical structure
+        $supportsHierarchy = in_array(class_basename($entity), ['Book', 'Manuscript']);
+        
+        if ($supportsHierarchy) {
+            // For hierarchical models: only get root nodes, then recurse
+            $rootNodes = $entity->children()
+                ->whereNull('parent_id')
+                ->orderBy('order', 'asc')
+                ->get();
 
-        $query = $modelClass::where($foreignKey, $entity->id);
-
-        if (in_array(class_basename($entity), ['Audio', 'Video'])) {
-            $query->orderBy('start_time', 'asc')->orderBy('order', 'asc');
-        } else {
-            $query->orderBy('order', 'asc');
+            $fullTranscript = '';
+            foreach ($rootNodes as $node) {
+            $fullTranscript .= $this->renderNodeWithDescendants($entity, $node);
         }
-
-        $fullChildren = $query->get();
-        \Illuminate\Support\Facades\Log::debug('[EntityContentService] Aggregating content', [
-            'count' => $fullChildren->count(),
-            'titles' => $fullChildren->pluck('title')->toArray()
-        ]);
-
-        $fullTranscript = '';
-        $type = strtolower(class_basename($entity));
-
-        foreach ($fullChildren as $index => $child) {
-            $title = $child->title ?: "قسم " . ($index + 1);
-
-            // Header Signature: <h4 class="structure-marker" data-segment-link="true" data-id="ID" data-start-time="TIME" data-folio="FOLIO" data-page="PAGE">TITLE:</h4>
-            $startTime = $child->start_time ?? 0;
-            $folio = $child->folio ?? null;
-            $page = $child->page ?? null;
+    } else {
+            // For flat models (Audio/Video): get all children and render them directly
+            $allNodes = $entity->children()->orderBy('order', 'asc')->get();
             
-            $marker = "<h4 class=\"structure-marker\" ";
-            $marker .= "data-segment-link=\"true\" ";
-            $marker .= "data-id=\"{$child->id}\" ";
-            $marker .= "data-type=\"{$child->type}\" ";
-            $marker .= "data-start-time=\"{$startTime}\" ";
-            if ($folio) $marker .= "data-folio=\"{$folio}\" ";
-            if ($page) $marker .= "data-page=\"{$page}\" ";
-            $marker .= ">{$title}</h4>";
+            $fullTranscript = '';
+            $type = strtolower(class_basename($entity));
             
-            \Illuminate\Support\Facades\Log::debug('[EntityContentService] Generated Marker', ['html' => $marker]);
-
-            $fullTranscript .= $marker;
-
-            $content = $child->content ?: '';
-
-            // Handle Video special case (if no content but has description)
-            if ($type === 'video' && empty($content) && $child->description) {
-                $content = "<p>{$child->description}</p>";
+            foreach ($allNodes as $node) {
+                $title = $node->title ?: "قسم";
+                $level = 'h4'; // Use H4 for flat segments/scenes as per standard
+                
+                $marker = "<{$level} class=\"structure-marker\" ";
+                $marker .= "data-segment-link=\"true\" ";
+                $marker .= "data-id=\"{$node->id}\" ";
+                $marker .= "data-type=\"{$node->type}\" ";
+                if (isset($node->start_time)) $marker .= "data-start-time=\"{$node->start_time}\" ";
+                $marker .= ">{$title}</{$level}>";
+                
+                $fullTranscript .= $marker;
+                $content = $node->content ?: '';
+                
+                if ($type === 'video' && empty($content) && $node->description) {
+                    $content = "<p>{$node->description}</p>";
+                }
+                
+                $fullTranscript .= $content;
+                $fullTranscript .= "<p><br/></p>";
             }
-
-            $fullTranscript .= $content;
-            $fullTranscript .= "<p><br/></p>"; // Space between nodes
         }
 
         return $fullTranscript;
+    }
+
+    protected function renderNodeWithDescendants(Entity $entity, Model $node): string
+    {
+        $type = strtolower(class_basename($entity));
+        $title = $node->title ?: "قسم";
+        
+        $level = $this->getHeadingLevel($node);
+        $tagClass = ($node->type === 'paragraph') ? 'structure-marker-text' : 'structure-marker';
+        
+        $marker = "<{$level} class=\"{$tagClass}\" ";
+        $marker .= "data-id=\"{$node->id}\" ";
+        $marker .= "data-type=\"{$node->type}\" ";
+        $marker .= ">";
+        $marker .= $node->title ?: $node->content;
+        $marker .= "</{$level}>";
+        
+        $html = $marker;
+        $content = $node->content ?: '';
+        
+        if ($type === 'video' && empty($content) && $node->description) {
+            $content = "<p>{$node->description}</p>";
+        }
+        
+        $html .= $content;
+        $html .= "<p><br/></p>";
+
+        // Recurse
+        $children = $node->children()->orderBy('order', 'asc')->get();
+        foreach ($children as $child) {
+            $html .= $this->renderNodeWithDescendants($entity, $child);
+        }
+
+        return $html;
     }
 
     /**
@@ -418,5 +448,88 @@ class EntityContentService
             ->firstOrFail();
 
         return $node->delete();
+    }
+
+    /**
+     * حساب عمق العقدة في الهيكل الشجري
+     */
+    public function getDepth(Model $node): int
+    {
+        $depth = 0;
+        $current = $node;
+
+        while ($current->parent_id) {
+            $depth++;
+            $parent = $current->parent;
+            if (!$parent) break;
+            $current = $parent;
+        }
+
+        return $depth;
+    }
+
+    /**
+     * تحديد مستوى العنوان (H2-H6) بناءً على العمق والنوع
+     */
+    public function getHeadingLevel(Model $node): string
+    {
+        if ($node->type === 'paragraph') {
+            return 'p';
+        }
+
+        $depth = $this->getDepth($node);
+        $level = $depth + 2;
+
+        return $level > 6 ? 'h6' : "h{$level}";
+    }
+
+    /**
+     * جلب كافة المحتوى لفرع شجري بالكامل (Node + Descendants)
+     */
+    public function getBranchContent(Entity $entity, string $nodeId): string
+    {
+        $rootNode = $this->getNode($entity, $nodeId);
+        if (!$rootNode) return '';
+
+        $allNodes = $this->collectDescendants($rootNode);
+        $allNodes->prepend($rootNode);
+
+        $html = '';
+        foreach ($allNodes as $node) {
+            $level = $this->getHeadingLevel($node);
+            $tagClass = $level === 'p' ? 'structure-marker-text' : 'structure-marker';
+            
+            $marker = "<{$level} class=\"{$tagClass}\" ";
+            $marker .= "data-segment-link=\"true\" ";
+            $marker .= "data-id=\"{$node->id}\" ";
+            $marker .= "data-type=\"{$node->type}\" ";
+            if ($node->start_time !== null) {
+                $marker .= "data-start-time=\"{$node->start_time}\" ";
+            }
+            $marker .= ">{$node->title}</{$level}>";
+
+            \Illuminate\Support\Facades\Log::info('[EntityContentService] Branch Marker generated:', ['html' => $marker, 'id' => $node->id]);
+
+            $html .= $marker;
+            $html .= $node->content ?? '';
+            $html .= "<p><br/></p>";
+        }
+
+        return $html;
+    }
+
+    /**
+     * جمع كافة الأبناء والأحفاد تتابعياً (Recursive Collection)
+     */
+    protected function collectDescendants(Model $node): Collection
+    {
+        $descendants = collect();
+
+        foreach ($node->children as $child) {
+            $descendants->push($child);
+            $descendants = $descendants->merge($this->collectDescendants($child));
+        }
+
+        return $descendants;
     }
 }

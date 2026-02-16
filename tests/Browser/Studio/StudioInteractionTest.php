@@ -6,9 +6,13 @@ use App\Models\User;
 use App\Models\Audio;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
+use App\Models\AudioSegment;
+use Illuminate\Support\Str;
 
 class StudioInteractionTest extends DuskTestCase
 {
+    use DatabaseTruncation;
     /**
      * Test dropdown search functionality for segments.
      */
@@ -29,41 +33,41 @@ class StudioInteractionTest extends DuskTestCase
 
         // Ensure Segments exist
         if ($audio->children()->count() === 0) {
-            $s1Id = \Illuminate\Support\Str::uuid();
-            \App\Models\AudioSegment::create([
-                'id' => $s1Id,
-                'audio_id' => $audio->id,
-                'title' => 'المقطع الأول',
-                'slug' => 'segment-1',
-                'order' => 1,
-                'start_time' => 0,
-                'duration' => 300,
-                'content' => "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$s1Id}\" data-type=\"segment\" data-start-time=\"0\">المقطع الأول</h4><p>محتوى المقطع الأول</p>"
-            ]);
+            $s1Id = (string) Str::uuid();
+            $s1 = new AudioSegment();
+            $s1->_id = $s1Id;
+            $s1->audio_id = $audio->id;
+            $s1->title = 'المقطع الأول';
+            $s1->slug = 'segment-1';
+            $s1->order = 1;
+            $s1->start_time = 0;
+            $s1->duration = 300;
+            $s1->content = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$s1Id}\" data-type=\"segment\" data-start-time=\"0\">المقطع الأول</h4><p>محتوى المقطع الأول</p>";
+            $s1->save();
             
-            $s2Id = \Illuminate\Support\Str::uuid();
-            \App\Models\AudioSegment::create([
-                'id' => $s2Id,
-                'audio_id' => $audio->id,
-                'title' => 'المقطع الثاني',
-                'slug' => 'segment-2',
-                'order' => 2,
-                'start_time' => 300,
-                'duration' => 300,
-                'content' => "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$s2Id}\" data-type=\"segment\" data-start-time=\"300\">المقطع الثاني</h4><p>محتوى المقطع الثاني</p>"
-            ]);
+            $s2Id = (string) Str::uuid();
+            $s2 = new AudioSegment();
+            $s2->_id = $s2Id;
+            $s2->audio_id = $audio->id;
+            $s2->title = 'المقطع الثاني';
+            $s2->slug = 'segment-2';
+            $s2->order = 2;
+            $s2->start_time = 300;
+            $s2->duration = 300;
+            $s2->content = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$s2Id}\" data-type=\"segment\" data-start-time=\"300\">المقطع الثاني</h4><p>محتوى المقطع الثاني</p>";
+            $s2->save();
             
-            $s3Id = \Illuminate\Support\Str::uuid();
-            \App\Models\AudioSegment::create([
-                'id' => $s3Id,
-                'audio_id' => $audio->id,
-                'title' => 'المقطع الثالث',
-                'slug' => 'segment-3',
-                'order' => 3,
-                'start_time' => 600,
-                'duration' => 300,
-                'content' => "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$s3Id}\" data-type=\"segment\" data-start-time=\"600\">المقطع الثالث</h4><p>محتوى المقطع الثالث</p>"
-            ]);
+            $s3Id = (string) Str::uuid();
+            $s3 = new AudioSegment();
+            $s3->_id = $s3Id;
+            $s3->audio_id = $audio->id;
+            $s3->title = 'المقطع الثالث';
+            $s3->slug = 'segment-3';
+            $s3->order = 3;
+            $s3->start_time = 600;
+            $s3->duration = 300;
+            $s3->content = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$s3Id}\" data-type=\"segment\" data-start-time=\"600\">المقطع الثالث</h4><p>محتوى المقطع الثالث</p>";
+            $s3->save();
             
             $audio->refresh(); 
         }
@@ -147,17 +151,17 @@ class StudioInteractionTest extends DuskTestCase
         
         // Ensure Segments exist
         if ($audio->children()->count() === 0) {
-            $s1Id = \Illuminate\Support\Str::uuid();
-            \App\Models\AudioSegment::create([
-                'id' => $s1Id,
-                'audio_id' => $audio->id,
-                'title' => 'المقطع الأول',
-                'slug' => 'segment-1',
-                'order' => 1,
-                'start_time' => 0,
-                'duration' => 300,
-                'content' => "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$s1Id}\" data-type=\"segment\" data-start-time=\"0\">المقطع الأول</h4><p>محتوى المقطع الأول</p>"
-            ]);
+            $s1Id = (string) \Illuminate\Support\Str::uuid();
+            $s1 = new AudioSegment();
+            $s1->_id = $s1Id;
+            $s1->audio_id = $audio->id;
+            $s1->title = 'المقطع الأول';
+            $s1->slug = 'segment-1';
+            $s1->order = 1;
+            $s1->start_time = 0;
+            $s1->duration = 300;
+            $s1->content = "<h4 class=\"structure-marker\" data-segment-link=\"true\" data-id=\"{$s1Id}\" data-type=\"segment\" data-start-time=\"0\">المقطع الأول</h4><p>محتوى المقطع الأول</p>";
+            $s1->save();
             $audio->refresh();
         }
 
@@ -165,7 +169,7 @@ class StudioInteractionTest extends DuskTestCase
         
         $this->browse(function (Browser $browser) use ($user, $audio, $segment) {
             $browser->loginAs($user)
-                    ->visit("/studio/audio/{$audio->slug}/{$segment->_id}")
+                    ->visitRoute('studio.show', ['type' => 'audio', 'slug' => $audio->slug, 'childId' => $segment->_id])
                     ->waitForText('Entity Studio')
                     ->pause(1500)
                     

@@ -366,12 +366,17 @@ class SeedRealisticData extends Command
                     // Level 1: Sub-book (الكتاب الفرعي)
                     $subBookCount = rand(1, 2);
                     for ($sb = 1; $sb <= $subBookCount; $sb++) {
+                        $nodeTitle = "كتاب " . ($sb === 1 ? 'المقدمات' : 'الأحكام');
+                        $nodeId = (string) Str::uuid();
+                        $nodeContent = '<p>مقدمة للكتاب الفرعي...</p>';
+                        
                         $subBook = $contentService->createNode($entity, [
+                            '_id' => $nodeId,
                             'type' => ContentNodeType::SUB_BOOK->value,
-                            'title' => "كتاب " . ($sb === 1 ? 'المقدمات' : 'الأحكام'),
-                            'content' => '<p>مقدمة للكتاب الفرعي...</p>',
-                            'json_content' => $this->generateJsonContent('<p>مقدمة للكتاب الفرعي...</p>'),
-                            'plain_text' => 'مقدمة للكتاب الفرعي...',
+                            'title' => $nodeTitle,
+                            'content' => $nodeContent,
+                            'json_content' => $this->generateJsonContent($nodeContent),
+                            'plain_text' => strip_tags($nodeContent),
                             'slug' => 'sub-book-' . $sb . '-' . mb_substr($entity->slug, 0, 4),
                             'order' => $sb,
                         ]);
@@ -379,13 +384,18 @@ class SeedRealisticData extends Command
                         // Level 2: Part (الجزء)
                         $partCount = rand(1, 2);
                         for ($p = 1; $p <= $partCount; $p++) {
+                            $nodeTitle = "الجزء {$p}";
+                            $nodeId = (string) Str::uuid();
+                            $nodeContent = '<p>مقدمة الجزء...</p>';
+
                             $part = $contentService->createNode($entity, [
+                                '_id' => $nodeId,
                                 'parent_id' => $subBook->id,
                                 'type' => ContentNodeType::PART->value,
-                                'title' => "الجزء {$p}",
-                                'content' => '<p>مقدمة الجزء...</p>',
-                                'json_content' => $this->generateJsonContent('<p>مقدمة الجزء...</p>'),
-                                'plain_text' => 'مقدمة الجزء...',
+                                'title' => $nodeTitle,
+                                'content' => $nodeContent,
+                                'json_content' => $this->generateJsonContent($nodeContent),
+                                'plain_text' => strip_tags($nodeContent),
                                 'slug' => 'part-' . $p . '-sb-' . $sb . '-' . mb_substr($entity->slug, 0, 4),
                                 'order' => $p
                             ]);
@@ -393,13 +403,18 @@ class SeedRealisticData extends Command
                             // Level 3: Chapter (الفصل) - For simplicity, skipping Bab level
                             $chapCount = rand(2, 4);
                             for ($c = 1; $c <= $chapCount; $c++) {
+                                $nodeTitle = "فصل {$c}: في المسائل المهمة";
+                                $nodeId = (string) Str::uuid();
+                                $nodeContent = "<p>هذا هو محتوى الفصل رقم {$c}. يحتوي على نصوص وتفريعات.</p>";
+
                                 $chapter = $contentService->createNode($entity, [
+                                    '_id' => $nodeId,
                                     'parent_id' => $part->id,
                                     'type' => ContentNodeType::CHAPTER->value,
-                                    'title' => "فصل {$c}: في المسائل المهمة",
-                                    'content' => "<p>هذا هو محتوى الفصل رقم {$c}. يحتوي على نصوص وتفريعات.</p>",
-                                    'json_content' => $this->generateJsonContent("<p>هذا هو محتوى الفصل رقم {$c}. يحتوي على نصوص وتفريعات.</p>"),
-                                    'plain_text' => "هذا هو محتوى الفصل رقم {$c}. يحتوي على نصوص وتفريعات.",
+                                    'title' => $nodeTitle,
+                                    'content' => $nodeContent,
+                                    'json_content' => $this->generateJsonContent($nodeContent),
+                                    'plain_text' => strip_tags($nodeContent),
                                     'slug' => 'chapter-' . $c . '-p-' . $p . '-' . mb_substr($entity->slug, 0, 4),
                                     'order' => $c
                                 ]);
@@ -410,13 +425,19 @@ class SeedRealisticData extends Command
                     // Create 5 "Pages" for Manuscript
                     for ($p = 1; $p <= 5; $p++) {
                         $pageTitles = [1 => 'الأولى', 2 => 'الثانية', 3 => 'الثالثة', 4 => 'الرابعة', 5 => 'الخامسة'];
+                        $pageNames = [1 => 'الأولى', 2 => 'الثانية', 3 => 'الثالثة', 4 => 'الرابعة', 5 => 'الخامسة'];
+                        $nodeTitle = 'الصفحة ' . ($pageNames[$p] ?? $p);
+                        $nodeId = (string) Str::uuid();
+                        $nodeContent = "<p>محتوى الصفحة {$p} من المخطوطة " . $entity->title . "...</p>";
+
                         $contentService->createNode($entity, [
+                            '_id' => $nodeId,
                             'type' => ContentNodeType::PAGE->value,
-                            'title' => 'الصفحة ' . ($pageTitles[$p] ?? $p),
+                            'title' => $nodeTitle,
                             'slug' => "page-{$p}-" . mb_substr($entity->slug, 0, 4),
-                            'content' => "<p>محتوى الصفحة {$p} من المخطوطة " . $entity->title . "...</p>",
-                            'json_content' => $this->generateJsonContent("<p>محتوى الصفحة {$p} من المخطوطة " . $entity->title . "...</p>"),
-                            'plain_text' => "محتوى الصفحة {$p} من المخطوطة " . $entity->title . "...",
+                            'content' => $nodeContent,
+                            'json_content' => $this->generateJsonContent($nodeContent),
+                            'plain_text' => strip_tags($nodeContent),
                             'order' => $p,
                         ]);
                     }
@@ -424,13 +445,19 @@ class SeedRealisticData extends Command
                     // Create 5 "Segments" for Audio to test Playlist
                     for ($s = 1; $s <= 5; $s++) {
                         $startTime = ($s - 1) * 60; // 0, 60, 120...
+                        $nodeTitle = 'المقطع ' . $s . ' ' . ($s === 1 ? '(المقدمة)' : '(شرح)');
+                        $nodeId = (string) Str::uuid();
+                        $startTime = ($s - 1) * 60; // 0, 60, 120...
+                        $nodeContent = "<p>تفريغ نصي للمقطع رقم {$s} يبدأ عند الدقيقة " . ($s-1) . "...</p>";
+
                         $contentService->createNode($entity, [
+                            '_id' => $nodeId,
                             'type' => ContentNodeType::SEGMENT->value,
-                            'title' => 'المقطع ' . $s . ' ' . ($s === 1 ? '(المقدمة)' : '(شرح)'),
+                            'title' => $nodeTitle,
                             'slug' => 'segment-' . $s . '-' . mb_substr($entity->slug, 0, 4),
-                            'content' => "<p>تفريغ نصي للمقطع رقم {$s} يبدأ عند الدقيقة " . ($s-1) . "...</p>",
-                            'json_content' => $this->generateJsonContent("<p>تفريغ نصي للمقطع رقم {$s} يبدأ عند الدقيقة " . ($s-1) . "...</p>"),
-                            'plain_text' => "تفريغ نصي للمقطع رقم {$s}...",
+                            'content' => $nodeContent,
+                            'json_content' => $this->generateJsonContent($nodeContent),
+                            'plain_text' => strip_tags($nodeContent),
                             'order' => $s,
                             'start_time' => (float) $startTime,
                             'end_time' => (float) ($startTime + 50), // 50s duration
@@ -440,13 +467,19 @@ class SeedRealisticData extends Command
                     // Create 3 "Scenes" for Video
                     for ($s = 1; $s <= 3; $s++) {
                         $startTime = ($s - 1) * 120; // 0, 120, 240...
+                        $nodeTitle = 'المشهد ' . $s;
+                        $nodeId = (string) Str::uuid();
+                        $startTime = ($s - 1) * 120; // 0, 120, 240...
+                        $nodeContent = "<p>وصف تفصيلي للمشهد رقم {$s}...</p>";
+
                         $contentService->createNode($entity, [
+                            '_id' => $nodeId,
                             'type' => ContentNodeType::SCENE->value,
-                            'title' => 'المشهد ' . $s,
+                            'title' => $nodeTitle,
                             'slug' => 'scene-' . $s . '-' . mb_substr($entity->slug, 0, 4),
-                            'content' => "<p>وصف تفصيلي للمشهد رقم {$s}...</p>",
-                            'json_content' => $this->generateJsonContent("<p>وصف تفصيلي للمشهد رقم {$s}...</p>"),
-                            'plain_text' => "وصف تفصيلي للمشهد رقم {$s}...",
+                            'content' => $nodeContent,
+                            'json_content' => $this->generateJsonContent($nodeContent),
+                            'plain_text' => strip_tags($nodeContent),
                             'order' => $s,
                             'start_time' => (float) $startTime,
                             'end_time' => (float) ($startTime + 100),
@@ -574,10 +607,10 @@ class SeedRealisticData extends Command
     /**
      * Generate a basic Tiptap JSON structure for seeding
      */
-    protected function generateJsonContent($html)
+    protected function generateJsonContent($contentHtml)
     {
-        // Simple conversion for dummy data: wrap inner text of <p> in Tiptap JSON
-        $text = strip_tags($html);
+        $text = strip_tags($contentHtml);
+        
         return [
             'type' => 'doc',
             'content' => [

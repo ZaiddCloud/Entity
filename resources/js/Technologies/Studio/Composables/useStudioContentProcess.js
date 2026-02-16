@@ -1,5 +1,6 @@
 import { useEditorStore } from '../../Store/EditorStore'
 import { useMediaStore } from '@/Technologies/Store/MediaStore'
+import { useTiptapStore } from '../../Editor/Core/TiptapStore'
 import { router } from '@inertiajs/vue3'
 
 /**
@@ -10,9 +11,32 @@ import { router } from '@inertiajs/vue3'
 export function useStudioContentProcess() {
     const editorStore = useEditorStore()
     const mediaStore = useMediaStore()
+    const tiptapStore = useTiptapStore()
+
+    const findParentIdFromEditor = () => {
+        const editor = tiptapStore.editor
+        if (!editor) return null
+
+        const { state } = editor
+        const { selection } = state
+        const { $from } = selection
+
+        // Search upwards for a node with data-id
+        for (let depth = $from.depth; depth >= 0; depth--) {
+            const node = $from.node(depth)
+            if (node.attrs && node.attrs['data-id']) {
+                console.log('[useStudioContentProcess] Detected Parent Node:', node.attrs.type, node.attrs['data-id'])
+                return node.attrs['data-id']
+            }
+        }
+
+        return null
+    }
 
     const insertNode = async (type, title, time = null) => {
         if (!editorStore.currentEntity) return
+
+        const parentId = findParentIdFromEditor()
 
         try {
             // 1. Optimistic UI: REMOVED (Step 29 Requirement)
@@ -33,7 +57,8 @@ export function useStudioContentProcess() {
             const response = await axios.post(`/studio/${editorStore.editorMode}/${editorStore.currentEntity.slug}/nodes`, {
                 type: type,
                 title: title,
-                time: time
+                time: time,
+                parent_id: parentId
             })
 
             console.log('[useStudioContentProcess] Persistence successful:', response.data.message)
