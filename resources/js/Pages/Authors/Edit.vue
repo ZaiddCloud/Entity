@@ -4,6 +4,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import Card from '@/Components/Card.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputLabel from '@/Components/InputLabel.vue';
+import SelectInput from '@/Components/SelectInput.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 
 const props = defineProps({
@@ -15,6 +16,9 @@ const form = useForm({
     bio: props.author.bio,
     birth_year: props.author.birth_year,
     death_year: props.author.death_year,
+    madhab: props.author.madhab || '',
+    original_region: props.author.original_region || '',
+    century_lived: props.author.century_lived || '',
 });
 
 const submit = () => {
@@ -143,6 +147,45 @@ const submit = () => {
               class="text-red-500 text-sm mt-1 font-bold"
             >
               {{ form.errors.bio }}
+            </div>
+          </div>
+
+          <!-- New Fields: Madhab, Region, Century -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-gray-100 dark:border-white/5">
+            <div>
+                <InputLabel for="madhab" value="المذهب" :optional="true" />
+                <SelectInput 
+                    id="madhab" 
+                    v-model="form.madhab" 
+                    :options="[{id: 'شافعي', name: 'شافعي'}, {id: 'حنفي', name: 'حنفي'}, {id: 'مالكي', name: 'مالكي'}, {id: 'حنبلي', name: 'حنبلي'}, {id: 'ظاهري', name: 'ظاهري'}, {id: 'جعفري', name: 'جعفري'}, {id: 'زيدية', name: 'زيدية'}, {id: 'أخرى', name: 'أخرى'}]" 
+                    class="mt-1 block w-full" 
+                    placeholder="اختر المذهب..."
+                />
+                 <div v-if="form.errors.madhab" class="text-red-500 text-sm mt-1 font-bold">{{ form.errors.madhab }}</div>
+            </div>
+            
+             <div>
+                <InputLabel for="original_region" value="المنطقة الأصلية" :optional="true" />
+                <TextInput 
+                    id="original_region" 
+                    v-model="form.original_region" 
+                    type="text" 
+                    class="mt-1 block w-full" 
+                    placeholder="مثال: أندلسي، عراقي..." 
+                />
+                <div v-if="form.errors.original_region" class="text-red-500 text-sm mt-1 font-bold">{{ form.errors.original_region }}</div>
+            </div>
+
+            <div>
+                <InputLabel for="century_lived" value="القرن الذي عاش فيه" :optional="true" />
+                <TextInput 
+                    id="century_lived" 
+                    v-model="form.century_lived" 
+                    type="text" 
+                    class="mt-1 block w-full" 
+                    placeholder="مثال: القرن الخامس" 
+                />
+                 <div v-if="form.errors.century_lived" class="text-red-500 text-sm mt-1 font-bold">{{ form.errors.century_lived }}</div>
             </div>
           </div>
 

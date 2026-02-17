@@ -18,6 +18,9 @@ class UpdateAuthorRequest extends FormRequest
             'bio' => 'nullable|string',
             'birth_year' => 'nullable|integer|min:-2000|max:' . (date('Y') + 1),
             'death_year' => 'nullable|integer|min:-2000|max:' . (date('Y') + 1),
+            'madhab' => 'nullable|string|max:255',
+            'original_region' => 'nullable|string|max:255',
+            'century_lived' => 'nullable|string|max:255',
         ];
     }
 }

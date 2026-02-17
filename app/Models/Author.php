@@ -44,6 +44,9 @@ class Author extends Model
         'bio',
         'birth_year',
         'death_year',
+        'madhab',
+        'original_region',
+        'century_lived',
     ];
 
     /**

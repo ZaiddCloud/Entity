@@ -85,10 +85,16 @@ const tabs = [
                   {{ manuscript.formatted_serial_number }}
                 </span>
                 <span
-                  v-if="manuscript.century"
+                  v-if="manuscript.manuscript_century || manuscript.manuscript_century_label"
                   class="px-3 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black backdrop-blur-sm"
                 >
-                  {{ manuscript.century }}
+                  {{ manuscript.manuscript_century_label || manuscript.manuscript_century }}
+                </span>
+                <span
+                  v-if="manuscript.is_autograph"
+                  class="px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black backdrop-blur-sm shadow-[0_0_10px_rgba(16,185,129,0.2)]"
+                >
+                  خط المؤلف (Autograph)
                 </span>
               </div>
 
@@ -260,7 +266,7 @@ const tabs = [
             <div class="space-y-4">
               <div class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
                 <span class="font-bold text-sm text-gray-300">القرن</span>
-                <span class="font-black text-amber-400">{{ manuscript.century_label || manuscript.century || 'غير محدد' }}</span>
+                <span class="font-black text-amber-400">{{ manuscript.manuscript_century_label || manuscript.manuscript_century || 'غير محدد' }}</span>
               </div>
               <div v-if="manuscript.copy_date" class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
                 <span class="font-bold text-sm text-gray-300">تاريخ النسخ</span>
@@ -454,7 +460,7 @@ const tabs = [
             </div>
             <div class="flex justify-between py-3 border-b border-gray-100 dark:border-white/5">
               <span class="text-gray-500 font-medium">القرن</span>
-              <span class="font-bold text-gray-900 dark:text-white">{{ manuscript.century_label || manuscript.century || '-' }}</span>
+              <span class="font-bold text-gray-900 dark:text-white">{{ manuscript.manuscript_century_label || manuscript.manuscript_century || '-' }}</span>
             </div>
             <div v-if="manuscript.copy_date" class="flex justify-between py-3 border-b border-gray-100 dark:border-white/5">
               <span class="text-gray-500 font-medium">تاريخ النسخ</span>
@@ -505,6 +511,18 @@ const tabs = [
             <div v-if="manuscript.notes" class="p-6 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/5">
               <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-3">ملاحظات</h4>
               <p class="text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-wrap">{{ manuscript.notes }}</p>
+            </div>
+            
+            <!-- Start/End Text -->
+            <div v-if="manuscript.manuscript_start || manuscript.manuscript_end" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div v-if="manuscript.manuscript_start" class="p-6 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-500/10">
+                    <h4 class="font-bold text-sm text-emerald-700 dark:text-emerald-400 mb-3">بداية المخطوط</h4>
+                    <p class="text-emerald-900 dark:text-emerald-200 leading-relaxed whitespace-pre-wrap font-serif text-lg opacity-80">{{ manuscript.manuscript_start }}</p>
+                </div>
+                <div v-if="manuscript.manuscript_end" class="p-6 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-500/10">
+                    <h4 class="font-bold text-sm text-emerald-700 dark:text-emerald-400 mb-3">نهاية المخطوط</h4>
+                    <p class="text-emerald-900 dark:text-emerald-200 leading-relaxed whitespace-pre-wrap font-serif text-lg opacity-80">{{ manuscript.manuscript_end }}</p>
+                </div>
             </div>
           </div>
         </Card>

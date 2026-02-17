@@ -120,6 +120,22 @@ const tabs = [
             <div class="prose dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 leading-loose">
               {{ author.bio || 'لا توجد سيرة ذاتية مسجلة لهذا المؤلف.' }}
             </div>
+
+            <!-- Biographical Details -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 mt-6 border-t border-gray-100 dark:border-white/5">
+              <div v-if="author.madhab" class="flex flex-col">
+                <span class="text-xs text-gray-400 font-bold mb-1">المذهب</span>
+                <span class="font-bold text-gray-900 dark:text-white">{{ author.madhab }}</span>
+              </div>
+              <div v-if="author.original_region" class="flex flex-col">
+                <span class="text-xs text-gray-400 font-bold mb-1">المنطقة الأصلية</span>
+                <span class="font-bold text-gray-900 dark:text-white">{{ author.original_region }}</span>
+              </div>
+              <div v-if="author.century_lived" class="flex flex-col">
+                <span class="text-xs text-gray-400 font-bold mb-1">القرن</span>
+                <span class="font-bold text-gray-900 dark:text-white">{{ author.century_lived }}</span>
+              </div>
+            </div>
           </Card>
         </div>
                 

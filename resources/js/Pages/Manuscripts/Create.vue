@@ -11,8 +11,8 @@ const props = defineProps({
 const form = useForm({
     title: '',
     code: '',
-    century: '',
-    century_label: '',
+    manuscript_century: '',
+    manuscript_century_label: '',
     author_ids: [],
     publisher_id: '',
     pages: '',
@@ -29,6 +29,9 @@ const form = useForm({
     lines_per_page: '',
     inscriptions: '',
     notes: '',
+    is_autograph: false,
+    manuscript_start: '',
+    manuscript_end: '',
     cover: null,
     file: null,
 });
@@ -169,24 +172,24 @@ const submit = () => {
             <!-- Details Grid -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div>
-                <InputLabel for="century_label" :optional="true">
+                <InputLabel for="manuscript_century_label" :optional="true">
                   القرن (نصي)
                 </InputLabel>
                 <TextInput
-                  id="century_label"
-                  v-model="form.century_label"
+                  id="manuscript_century_label"
+                  v-model="form.manuscript_century_label"
                   type="text"
                   class="mt-1 block w-full"
                   placeholder="مثلاً: 9 هـ"
                 />
               </div>
               <div>
-                <InputLabel for="century" :optional="true">
+                <InputLabel for="manuscript_century" :optional="true">
                   القرن (رقمي)
                 </InputLabel>
                 <TextInput
-                  id="century"
-                  v-model="form.century"
+                  id="manuscript_century"
+                  v-model="form.manuscript_century"
                   type="text"
                   class="mt-1 block w-full"
                   placeholder="مثلاً: 9"
@@ -226,6 +229,19 @@ const submit = () => {
               </h3>
 
               <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                 <!-- Is Autograph Toggle -->
+                 <div class="md:col-span-3">
+                     <label class="flex items-center gap-3 cursor-pointer group">
+                        <div class="relative">
+                            <input type="checkbox" v-model="form.is_autograph" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
+                        </div>
+                        <span class="text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-emerald-600 transition-colors">
+                            نسخة بخط المؤلف (Autograph)
+                        </span>
+                     </label>
+                 </div>
+
                 <div class="md:col-span-2">
                   <InputLabel for="original_title" :optional="true">العنوان كما ورد في النسخة</InputLabel>
                   <TextInput id="original_title" v-model="form.original_title" type="text" class="mt-1 block w-full" />
@@ -269,6 +285,18 @@ const submit = () => {
                 <div>
                   <InputLabel for="pages" :optional="true">عدد الأوراق</InputLabel>
                   <TextInput id="pages" v-model="form.pages" type="number" class="mt-1 block w-full" />
+                </div>
+
+                <!-- Start/End Text -->
+                <div class="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <InputLabel for="manuscript_start" :optional="true">بداية المخطوط</InputLabel>
+                        <textarea id="manuscript_start" v-model="form.manuscript_start" rows="3" class="mt-1 block w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-black/20 dark:text-gray-300 focus:border-emerald-500 focus:ring-emerald-500/20 shadow-sm text-sm" placeholder="الحمد لله الذي..." />
+                    </div>
+                    <div>
+                        <InputLabel for="manuscript_end" :optional="true">نهاية المخطوط</InputLabel>
+                        <textarea id="manuscript_end" v-model="form.manuscript_end" rows="3" class="mt-1 block w-full rounded-2xl border-gray-300 dark:border-gray-700 dark:bg-black/20 dark:text-gray-300 focus:border-emerald-500 focus:ring-emerald-500/20 shadow-sm text-sm" placeholder="وكتبه العبد الفقير..." />
+                    </div>
                 </div>
               </div>
 

@@ -27,8 +27,15 @@ class UpdateManuscriptRequest extends FormRequest
             'script_type' => 'nullable|string|max:100',
             'dimensions' => 'nullable|string|max:100',
             'lines_per_page' => 'nullable|integer',
+            'pages' => 'nullable|integer',
             'inscriptions' => 'nullable|string',
             'notes' => 'nullable|string',
+            'is_autograph' => 'boolean',
+            'manuscript_start' => 'nullable|string',
+            'manuscript_end' => 'nullable|string',
+            
+            'manuscript_century' => 'nullable|string|max:255',
+            'manuscript_century_label' => 'nullable|string|max:255',
 
             'author_ids' => 'nullable|array',
             'author_ids.*' => 'exists:authors,id',
