@@ -3,7 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB; // Added this line to use DB facade
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration {
     public function up(): void
@@ -13,13 +13,20 @@ return new class extends Migration {
             $table->string('name');
             $table->string('slug')->unique();
             $table->text('bio')->nullable();
+            
+            // بيانات إضافية (الجديدة)
+            $table->string('madhab')->nullable()->index(); // المذهب
+            $table->string('original_region')->nullable()->index(); // البلد/الإقليم
+            $table->string('century_lived')->nullable()->index(); // قرن الوفاة (نصي: القرن التاسع)
+
             $table->integer('birth_year')->nullable();
             $table->integer('death_year')->nullable();
+            
             $table->timestamps();
             $table->softDeletes();
         });
 
-        // إضافة الرقم التسلسلي باستخدام SQL مباشر لضمان التوافق مع MariaDB عند وجود UUID كـ Primary Key
+        // إضافة الرقم التسلسلي
         DB::statement('ALTER TABLE authors ADD serial_number BIGINT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE AFTER id');
 
         Schema::create('authorables', function (Blueprint $table) {
@@ -31,7 +38,7 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::dropIfExists('author_book');
+        Schema::dropIfExists('authorables'); // تصحيح الاسم هنا أيضاً ليتطابق مع الـ up
         Schema::dropIfExists('authors');
     }
 };

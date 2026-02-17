@@ -39,7 +39,7 @@ return new class extends Migration {
             $table->index(['entity_id', 'entity_type']);
             $table->index('category_id');
 
-            $table->unique(['category_id', 'entity_id', 'entity_type'], 'taggable_unique');
+            $table->unique(['category_id', 'entity_id', 'entity_type'], 'categorizable_unique');
 
         });
     }
