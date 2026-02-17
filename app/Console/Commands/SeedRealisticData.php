@@ -145,10 +145,28 @@ class SeedRealisticData extends Command
         // 3. New Ecosystem Data (Authors, Publishers, Bookers)
         $this->info("Seeding Authors, Publishers and Contributors...");
 
-        $authorsList = ['ابن خلدون', 'البخاري', 'الجاحظ', 'المتنبي', 'ابن رشد', 'نجيب محفوظ', 'طه حسين', 'ابن المقفع', 'الشافعي', 'المنشاوي', 'د. السويدان'];
-        $authors = collect($authorsList)->map(fn($name) => Author::query()->firstOrCreate(
-            ['name' => $name],
-            ['slug' => Str::slug($name, '-', null)]
+        $authorsList = [
+            ['name' => 'ابن خلدون', 'madhab' => 'مالكي', 'region' => 'أندلسي', 'century' => 'القرن الثامن'],
+            ['name' => 'البخاري', 'madhab' => 'شافعي', 'region' => 'أوزبكي', 'century' => 'القرن الثالث'],
+            ['name' => 'الجاحظ', 'madhab' => 'معتزلي', 'region' => 'عراقي', 'century' => 'القرن الثالث'],
+            ['name' => 'المتنبي', 'madhab' => null, 'region' => 'عراقي', 'century' => 'القرن الرابع'],
+            ['name' => 'ابن رشد', 'madhab' => 'مالكي', 'region' => 'أندلسي', 'century' => 'القرن السادس'],
+            ['name' => 'نجيب محفوظ', 'madhab' => null, 'region' => 'مصري', 'century' => 'القرن العشرين'],
+            ['name' => 'طه حسين', 'madhab' => null, 'region' => 'مصري', 'century' => 'القرن العشرين'],
+            ['name' => 'ابن المقفع', 'madhab' => null, 'region' => 'فارسي', 'century' => 'القرن الثاني'],
+            ['name' => 'الشافعي', 'madhab' => 'شافعي', 'region' => 'مكي', 'century' => 'القرن الثاني'],
+            ['name' => 'المنشاوي', 'madhab' => 'شافعي', 'region' => 'مصري', 'century' => 'القرن العشرين'],
+            ['name' => 'د. السويدان', 'madhab' => null, 'region' => 'كويتي', 'century' => 'القرن الواحد والعشرين']
+        ];
+        
+        $authors = collect($authorsList)->map(fn($data) => Author::query()->firstOrCreate(
+            ['name' => $data['name']],
+            [
+                'slug' => Str::slug($data['name'], '-', null),
+                'madhab' => $data['madhab'],
+                'original_region' => $data['region'],
+                'century_lived' => $data['century']
+            ]
         ));
 
         $publishersList = ['دار المعرفة', 'دار الشروق', 'مكتبة العبيكان', 'عالم المعرفة', 'مركز دراسات الوحدة العربية', 'مؤسسة التراث', 'إذاعة القرآن الكريم'];
@@ -301,19 +319,20 @@ class SeedRealisticData extends Command
 
                 if (EntityType::tryFrom($type) === EntityType::MANUSCRIPT) {
                     $centuryNum = rand(2, 14);
-                    $attributes['century'] = (string) $centuryNum;
-                    $attributes['century_label'] = $centuryNum . ' هـ';
+                    // Standard Schema Fields
+                    $attributes['manuscript_century'] = (string) $centuryNum;
+                    $attributes['manuscript_century_label'] = $centuryNum . ' هـ';
                     
-                    // Rich Manuscript Metadata
+                    // Metadata Helpers
                     $scribes = ['محمد بن أحمد الكاتب', 'علي بن عبدالله النساخ', 'أحمد الأنصاري', 'ابن البواب', 'مجهول'];
-                    $madhabs = ['شافعي', 'حنفي', 'مالكي', 'حنبلي', 'ظاهري'];
                     $scriptTypes = ['نسخ', 'كوفي', 'ديواني', 'رقعة', 'ثلث'];
                     $locations = ['دمشق', 'القاهرة', 'اسطنبول', 'بغداد', 'المدينة المنورة'];
                     
+                    // Rich Manuscript Metadata
                     $attributes['original_title'] = $title;
                     $attributes['catalog_number'] = 'MS-' . rand(1000, 9999) . '-' . strtoupper(substr(md5($title), 0, 2));
+                    $attributes['is_autograph'] = (rand(1, 10) > 8); // 20% likely to be chronograph
                     $attributes['scribe'] = $scribes[array_rand($scribes)];
-                    $attributes['madhab'] = $madhabs[array_rand($madhabs)];
                     $attributes['copy_date'] = rand(200, 1400) . ' هـ';
                     $attributes['parts'] = (string) rand(1, 10);
                     $attributes['script_type'] = $scriptTypes[array_rand($scriptTypes)];
@@ -322,6 +341,11 @@ class SeedRealisticData extends Command
                     $attributes['inscriptions'] = 'تملك: ' . $locations[array_rand($locations)] . ' - قراءة وسماع';
                     $attributes['notes'] = 'نسخة نفيسة بخط جميل ومقروء، مع حواشٍ قيّمة.';
                     $attributes['location'] = $locations[array_rand($locations)];
+                    
+                    // New Columns Request
+                    $attributes['pages'] = rand(50, 500);
+                    $attributes['manuscript_start'] = "بداية المخطوط: الحمد لله رب العالمين... (نص عشوائي للمقدمة)";
+                    $attributes['manuscript_end'] = "...وهذا آخر ما تيسر إيراده، والحمد لله وحده.";
                     
                 } elseif (EntityType::tryFrom($type)?->supportsDuration()) {
                     $attributes['duration'] = rand(300, 3600);
