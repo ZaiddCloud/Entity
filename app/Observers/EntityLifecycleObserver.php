@@ -16,6 +16,11 @@ class EntityLifecycleObserver
         if ($this->shouldGenerateSlug($entity)) {
             $entity->slug = $this->generateUniqueSlug($entity->title, $entity);
         }
+
+        // Generate Code for Manuscripts
+        if (get_class($entity) === \App\Models\Manuscript::class && empty($entity->code)) {
+            $entity->code = \App\Helpers\SlugHelper::uniqueCode(get_class($entity), $entity->title);
+        }
     }
 
     /**
@@ -51,16 +56,7 @@ class EntityLifecycleObserver
      */
     private function generateUniqueSlug(string $title, $entity): string
     {
-        $slug = \App\Helpers\SlugHelper::arabicSlug($title);
-        $originalSlug = $slug;
-        $count = 1;
-
-        while ($this->slugExists($slug, $entity)) {
-            $slug = $originalSlug . '-' . $count;
-            $count++;
-        }
-
-        return $slug;
+        return \App\Helpers\SlugHelper::uniqueSlug(get_class($entity), $title);
     }
 
     /**

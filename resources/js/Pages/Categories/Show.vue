@@ -140,37 +140,89 @@
           </Card>
         </div>
 
-        <!-- Sub-categories -->
-        <div v-if="category.children?.length > 0">
-          <div class="space-y-4">
-            <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+        <!-- Right Column / Sub-categories or Info -->
+        <div class="space-y-6">
+          <div v-if="category.children?.length > 0">
+            <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 mb-4">
               <span class="w-1 h-4 bg-lime-500 rounded-full" />
               التصنيفات الفرعية ({{ category.children.length }})
             </h3>
-            <div class="space-y-3">
+            <div class="space-y-2">
               <Link
                 v-for="child in category.children"
                 :key="child.id"
                 :href="route('categories.show', child.id)"
               >
-                <Card class="!p-4 hover:border-emerald-500 group transition-all cursor-pointer">
+                <Card class="!p-3 hover:border-emerald-500 group transition-all cursor-pointer">
                   <div class="flex items-center justify-between">
-                    <span class="font-black text-gray-900 dark:text-white group-hover:text-emerald-600">{{ child.name }}</span>
-                    <svg
-                      class="w-4 h-4 text-gray-300 group-hover:text-emerald-500 transition-transform group-hover:translate-x-[-4px]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    ><path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 5l7 7-7 7"
-                    /></svg>
+                    <span class="font-black text-gray-800 dark:text-white group-hover:text-emerald-600 text-sm">{{ child.name }}</span>
+                    <svg class="w-4 h-4 text-gray-300 group-hover:text-emerald-500 transition-transform group-hover:translate-x-[-4px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                   </div>
                 </Card>
               </Link>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Full Width Content Sections -->
+      <div class="space-y-12 pt-4">
+        <!-- Manuscripts Section -->
+        <div v-if="category.manuscripts?.length > 0">
+          <div class="flex items-center justify-between mb-8">
+            <h3 class="text-xl font-black flex items-center gap-3">
+              <span class="w-1.5 h-8 bg-amber-500 rounded-full" />
+              المخطوطات المرتبطة
+            </h3>
+            <Badge color="amber">{{ category.manuscripts.length }} مخطوط</Badge>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Link
+              v-for="item in category.manuscripts"
+              :key="item.id"
+              :href="route('manuscripts.show', item.slug)"
+              class="group bg-white dark:bg-[#0a0a0a] border border-gray-100 dark:border-white/5 rounded-[2rem] p-6 hover:border-amber-500/30 hover:shadow-2xl hover:shadow-amber-500/5 transition-all duration-500 flex items-center gap-6"
+            >
+              <div class="w-16 h-20 bg-amber-50 dark:bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform shadow-inner">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h4 class="font-black text-gray-900 dark:text-white text-lg truncate group-hover:text-amber-500 transition-colors">{{ item.title }}</h4>
+                <div class="flex items-center gap-3 mt-2">
+                  <span class="text-[10px] font-black text-amber-500/70 bg-amber-50 dark:bg-amber-500/5 px-2 py-1 rounded-lg" v-if="item.catalog_number">رقم: {{ item.catalog_number }}</span>
+                  <span class="text-[10px] font-black text-gray-400" v-if="item.parts">{{ item.parts }} أجزاء</span>
+                </div>
+              </div>
+            </Link>
+          </div>
+        </div>
+
+        <!-- Books Section -->
+        <div v-if="category.books?.length > 0">
+          <div class="flex items-center justify-between mb-8">
+            <h3 class="text-xl font-black flex items-center gap-3">
+              <span class="w-1.5 h-8 bg-blue-500 rounded-full" />
+              الكتب المرتبطة
+            </h3>
+            <Badge color="blue">{{ category.books.length }} كتاب</Badge>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Link
+              v-for="item in category.books"
+              :key="item.id"
+              :href="route('books.show', item.slug)"
+              class="group bg-white dark:bg-[#0a0a0a] border border-gray-100 dark:border-white/5 rounded-[2rem] p-6 hover:border-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-500 flex items-center gap-6"
+            >
+              <div class="w-16 h-20 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform shadow-inner">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h4 class="font-black text-gray-900 dark:text-white text-lg truncate group-hover:text-blue-500 transition-colors">{{ item.title }}</h4>
+                <div class="mt-2">
+                   <span class="text-[10px] font-black text-blue-500/70 bg-blue-50 dark:bg-blue-500/5 px-2 py-1 rounded-lg" v-if="item.isbn">ISBN: {{ item.isbn }}</span>
+                </div>
+              </div>
+            </Link>
           </div>
         </div>
       </div>

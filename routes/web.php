@@ -69,6 +69,7 @@ Route::middleware(['auth'])->group(function () {
 
     // System Commands API
     Route::post('api/system/run-command', [App\Http\Controllers\SystemController::class, 'runCommand'])->name('api.system.run-command');
+    Route::post('api/system/list-files', [App\Http\Controllers\SystemController::class, 'listFiles'])->name('api.system.list-files');
 
     // Command Dashboard Page
     Route::get('/system/commands', function () {

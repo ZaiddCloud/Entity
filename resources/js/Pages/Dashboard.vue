@@ -22,7 +22,7 @@
             </p>
           </div>
                     
-          <div class="flex gap-4 shrink-0">
+          <div class="flex flex-wrap gap-4 shrink-0">
             <div class="bg-black/20 rounded-3xl p-6 border border-white/10 text-center min-w-[140px] hover:bg-black/30 transition-colors">
               <span class="block text-white/50 text-[10px] font-black uppercase mb-2 tracking-widest">إجمالي المحتوى</span>
               <span class="text-4xl font-black text-white">{{ totalEntities }}</span>
@@ -31,6 +31,13 @@
               <span class="block text-white/70 text-[10px] font-black uppercase mb-2 tracking-widest">المؤلفون</span>
               <span class="text-4xl font-black text-white">{{ stats.authors }}</span>
             </div>
+            <Link
+              :href="route('categories.index')"
+              class="bg-indigo-500/20 rounded-3xl p-6 border border-indigo-500/20 text-center min-w-[140px] hover:bg-indigo-500/30 transition-colors"
+            >
+              <span class="block text-indigo-200/50 text-[10px] font-black uppercase mb-2 tracking-widest">التصنيفات</span>
+              <span class="text-4xl font-black text-white">{{ stats.categories }}</span>
+            </Link>
           </div>
         </div>
       </section>
@@ -179,14 +186,15 @@
                         
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Link
-                v-for="book in recentBooks"
-                :key="book.id"
-                :href="route('books.show', book.slug)"
+                v-for="item in recentEntities"
+                :key="item.id + item.type"
+                :href="route(item.type + 's.show', item.slug)"
                 class="group bg-gray-50/50 dark:bg-white/2 p-4 rounded-3xl border border-transparent hover:border-indigo-500/20 hover:bg-white dark:hover:bg-black transition-all duration-300"
               >
                 <div class="flex gap-4">
                   <div class="w-20 h-28 bg-gray-200 dark:bg-gray-800 rounded-2xl overflow-hidden shrink-0 shadow-lg group-hover:scale-105 transition-transform duration-500 flex items-center justify-center">
                     <svg
+                      v-if="item.type === 'book'"
                       class="w-8 h-8 text-gray-400 group-hover:text-indigo-500 transition-colors"
                       fill="none"
                       stroke="currentColor"
@@ -197,25 +205,48 @@
                       stroke-width="2"
                       d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                     /></svg>
+                    <svg
+                      v-else
+                      class="w-8 h-8 text-gray-400 group-hover:text-amber-500 transition-colors"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    ><path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    /></svg>
                   </div>
                   <div class="flex flex-col justify-between py-1">
                     <div>
                       <h4 class="font-black text-gray-900 dark:text-white line-clamp-1 group-hover:text-indigo-500 transition-colors">
-                        {{ book.title }}
+                        {{ item.title }}
                       </h4>
-                      <div class="flex items-center gap-1 mt-1">
+                      <div class="flex flex-wrap items-center gap-1 mt-1">
                         <span
-                          v-for="author in book.authors"
+                          v-for="author in item.authors"
                           :key="author.id"
                           class="text-[10px] font-bold text-gray-400 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-lg"
                         >
                           {{ author.name }}
                         </span>
+                        <span v-if="!item.authors || item.authors.length === 0" class="text-[10px] font-bold text-gray-300">بدون مؤلف</span>
+                        
+                        <Link
+                          v-for="cat in item.categories"
+                          :key="cat.id"
+                          :href="route('categories.show', cat.id)"
+                          class="text-[10px] font-bold text-indigo-400/70 bg-indigo-50/50 dark:bg-indigo-500/5 px-2 py-0.5 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-500/10 transition-colors"
+                          @click.stop
+                        >
+                          {{ cat.name }}
+                        </Link>
                       </div>
                     </div>
-                    <div class="flex items-center justify-between text-[10px] font-black text-indigo-400 tracking-tighter uppercase">
-                      <span>#{{ book.serial_number }}</span>
-                      <span class="text-gray-400">{{ formatDate(book.created_at) }}</span>
+                    <div class="flex items-center justify-between text-[10px] font-black tracking-tighter uppercase mt-2">
+                      <span :class="item.type === 'manuscript' ? 'text-amber-500' : 'text-blue-500'">{{ item.type === 'manuscript' ? 'مخطوط' : 'كتاب' }}</span>
+                      <span class="text-gray-400">{{ formatDate(item.created_at) }}</span>
                     </div>
                   </div>
                 </div>
@@ -383,7 +414,7 @@ import { computed } from 'vue';
 const props = defineProps({
     stats: Object,
     recent: Array,
-    recentBooks: Array,
+    recentEntities: Array,
 });
 
 const totalEntities = computed(() => {
@@ -440,6 +471,7 @@ section {
 .line-clamp-1 {
     display: -webkit-box;
     -webkit-line-clamp: 1;
+    line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }

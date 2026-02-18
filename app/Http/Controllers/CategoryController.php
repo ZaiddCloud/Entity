@@ -19,6 +19,7 @@ class CategoryController extends EntityController
 
     //Customization
     protected function getRelations(): array { return ['parent', 'books', 'videos', 'audio', 'manuscripts']; }
+    protected function getWithCount(): array { return ['books', 'videos', 'audio', 'manuscripts']; }
     protected function getSearchFields(): array { return ['name', 'description']; }
     protected function getPerPage(): int { return 20; }
     

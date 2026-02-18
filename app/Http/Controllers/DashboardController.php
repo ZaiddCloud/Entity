@@ -35,16 +35,14 @@ class DashboardController extends Controller
             'versions' => \App\Models\Version::count(),
         ];
 
-        // 1. Recent Books with Authors & Versions
-        $recentBooks = Book::with([
-            'authors',
-            'versions' => function ($q) {
-                $q->latest()->limit(1);
-            }
-        ])
-            ->latest()
-            ->limit(5)
-            ->get();
+        // 1. Unified Recent Additions (Books & Manuscripts)
+        $recentBooks = Book::with(['authors', 'categories'])->latest()->limit(4)->get()->map(fn($b) => [...$b->toArray(), 'type' => 'book']);
+        $recentManuscripts = Manuscript::with(['authors', 'categories'])->latest()->limit(4)->get()->map(fn($m) => [...$m->toArray(), 'type' => 'manuscript']);
+        
+        $recentEntities = $recentBooks->concat($recentManuscripts)
+            ->sortByDesc('created_at')
+            ->take(6)
+            ->values();
 
         // 2. Fetch recent activities
         $recentActivities = Activity::with(['user', 'entity'])
@@ -54,10 +52,10 @@ class DashboardController extends Controller
             ->map(function ($activity) {
                 return [
                     'id' => $activity->id,
-                    'type' => strtolower(class_basename($activity->entity_type)),
+                    'type' => $activity->entity_type ? strtolower(class_basename($activity->entity_type)) : 'system',
                     'activity_type' => $activity->activity_type,
                     'description' => $activity->description,
-                    'entity_title' => $activity->entity?->title ?? 'عنصر محذوف',
+                    'entity_title' => $activity->entity?->title ?? 'النظام',
                     'user_name' => $activity->user?->name ?? 'النظام',
                     'created_at' => $activity->created_at,
                     'entity_slug' => $activity->entity?->slug,
@@ -67,7 +65,7 @@ class DashboardController extends Controller
         return Inertia::render('Dashboard', [
             'stats' => $stats,
             'recent' => $recentActivities,
-            'recentBooks' => $recentBooks,
+            'recentEntities' => $recentEntities,
         ]);
     }
 }

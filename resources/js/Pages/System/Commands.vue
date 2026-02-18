@@ -20,6 +20,12 @@ const manuscriptForm = ref({
     path: '/home/z/PhpstormProjects/Entity/storage/app/manuscripts'
 });
 
+const dataSyncForm = ref({
+    path: '',
+    source: '',
+    dryRun: true
+});
+
 const runCommand = async (command, args = {}) => {
     isRunning.value = true;
     output.value = 'Running command...\n';
@@ -30,7 +36,7 @@ const runCommand = async (command, args = {}) => {
             args
         });
         
-        output.value += response.data.output;
+        output.value += (response.data.output || '');
         output.value += '\n[SUCCESS] Command finished.';
     } catch (error) {
         output.value += '\n[ERROR] ' + (error.response?.data?.message || error.message);
@@ -52,6 +58,66 @@ const handleSync = () => {
 
 const handleManuscriptSync = () => {
     runCommand('manuscript:sync', { path: manuscriptForm.value.path });
+};
+
+const handleDataSync = () => {
+    if (!dataSyncForm.value.path) {
+        output.value = '[ERROR] الرجاء اختيار ملف أولاً من خلال زر "تصفح"\n';
+        return;
+    }
+    
+    const args = { file: dataSyncForm.value.path };
+    
+    if (dataSyncForm.value.source) args['--source'] = dataSyncForm.value.source;
+    if (dataSyncForm.value.dryRun) args['--dry-run'] = true;
+    
+    runCommand('manuscriptsData:sync', args);
+};
+
+// File Browser Logic
+const showBrowser = ref(false);
+const browserPath = ref('');
+const browserItems = ref([]);
+const browserLoading = ref(false);
+
+const loadFiles = async (path = '') => {
+    browserLoading.value = true;
+    try {
+        const response = await axios.post(route('api.system.list-files'), { path });
+        browserItems.value = response.data.items;
+        browserPath.value = response.data.current_path;
+    } catch (error) {
+        console.error("Failed to list files", error);
+    } finally {
+        browserLoading.value = false;
+    }
+};
+
+const navigateBrowser = (item) => {
+    if (item.type === 'folder') {
+        loadFiles(item.path);
+    } else {
+        // Select file: item.path is now absolute from listFiles
+        dataSyncForm.value.path = item.path;
+        showBrowser.value = false;
+    }
+};
+
+const navigateUp = () => {
+    // listFiles returns parent_path in response, or we can calculate dirname
+    // But listFiles handles '..' correctly if we pass the folder.
+    // If we are at root, maybe we can't go up.
+    // Let's rely on the API to handle '..' or parent_path if provided.
+    // Current implementation of listFiles returns '..' as a folder item.
+    // So navigateBrowser will handle it.
+    // BUT we also have the "Up" button.
+    const parent = browserPath.value.split('/').slice(0, -1).join('/') || '/';
+    loadFiles(parent); 
+};
+
+const openBrowser = () => {
+    showBrowser.value = true;
+    loadFiles(browserPath.value || '');
 };
 
 </script>
@@ -127,6 +193,19 @@ const handleManuscriptSync = () => {
                         <div>
                             <div class="font-bold">مزامنة المخطوطات</div>
                             <div class="text-xs opacity-60">manuscript:sync</div>
+                        </div>
+                    </button>
+
+                    <button 
+                        dusk="manuscriptsData-sync-section"
+                        @click="activeTab = 'datasync'"
+                        class="w-full text-right p-4 rounded-xl border transition-all flex items-center gap-3"
+                        :class="activeTab === 'datasync' ? 'bg-purple-900/20 border-purple-500/50 text-white' : 'bg-gray-900 border-gray-800 hover:border-gray-700'"
+                    >
+                        <span class="text-2xl">📊</span>
+                        <div>
+                            <div class="font-bold">استيراد بيانات (Legacy)</div>
+                            <div class="text-xs opacity-60">manuscriptsData:sync</div>
                         </div>
                     </button>
 
@@ -268,6 +347,111 @@ const handleManuscriptSync = () => {
                              >
                                  <span v-if="isRunning" class="animate-spin">⏳</span>
                                  <span>تنفيذ المزامنة</span>
+                             </button>
+                         </div>
+
+                         <!-- DATA SYNC TAB (Legacy Import) -->
+                         <div v-if="activeTab === 'datasync'">
+                             <h2 class="text-xl font-bold text-white mb-4">استيراد بيانات المخطوطات (Legacy)</h2>
+                             <p class="text-gray-400 text-sm mb-6 leading-relaxed">
+                                 استيراد بيانات المخطوطات القديمة من ملفات CSV, Excel, JSON إلى قاعدة البيانات الجديدة.
+                             </p>
+                             
+                             <div class="space-y-4 mb-6">
+                                 <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">مسار الملف (CSV, XLSX, JSON)</label>
+                                    <div class="flex gap-2">
+                                        <input 
+                                            dusk="file-path-input"
+                                            v-model="dataSyncForm.path" 
+                                            type="text" 
+                                            class="flex-1 bg-gray-950 border border-gray-700 rounded-lg px-4 py-2 text-white font-mono text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent dir-ltr"
+                                            placeholder="/path/to/data.csv"
+                                        >
+                                        <button 
+                                            dusk="browse-button"
+                                            @click="openBrowser"
+                                            class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 rounded-lg px-4 py-2 text-sm flex items-center gap-2 transition-colors"
+                                        >
+                                            <span>📂 تصفح</span>
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2">اختر ملفاً من السيرفر أو اكتب المسار يدوياً.</p>
+                                 </div>
+
+                                 <!-- File Browser Modal -->
+                                 <div dusk="file-browser-modal" v-if="showBrowser" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                                     <div class="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-2xl h-[500px] flex flex-col shadow-2xl">
+                                         <!-- Header -->
+                                         <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-950 rounded-t-xl">
+                                             <h3 class="font-bold text-white flex items-center gap-2">
+                                                 <span>📂</span>
+                                                 <span class="dir-ltr text-sm font-mono text-gray-400 overflow-hidden text-ellipsis whitespace-nowrap max-w-md">{{ browserPath || 'Project Root' }}</span>
+                                             </h3>
+                                             <button dusk="close-browser-button" @click="showBrowser = false" class="text-gray-400 hover:text-white px-2">✕</button>
+                                         </div>
+
+                                         <!-- Browser Content -->
+                                         <div class="flex-1 overflow-y-auto p-2">
+                                             <div v-if="browserLoading" class="flex justify-center items-center h-full">
+                                                 <span class="animate-spin text-2xl">⏳</span>
+                                             </div>
+                                             
+                                             <div v-else class="space-y-1">
+                                                 <!-- '..' is now returned by API if applicable, or we use button -->
+                                                 
+                                                 <button 
+                                                     v-for="item in browserItems" 
+                                                     :key="item.path"
+                                                     @click="navigateBrowser(item)"
+                                                     class="w-full text-right px-4 py-3 hover:bg-gray-800 rounded flex items-center gap-3 transition-colors border-b border-gray-800/50 last:border-0"
+                                                 >
+                                                     <span class="text-xl">{{ item.type === 'folder' ? '📁' : '📄' }}</span>
+                                                     <div class="flex-1">
+                                                         <div class="text-gray-200 font-medium dir-ltr text-right truncate">{{ item.name }}</div>
+                                                     </div>
+                                                     <span v-if="item.extension" class="text-xs text-gray-600 bg-gray-900 px-2 py-1 rounded uppercase">{{ item.extension }}</span>
+                                                 </button>
+
+                                                 <div v-if="browserItems.length === 0" class="text-center text-gray-500 py-8">
+                                                     مجلد فارغ
+                                                 </div>
+                                             </div>
+                                         </div>
+                                     </div>
+                                 </div>
+
+                                 <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">المصدر (اختياري)</label>
+                                    <input 
+                                        dusk="source-input"
+                                        v-model="dataSyncForm.source" 
+                                        type="text" 
+                                        class="w-full bg-gray-950 border border-gray-700 rounded-lg px-4 py-2 text-white text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        placeholder="مثال: wam, makhtota"
+                                    >
+                                 </div>
+
+                                 <div class="flex items-center gap-3 pt-2">
+                                     <input 
+                                        type="checkbox" 
+                                        id="dryRun" 
+                                        v-model="dataSyncForm.dryRun"
+                                        dusk="dry-run-checkbox"
+                                        class="w-4 h-4 rounded border-gray-700 bg-gray-900 text-purple-600 focus:ring-purple-500"
+                                     >
+                                     <label for="dryRun" class="text-sm text-gray-300 select-none cursor-pointer">تجربة فقط (Dry Run) - عدم الحفظ في قاعدة البيانات</label>
+                                 </div>
+                             </div>
+
+                             <button 
+                                 dusk="run-sync-command"
+                                 @click="handleDataSync" 
+                                 :disabled="isRunning"
+                                 class="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+                             >
+                                 <span v-if="isRunning" class="animate-spin">⏳</span>
+                                 <span>بدء الاستيراد</span>
                              </button>
                          </div>
 
