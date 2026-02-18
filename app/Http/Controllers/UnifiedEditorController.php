@@ -112,11 +112,25 @@ class UnifiedEditorController extends Controller
             }
         }
 
-        // Load siblings for Manuscript if 'code' exists
+        // Load siblings for Manuscript if 'code' exists (View all copies with the same work code prefix)
         if ($entityType === EntityType::MANUSCRIPT && $entity->code) {
-            $siblings = Manuscript::where('code', $entity->code)
+            // Extract the prefix (e.g., 'ج-ش-م-م-م-ك-0074' -> 'ج-ش-م-م-م-ك')
+            $parts = explode('-', $entity->code);
+            array_pop($parts); // Remove the sequential number
+            $workPrefix = implode('-', $parts);
+
+            $siblings = Manuscript::where('code', 'LIKE', $workPrefix . '-%')
                 ->where('id', '!=', $entity->id)
                 ->get();
+
+            // CRITICAL: Also load children (pages) for siblings so they are available in ManuscriptStore
+            foreach ($siblings as $sibling) {
+                $siblingChildren = ManuscriptPage::where('manuscript_id', $sibling->id)
+                    ->orderBy('order', 'asc')
+                    ->get();
+                $sibling->setRelation('children', $siblingChildren);
+            }
+
             $entity->setRelation('siblings', $siblings);
         }
 

@@ -12,6 +12,14 @@ const toggleVersion = (id) => {
     <header class="absolute top-0 left-0 right-0 z-10 h-12 px-4 flex items-center justify-between gap-4 transition-all bg-gradient-to-b from-black/60 to-transparent">
         <!-- Right Section: Navigation Tools -->
         <div class="flex items-center gap-4 flex-1 md:flex-initial">
+            <!-- Work Title & Code -->
+            <div class="flex flex-col text-white/90 mr-2">
+                <span class="text-[14px] font-bold truncate max-w-[200px]">{{ store.manuscript?.title }}</span>
+                <span class="text-[9px] text-white/40 font-mono tracking-widest uppercase">{{ store.manuscript?.code?.split('-').slice(0, -1).join('-') }}</span>
+            </div>
+
+            <div class="w-px h-6 bg-white/10 mx-2" />
+
             <!-- Versions / Copies List -->
             <div class="flex items-center gap-1 bg-white/5 rounded-full p-1 border border-white/5 backdrop-blur-sm overflow-hidden">
                 <div 

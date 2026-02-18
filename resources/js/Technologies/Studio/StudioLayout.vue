@@ -316,9 +316,14 @@ const handleInsertNode = ({ type, title, time }) => {
             <span class="text-xs px-1.5 py-0.5 rounded bg-gray-800 text-gray-300 border border-gray-700">
                 {{ props.type === 'manuscript' ? 'مخطوط' : (props.type === 'audio' ? 'صوت' : 'فيديو') }}
             </span>
-            <h1 class="text-sm font-medium text-white truncate max-w-[200px] md:max-w-md">
-                {{ props.entity.title || props.entity.original_title || 'بدون عنوان' }}
-            </h1>
+            <div class="flex flex-col">
+                <h1 class="text-sm font-medium text-white truncate max-w-[200px] md:max-w-md">
+                    {{ props.entity.title || props.entity.original_title || 'بدون عنوان' }}
+                </h1>
+                <span v-if="props.entity.code" class="text-[10px] text-gray-400 font-mono tracking-wider">
+                    {{ props.entity.code }}
+                </span>
+            </div>
 
             <!-- Step 3: Studio Add Button (Always Visible in Studio) -->
             <StudioAddButton 

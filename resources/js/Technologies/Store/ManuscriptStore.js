@@ -32,13 +32,13 @@ export const useManuscriptStore = defineStore('manuscript', {
             return [
                 {
                     id: state.manuscript.id,
-                    name: 'النسخة الحالية',
+                    name: state.manuscript.catalog_number || state.manuscript.code || 'الأصل',
                     manuscript: state.manuscript,
                     pages: state.manuscript.children || []
                 },
                 ...(state.siblings || []).map(s => ({
                     id: s.id,
-                    name: s.catalog_number || s.title,
+                    name: s.catalog_number || s.code || s.title || 'نسخة أخرى',
                     manuscript: s,
                     pages: s.children || []
                 }))
