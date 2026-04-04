@@ -8,6 +8,11 @@ import { ZiggyVue, route } from 'ziggy-js';
 import { Ziggy } from './ziggy';
 import { createPinia } from 'pinia';
 import RootLayout from './Layouts/RootLayout.vue';
+import Card from './Components/Card.vue';
+import TextInput from './Components/TextInput.vue';
+import SelectInput from './Components/SelectInput.vue';
+import PrimaryButton from './Components/PrimaryButton.vue';
+import InputLabel from './Components/InputLabel.vue';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -33,14 +38,20 @@ createInertiaApp({
     setup({ el, App, props, plugin }) {
         const pinia = createPinia();
 
-        return createApp({ render: () => h(App, props) })
+        const app = createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(pinia)
             .use(ZiggyVue, Ziggy)
+            .component('Card', Card)
+            .component('TextInput', TextInput)
+            .component('SelectInput', SelectInput)
+            .component('PrimaryButton', PrimaryButton)
+            .component('InputLabel', InputLabel)
             .directive('tooltip', (el, binding) => {
                 el.title = binding.value || '';
-            })
-            .mount(el);
+            });
+
+        return app.mount(el);
     },
     progress: {
         color: '#4B5563',

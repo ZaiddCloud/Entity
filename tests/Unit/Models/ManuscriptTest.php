@@ -25,16 +25,13 @@ class ManuscriptTest extends TestCase
     {
         $manuscript = Manuscript::create([
             'title' => 'كتاب الطب النبوي',
-            'author' => 'ابن قيم الجوزية',
-            'century' => 14,
-            'language' => 'عربية',
+            'manuscript_century' => '14',
             'pages' => 350
         ]);
 
         $this->assertEquals('كتاب الطب النبوي', $manuscript->title);
         $this->assertEquals('كتاب-الطب-النبوي', $manuscript->slug); // تغيير التوقع
-        $this->assertEquals(14, $manuscript->century);
-        $this->assertEquals('عربية', $manuscript->language);
+        $this->assertEquals('14', $manuscript->manuscript_century);
         $this->assertEquals(350, $manuscript->pages);
         $this->assertTrue($manuscript->isAncient());
         $this->assertFalse($manuscript->isModern());
@@ -45,7 +42,7 @@ class ManuscriptTest extends TestCase
     {
         $manuscript = Manuscript::create([
             'title' => 'Old Book',
-            'century' => 10 // القرن 10 الميلادي
+            'manuscript_century' => '10' // القرن 10 الميلادي
         ]);
 
         // العمر التقريبي = السنة الحالية - (900 + 1)

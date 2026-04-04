@@ -154,8 +154,7 @@ class CompletePolymorphicSystemTest extends TestCase
     {
         $manuscript = Manuscript::create([
             'title' => 'Old Manuscript',
-            'author' => 'Ancient Author',
-            'century' => 10,
+            'manuscript_century' => '10',
         ]);
 
         // تسجيل الحذف
@@ -181,7 +180,7 @@ class CompletePolymorphicSystemTest extends TestCase
             Book::create(['title' => 'Book', 'author' => 'Author']),
             Video::create(['title' => 'Video', 'duration' => 120]),
             Audio::create(['title' => 'Audio', 'duration' => 180]),
-            Manuscript::create(['title' => 'Manuscript', 'author' => 'Old', 'century' => 12]),
+            Manuscript::create(['title' => 'Manuscript', 'manuscript_century' => '12']),
         ];
 
         $tag = Tag::create(['name' => 'Test Tag']);

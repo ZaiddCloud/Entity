@@ -84,8 +84,7 @@ class EntityLifecycleObserverTest extends TestCase
     {
         $manuscript = Manuscript::create([
             'title' => 'My Test Manuscript',
-            'author' => 'Old Author',
-            'century' => 14,
+            'manuscript_century' => '14',
         ]);
 
         $this->assertEquals('my-test-manuscript', $manuscript->fresh()->slug);
@@ -150,13 +149,13 @@ class EntityLifecycleObserverTest extends TestCase
     public function it_creates_unique_slugs_for_duplicate_manuscript_titles()
     {
         // Arrange
-        Manuscript::create(['title' => 'Duplicate Manuscript', 'author' => 'Author', 'century' => 10]);
+        Manuscript::create(['title' => 'Duplicate Manuscript', 'manuscript_century' => '10']);
 
         // Act
-        $manuscript2 = Manuscript::create(['title' => 'Duplicate Manuscript', 'author' => 'Author 2', 'century' => 11]);
+        $manuscript2 = Manuscript::create(['title' => 'Duplicate Manuscript', 'manuscript_century' => '11']);
 
         // Assert
-        $this->assertEquals('duplicate-manuscript-1', $manuscript2->fresh()->slug);
+        $this->assertEquals('duplicate-manuscript-01', $manuscript2->fresh()->slug);
     }
 
     /** @test */

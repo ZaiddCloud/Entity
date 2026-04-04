@@ -20,9 +20,8 @@ class MongoDBIntegrationTest extends TestCase
             'slug' => 'test-mongo-' . uniqid(),
             'code' => 'MONGO_TEST',
             'scribe' => 'Test Scribe',
-            'madhab' => 'شافعي',
-            'century' => '9',
-            'century_label' => '9 هـ',
+            'manuscript_century' => '9',
+            'manuscript_century_label' => '9 هـ',
         ]);
 
         // Create a ManuscriptPage in MongoDB linked to it

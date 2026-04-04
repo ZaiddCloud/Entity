@@ -21,7 +21,6 @@ class EntityVersioningTest extends TestCase
             'original_title' => 'Al-Jami Al-Sahih',
             'code' => 'BUKHARI_TEST_001',
             'scribe' => 'Ibn Al-Waraq',
-            'madhab' => 'Shafi',
             'script_type' => 'Naskh',
             'inscriptions' => 'Owned by Sultan Qaitbay',
         ];
@@ -31,7 +30,6 @@ class EntityVersioningTest extends TestCase
         $this->assertDatabaseHas('manuscripts', [
             'id' => $manuscript->id,
             'scribe' => 'Ibn Al-Waraq',
-            'madhab' => 'Shafi',
             'code' => 'BUKHARI_TEST_001',
         ]);
 

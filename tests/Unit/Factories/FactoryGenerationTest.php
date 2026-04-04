@@ -25,8 +25,7 @@ class FactoryGenerationTest extends TestCase
 
         $manuscript = \App\Models\Manuscript::factory()->create();
         $this->assertNotNull($manuscript->id);
-        $this->assertNotNull($manuscript->author);
-        $this->assertNotNull($manuscript->century);
+        $this->assertNotNull($manuscript->manuscript_century);
     }
 
     /** @test */

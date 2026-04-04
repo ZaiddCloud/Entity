@@ -20,7 +20,6 @@ class StoreManuscriptRequest extends FormRequest
             
             // Physical Metadata
             'catalog_number' => 'nullable|string|max:100',
-            'madhab' => 'nullable|string|max:100',
             'scribe' => 'nullable|string|max:255',
             'copy_date' => 'nullable|string|max:100',
             'parts' => 'nullable|string|max:100',
@@ -41,8 +40,6 @@ class StoreManuscriptRequest extends FormRequest
             'author_ids.*' => 'exists:authors,id',
             'publisher_id' => 'nullable|exists:publishers,id',
             'published_year' => 'nullable|integer|min:1000|max:' . (date('Y') + 1),
-            'century' => 'nullable|string|max:255',
-            'century_label' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'cover' => 'nullable|image|max:2048',
             'file' => 'nullable|mimes:pdf|max:51200', // 50MB

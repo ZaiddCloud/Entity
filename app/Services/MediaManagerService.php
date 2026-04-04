@@ -107,9 +107,9 @@ class MediaManagerService
         
         if ($entityTypeEnum === EntityType::MANUSCRIPT) {
             $manuscriptFields = [
-                'century', 'century_label', 'original_title', 'catalog_number', 'madhab', 'scribe', 
+                'manuscript_century', 'manuscript_century_label', 'original_title', 'catalog_number', 'scribe', 
                 'copy_date', 'parts', 'script_type', 'dimensions', 'lines_per_page', 
-                'inscriptions', 'notes'
+                'inscriptions', 'notes', 'pages', 'manuscript_start', 'manuscript_end', 'is_autograph'
             ];
             
             foreach ($manuscriptFields as $field) {
@@ -152,12 +152,12 @@ class MediaManagerService
             'publisher_id' => 'nullable|uuid|exists:publishers,id',
             'isbn' => 'nullable|string|max:20',
             'duration' => 'nullable|integer',
-            'century' => 'nullable|string|max:100',
+            'manuscript_century' => 'nullable|string|max:100',
+            'manuscript_century_label' => 'nullable|string|max:100',
             'pages' => 'nullable|integer',
             'published_year' => 'nullable|integer',
             // Manuscript specifics
             'catalog_number' => 'nullable|string|max:100',
-            'madhab' => 'nullable|string|max:100',
             'scribe' => 'nullable|string|max:255',
             'original_title' => 'nullable|string|max:255',
         ]);

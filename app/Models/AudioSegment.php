@@ -26,7 +26,6 @@ class AudioSegment extends Model
 
     protected $primaryKey = '_id';
     protected $keyType = 'string';
-    public $incrementing = false;
     protected $guarded = [];
 
     public function audio()

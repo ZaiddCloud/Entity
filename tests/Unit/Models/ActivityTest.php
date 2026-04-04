@@ -60,7 +60,7 @@ class ActivityTest extends TestCase
             Book::create(['title' => 'Test Book', 'author' => 'Author']),
             Video::create(['title' => 'Test Video', 'duration' => 120]),
             Audio::create(['title' => 'Test Audio', 'duration' => 180]),
-            Manuscript::create(['title' => 'Test Manuscript', 'author' => 'Old Author', 'century' => 14]),
+            Manuscript::create(['title' => 'Test Manuscript', 'manuscript_century' => '14']),
         ];
 
         foreach ($entities as $entity) {
@@ -161,8 +161,8 @@ class ActivityTest extends TestCase
             'order_column' => 1,
         ]);
 
-        $manuscript1 = Manuscript::create(['title' => 'Series MS 1', 'author' => 'Author', 'century' => 12]);
-        $manuscript2 = Manuscript::create(['title' => 'Series MS 2', 'author' => 'Author', 'century' => 13]);
+        $manuscript1 = Manuscript::create(['title' => 'Series MS 1', 'manuscript_century' => '12']);
+        $manuscript2 = Manuscript::create(['title' => 'Series MS 2', 'manuscript_century' => '13']);
 
         // Add entities to series with positions
         $series->addEntity($manuscript1, 1);

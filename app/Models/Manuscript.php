@@ -31,7 +31,6 @@ class Manuscript extends Entity
         'code',
         'slug',
         'catalog_number',
-        'madhab',
         'scribe',
         'copy_date',
         'parts',
@@ -40,15 +39,13 @@ class Manuscript extends Entity
         'lines_per_page',
         'inscriptions',
         'notes',
-        'author', // Keep legacy if needed or remove? Migration kept it.
+        // 'author', // Removed: migrated to authorables polymorphic relation
         'manuscript_century',
         'manuscript_century_label',
         'manuscript_start',
         'manuscript_end',
         'is_autograph',
-        'language',
         'pages',
-        'publisher',
         'location',
         'description',
         'cover_path',
@@ -65,10 +62,10 @@ class Manuscript extends Entity
 
     public function getCenturyDisplayAttribute(): string
     {
-        $century = $this->century;
+        $century = (int) $this->manuscript_century;
 
         if ($century <= 0) {
-            return "قبل الميلاد";
+            return "قبل هجرة";
         }
 
         $hijriCentury = $century - 600; // تقدير تقريبي
@@ -77,8 +74,8 @@ class Manuscript extends Entity
 
     public function getAgeAttribute(): int
     {
-        $currentYear = date('Y');
-        $centuryStart = ($this->century - 1) * 100 + 1;
+        $currentYear = (int) date('Y');
+        $centuryStart = (((int) $this->manuscript_century) - 1) * 100 + 1;
         return $currentYear - $centuryStart;
     }
 
@@ -89,12 +86,12 @@ class Manuscript extends Entity
 
     public function isAncient(): bool
     {
-        return $this->century < 15; // قبل القرن 15
+        return ((int) $this->manuscript_century) < 15; // قبل القرن 15
     }
 
     public function isModern(): bool
     {
-        return $this->century >= 19; // بعد القرن 19
+        return ((int) $this->manuscript_century) >= 19; // بعد القرن 19
     }
 
     /**

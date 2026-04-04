@@ -29,7 +29,6 @@ class BookChild extends Model
     protected $collection = 'book_children';
     protected $primaryKey = '_id';
     protected $keyType = 'string';
-    public $incrementing = false;
     protected $guarded = [];
 
     /**

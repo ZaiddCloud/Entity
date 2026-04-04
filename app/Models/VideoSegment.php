@@ -26,7 +26,6 @@ class VideoSegment extends Model
 
     protected $primaryKey = '_id';
     protected $keyType = 'string';
-    public $incrementing = false;
     protected $guarded = [];
 
     public function video()
